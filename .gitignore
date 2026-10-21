@@ -1,0 +1,20 @@
+# Secrets
+.env
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Raw TMDB pull: large, and TMDB terms limit caching to six months
+data/raw/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
