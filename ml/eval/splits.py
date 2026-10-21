@@ -4,6 +4,7 @@
     load(model, "test", final=True, exclude_covid=True)
                                        -> the test split without 2020-21 (reported both ways for revenue)
     fold_data(model, fold)             -> (train, test) for one rolling-backtest fold, all before 2019
+    through(model, last_year)          -> every non-test row released up to last_year
 
 Every row has movie_id, split, the model's target, score_weight, main_genre, budget_2025,
 original_language, release_date, typical_revenue / typical_score (the typical film at that date,
@@ -89,6 +90,13 @@ def load(model: str, split: str, final: bool = False, exclude_covid: bool = Fals
     df = df[df["split"] == split]
     if exclude_covid:
         df = df[~df["year"].isin(COVID_YEARS)]
+    return df.reset_index(drop=True).copy()
+
+
+def through(model: str, last_year: int, db_path: Path = DB_FILE) -> pd.DataFrame:
+    """The model's rows released up to and including last_year, never the test split (the chain's budget model)."""
+    df = _view(model, str(db_path))
+    df = df[(df["split"] != "test") & (df["year"] <= last_year)]
     return df.reset_index(drop=True).copy()
 
 

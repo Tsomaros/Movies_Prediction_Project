@@ -6,7 +6,9 @@ Every row reuses the full model's tuned settings and tree count (no retuning), i
 (<=2015) and scored on validation (2016-18), and also runs the rolling backtest (fold-refit synopsis).
 Only accuracy is compared: the range correction was calibrated for the full model, so ranges are
 left uncalibrated here. "Full model" means every allowed feature, synopsis included; after this table
-the saved models leave the synopsis out (DEFAULT_DROP in ml.models.train). The 32-number row refits the synopsis PCA with 32 components on <=2015
+the saved models leave the synopsis out (DEFAULT_DROP in ml.models.train). The Day 5 rows leave out the
+Day 6 budget track record; the last revenue row adds it to the saved revenue model's features. The budget
+model's rows (Day 6) start from every allowed feature, budget track record included. The 32-number row refits the synopsis PCA with 32 components on <=2015
 films for validation and per fold for the backtest; the features table keeps 16.
 """
 
@@ -26,16 +28,27 @@ from ml.features.synopsis import N_COMPONENTS
 from ml.models.train import TARGETS, LgbmQuantile
 from ml.models.tune import load_params, log_experiment
 
+B = ("budget_history",)  # the Day 6 budget track record, which the Day 5 rows never had
+DAY5 = ("revenue", "score")
 RUNS = [  # (label, LgbmQuantile options, targets); every row names its drop, the model's default leaves out synopsis
-    ("Full model", {"drop": ()}, TARGETS),
-    ("No synopsis embeddings", {"drop": ("synopsis",)}, TARGETS),
-    ("32 synopsis numbers", {"drop": (), "synopsis_components": 32}, TARGETS),
-    ("No track-record features", {"drop": ("track_record",)}, TARGETS),
-    ("No themes", {"drop": ("themes",)}, TARGETS),
-    ("No budget", {"drop": ("budget",)}, ("revenue",)),
-    ("No monotone constraints", {"drop": (), "monotone": False}, ("revenue",)),
+    ("Full model", {"drop": B}, DAY5),
+    ("No synopsis embeddings", {"drop": ("synopsis", *B)}, DAY5),
+    ("32 synopsis numbers", {"drop": B, "synopsis_components": 32}, DAY5),
+    ("No track-record features", {"drop": ("track_record", *B)}, DAY5),
+    ("No themes", {"drop": ("themes", *B)}, DAY5),
+    ("No budget", {"drop": ("budget", *B)}, ("revenue",)),
+    ("No monotone constraints", {"drop": B, "monotone": False}, ("revenue",)),
+    ("No synopsis + budget track record (saved)", {"drop": ("synopsis",)}, ("revenue",)),  # vs "No synopsis"
+    # Budget (Day 6): the full model has every allowed feature, budget track record included
+    ("Full model", {"drop": ()}, ("budget",)),
+    ("No synopsis embeddings (saved)", {"drop": ("synopsis",)}, ("budget",)),
+    ("32 synopsis numbers", {"drop": (), "synopsis_components": 32}, ("budget",)),
+    ("No budget track record", {"drop": ("budget_history",)}, ("budget",)),
+    ("No track-record features", {"drop": ("track_record",)}, ("budget",)),
+    ("No themes", {"drop": ("themes",)}, ("budget",)),
 ]
-KEYS = {"revenue": ("mae_log", "within_2x", "spearman"), "score": ("mae", "weighted_mae", "spearman")}
+KEYS = {"revenue": ("mae_log", "within_2x", "spearman"), "budget": ("mae_log", "within_2x", "spearman"),
+        "score": ("mae", "weighted_mae", "spearman")}
 
 
 def run(target: str, label: str, options: dict[str, Any]) -> dict[str, Any]:

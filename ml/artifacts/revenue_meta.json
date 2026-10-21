@@ -154,7 +154,13 @@
   "actors_franchise_films_min",
   "actors_is_new_max",
   "actors_is_new_mean",
-  "actors_is_new_min"
+  "actors_is_new_min",
+  "director_budget",
+  "actors_budget_max",
+  "actors_budget_mean",
+  "actors_budget_min",
+  "company_budget",
+  "franchise_budget"
  ],
  "residual_features": [
   "genre_action",
@@ -305,7 +311,13 @@
   "actors_franchise_films_min",
   "actors_is_new_max",
   "actors_is_new_mean",
-  "actors_is_new_min"
+  "actors_is_new_min",
+  "director_budget",
+  "actors_budget_max",
+  "actors_budget_mean",
+  "actors_budget_min",
+  "company_budget",
+  "franchise_budget"
  ],
  "drop": [
   "synopsis"
@@ -327,18 +339,18 @@
   "huber_delta": 0.6653693854237883
  },
  "n_trees": 1032,
- "q": 0.4728205060290378,
+ "q": 0.44771978318948413,
  "trained_on": "train split, 1960-2015",
  "train_films": 8050,
  "validation_metrics": {
   "n": 886,
-  "mae_log": 1.113473303930391,
-  "median_pct_error": 68.83490372147591,
-  "within_2x": 0.45598194130925507,
-  "spearman": 0.794375162537348,
-  "coverage": 0.8318284424379232,
-  "width": 36.74137108765394
+  "mae_log": 1.0932959017443635,
+  "median_pct_error": 66.19238195639726,
+  "within_2x": 0.4683972911963883,
+  "spearman": 0.8065875627960681,
+  "coverage": 0.8363431151241535,
+  "width": 36.20811417051187
  },
  "lightgbm": "4.7.0",
- "saved_at": "2026-10-21T15:19:10+00:00"
+ "saved_at": "2026-10-21T17:21:12+00:00"
 }

@@ -1,0 +1,44 @@
+{
+ "target": "budget",
+ "params": {
+  "learning_rate": 0.039932991933806276,
+  "num_leaves": 46,
+  "min_data_in_leaf": 8,
+  "feature_fraction": 0.9973984752728752,
+  "bagging_fraction": 0.7686446895205843,
+  "bagging_freq": 1,
+  "lambda_l1": 0.0013123807969199618,
+  "lambda_l2": 0.7203950971970428
+ },
+ "n_trees": 1404,
+ "fold_mae": [
+  0.6990474626020964,
+  0.6702306844907038
+ ],
+ "mean_mae": 0.6846390735464001,
+ "default": {
+  "params": {
+   "learning_rate": 0.05,
+   "num_leaves": 31,
+   "min_data_in_leaf": 20,
+   "feature_fraction": 0.8,
+   "bagging_fraction": 0.8,
+   "bagging_freq": 1,
+   "lambda_l1": 0.001,
+   "lambda_l2": 0.001
+  },
+  "n_trees": 650,
+  "fold_mae": [
+   0.717212710798298,
+   0.6809140871321822
+  ],
+  "mean_mae": 0.6990633989652401
+ },
+ "trials": 96,
+ "minutes": 15.0,
+ "folds": [
+  "fold 1: <=2009 -> 2010-2012",
+  "fold 2: <=2012 -> 2013-2015"
+ ],
+ "tuned_at": "2026-10-21T17:19:54+00:00"
+}

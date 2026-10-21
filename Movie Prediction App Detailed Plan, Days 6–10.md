@@ -24,26 +24,34 @@ Day 6 ends with a calibrated budget model, revenue ranges that widen honestly wh
 
 | Topic               | Decision                                                                                                                                    | Why                                                                   |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Budget model        | Same recipe as Day 5: three quantile models, Optuna, MAPIE calibration, same harness                                                        | Shared code and a fair comparison                                     |
-| Budget track record | Leak-safe earlier budgets for director, actors, company and franchise; also tried in the revenue model and kept only if validation improves | Earlier budgets predict budget better than earlier revenue            |
+| Budget model        | Same recipe as Day 5: three quantile models, Optuna on backtest folds 1–2 (tree count from early stopping), our own CQR calibration on folds 1–2, same harness | Shared code and a fair comparison                                     |
+| Budget inputs       | Every allowed feature except the synopsis numbers (`DEFAULT_DROP`), with one ablation row adding them back                                 | Synopsis didn't help revenue or score on Day 5; the row confirms it for budget |
+| Budget track record | Leak-safe earlier budgets for director, actors, company and franchise; also tried in the revenue model and kept only if both validation and the backtest improve; not added to the monotone constraints | Earlier budgets predict budget better than earlier revenue; same bar as the Day 5 ablation |
+| Budget track record in the models | Kept in the revenue model (validation MAE log −0.020, backtest −0.006, same tuned settings); the score model stays without it | Decided by Dimitris after the trial; it passed the validation + backtest rule |
 | The chain           | One revenue model, two calibrations: "budget given" and "budget estimated"                                                                  | Ranges widen automatically when budget is estimated; cheap and honest |
+| Chain calibration   | "Estimated" mode is calibrated on folds 1–2: each fold trains a budget model on its own train years, and the revenue model's out-of-fold predictions use those predicted budgets | 2016–18 is never used to fit, stop or calibrate, so coverage in both modes stays an honest check |
+| ≤2018 models        | Retrained on ≤2018; their corrections come from out-of-fold predictions on all three folds (2010–18)                                         | More calibration films, and the Day 5 2016–18 revenue coverage (83%) was slightly cautious |
+| All-data models     | Retrained on ≤2025 for the app with the ≤2018 corrections and tree counts reused; stated in Limitations                                    | No later years are left to calibrate on                               |
+| Retuning            | Revenue and score are not retuned without synopsis                                                                                          | Tuning gained only about 1% on Day 5                                  |
 | Rough estimate      | Per-prediction label, starting at high ÷ low > 4×, adjusted on validation                                                                   | Flags exactly the predictions that are uncertain                      |
+| Rough-estimate rule | Revenue and budget only: high ÷ low above the 75th percentile of 2016–18 widths, rounded (revenue 81×, budget 12×), frozen in `ml/artifacts/rough_estimate.json`; score gets no label | 4× flagged 98% of revenue and 93% of budget ranges; score widths barely predict error (Spearman 0.09). Decided by Dimitris |
 | Budget comparison   | Always shown, even when the creator gives a budget                                                                                          | A useful sanity check at almost no cost                               |
 | Test set            | Opened once; no model changes after seeing it; results reviewed together                                                                    | Keeps the numbers credible                                            |
 
 ### Tasks
 
-1. **Budget track-record features (45 min).** Median earlier budget (2025 $) for the director, the actors (max/mean/min), the company and the franchise; shrunk towards the average; leakage tests extended.
-2. **Budget model (1.5 h).** Three quantile models on log budget from `v_train_budget`; every form field except budget as input; Optuna 15 min; MAPIE on 2016–18; evaluated against B0–B2.
-3. **Chain (1 h).** Calibrate the revenue model twice. For "estimated" mode, feed 2016–18 revenue predictions with budgets from a budget model trained on ≤2015. Coverage checked in both modes; `predict_revenue(features, budget=None)` picks the mode.
+0. **Update the plan document (15 min).** Our own CQR on folds 1–2 instead of MAPIE on 2016–18, the chain calibrated on folds 1–2, ≤2018 corrections from all three folds, all-data models reuse them, no synopsis in the budget model, no retune.
+1. **Budget track-record features (45 min).** Median earlier budget (2025 $) for the director, the actors (max/mean/min), the company and the franchise; shrunk towards the average; leakage tests extended. Tried in the revenue model as an ablation row.
+2. **Budget model (1.5 h).** Three quantile models on log budget from `v_train_budget` in `ml/models/train.py`; every allowed feature except budget and synopsis; Optuna 15 min on folds 1–2; CQR correction from fold 1–2 out-of-fold predictions; evaluated against B0–B2 on validation, breakdowns and the backtest; ablation row with synopsis.
+3. **Chain (1 h).** Calibrate the revenue model twice. For "estimated" mode, folds 1–2 train a budget model on the fold's train years and feed its predicted budgets into the revenue model's out-of-fold predictions; the correction comes from those. Coverage in both modes checked on 2016–18, where the budget comes from the budget model trained on ≤2015. `predict_revenue(features, budget=None)` picks the mode.
 4. **Rough-estimate label (30 min).** Record the share of validation films labelled and how much larger their errors are.
 5. **Budget comparison (15 min).** "Similar films usually cost $X–Y" returned whenever a budget is given.
 6. **Freeze and final test run (1.5 h).**
    1. Freeze features, settings, calibrations and the rough rule; tag `pre-test`.
-   2. Retrain all three models on ≤2018 and calibrate on 2016–18.
+   2. Retrain all three models on ≤2018 with the frozen settings; take every correction (both revenue modes, budget, score) from out-of-fold predictions on all three folds.
    3. One `final=True` run on 2019+: revenue in both modes, with and without 2020–21; budget; score; all metrics, coverage and breakdowns against B0–B2.
    4. Write the numbers into the README immediately; disappointments go into Limitations.
-   5. Retrain on all data (≤2025) for the app; tag `final-models`.
+   5. Retrain on all data (≤2025) for the app, reusing the ≤2018 corrections and tree counts; tag `final-models`.
 7. **Tests (45 min).** Budget ranges ordered; estimated mode never narrower than given mode; `final=True` only in the final-run script; final artifacts reload identically.
 8. **Wrap-up (30 min).** Test results and limitations in the README, `PROGRESS.md`, commit.
 
@@ -212,4 +220,4 @@ Day 10 ends with a working React app where a creator can fill in the form (or lo
 
 - [LightGBM issue #1969](https://github.com/microsoft/LightGBM/issues/1969): `pred_contrib` returns SHAP values plus the expected value
 - [LightGBM issue #3998](https://github.com/microsoft/LightGBM/issues/3998): contributions don't add up for quantile/L1 objectives
-- [MAPIE ConformalizedQuantileRegressor](https://mapie.readthedocs.io/en/stable/generated/mapie.regression.ConformalizedQuantileRegressor.html): calibrated ranges used in both chain modes
+- [MAPIE ConformalizedQuantileRegressor](https://mapie.readthedocs.io/en/stable/generated/mapie.regression.ConformalizedQuantileRegressor.html): the CQR method behind our own calibration function, used in both chain modes

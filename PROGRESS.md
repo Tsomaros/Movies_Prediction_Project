@@ -245,3 +245,116 @@
 - **The budget chain will cost revenue accuracy.** Without budget, MAE log rises by about 0.1 (validation 1.219), which is roughly the floor if the predicted budget were useless.
 - **Synopsis adds nothing.** Consider removing it from the creator form's "helps the prediction" messaging, or trying other text features later.
 - **Optional retune without synopsis** (`make tune`, 30 min). Tuning gained only about 1% the first time.
+
+## Day 6: Budget model, the chain and the final test run
+
+- [x] 0. Update the plan document: our own CQR on folds 1–2 instead of MAPIE on 2016–18, the chain calibrated on folds 1–2, ≤2018 corrections from all three folds, all-data models reuse them, no synopsis in the budget model, no retune
+- [x] 1. Budget track-record features (`ml/features/history.py`), also tried in the revenue model: kept in revenue
+- [x] 2. Budget model (`ml/models/train.py`, tuning, calibration, harness, synopsis ablation row)
+- [x] 3. Chain: "budget given" and "budget estimated" calibrations, `predict_revenue(features, budget=None)`
+- [x] 4. Rough-estimate label
+- [x] 5. Budget comparison
+- [ ] 6. Freeze (`pre-test`), retrain on ≤2018, final test run, all-data models (`final-models`)
+- [ ] 7. Tests
+- [ ] 8. Wrap-up and commit
+
+### Task 1: budget track record
+
+- **6 features:** `director_budget`, `actors_budget_{max,mean,min}`, `company_budget` and `franchise_budget`, in log 2025 dollars, appended after the Day 3–5 columns. The rebuilt table matches the old one exactly on all 169 earlier columns (same values, same order), so the Day 5 models reproduce exactly. `make features` now takes about 95 s.
+- **Correlation with log budget (train):** franchise 0.78, company 0.59, actors max 0.53, director 0.38 (director's earlier revenue: 0.23).
+- **Revenue trial** (tuned settings reused): validation MAE log 1.113 → 1.093, within 2× 45.6% → 46.8%; backtest mean 1.130 → 1.124. Kept by your decision. Score stays without it (`DEFAULT_DROP` is now per target).
+- **After retraining:** revenue's correction is +0.448 log (was +0.473); validation coverage 83.6%, width 36×. Score unchanged.
+
+### Changes from the plan
+
+- **An earlier film's budget counts from its release,** with no 182-day wait like revenue and score: a budget is known before release.
+- **Company budget is the highest shrunk median among the film's companies** that have earlier budgets (the typical budget when none do). Companies get their own track record (`Companies` in `history.py`), with typed names matched against every company in the database, not only the top 30.
+- **Franchise budget is the plain median of earlier entries** (NaN when none), like `franchise_revenue`; the first entry's budget counts.
+- **The budget features are their own group** ("budget track record") rather than part of "track record", so the Day 5 ablation rows keep their meaning. `reports/ablation.md` is still the Day 5 table; the full ablation is rerun with the budget model rows in task 2.
+
+### Checks
+
+- A deliberate bug (same-day budgets counted) was caught by 3 tests. 145 tests passing.
+
+### Task 2: budget model
+
+- **Model:** three LightGBM quantile models on log 2025 dollars (`LgbmQuantile("budget")`), unweighted, no constraints; 157 features (every allowed one except `log_budget` and the synopsis numbers). `train.py`, `tune.py`, `calibrate.py`, `evaluate.py` and `ablation.py` now cover all three targets.
+- **Tuning:** 96 trials in 15 min on folds 1–2; fold MAE log 0.685 with 1,404 trees vs 0.699 for the defaults (−2.1%).
+- **Calibration:** +0.399 log from 2,599 fold films. Coverage before → after: folds 55% / 57% → 80% / 80%, 2016–18 64% → 84%.
+
+| Budget (validation 2016–18) | MAE log | Within 2× | Spearman | Coverage | Width | Backtest mean |
+| --- | --- | --- | --- | --- | --- | --- |
+| B2 | 1.193 | 37.3% | 0.389 | 86.0% | 72× | 1.265 ± 0.052 |
+| **LightGBM** | **0.613** | **70.9%** | **0.859** | 84.3% | **8.1×** | **0.662 ± 0.036** |
+
+- **Breakdowns:** better than B2 in every group. $150M+ films: 90% within 2× (B2: 0%). Under $10M: MAE log 0.85, coverage 77% (the one group below 80%). New directors 0.80, sequels 0.43.
+- **Ablation:** removing the budget track record costs +0.054 (validation) / +0.061 (backtest), the people track record +0.023 / +0.026. Synopsis: +0.000 / −0.004 without it, +0.004 / +0.008 with 32 numbers, so it stays out. Themes: −0.005 / +0.001, kept.
+- **Full ablation rerun:** every Day 5 revenue and score row reproduced exactly; the revenue row with the budget track record matches task 1.
+- **Sizes and times:** `make train` about 1 min for the three models (plus about 4 min of calibration), `make evaluate` about 3 min, the ablation about 18 min.
+
+### Checks (task 2)
+
+- The budget model's top inputs by gain are `company_budget` (13%), runtime (5%) and `director_budget` (4%), with no single dominant column; `log_budget` is not among its features (tested).
+- New tests: budget ranges ordered, three plain quantile models with per-film widths, never its own target, saved budget model reloads identically. 149 tests passing.
+
+### Task 3: the chain
+
+- **Module:** `ml/models/chain.py`. `EstimatedBudgetRevenue` fits the revenue model on real budgets and a budget model on every `v_train_budget` film up to the same last year (`splits.through`), then predicts revenue from the budget model's middle prediction. `Chain` / `predict_revenue(features, budget=None)` use the saved models: a budget means "given", none means "estimated". `LgbmQuantile.predict` takes an optional `q`.
+- **Calibration** (`make train` now writes `revenue_estimated_calibration.json` too): estimated q = +0.585 log (given: +0.448), from the same 1,848 fold films. Coverage before → after: folds 62% / 61% → 79% / 81%, 2016–18 66% → 86%.
+
+| Revenue (validation 2016–18) | MAE log | Within 2× | Spearman | Coverage | Width | Backtest mean |
+| --- | --- | --- | --- | --- | --- | --- |
+| B2 (real budget) | 1.316 | 39.8% | 0.709 | 79.7% | 53× | 1.309 ± 0.012 |
+| No budget input (ablation) | 1.219 | 39.3% | — | — | — | 1.244 ± 0.023 |
+| **LightGBM, budget estimated** | **1.135** | **44.0%** | **0.793** | 86.1% | 48× | **1.192 ± 0.044** |
+| LightGBM, budget given | 1.093 | 46.8% | 0.807 | 83.6% | 36× | 1.124 ± 0.023 |
+
+- **The estimated budget recovers about two-thirds of what the budget is worth:** no budget costs +0.126 against the given mode, an estimated one +0.042. On the 886 validation revenue films the estimate is within 2× of the real budget for 75% (MAE log 0.535), and on average 9% high.
+- **Estimated mode beats B2 with the real budget** on validation and in every fold (1.199 / 1.242 / 1.135 vs 1.292 / 1.318 / 1.316).
+- **Coverage by group (estimated):** 84–94%, every group above 80%; $150M+ films 94%, under $10M 88%.
+
+### Changes from the plan
+
+- **The estimated correction is never smaller than the given one** (`max` in `Chain.load` and the harness), which makes "estimated is never narrower" true by construction; here it didn't bind (0.585 vs 0.448).
+- **The harness reports revenue in both modes**, so the estimated mode gets the same breakdowns and backtest as every other model. `make evaluate` now takes about 4.5 min.
+
+### Checks (task 3)
+
+- `predict_revenue` on 2016–18 with the saved models reproduces the harness exactly in both modes (1.1353 / 1.0933).
+- New tests: given mode uses the creator's budget (one value or one per film), estimated mode feeds the budget model's middle and ignores any `log_budget` in the features, estimated is never narrower than given with the same budget. 152 tests passing.
+- 2016–18 coverage in estimated mode (86%) is more cautious than given (84%); the ≤2018 models take their corrections from all three folds (task 6).
+
+### Task 4: rough-estimate label
+
+- **Module:** `ml/models/rough.py` (`is_rough`, `fit_rule`; `uv run python -m ml.models.rough` writes `ml/artifacts/rough_estimate.json`). The rule is fitted with the saved ≤2015 models on 2016–18 and then frozen.
+- **Rule (your decision):** revenue and budget only; high ÷ low above the 75th percentile of 2016–18 widths, rounded to two figures: **revenue 81×** (from the budget-given ranges), **budget 12×**. Score gets no label.
+
+| Validation 2016–18 | Labelled | MAE log labelled / rest | Within 2× labelled / rest |
+| --- | --- | --- | --- |
+| Revenue, budget given | 25% | 1.537 / 0.945 (1.63×) | 34% / 51% |
+| Revenue, budget estimated | 32% | 1.547 / 0.945 (1.64×) | 31% / 50% |
+| Budget | 27% | 0.863 / 0.520 (1.66×) | 54% / 77% |
+
+### Changes from the plan
+
+- **The 4× starting point was dropped:** it labelled 98% of revenue and 93% of budget predictions (typical widths 36× and 8×).
+- **Score has no label:** its widths span only 1.3–2.0 points, width vs error Spearman is 0.09, and the widest quarter has only 1.14× the error of the rest. Revenue (0.30) and budget (0.26) widths do track error.
+- **The rule is not part of `make train`,** so retraining (task 6) can't move the frozen cut-offs.
+
+### Checks (task 4)
+
+- New tests: the cut-off compares high ÷ low (80× not labelled, 82× labelled at 81×), score is never labelled, and the fitted rule labels about a quarter with a two-figure cut-off. 154 tests passing.
+
+### Task 5: budget comparison
+
+- **Code:** `compare_budget` and `Chain.compare_budget(features, budget=None)` in `ml/models/chain.py`, plus `format_money` (two significant figures: "$12M", "$1.2B"). Columns: low, middle, high (2025 $) and the sentence "Similar films usually cost $X–Y"; with a budget also its position (below / within / above) and its ratio to the middle. "Similar films" means the budget model's calibrated 10th–90th range for the same form.
+- **On 2016–18 (1,162 films, real budgets):** 84.3% within, 10.9% below, 4.7% above; median budget ÷ middle 0.97. Examples: *Get Out* $5.9M vs $1.4M–$20M, *Avengers: Infinity War* $380M vs $180M–$580M, *La La Land* $40M vs $14M–$65M.
+
+### Surprises / inputs for later
+
+- **Misses are lopsided:** real budgets fall below the range twice as often as above it.
+- **Rounding can blur a "below":** *The Shape of Water* ($26M) is just under a low end that also shows as $26M. Day 7's wording should handle budgets within a few percent of an edge (e.g. "at the low end").
+
+### Checks (task 5)
+
+- New tests: money formatting (6 cases), positions and ratios on hand values, the range still shown without a budget, and the chain using the budget model's own range. 162 tests passing.

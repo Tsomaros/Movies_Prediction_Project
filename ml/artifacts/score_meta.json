@@ -157,7 +157,8 @@
  ],
  "residual_features": null,
  "drop": [
-  "synopsis"
+  "synopsis",
+  "budget_history"
  ],
  "monotone": [],
  "params": {
@@ -184,5 +185,5 @@
   "width": 1.684557811956916
  },
  "lightgbm": "4.7.0",
- "saved_at": "2026-10-21T15:19:28+00:00"
+ "saved_at": "2026-10-21T17:21:51+00:00"
 }
