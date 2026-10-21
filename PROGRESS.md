@@ -254,7 +254,7 @@
 - [x] 3. Chain: "budget given" and "budget estimated" calibrations, `predict_revenue(features, budget=None)`
 - [x] 4. Rough-estimate label
 - [x] 5. Budget comparison
-- [ ] 6. Freeze (`pre-test`), retrain on ≤2018, final test run, all-data models (`final-models`)
+- [x] 6. Freeze (`pre-test`), retrain on ≤2018, final test run, all-data models (`final-models` tag after your review)
 - [ ] 7. Tests
 - [ ] 8. Wrap-up and commit
 
@@ -358,3 +358,27 @@
 ### Checks (task 5)
 
 - New tests: money formatting (6 cases), positions and ratios on hand values, the range still shown without a budget, and the chain using the budget model's own range. 162 tests passing.
+
+### Task 6: freeze and final test run
+
+- **Freeze:** tasks 1–5 committed (`6b12900`) and tagged `pre-test`.
+- **Script:** `ml/eval/final.py` is the only module that passes `final=True`. `test` refuses to run again once `reports/final_test.json` exists; `all-data` needs the test run's corrections. A dry run with 2016–18 standing in for the test split (outputs in the scratchpad) reproduced every validation number exactly before the real run.
+- **≤2018 corrections** (out-of-fold on folds 1–3, 2010–18): revenue +0.399 (2,734 films), revenue estimated +0.505, budget +0.363 (3,761), score +0.159 (10,014). All smaller than the folds 1–2 corrections (0.448 / 0.585 / 0.399 / 0.165).
+- **Test run (2019+, once, 259 s):**
+
+| Test 2019+ | B2 | LightGBM | Coverage | Width | Validation (for reference) |
+| --- | --- | --- | --- | --- | --- |
+| Revenue MAE log, budget given | 1.455 | **1.230** | 77.4% | 34× | 1.093 |
+| Revenue, without 2020–21 | 1.418 | **1.189** | 78.2% | 33× | |
+| Revenue, budget estimated | 1.455 | **1.266** | 78.2% | 42× | 1.135 |
+| Budget MAE log | 1.247 | **0.682** | 79.9% | 7.6× | 0.613 |
+| Score MAE | 0.574 | **0.493** | 81.1% | 1.67 pts | 0.496 |
+
+- **Disappointments (in Limitations):** $150M+ revenue films are worse than B2 (MAE log 1.04 vs 0.99) with 64% coverage; with an estimated budget level with B2 (0.99). $50–150M revenue coverage 75%; $50M+ budget coverage 74–77%. Revenue is about 0.14 harder on 2019+ for both LightGBM and B2.
+- **Rough label on test:** revenue 18% labelled (1.45× the error), estimated 24% (1.40×), budget 24% (1.77×).
+- **All-data models** (`ml/artifacts/final/`, `.joblib` gitignored): revenue 10,421 films, budget 14,460, score 33,077 (1960–2025), with the ≤2018 corrections and frozen tree counts; the revenue meta carries `q_estimated` (+0.505), which `Chain.load(out_dir)` reads.
+
+### Changes from the plan (task 6)
+
+- **`save_model` takes `extra` metadata** and writes "films released 1960–2025" instead of "train split, …".
+- **The ≤2018 models aren't saved;** the test run fits and scores them in one go. The app uses the all-data models.

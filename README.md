@@ -319,6 +319,47 @@ Each row removes one part and reuses the tuned settings. The full model here mea
   Removing the budget track record costs the most, more than the whole people track record. The synopsis doesn't help the budget model either, so it is left out. Themes are a wash (−0.005 on validation, +0.001 in the backtest) and stay in, as in the other models.
 - **The budget track record (Day 6) helps revenue, mostly on 2016–18.** Added to the saved model's features, it lowers validation MAE log from 1.113 to 1.093 and the backtest mean from 1.130 to 1.124. The backtest gain comes from fold 3 (2016–18, −0.020); folds 1–2 change by +0.004 and −0.002. The revenue and score rows in the first table leave it out.
 
+## Final test results (2019+)
+
+The test split was opened once, on 2026-10-21, after everything was frozen at the `pre-test` tag (`uv run python -m ml.eval.final test`; full tables in `reports/final_test.md`). Every model, B0–B2 included, was refitted on films released up to 2018 with the frozen settings. Each range correction came from out-of-fold predictions on all three backtest folds (2010–18): revenue +0.399 log (budget estimated +0.505), budget +0.363 log, score +0.159 points. No model was changed after the run.
+
+| Revenue, budget given | Films | MAE log | Median % error | Within 2× | Spearman | Coverage | Range width |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| B2 budget × genre multiple | 1,485 | 1.455 | 82% | 36.2% | 0.664 | 77.6% | 54× |
+| **LightGBM** | 1,485 | **1.230** | **76%** | **41.1%** | **0.761** | 77.4% | **34×** |
+| LightGBM, without 2020–21 | 1,163 | 1.189 | 74% | 42.4% | 0.764 | 78.2% | 33× |
+
+| Revenue, budget estimated | Films | MAE log | Median % error | Within 2× | Spearman | Coverage | Range width |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| **LightGBM** | 1,485 | **1.266** | **78%** | **38.7%** | **0.744** | 78.2% | 42× |
+| LightGBM, without 2020–21 | 1,163 | 1.225 | 75% | 39.8% | 0.751 | 79.4% | 41× |
+
+| Budget | Films | MAE log | Median % error | Within 2× | Spearman | Coverage | Range width |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| B2 genre median × sequel factor | 1,964 | 1.247 | 80% | 34.3% | 0.360 | 83.7% | 67× |
+| **LightGBM** | 1,964 | **0.682** | **45%** | **66.7%** | **0.827** | 79.9% | **7.6×** |
+
+| Score | Films | MAE | Weighted MAE | Spearman | Coverage | Range width |
+| --- | --- | --- | --- | --- | --- | --- |
+| B2 genre median + director | 7,461 | 0.574 | 0.578 | 0.503 | 80.8% | 1.94 pts |
+| **LightGBM** | 7,461 | **0.493** | **0.491** | **0.641** | 81.1% | **1.67 pts** |
+
+**What the test shows**
+- **All three models beat B2 on the test set.** Error is 15% lower for revenue (budget given), 45% lower for budget and 14% lower for score. Revenue with an estimated budget (1.266) also beats B2, which uses the real budget (1.455).
+- **Revenue is harder on 2019+ than on 2016–18 for every model.** LightGBM's MAE log rose from 1.093 to 1.230, and B2's from 1.316 to 1.455, by about the same amount. Leaving out 2020–21 brings LightGBM down to 1.189. Budget rose from 0.613 to 0.682; score stayed level (0.496 → 0.493).
+- **Coverage is close to 80%:** budget 79.9%, score 81.1% and revenue 77.4% (78.2% without 2020–21). Revenue ranges are slightly too narrow on the test years; 2016–18 had been slightly too wide (84%).
+- **Big-budget revenue is the one group where LightGBM doesn't beat B2.** For $150M+ films (108), MAE log is 1.04 against B2's 0.99, and only 64% are covered (B2: 90%). With an estimated budget it's 0.99, level with B2. $50–150M films are covered 75%.
+- **Every other group is better than B2:** for example films under $10M (revenue 1.36 vs 1.68), new directors (revenue 1.40 vs 1.71; budget 0.92 vs 1.67) and sequels (revenue within 2× 61% vs 45%).
+- **The rough-estimate label still picks out the worst predictions,** with smaller gaps than on 2016–18:
+
+  | Test, 2019+ | Labelled | MAE log, labelled / rest | Within 2×, labelled / rest |
+  | --- | --- | --- | --- |
+  | Revenue, budget given | 18% | 1.65 / 1.14 (1.4×) | 27% / 44% |
+  | Revenue, budget estimated | 24% | 1.62 / 1.16 (1.4×) | 25% / 43% |
+  | Budget | 24% | 1.02 / 0.58 (1.8×) | 49% / 72% |
+
+The app's models are then retrained on every film from 1960–2025 with the same settings, tree counts and ≤2018 corrections (`uv run python -m ml.eval.final all-data` → `ml/artifacts/final/`). Their own accuracy can't be measured, since no later films are left to test on.
+
 ## Limitations
 
 - **The revenue model is mostly an English-language, post-1980 model.** Only 21% of English films have both budget and revenue (32% among the first 700 per year), and most other languages are under 10%. There are only 286 revenue training films from the 1960s and 471 from the 1970s.
@@ -327,8 +368,10 @@ Each row removes one part and reuses the tuned settings. The full model here mea
 - **US certification is missing for 65% of films**, so the creator form has an "unrated/unknown" option (70.5% of films, counting NR).
 - **Track-record scores use today's ratings.** An earlier film's score is its current TMDB rating, not its rating when the later film came out; the pull has no rating history.
 - **COVID can't be learned from training data.** `covid_period` is always 0 in the train split, because 2020–21 films are all in the test split.
-- **Revenue with an estimated budget is less accurate.** When a creator leaves the budget out, the app predicts it first; validation MAE log rises from 1.093 to 1.135, and the ranges widen from about 36× to 48×. The estimated mode is calibrated, but its 2016–18 coverage (86%) is above the target.
-- **Coverage close to 80% overall can hide groups that are far off.** For example, B2 revenue covers 100% of $150M+ films but 72% of films under $10M. LightGBM narrows this to 82–91%. `reports/breakdowns.md` has the coverage for each group.
+- **Revenue with an estimated budget is less accurate.** When a creator leaves the budget out, the app predicts it first; validation MAE log rises from 1.093 to 1.135 (test: 1.230 to 1.266), and the ranges widen from about 34× to 42× on the test years.
+- **Coverage close to 80% overall can hide groups that are far off.** For example, B2 revenue covers 100% of $150M+ films but 72% of films under $10M. LightGBM narrows this to 82–91% on 2016–18, but on the test years it covers only 64% of $150M+ revenue films and 74–77% of $50M+ budgets. `reports/breakdowns.md` and `reports/final_test.md` have the coverage for each group.
+- **Big-budget revenue is no better than the simple baseline on the test years.** For $150M+ films from 2019 on, LightGBM's revenue error (MAE log 1.04) is slightly worse than B2's (0.99), and its ranges are too narrow (64% coverage). Why isn't known yet; the test split stays closed, so it can only be studied on newer films.
+- **The app's models have no test score of their own.** They are retrained on 1960–2025 and reuse the ≤2018 corrections and tree counts; the 2019+ results above are the best estimate of their accuracy.
 - **The revenue and score settings were tuned with the synopsis numbers included and without the budget track record.** The ablation dropped the synopsis afterwards and Day 6 added the budget track record to revenue; the settings were reused without retuning. The budget model was tuned on Day 6 with its saved features, and `make tune` now tunes every model with its saved features.
 - **Synopsis meaning doesn't help yet.** MiniLM embeddings reduced to 16 or 32 numbers add nothing beyond genres and themes. Other text features remain an open question.
 - **Themes depend on TMDB's keywords.** Only 48% of films have a theme, and some keywords are loose: "rape" puts *The Revenant* in "sex and erotica", and "hilarious" puts some action films in "comedy and satire".

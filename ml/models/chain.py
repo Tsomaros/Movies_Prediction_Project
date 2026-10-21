@@ -26,14 +26,16 @@ or above it.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
 
 from ml.eval.splits import through
-from ml.models.train import LgbmQuantile, load_model
+from ml.models.train import ARTIFACTS_DIR, LgbmQuantile, load_model, meta_file
 
 MODES = ("given", "estimated")
 POSITIONS = ("below", "within", "above")  # the creator's budget against the similar-films range
@@ -108,12 +110,17 @@ class Chain:
     q: dict[str, float]  # mode -> range correction (log units)
 
     @classmethod
-    def load(cls) -> Chain:
+    def load(cls, out_dir: Path = ARTIFACTS_DIR) -> Chain:
+        """The saved models in out_dir: ml/artifacts (<=2015, `make train`) or ml/artifacts/final (all data).
+
+        The all-data revenue model carries its estimated-mode correction in its metadata (q_estimated)."""
         from ml.models.calibrate import load_q  # calibrate imports this module
 
-        revenue, budget = load_model("revenue"), load_model("budget")
+        revenue, budget = load_model("revenue", out_dir), load_model("budget", out_dir)
+        meta = json.loads(meta_file("revenue", out_dir).read_text(encoding="utf-8"))
         given = revenue.q
-        return cls(revenue, budget, {"given": given, "estimated": max(load_q("revenue", estimated=True), given)})
+        estimated = meta["q_estimated"] if "q_estimated" in meta else load_q("revenue", estimated=True)
+        return cls(revenue, budget, {"given": given, "estimated": max(estimated, given)})
 
     def predict_revenue(self, features: pd.DataFrame, budget=None) -> pd.DataFrame:
         """Revenue p10 / p50 / p90 (log 2025 $). budget: 2025 dollars, one value or one per row; None estimates it.

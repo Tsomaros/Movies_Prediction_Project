@@ -180,7 +180,7 @@ def meta_file(target: str, out_dir: Path = ARTIFACTS_DIR) -> Path:
 
 
 def save_model(model: LgbmQuantile, train: pd.DataFrame, validation_metrics: dict[str, float] | None = None,
-               out_dir: Path = ARTIFACTS_DIR) -> dict[str, Any]:
+               out_dir: Path = ARTIFACTS_DIR, extra: dict[str, Any] | None = None) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     for key in QUANTILE_KEYS:
         joblib.dump(model.models[key], out_dir / f"{model.target}_{key}.joblib")
@@ -195,12 +195,13 @@ def save_model(model: LgbmQuantile, train: pd.DataFrame, validation_metrics: dic
         "params": model.params,
         "n_trees": model.n_trees,
         "q": model.q,
-        "trained_on": f"train split, {int(train['year'].min())}-{int(train['year'].max())}",
+        "trained_on": f"films released {int(train['year'].min())}-{int(train['year'].max())}",
         "train_films": len(train),
         "validation_metrics": validation_metrics,
         "lightgbm": lgb.__version__,
         "saved_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
+    meta.update(extra or {})
     meta_file(model.target, out_dir).write_text(json.dumps(meta, indent=1) + "\n", encoding="utf-8")
     return meta
 
