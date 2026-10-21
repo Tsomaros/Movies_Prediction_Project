@@ -1,0 +1,197 @@
+{
+  "about": "Fitted on train films (<=2015): the most common original languages, production countries and production companies. Anything else counts as 'other'.",
+  "languages": [
+    "en",
+    "fr",
+    "es",
+    "it",
+    "ja",
+    "de",
+    "ru",
+    "cn",
+    "hi",
+    "zh",
+    "pt",
+    "el",
+    "tr",
+    "ko",
+    "pl"
+  ],
+  "countries": [
+    "US",
+    "FR",
+    "GB",
+    "IT",
+    "JP",
+    "DE",
+    "CA",
+    "ES",
+    "MX",
+    "SU",
+    "HK",
+    "IN",
+    "BR",
+    "SE",
+    "GR"
+  ],
+  "companies": [
+    {
+      "id": 33,
+      "name": "Universal Pictures"
+    },
+    {
+      "id": 174,
+      "name": "Warner Bros. Pictures"
+    },
+    {
+      "id": 4,
+      "name": "Paramount Pictures"
+    },
+    {
+      "id": 5,
+      "name": "Columbia Pictures"
+    },
+    {
+      "id": 21,
+      "name": "Metro-Goldwyn-Mayer"
+    },
+    {
+      "id": 25,
+      "name": "20th Century Fox"
+    },
+    {
+      "id": 344,
+      "name": "Mosfilm"
+    },
+    {
+      "id": 104,
+      "name": "Canal+"
+    },
+    {
+      "id": 5822,
+      "name": "Toei Company"
+    },
+    {
+      "id": 1931,
+      "name": "Filmové studio Barrandov"
+    },
+    {
+      "id": 882,
+      "name": "TOHO"
+    },
+    {
+      "id": 3324,
+      "name": "BBC"
+    },
+    {
+      "id": 5798,
+      "name": "Shaw Brothers"
+    },
+    {
+      "id": 356,
+      "name": "TF1 Films Production"
+    },
+    {
+      "id": 955,
+      "name": "Nikkatsu Corporation"
+    },
+    {
+      "id": 83,
+      "name": "France 2 Cinéma"
+    },
+    {
+      "id": 60,
+      "name": "United Artists"
+    },
+    {
+      "id": 12,
+      "name": "New Line Cinema"
+    },
+    {
+      "id": 4606,
+      "name": "ZDF"
+    },
+    {
+      "id": 10845,
+      "name": "Lenfilm"
+    },
+    {
+      "id": 1583,
+      "name": "RAI"
+    },
+    {
+      "id": 591,
+      "name": "France 3 Cinéma"
+    },
+    {
+      "id": 694,
+      "name": "StudioCanal"
+    },
+    {
+      "id": 310,
+      "name": "CNC"
+    },
+    {
+      "id": 9,
+      "name": "Gaumont"
+    },
+    {
+      "id": 1444,
+      "name": "The Cannon Group"
+    },
+    {
+      "id": 14,
+      "name": "Miramax"
+    },
+    {
+      "id": 14599,
+      "name": "Soyuzmultfilm"
+    },
+    {
+      "id": 192,
+      "name": "Shochiku"
+    },
+    {
+      "id": 10473,
+      "name": "ONF | NFB"
+    }
+  ],
+  "major_studios": [
+    {
+      "id": 33,
+      "name": "Universal Pictures"
+    },
+    {
+      "id": 174,
+      "name": "Warner Bros. Pictures"
+    },
+    {
+      "id": 4,
+      "name": "Paramount Pictures"
+    },
+    {
+      "id": 5,
+      "name": "Columbia Pictures"
+    },
+    {
+      "id": 25,
+      "name": "20th Century Fox"
+    },
+    {
+      "id": 127928,
+      "name": "20th Century Studios"
+    },
+    {
+      "id": 2,
+      "name": "Walt Disney Pictures"
+    },
+    {
+      "id": 21,
+      "name": "Metro-Goldwyn-Mayer"
+    },
+    {
+      "id": 60,
+      "name": "United Artists"
+    }
+  ]
+}

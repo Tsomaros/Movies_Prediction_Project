@@ -1,0 +1,1522 @@
+[
+ {
+  "name": "genre_action",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_adventure",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_animation",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_comedy",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_crime",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_documentary",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_drama",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_family",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_fantasy",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_history",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_horror",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_music",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_mystery",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_romance",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_science_fiction",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_tv_movie",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_thriller",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_war",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "genre_western",
+  "source": "genres",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_based_on_a_book",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_true_story",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_sequel_or_remake",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_crime_and_police",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_heist",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_murder_and_revenge",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_spy_and_conspiracy",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_action_and_martial_arts",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_history_and_war",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_supernatural",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_monsters_and_gore",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_science_fiction",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_superhero",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_fantasy_and_magic",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_survival_and_adventure",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_love_and_marriage",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_family",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_friendship",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_coming_of_age_and_school",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_lgbtq",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_sex_and_erotica",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_grief_addiction_and_mental_health",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_comedy_and_satire",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_music",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_sports",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_christmas_and_holidays",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "theme_politics_and_religion",
+  "source": "themes",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_en",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_fr",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_es",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_it",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_ja",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_de",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_ru",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_cn",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_hi",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_zh",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_pt",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_el",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_tr",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_ko",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_pl",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "language_other",
+  "source": "language",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_US",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_FR",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_GB",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_IT",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_JP",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_DE",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_CA",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_ES",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_MX",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_SU",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_HK",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_IN",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_BR",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_SE",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_GR",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_other",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "country_unknown",
+  "source": "countries",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_universal_pictures",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_warner_bros_pictures",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_paramount_pictures",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_columbia_pictures",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_metro_goldwyn_mayer",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_20th_century_fox",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_mosfilm",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_canal",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_toei_company",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_filmov_studio_barrandov",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_toho",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_bbc",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_shaw_brothers",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_tf1_films_production",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_nikkatsu_corporation",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_france_2_cin_ma",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_united_artists",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_new_line_cinema",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_zdf",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_lenfilm",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_rai",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_france_3_cin_ma",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_studiocanal",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_cnc",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_gaumont",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_the_cannon_group",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_miramax",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_soyuzmultfilm",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_shochiku",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_onf_nfb",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_other",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_unknown",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "major_studio",
+  "source": "companies",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "cert_g",
+  "source": "certification",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "cert_pg",
+  "source": "certification",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "cert_pg_13",
+  "source": "certification",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "cert_r",
+  "source": "certification",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "cert_nc_17",
+  "source": "certification",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "cert_unrated_unknown",
+  "source": "certification",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "runtime",
+  "source": "runtime",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "is_franchise",
+  "source": "franchise (earlier films in the collection)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "franchise_earlier_films",
+  "source": "franchise (earlier films in the collection)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "franchise_revenue",
+  "source": "franchise (earlier films in the collection)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "year",
+  "source": "release date",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "month",
+  "source": "release date",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "summer",
+  "source": "release date",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "holiday",
+  "source": "release date",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "covid_period",
+  "source": "release date",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "log_budget",
+  "source": "budget (2025 dollars)",
+  "models": [
+   "revenue",
+   "score"
+  ]
+ },
+ {
+  "name": "director_n_films",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "director_years_active",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "director_revenue",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "director_score",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "director_franchise_films",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "director_is_new",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_n_films_max",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_n_films_mean",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_n_films_min",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_years_active_max",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_years_active_mean",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_years_active_min",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_revenue_max",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_revenue_mean",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_revenue_min",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_score_max",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_score_mean",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_score_min",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_franchise_films_max",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_franchise_films_mean",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_franchise_films_min",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_is_new_max",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_is_new_mean",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_is_new_min",
+  "source": "track record (earlier films only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_00",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_01",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_02",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_03",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_04",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_05",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_06",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_07",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_08",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_09",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_10",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_11",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_12",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_13",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_14",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "synopsis_15",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "has_synopsis",
+  "source": "synopsis (MiniLM + PCA)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ }
+]

@@ -110,31 +110,46 @@ Day 3 ends with one leak-safe feature function used by both training and the liv
 
 | Topic                   | Decision                                                                                                                                                                    | Why                                                                      |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Creator form            | Required: genres, release year/month, runtime, language, certification, director, top 3 actors, at least one theme. Optional: company, country, franchise, synopsis, budget | The form defines what the model may use                                  |
+| Creator form            | Required: genres, release year/month, runtime, language, certification, director, 5–10 actors in billing order (at least 5), at least one theme. Optional: company, country, franchise, synopsis, budget | The form defines what the model may use                                  |
 | New people              | Any typed name is accepted; names not in the database count as "new person"                                                                                                 | First-time casts must still get a prediction                             |
 | Budget in revenue model | Chained: the creator's budget if given, otherwise the predicted budget, with wider ranges                                                                                   | Budget is the strongest revenue signal; one model, natural "what if" use |
-| Track record            | Earlier films only, shrunk towards the average for people with few films                                                                                                    | Leak-safe; one hit doesn't make a "star"                                 |
-| Keywords                | Grouped into themes (about 15–25)                                                                                                                                           | Easier for creators to pick                                              |
-| Synopsis                | MiniLM sentence embeddings via ONNX                                                                                                                                         | Strongest text option without PyTorch in the app                         |
+| Track record            | Earlier films only, shrunk towards the average as if the person had 4 extra average films: `(n × own + 4 × average) / (n + 4)`                                              | Leak-safe; one hit doesn't make a "star"                                 |
+| Certification           | G, PG, PG-13, R, NC-17 and "unrated/unknown" (NR and missing merged)                                                                                                         | 65% of films have no US certification and 6% are NR                      |
+| Keywords                | Grouped into themes (about 15–25); names proposed by Claude, approved by Dimitris                                                                                           | Easier for creators to pick                                              |
+| Synopsis                | MiniLM sentence embeddings via ONNX, using the ready-made ONNX export of `all-MiniLM-L6-v2` from Hugging Face                                                               | Strongest text option with no PyTorch anywhere, not even for export      |
+| Storage                 | A `features` table in `data/movies.db`, built by `make features`                                                                                                            | One database; no new file format or dependency                           |
 | Cut line                | Embeddings move to Day 5 if Day 3 runs short                                                                                                                                | Day 3 is about 9 hours                                                   |
+
+### Leak-safety rules
+
+- **History** means films released strictly before the target film's release date, so a film never counts towards itself.
+- An earlier film's revenue and score only count once it is at least 182 days old at that date. Before then it adds to the film count but not to the medians, matching `revenue_incomplete`.
+- The average used for shrinkage comes from history only, so it changes over time instead of including future films.
+- Top-N lists, the theme keyword list and PCA are fitted on the train split (≤2015) only.
+- **Known limitation:** an earlier film's score is its current TMDB rating, not its rating at the time. The pull can't avoid this, so the README states it.
+
+**New dependencies:** `onnxruntime` and `tokenizers` (embeddings), `scikit-learn` (clustering and PCA), and `numpy`, which was already used but is now declared.
 
 ### Tasks
 
-1. **Form-to-feature contract (30 min).** `ml/features/contract.py` lists every input, its type and allowed values; it drives Day 8 API validation and the Day 10 form.
-2. **Keyword themes (1.5 h).** Embed the \~300 most frequent keywords with MiniLM, cluster them, name the groups by hand ("superhero", "true story", "based on a book", "heist"); save to `ml/features/themes.json`; one yes/no column per theme.
-3. **Track-record features (2 h).** For the director and each top-3 actor, from films before the target's date only: number of earlier films, years since first film, median earlier revenue (2025 $) and score (shrunk), franchise experience, `is_new`. Actors combined as max, mean and min.
-4. **Other features (1 h).**
-   - Genres: one column each. Language and country: top 15 + "other". Company: top 30, `major_studio`, or "unknown".
-   - Franchise: `is_franchise`, earlier films in the collection, the collection's earlier median revenue.
+0. **Update this plan (5 min).** The decisions and leak-safety rules above.
+1. **Form-to-feature contract (30 min).** `ml/features/contract.py` lists every input, its type, whether it's required and its allowed values; `validate(form)` returns the cleaned form and errors. People fields take an autocomplete id or free text (unknown names mean "new person"). It drives Day 8 API validation and the Day 10 form.
+2. **Model download and text embedding (45 min).** `make model` downloads `onnx/model.onnx` (about 90 MB) and `tokenizer.json` from `sentence-transformers/all-MiniLM-L6-v2` into `ml/artifacts/minilm/` (gitignored). `ml/features/text.py` runs it with `onnxruntime` + `tokenizers`: mean pooling over the attention mask, then L2 normalisation.
+3. **Keyword themes (1.5 h).** Embed the 300 most frequent keywords in train films, cluster them with KMeans (about 20 groups), name the groups ("superhero", "true story", "based on a book", "heist") and get the names approved (done: 27 themes from the 30-group run, cleaned by hand; "amused", "absurd" and "campy" dropped after the notebook); save to `ml/features/themes.json`; one yes/no column per theme.
+4. **Track-record features (2 h), `ml/features/history.py`.** For the director and the first 5 billed actors (the form's required 5; actors 6–10 are accepted but not used), from history only: number of earlier films, years since first film, shrunk median earlier log revenue (2025 $) and shrunk median earlier score, earlier franchise films, `is_new`. With several directors, the one with the most earlier films is used. Actors combined as max, mean and min.
+5. **Other features (1 h), `ml/features/basic.py`.**
+   - Genres: one column each. Language and country: top 15 + "other". Company: top 30, `major_studio`, or "unknown". Lists fitted on train and saved to `ml/features/vocab.json`.
+   - Certification: the six categories above. Runtime.
+   - Franchise: `is_franchise`, earlier films in the collection, the collection's earlier median log revenue. **Sequels only:** `is_franchise` is 1 only when the collection already had an earlier film, because first entries join a collection only after later sequels (train median revenue: first entries $108M, later entries $103M, no collection $27M). A new franchise name on the form counts as an original film. Franchise experience in Task 4 uses the same rule. Major studios: Universal, Warner Bros., Paramount, Columbia, 20th Century Fox / 20th Century Studios, Walt Disney Pictures, MGM, United Artists.
    - Dates: year, month, summer (May–Aug) and holiday (Nov–Dec) flags, `covid_period`.
    - Budget: log budget in 2025 dollars; predicted budget fills in when missing (Day 6).
-5. **Synopsis embeddings with ONNX (1.5 h).** Export `all-MiniLM-L6-v2` to ONNX and run it with `onnxruntime` + `tokenizers`; PCA from 384 to 16 numbers, fitted on training years only; neutral vector + `has_synopsis` when empty; artifacts in `ml/artifacts/`.
-6. **One shared feature function (1 h).** `build_features(movie, as_of_date)` for the training table and the Day 8 API; outputs a `features` table and `feature_list.json` (name, source, allowed per model).
-7. **Tests (45 min).** No future films in track-record or franchise values; forbidden inputs never appear; unknown people get neutral values; training and API paths give identical features.
-8. **Notebook `03_features.ipynb` (45 min).** Missing-value rates, top correlations with log revenue and score, a look at the themes and embeddings.
-9. **Wrap-up (15 min).** `PROGRESS.md` and commit.
+6. **Synopsis embeddings (1.5 h).** Embed every overview once into `data/overview_embeddings.npy` (gitignored); PCA from 384 to 16 numbers, fitted on train only, saved to `ml/artifacts/synopsis_pca.json`; neutral vector (zeros after PCA) + `has_synopsis = 0` when empty.
+7. **One shared feature function (1 h), `ml/features/build.py`.** `build_features(form, as_of_date, ctx)` for the training table and the Day 8 API. The training table turns each film into a form (`film_to_form`) and passes it through the same function at its release date. Outputs the `features` table in `movies.db` and `feature_list.json` (name, source, allowed per model). `make features` builds it; `make data` = pull, db, features; `make db` drops the table, so `make features` runs after it.
+8. **Tests (45 min), `tests/test_features.py`.** No future films in track-record or franchise values; films under 182 days old count but don't move the medians; shrinkage matches a hand-computed value; forbidden inputs never appear and budget isn't a budget-model input; unknown people get neutral values; training and API paths give identical features; contract validation; embedding tests skip when the model file is missing.
+9. **Notebook `03_features.ipynb` (45 min).** Missing-value rates, top correlations with log revenue and score (train only), theme sizes and examples, a 2-D view of the embeddings by genre.
+10. **Wrap-up (15 min).** `PROGRESS.md`, README features section and limitation, commit.
 
-**Done when** the feature table exists for every film, the leakage tests pass, and the API can call the same function on a form input.
+**Done when** the feature table exists for every film, the leakage tests pass, and the API can call the same function on a form input, including one with a new director.
 
 ## Day 4: Baselines and evaluation
 

@@ -1,0 +1,213 @@
+"""Non-people features: genres, themes, language, country, company, certification, runtime, franchise, dates, budget.
+
+    fit_vocab(con)                    -> top languages, countries and companies in train films (saved to vocab.json)
+    load_vocab(path)                  -> the committed vocab
+    Franchises.from_db(con)           -> each collection's dated films, for leak-safe franchise features
+    basic_features(form, as_of, ...)  -> one dict of feature columns for a contract-shaped form
+
+Lists are fitted on train films (<=2015) only. A film counts as a franchise film only when its
+collection already had an earlier film (a sequel or later entry): a first entry belongs to a
+collection only because sequels came later, which would leak future success into training.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import re
+import sqlite3
+from bisect import bisect_left, bisect_right
+from pathlib import Path
+from typing import Any, Iterable
+
+import numpy as np
+import pandas as pd
+
+from ml.data.clean import COVID_YEARS
+from ml.features.contract import CERTIFICATIONS, GENRES, UNRATED
+from ml.features.history import MATURE_DAYS
+
+VOCAB_FILE = Path("ml/features/vocab.json")
+N_LANGUAGES, N_COUNTRIES, N_COMPANIES = 15, 15, 30
+MAJOR_STUDIOS = {  # TMDB company id -> name: the classic Hollywood majors (and Fox's current name)
+    33: "Universal Pictures",
+    174: "Warner Bros. Pictures",
+    4: "Paramount Pictures",
+    5: "Columbia Pictures",
+    25: "20th Century Fox",
+    127928: "20th Century Studios",
+    2: "Walt Disney Pictures",
+    21: "Metro-Goldwyn-Mayer",
+    60: "United Artists",
+}
+SUMMER_MONTHS = (5, 6, 7, 8)
+HOLIDAY_MONTHS = (11, 12)
+
+
+def slug(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", name.casefold()).strip("_")
+
+
+# ---------------------------------------------------------------- vocab (fitted on train)
+
+
+def fit_vocab(con: sqlite3.Connection) -> dict[str, Any]:
+    languages = con.execute(
+        "SELECT original_language FROM movies WHERE split = 'train' AND original_language IS NOT NULL "
+        "GROUP BY 1 ORDER BY COUNT(*) DESC, 1 LIMIT ?", (N_LANGUAGES,)).fetchall()
+    countries = con.execute(
+        "SELECT country FROM movie_countries mc JOIN movies m ON m.id = mc.movie_id WHERE m.split = 'train' "
+        "GROUP BY 1 ORDER BY COUNT(*) DESC, 1 LIMIT ?", (N_COUNTRIES,)).fetchall()
+    companies = con.execute(
+        "SELECT co.id, co.name FROM movie_companies mc JOIN companies co ON co.id = mc.company_id "
+        "JOIN movies m ON m.id = mc.movie_id WHERE m.split = 'train' "
+        "GROUP BY co.id ORDER BY COUNT(*) DESC, co.id LIMIT ?", (N_COMPANIES,)).fetchall()
+    return {
+        "about": "Fitted on train films (<=2015): the most common original languages, production countries "
+                 "and production companies. Anything else counts as 'other'.",
+        "languages": [r[0] for r in languages],
+        "countries": [r[0] for r in countries],
+        "companies": [{"id": int(i), "name": n} for i, n in companies],
+        "major_studios": [{"id": i, "name": n} for i, n in MAJOR_STUDIOS.items()],
+    }
+
+
+def save_vocab(vocab: dict[str, Any], path: Path = VOCAB_FILE) -> None:
+    path.write_text(json.dumps(vocab, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def load_vocab(path: Path = VOCAB_FILE) -> dict[str, Any]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _company_ids(refs: Iterable[dict[str, Any]], vocab: dict[str, Any]) -> list[int | None]:
+    """Company refs -> TMDB ids where we can tell (by id, or by name for the listed companies), else None."""
+    by_name = {c["name"].casefold(): c["id"] for c in vocab["companies"] + vocab["major_studios"]}
+    out = []
+    for ref in refs:
+        if ref.get("id") is not None:
+            out.append(int(ref["id"]))
+        else:
+            out.append(by_name.get((ref.get("name") or "").strip().casefold()))
+    return out
+
+
+# ---------------------------------------------------------------- franchises
+
+
+class Franchises:
+    def __init__(self, films: pd.DataFrame, collections: pd.DataFrame) -> None:
+        """films: collection_id, release_date, log_revenue (NaN if unusable). collections: id, name."""
+        films = films[films["collection_id"].notna()].copy()
+        films["day"] = pd.to_datetime(films["release_date"]).values.astype("datetime64[D]").astype(np.int64)
+        films = films.sort_values(["collection_id", "day"], kind="stable")
+        self.days: dict[int, np.ndarray] = {}
+        self.revenue_days: dict[int, np.ndarray] = {}
+        self.revenue: dict[int, np.ndarray] = {}
+        for cid, g in films.groupby("collection_id", sort=False):
+            rev = g[g["log_revenue"].notna()]
+            self.days[int(cid)] = g["day"].to_numpy()
+            self.revenue_days[int(cid)] = rev["day"].to_numpy()
+            self.revenue[int(cid)] = rev["log_revenue"].to_numpy()
+        named = collections.assign(key=collections["name"].str.casefold()).sort_values(["key", "id"])
+        named = named[named["id"].isin(self.days)]
+        self.by_name = {r.key: int(r.id) for r in named.drop_duplicates("key").itertuples()}
+
+    @classmethod
+    def from_db(cls, con: sqlite3.Connection) -> Franchises:
+        films = pd.read_sql_query(
+            """
+            SELECT collection_id, release_date,
+                   CASE WHEN budget IS NOT NULL AND revenue IS NOT NULL AND NOT money_suspect
+                             AND NOT revenue_incomplete THEN LN(revenue_2025) END AS log_revenue
+            FROM movies WHERE collection_id IS NOT NULL AND release_date IS NOT NULL
+            """,  # same revenue rule as v_train_revenue
+            con,
+        )
+        return cls(films, pd.read_sql_query("SELECT id, name FROM collections", con))
+
+    def resolve(self, ref: dict[str, Any] | None) -> int | None:
+        """A known collection id, else a case-insensitive name match, else None (a new franchise)."""
+        if not ref:
+            return None
+        if ref.get("id") is not None and int(ref["id"]) in self.days:
+            return int(ref["id"])
+        return self.by_name.get((ref.get("name") or "").strip().casefold())
+
+    def features(self, collection_id: int | None, as_of: int) -> dict[str, float]:
+        days = self.days.get(collection_id) if collection_id is not None else None
+        earlier = bisect_left(days, as_of) if days is not None else 0
+        revenue = np.array([])
+        if earlier:
+            revenue = self.revenue[collection_id][: bisect_right(self.revenue_days[collection_id], as_of - MATURE_DAYS)]
+        return {
+            "is_franchise": int(earlier > 0),
+            "franchise_earlier_films": earlier,
+            "franchise_revenue": float(np.median(revenue)) if len(revenue) else float("nan"),
+        }
+
+
+# ---------------------------------------------------------------- features
+
+
+def basic_features(
+    form: dict[str, Any], as_of: int, vocab: dict[str, Any], franchises: Franchises, theme_names: Iterable[str]
+) -> dict[str, float]:
+    """Feature columns for one contract-shaped form (see contract.validate); missing values become NaN or 'unknown'."""
+    f: dict[str, float] = {}
+    genres = set(form.get("genres") or [])
+    f.update({f"genre_{slug(g)}": int(g in genres) for g in GENRES})
+    themes = set(form.get("themes") or [])
+    f.update({f"theme_{slug(t)}": int(t in themes) for t in theme_names})
+
+    language = form.get("language")
+    f.update({f"language_{code}": int(language == code) for code in vocab["languages"]})
+    f["language_other"] = int(language is not None and language not in vocab["languages"])
+
+    countries = set(form.get("countries") or [])
+    f.update({f"country_{code}": int(code in countries) for code in vocab["countries"]})
+    f["country_other"] = int(bool(countries - set(vocab["countries"])))
+    f["country_unknown"] = int(not countries)
+
+    company_refs = form.get("companies") or []
+    ids = _company_ids(company_refs, vocab)
+    listed = {c["id"] for c in vocab["companies"]}
+    f.update({f"company_{slug(c['name'])}": int(c["id"] in ids) for c in vocab["companies"]})
+    f["company_other"] = int(any(i not in listed for i in ids))
+    f["company_unknown"] = int(not company_refs)
+    f["major_studio"] = int(any(i in MAJOR_STUDIOS for i in ids))
+
+    certification = form.get("certification") or UNRATED
+    f.update({f"cert_{slug(c)}": int(certification == c) for c in CERTIFICATIONS})
+
+    runtime = form.get("runtime")
+    f["runtime"] = float(runtime) if runtime is not None else float("nan")
+
+    f.update(franchises.features(franchises.resolve(form.get("franchise")), as_of))
+
+    year, month = form["release_year"], form["release_month"]
+    f.update({
+        "year": year,
+        "month": month,
+        "summer": int(month in SUMMER_MONTHS),
+        "holiday": int(month in HOLIDAY_MONTHS),
+        "covid_period": int(year in COVID_YEARS),
+    })
+
+    budget = form.get("budget")
+    f["log_budget"] = math.log(budget) if budget else float("nan")
+    return f
+
+
+def main() -> None:
+    from ml.data.build_db import DB_FILE
+
+    with sqlite3.connect(DB_FILE) as con:
+        vocab = fit_vocab(con)
+    save_vocab(vocab)
+    print(f"Wrote {VOCAB_FILE}: {len(vocab['languages'])} languages, {len(vocab['countries'])} countries, "
+          f"{len(vocab['companies'])} companies, {len(vocab['major_studios'])} major studios")
+
+
+if __name__ == "__main__":
+    main()

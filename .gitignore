@@ -16,6 +16,12 @@ data/raw/
 # Built from the raw pull (same TMDB terms); rebuild with `make db`
 data/movies.db*
 
+# MiniLM model files (about 90 MB); download with `make model`
+ml/artifacts/minilm/
+
+# Overview embedding cache (about 120 MB, TMDB text); rebuilt by `make features`
+data/overview_embeddings*.npz
+
 # OS / editors
 .DS_Store
 Thumbs.db

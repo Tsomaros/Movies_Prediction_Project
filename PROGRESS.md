@@ -97,3 +97,50 @@
 
 - Updated inputs for later days: revenue training before 1980 is still thin (286 films in the 1960s, 471 in the 1970s); 178 training films (2.0%) earned less than 1% of their budget; US certification is missing for 65% of films.
 - The TMDB caching deadline is unchanged: re-pull or delete the raw data and database by 2027-04-21.
+
+## Day 3: Feature engineering (done 2026-10-21)
+
+- [x] 0. Update the plan document: shrinkage like 4 extra films, NR + missing → "unrated/unknown", ready-made ONNX model, `features` table in `movies.db`, leak-safety rules
+- [x] 1. Form-to-feature contract (`ml/features/contract.py`): 14 inputs, `validate`, `describe`
+- [x] 2. MiniLM download and embedding (`ml/features/text.py`, `make model`)
+- [x] 3. Keyword themes (`ml/features/themes.py` → `themes.json`, 27 themes approved)
+- [x] 4. Track-record features (`ml/features/history.py`)
+- [x] 5. Other features (`ml/features/basic.py` → `vocab.json`)
+- [x] 6. Synopsis embeddings and PCA (`ml/features/synopsis.py` → `ml/artifacts/synopsis_pca.json`)
+- [x] 7. One shared feature function (`ml/features/build.py` → `features` table, `feature_list.json`; `make features`)
+- [x] 8. Tests (`tests/test_features.py`, 30 tests; 95 total passing)
+- [x] 9. Notebook `notebooks/03_features.ipynb`
+- [x] 10. Wrap-up and commit
+
+### Build stats
+
+- `features` table: 79,199 films × 169 features (33 company, 27 theme, 24 track record, 19 genre, 17 country, 17 synopsis, 16 language, 6 certification, 5 date, 3 franchise, runtime, budget).
+- `make features` takes about 60–80 s with the embedding cache in place. Embedding every overview the first time took 469 s (78,211 distinct texts); `data/overview_embeddings.npz` is 134 MB and not in git.
+- `History` loads in about 7 s and covers every film in about 15 s.
+- Model files: `all-MiniLM-L6-v2` at revision `1110a243`, both files checked against pinned sha256 hashes; `ml/artifacts/minilm/` (91 MB) is not in git.
+
+### Changes from the plan
+
+- **Actors: the form takes 5–10 (5 required), and features use the first 5 billed.** Top 10 correlated slightly better in training (+0.28 vs +0.25 with log revenue), but a creator entering only 5 would get features computed differently from training.
+- **Franchise counts sequels only.** First entries of a collection earn far more (train median $108M vs $27M with no collection) because only hits get sequels, so `is_franchise`, franchise experience and the collection's earlier revenue all use earlier entries only. A new franchise name on the form counts as an original.
+- **27 themes, not 15–25.** KMeans with 20 groups mixed unrelated keywords, so the 30-group run was cleaned by hand and approved. After the notebook, "amused", "absurd" and "campy" were dropped from comedy and satire: 40–51% of their films weren't comedies; now 91% of the theme's films are.
+- **Synopsis code is in its own module** (`synopsis.py`), so `text.py` only handles the model.
+- **A creator's film is judged at the 1st of its release month**; training films at their exact release date. On The Dark Knight this changes only small track-record values (one actor film between 1 and 16 July).
+- **Major studios are a named list of 9:** Universal, Warner Bros., Paramount, Columbia, 20th Century Fox and 20th Century Studios, Walt Disney Pictures, MGM, United Artists.
+- `numpy` is now declared in `pyproject.toml` (Day 2 note), along with `onnxruntime`, `tokenizers` and `scikit-learn`.
+
+### Checks
+
+- The Dark Knight typed by hand with names (director, 10 actors, companies, franchise, synopsis text) gives exactly the same 169 values as its training row.
+- Two deliberate bugs were caught by the tests: counting same-day films (the film itself) and counting first entries as franchise experience.
+- Nolan before The Dark Knight checked by hand: shrunk revenue (5 × 18.98 + 4 × 17.51) / 9 = 18.33; Batman Begins is not franchise experience.
+
+### Surprises / inputs for Day 4+
+
+- `covid_period` is always 0 in train, so no model can learn from it; Day 4's with-and-without-2020–21 report matters.
+- The test split has more new directors (38%) than train (31%), so Day 4's new-vs-experienced breakdown is important.
+- Only 48% of films have a theme, and TMDB keyword noise remains ("rape" puts *The Revenant* in sex and erotica, "hilarious" puts some action films in comedy).
+- `franchise_revenue` is +0.81 with log revenue but exists only for 730 train sequels; `log_budget` (+0.68) is missing for 83% of train films, so Day 6's budget chaining matters.
+- Director experience isn't linear: median revenue peaks at 6–10 earlier films ($58M) and dips at 11+ ($43M).
+- 16 synopsis numbers keep 28.5% of the variance; try 32 on Day 5 if the synopsis helps.
+- An earlier film's score is its current TMDB rating, not its rating at the time (README Limitations).

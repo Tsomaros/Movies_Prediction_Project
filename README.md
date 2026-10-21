@@ -35,7 +35,7 @@ A value of `0` in TMDB's `budget` or `revenue` means "unknown", not zero. See [C
 - **Source:** our own TMDB API pull. The 1,200 most-voted films per year, 1960–2025, in all languages (79,199 films). The first 700 per year carry almost all the money data; the extra 500 mostly add score data.
 - **Per film:** basic info, genres, overview, runtime, budget, revenue, collection, US certification, keywords, production companies and countries, the top 15 cast, and key crew (director, writers, producers, composer, cinematographer, editor).
 - **Raw output:** `data/raw/tmdb_movies.jsonl`. It is not committed to git.
-- **Database:** `data/movies.db` (SQLite), built from the raw pull by `make db`. It is not committed to git either. It holds the cleaned films, people, genres, companies, keywords and collections, full-text search on titles and overviews, and these views:
+- **Database:** `data/movies.db` (SQLite), built from the raw pull by `make db`, plus the `features` table from `make features`. Neither it nor the overview embedding cache (`data/overview_embeddings.npz`) is committed to git. It holds the cleaned films, people, genres, companies, keywords and collections, full-text search on titles and overviews, and these views:
   - `v_train_revenue`, `v_train_budget` and `v_train_score` for training
   - `v_directors` and `v_actors` for autocomplete
 - **Inflation:** `data/cpi_us_annual.csv` holds US CPI-U annual averages for 1960–2025 (FRED `CPIAUCNS`) and is committed. October 2025 was never published because of the government shutdown, so it is filled with the midpoint of September and November. **Add a row for each new year before pulling it**; without one, that year's 2025-dollar values stay empty.
@@ -54,15 +54,17 @@ Requirements: [uv](https://docs.astral.sh/uv/) and GNU make. uv installs Python 
 
 ```bash
 make setup                 # create .venv and install locked dependencies
+make model                 # download the MiniLM text model (about 90 MB, once)
 cp .env.example .env       # then paste your TMDB API Read Access Token into .env
 make test                  # offline tests, no network needed
-make data                  # pull films from TMDB into data/raw/ (resumable), then build data/movies.db
-make db                    # rebuild data/movies.db from the raw pull only (about 30 s)
+make data                  # pull films from TMDB (resumable), build data/movies.db, then the features table
+make db                    # rebuild data/movies.db from the raw pull only (about 30 s; drops the features table)
+make features              # build the features table (about 1 min; the first run also embeds every overview, about 8 min)
 ```
 
 | Folder       | Contents                                         |
 | ------------ | ------------------------------------------------ |
-| `ml/`        | Data pull, features, models and evaluation       |
+| `ml/`        | Data pull, features, models and evaluation; `ml/artifacts/` holds the PCA (committed) and the MiniLM files (not in git) |
 | `backend/`   | FastAPI app (later)                              |
 | `frontend/`  | React (Vite) app (later)                         |
 | `data/`      | Raw pull and database (not in git), CPI table, summaries |
@@ -98,6 +100,41 @@ There is no rule for very *high* revenue-to-budget ratios. The only films above 
 
 `notebooks/02_clean_check.ipynb` re-checks every rule and the view sizes after each build.
 
+## Features
+
+One function, `build_features(form, as_of, ctx)` in `ml/features/build.py`, turns a creator's form into model inputs. The training table uses the same function: each film is written as a form and judged at its release date. A creator's film is judged at the 1st of its release month. The form itself is defined in `ml/features/contract.py`.
+
+| Creator form | Inputs |
+| --- | --- |
+| Required | genres (1–5), release year and month, runtime, language, US certification, director, 5–10 actors in billing order, 1–5 themes |
+| Optional | production companies, countries, franchise, synopsis, budget (2025 dollars) |
+
+People, companies and the franchise can be picked from autocomplete or typed. A name that isn't in the database counts as a new person, a new company or an original film.
+
+The `features` table in `data/movies.db` has 169 features for every film. `ml/features/feature_list.json` lists each feature's source and which models may use it.
+
+| Group | Features | Notes |
+| --- | --- | --- |
+| Track record | 24 | Director, and the first 5 billed actors as max, mean and min: earlier films, years active, median earlier log revenue and score shrunk towards the typical film as if they had 4 more average films, earlier franchise films, `is_new` |
+| Companies | 33 | Top 30 in train, `company_other`, `company_unknown`, `major_studio` (9 classic Hollywood majors) |
+| Themes | 27 | Story themes grouped from the 300 most common TMDB keywords (`ml/features/themes.json`) |
+| Genres | 19 | One per TMDB genre |
+| Countries, language | 17, 16 | Top 15 in train, plus "other" (and "unknown" for countries) |
+| Synopsis | 17 | MiniLM (`all-MiniLM-L6-v2`, ONNX) reduced to 16 numbers with PCA, plus `has_synopsis` |
+| Certification | 6 | G, PG, PG-13, R, NC-17, unrated/unknown (NR and missing) |
+| Release date | 5 | Year, month, summer (May–Aug), holiday (Nov–Dec), `covid_period` |
+| Franchise | 3 | `is_franchise` (sequels only), earlier films in the collection, their median log revenue |
+| Runtime, budget | 1, 1 | `log_budget` in 2025 dollars; not allowed in the budget model |
+
+**Leak safety.** These rules are tested in `tests/test_features.py`:
+- Only films released strictly before the film's date count, so a film never counts towards itself.
+- An earlier film's revenue and score count only once it is 182 days old.
+- The typical film used for shrinkage is built from earlier films only.
+- The top-N lists, theme keywords and PCA are fitted on train films (≤2015) only.
+- A film counts as a franchise film only if its collection already had an earlier film. A first entry joins a collection only once sequels exist, which would leak its later success.
+
+`notebooks/03_features.ipynb` shows missing values, the strongest single signals and a look at the themes and synopsis numbers.
+
 ## Evaluation
 
 _Day 4._
@@ -111,7 +148,10 @@ _Day 5._
 - **The revenue model is mostly an English-language, post-1980 model.** Only 21% of English films have both budget and revenue (32% among the first 700 per year), and most other languages are under 10%. There are only 286 revenue training films from the 1960s and 471 from the 1970s.
 - **Some revenues are incomplete.** 178 training films (2.0%) earned less than 1% of their budget. Some are real flops, but others seem to record only part of the box office, probably the US share (e.g. *Flying Swords of Dragon Gate*, $128k). No rule catches these yet.
 - **Local-currency budgets are only caught when they're extreme.** The currency rule flags budgets far above their language's norm. Smaller mistakes sit near the cap: a budget entered in Brazilian reais (about 3.5 to the dollar in 2016) is only around 3.5× too high, and *The Ten Commandments: The Movie* was flagged only narrowly.
-- **US certification is missing for 65% of films**, so the creator form needs an "unrated/unknown" option.
+- **US certification is missing for 65% of films**, so the creator form has an "unrated/unknown" option (70.5% of films, counting NR).
+- **Track-record scores use today's ratings.** An earlier film's score is its current TMDB rating, not its rating when the later film came out; the pull has no rating history.
+- **COVID can't be learned from training data.** `covid_period` is always 0 in the train split, because 2020–21 films are all in the test split.
+- **Themes depend on TMDB's keywords.** Only 48% of films have a theme, and some keywords are loose: "rape" puts *The Revenant* in "sex and erotica", and "hilarious" puts some action films in "comedy and satire".
 
 ## Next steps
 
