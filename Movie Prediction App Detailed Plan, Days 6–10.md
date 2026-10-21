@@ -59,6 +59,8 @@ Day 6 ends with a calibrated budget model, revenue ranges that widen honestly wh
 
 **Done when** the test results are in the README exactly as measured and the final all-data models are saved for the API.
 
+**Outcome (2026-10-21):** done. Test (2019+): revenue MAE log 1.230 (B2 1.455), 1.266 with an estimated budget; budget 0.682 (B2 1.247); score 0.493 (B2 0.574); coverage 77–81%. $150M+ revenue films were worse than B2 (1.04 vs 0.99). Tags `pre-test` and `final-models`; the app's models are in `ml/artifacts/final/`.
+
 ## Day 7: Explanations and packaging
 
 Day 7 ends with one `predict()` call that returns budget, revenue and score ranges, the top drivers for each in plain English, and 5 comparable films, in under 400 ms.

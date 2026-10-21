@@ -19,7 +19,7 @@ A value of `0` in TMDB's `budget` or `revenue` means "unknown", not zero. See [C
 ## Working principles
 
 - **Pre-release inputs only.** Every model input must be something a creator knows before the film exists. Post-release fields (`popularity`, `vote_count`, `vote_average`) are never features.
-- **Time-based splits.** Every evaluation uses the same splits, and the test set stays locked until the end of Day 6.
+- **Time-based splits.** Every evaluation uses the same splits, and the test set was opened only once, at the end of Day 6.
 
   | Split      | Release years |
   | ---------- | ------------- |
@@ -63,17 +63,20 @@ make features              # build the features table (about 1 min; the first ru
 make tune                  # tune the LightGBM settings on backtest folds 1-2 (15 min per target, 45 min in all)
 make train                 # calibrate the ranges, then fit and save all three models to ml/artifacts/ (about 5 min)
 make evaluate              # baselines and LightGBM on validation, breakdowns and backtest -> reports/ (test split untouched)
+uv run python -m ml.models.rough           # the rough-estimate cut-offs (fitted once on Day 6, then frozen)
+uv run python -m ml.eval.final test        # the one-time test run (done on Day 6; refuses to run again)
+uv run python -m ml.eval.final all-data    # retrain the app's models on 1960-2025 -> ml/artifacts/final/ (about 1 min)
 ```
 
 | Folder       | Contents                                         |
 | ------------ | ------------------------------------------------ |
-| `ml/`        | Data pull, features, models and evaluation; `ml/artifacts/` holds the PCA and the models' settings, calibration and metadata (committed), the MiniLM files and the trained `.joblib` models (not in git; `make model`, `make train`) |
+| `ml/`        | Data pull, features, models and evaluation; `ml/artifacts/` holds the PCA and the models' settings, calibration and metadata (committed), the MiniLM files and the trained `.joblib` models (not in git; `make model`, `make train`); `ml/artifacts/final/` holds the app's all-data models |
 | `backend/`   | FastAPI app (later)                              |
 | `frontend/`  | React (Vite) app (later)                         |
 | `data/`      | Raw pull and database (not in git), CPI table, summaries |
 | `tests/`     | Offline tests                                    |
 | `notebooks/` | Exploration and check notebooks                  |
-| `reports/`   | Evaluation reports from `make evaluate` (committed) |
+| `reports/`   | Evaluation reports from `make evaluate`, the ablation and the final test run (committed) |
 
 ## Cleaning rules
 
@@ -144,7 +147,7 @@ The `features` table in `data/movies.db` has 175 features for every film. `ml/fe
 
 Every model goes through one harness, `ml/eval/`. Run `make evaluate` to write `reports/metrics.md`, `breakdowns.md`, `backtest.md` and `metrics.json`; it takes about 4.5 minutes and needs the tuned settings and calibration (`make tune`, `make train`).
 
-- **Splits.** Each model is fitted on train (≤2015) and scored on validation (2016–18). The test split (2019+) is locked behind `final=True` and is opened once, at the end of Day 6. The revenue test will be reported both with and without 2020–21.
+- **Splits.** Each model is fitted on train (≤2015) and scored on validation (2016–18). The test split (2019+) is locked behind `final=True`, which only `ml/eval/final.py` passes, and was opened once, at the end of Day 6. The revenue test will be reported both with and without 2020–21.
 - **Metrics.**
   - Revenue and budget are measured on log 2025 dollars. **MAE on log** picks models, and **within 2×** is the headline. Median % error and Spearman are also reported.
   - Score uses MAE, plus MAE weighted by log(1 + votes).
@@ -265,7 +268,7 @@ Rolling backtest, mean ± spread across the three folds:
 - **Ranges now fit the groups better.** Revenue coverage is 82–91% in every group (B2: 72–100%), and score coverage is 80–82%.
 - **An estimated budget costs revenue some accuracy, but less than having no budget at all.** Validation MAE log is 1.135 with an estimated budget, against 1.093 with the real one and 1.219 for a model with no budget input (ablation). Even estimated, it beats B2, which uses the real budget (1.316). The estimate is within 2× of the real budget for 75% of revenue films.
 - **Estimated-budget ranges are wider and slightly cautious.** They are typically 48× wide (36× with the budget given) and cover 86% of 2016–18 films, above the 80% target; every group is covered 84–94%.
-- **Revenue coverage on 2016–18 is 84%, a little above the target.** Calibrated on 2010–15, the ranges are slightly cautious for 2016–18. The test set (Day 6) gives the final figure.
+- **Revenue coverage on 2016–18 is 84%, a little above the target.** Calibrated on 2010–15, the ranges are slightly cautious for 2016–18. On the test years they are slightly narrow instead (77%; see below).
 - **The budget model learns what the baselines couldn't.** B2 budget barely beat the median; LightGBM puts 71% of films within 2× (B2: 37%). Earlier budgets of the companies, director and actors carry most of it: without them, validation MAE log rises from 0.613 to 0.667.
 - **Budget coverage on 2016–18 is 84%,** slightly cautious like revenue, but only 77% for films under $10M. Budget ranges are typically 8× wide (5× for $150M+ films, 12× under $10M and for new directors).
 - **Small films are still hard.** Under $10M, revenue MAE log is 1.34 and only 36% are within 2× (B2: 35%); budget MAE log is 0.85 (0.33 at $150M+).

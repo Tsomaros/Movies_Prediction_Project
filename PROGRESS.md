@@ -246,7 +246,7 @@
 - **Synopsis adds nothing.** Consider removing it from the creator form's "helps the prediction" messaging, or trying other text features later.
 - **Optional retune without synopsis** (`make tune`, 30 min). Tuning gained only about 1% the first time.
 
-## Day 6: Budget model, the chain and the final test run
+## Day 6: Budget model, the chain and the final test run (done 2026-10-21)
 
 - [x] 0. Update the plan document: our own CQR on folds 1–2 instead of MAPIE on 2016–18, the chain calibrated on folds 1–2, ≤2018 corrections from all three folds, all-data models reuse them, no synopsis in the budget model, no retune
 - [x] 1. Budget track-record features (`ml/features/history.py`), also tried in the revenue model: kept in revenue
@@ -255,8 +255,8 @@
 - [x] 4. Rough-estimate label
 - [x] 5. Budget comparison
 - [x] 6. Freeze (`pre-test`), retrain on ≤2018, final test run, all-data models (`final-models` tag after your review)
-- [ ] 7. Tests
-- [ ] 8. Wrap-up and commit
+- [x] 7. Tests
+- [x] 8. Wrap-up and commit
 
 ### Task 1: budget track record
 
@@ -382,3 +382,24 @@
 
 - **`save_model` takes `extra` metadata** and writes "films released 1960–2025" instead of "train split, …".
 - **The ≤2018 models aren't saved;** the test run fits and scores them in one go. The app uses the all-data models.
+
+### Task 7: tests
+
+- **Already covered in tasks 2–5:** budget ranges ordered, estimated mode never narrower than given, budget model never gets `log_budget`, saved budget model reloads identically, the chain, the rough label and the budget comparison.
+- **New `tests/test_final.py` (10 tests):**
+  - only `ml/eval/final.py` passes `final=True` (checked on the code's syntax tree, so docstrings don't count);
+  - the test run refuses a second run before touching any data;
+  - the all-data stage refuses to run without the test run's corrections;
+  - a saved chain reloads identically and reads its estimated correction from the metadata;
+  - the committed all-data metadata uses the frozen settings, tree counts, features and final corrections, trained on 1960–2025 (skipped without the files);
+  - the all-data models reload identically (skipped when the gitignored `.joblib` files are absent).
+- **Checks:** two deliberate bugs were caught (a `final=True` call added to `evaluate.py`, and the second-run guard removed). 172 tests passing.
+
+### Surprises / inputs for Day 7+
+
+- **Use the all-data models:** `Chain.load(Path("ml/artifacts/final"))` and `load_model(target, Path("ml/artifacts/final"))`. `ml/artifacts/` keeps the ≤2015 models from `make train` for evaluation.
+- **Big-budget revenue is the weak spot** ($150M+: worse than B2 on 2019+, 64% coverage). Day 7's explanations and Day 11's results page should not oversell blockbuster revenue predictions.
+- **Rough-estimate label:** 18–24% of test predictions; pass it through `predict()` per target (revenue, budget; never score).
+- **Budget comparison wording:** budgets within a few percent of an edge round to the same dollar figure (*The Shape of Water*); word these as "at the low/high end".
+- **Revenue explanations must handle both modes:** in estimated mode the budget driver is the predicted budget, not the creator's.
+- **`make evaluate` takes about 4.5 min** now (13 models with backtests); `make train` about 5 min.
