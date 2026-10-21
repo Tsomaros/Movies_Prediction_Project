@@ -13,6 +13,9 @@ __pycache__/
 # Raw TMDB pull: large, and TMDB terms limit caching to six months
 data/raw/
 
+# Built from the raw pull (same TMDB terms); rebuild with `make db`
+data/movies.db*
+
 # OS / editors
 .DS_Store
 Thumbs.db

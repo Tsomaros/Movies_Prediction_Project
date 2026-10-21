@@ -71,8 +71,8 @@ Day 2 ends with one SQLite database that keeps every released film, holds trustw
 | ------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | Incomplete films    | Keep every released film; bad money becomes NULL                                   | Browse pages and the score model still need them; each model gets its own training view |
 | Placeholder money   | Budget or revenue below $1,000 → NULL                                              | TMDB placeholders such as `7` meaning $7M; real micro-budgets survive                   |
-| Suspicious money    | Flag `money_suspect`, keep for display, exclude from financial training            | Absurd revenue/budget ratios and budgets entered in local currency                      |
-| Inflation           | Store nominal and 2025-dollar values with the `cpi` library                        | Films span 1960–2025; models and UI use 2025 dollars                                    |
+| Suspicious money    | Flag `money_suspect`, keep for display, exclude from financial training            | Token box office (revenue below 0.0001× budget) and budgets entered in local currency; no high-ratio rule, since it only caught real hits (Blair Witch, Paranormal Activity) |
+| Inflation           | Store nominal and 2025-dollar values from a committed US CPI-U table (FRED, 1960–2025) | Films span 1960–2025; models and UI use 2025 dollars; offline and fixed, unlike the `cpi` library |
 | Score reliability   | Minimum vote threshold + `log(1 + vote_count)` training weights                    | Low-vote scores are noisy; well-voted films count more                                  |
 | Still-earning films | `revenue_incomplete` for films under 6 months old at pull time; no stricter cutoff | Safety net for future re-pulls; barely applies to this pull                             |
 | COVID               | `covid_period` flag for 2020–2021                                                  | The 2019+ test set contains the collapse years                                          |
@@ -85,11 +85,11 @@ Day 2 ends with one SQLite database that keeps every released film, holds trustw
 2. **Basic cleaning (1 h).** Keep status "Released"; drop duplicate ids; trim text and fall back to the original title; parse release date into date, year and month; runtime 0 or over 600 min → NULL; 0-vote score → NULL.
 3. **Money rules (1.5 h).**
    - Below $1,000 → NULL.
-   - Ratio check: revenue ÷ budget above 1,000× or below 0.0001× → `money_suspect`.
-   - Currency check: non-English films with budgets far above their language market's cap (caps set from the Day 1 notebook) → `money_suspect`.
+   - Ratio check: revenue ÷ budget below 0.0001× → `money_suspect`.
+   - Currency check: non-English films whose 2025-dollar budget is more than 3× their language's 99th percentile (languages with fewer than 30 budgets share one non-English cap) → `money_suspect`.
    - Inflation: `budget_2025` and `revenue_2025` beside the nominal columns.
    - `revenue_incomplete` and `covid_period` flags.
-4. **Score rules (30 min).** Confirm the vote threshold (about 50) from the Day 1 notebook; store the `log(1 + vote_count)` weight per film.
+4. **Score rules (30 min).** Vote threshold of 50, confirmed from the Day 1 notebook; store the `log(1 + vote_count)` weight per film.
 5. **SQLite database (1.5 h).**
    - Tables: `movies`, `genres`, `people`, `movie_cast` (top 15), `movie_crew` (key jobs), `companies`, `keywords`, `collections`, `countries`, plus link tables.
    - Indexes for browse, filters and autocomplete; FTS5 full-text search on title and overview.
