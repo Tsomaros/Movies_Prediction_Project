@@ -60,6 +60,7 @@ make test                  # offline tests, no network needed
 make data                  # pull films from TMDB (resumable), build data/movies.db, then the features table
 make db                    # rebuild data/movies.db from the raw pull only (about 30 s; drops the features table)
 make features              # build the features table (about 1 min; the first run also embeds every overview, about 8 min)
+make evaluate              # baselines on validation, breakdowns and backtest -> reports/ (test split untouched)
 ```
 
 | Folder       | Contents                                         |
@@ -70,6 +71,7 @@ make features              # build the features table (about 1 min; the first ru
 | `data/`      | Raw pull and database (not in git), CPI table, summaries |
 | `tests/`     | Offline tests                                    |
 | `notebooks/` | Exploration and check notebooks                  |
+| `reports/`   | Evaluation reports from `make evaluate` (committed) |
 
 ## Cleaning rules
 
@@ -137,7 +139,60 @@ The `features` table in `data/movies.db` has 169 features for every film. `ml/fe
 
 ## Evaluation
 
-_Day 4._
+Every model goes through one harness, `ml/eval/`. Run `make evaluate` to write `reports/metrics.md`, `breakdowns.md`, `backtest.md` and `metrics.json`; it takes about 5 s.
+
+- **Splits.** Each model is fitted on train (≤2015) and scored on validation (2016–18). The test split (2019+) is locked behind `final=True` and is opened once, at the end of Day 6. The revenue test will be reported both with and without 2020–21.
+- **Metrics.**
+  - Revenue and budget are measured on log 2025 dollars. **MAE on log** picks models, and **within 2×** is the headline. Median % error and Spearman are also reported.
+  - Score uses MAE, plus MAE weighted by log(1 + votes).
+  - Every model predicts a 10th–90th percentile range, reported as its **coverage** (target 80%) and width.
+- **Baselines.** Each baseline's range is its own train errors (10th to 90th percentile) added to its middle prediction.
+
+  |     | Revenue | Budget | Score |
+  | --- | --- | --- | --- |
+  | B0 | global median | global median | global median |
+  | B1 | median per main genre | median per main genre | median per main genre |
+  | B2 | budget × the genre's median revenue/budget multiple | genre median × a sequel factor (sequels cost 1.45×) | genre median + 1.18 × (director's shrunk earlier score − typical score) |
+
+  The main genre is TMDB's first-listed genre. Genres with fewer than 30 train films use the global value.
+- **Breakdowns.** Validation results by budget size, English vs other languages, new vs experienced director, and sequel vs original.
+- **Rolling backtest.** Three folds: train ≤2009 → test 2010–12, ≤2012 → 2013–15, ≤2015 → 2016–18. Each fold refits the model, and a model that uses the synopsis numbers also refits their PCA on that fold's train years.
+
+### Baseline results (validation, 2016–18)
+
+| Revenue | MAE log | Within 2× | Spearman | Coverage | Range width |
+| --- | --- | --- | --- | --- | --- |
+| B0 global median | 1.890 | 24.9% | — | 78.3% | 300× |
+| B1 genre median | 1.796 | 26.2% | 0.314 | 78.6% | 240× |
+| **B2 budget × genre multiple** | **1.316** | **39.8%** | **0.709** | 79.7% | 53× |
+
+| Budget | MAE log | Within 2× | Spearman | Coverage | Range width |
+| --- | --- | --- | --- | --- | --- |
+| B0 global median | 1.272 | 35.7% | — | 83.1% | 98× |
+| B1 genre median | 1.207 | 36.7% | 0.359 | 85.1% | 74× |
+| **B2 genre median × sequel factor** | **1.193** | **37.3%** | **0.389** | 86.0% | 72× |
+
+| Score | MAE | Weighted MAE | Spearman | Coverage | Range width |
+| --- | --- | --- | --- | --- | --- |
+| B0 global median | 0.692 | 0.685 | — | 82.6% | 2.30 pts |
+| B1 genre median | 0.627 | 0.625 | 0.392 | 81.3% | 2.04 pts |
+| **B2 genre median + director** | **0.602** | **0.599** | **0.485** | 81.0% | 1.96 pts |
+
+Rolling backtest, mean ± spread across the three folds (MAE log for money, MAE for score):
+
+| | B0 | B1 | B2 |
+| --- | --- | --- | --- |
+| Revenue | 1.950 ± 0.043 | 1.876 ± 0.057 | **1.309 ± 0.012** |
+| Budget | 1.357 ± 0.064 | 1.273 ± 0.047 | **1.265 ± 0.052** |
+| Score | 0.731 ± 0.028 | 0.657 ± 0.021 | **0.621 ± 0.014** |
+
+**What the baselines show**
+- **B2 is the benchmark to beat for every target**, and the ranking holds in every backtest fold. Compared with B1, B2 lowers the validation error by 27% for revenue, 4% for score and 1% for budget.
+- **Budget is what makes B2 revenue strong.** B2 revenue uses the film's real budget, so it is a "budget known" benchmark.
+- **The budget baselines barely learn.** They predict close to the median and do well only on $10–50M films (70% within 2×). At $150M+, not one film lands within 2×.
+- **One range for every film fits no group well.** B2 revenue covers 80% overall, but 100% of $150M+ films and only 72% of films under $10M and of new directors' films. The Day 5 quantile models give each film its own range.
+- **Small films, new directors and non-English films are the hardest groups; sequels are the easiest** (48% of sequels are within 2× for revenue).
+- **The director's track record helps the score only where it exists.** MAE falls from 0.61 to 0.57 for experienced directors and from 0.63 to 0.54 for sequels, but stays at 0.66 for new directors.
 
 ## Results
 
@@ -151,6 +206,8 @@ _Day 5._
 - **US certification is missing for 65% of films**, so the creator form has an "unrated/unknown" option (70.5% of films, counting NR).
 - **Track-record scores use today's ratings.** An earlier film's score is its current TMDB rating, not its rating when the later film came out; the pull has no rating history.
 - **COVID can't be learned from training data.** `covid_period` is always 0 in the train split, because 2020–21 films are all in the test split.
+- **The revenue benchmark assumes a known budget.** B2 revenue uses each film's real budget. In the app, the budget is sometimes a prediction (Day 6), which will make revenue predictions less accurate than these numbers.
+- **Coverage close to 80% overall can hide groups that are far off.** For example, B2 revenue covers 100% of $150M+ films but 72% of films under $10M. `reports/breakdowns.md` has the coverage for each group.
 - **Themes depend on TMDB's keywords.** Only 48% of films have a theme, and some keywords are loose: "rape" puts *The Revenant* in "sex and erotica", and "hilarious" puts some action films in "comedy and satire".
 
 ## Next steps

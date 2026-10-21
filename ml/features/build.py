@@ -111,7 +111,8 @@ class FilmForms:
             "collection_id, budget_2025, overview FROM movies WHERE release_date IS NOT NULL", con).set_index("id")
         return cls(
             movies=movies,
-            genres=lists("SELECT mg.movie_id, g.name FROM movie_genres mg JOIN genres g ON g.id = mg.genre_id ORDER BY g.name"),
+            genres=lists("SELECT mg.movie_id, g.name FROM movie_genres mg JOIN genres g ON g.id = mg.genre_id "
+                         "ORDER BY mg.movie_id, mg.ord"),  # TMDB's order: the first is the main genre
             directors=lists("SELECT movie_id, person_id FROM movie_crew WHERE job = 'Director' ORDER BY movie_id, person_id"),
             actors=lists("SELECT movie_id, person_id FROM movie_cast ORDER BY movie_id, ord"),
             companies=lists("SELECT movie_id, company_id FROM movie_companies ORDER BY movie_id, company_id"),

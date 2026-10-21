@@ -109,9 +109,9 @@ def flatten(records: list[dict[str, Any]]) -> dict[str, pd.DataFrame]:
         movies.append({**{c: r.get(c) for c in MOVIE_COLUMNS}, "collection_id": collection["id"] if collection else None})
         if collection:
             collections.append(collection)
-        for g in r.get("genres", []):
+        for i, g in enumerate(r.get("genres", [])):
             genres.append(g)
-            movie_genres.append((mid, g["id"]))
+            movie_genres.append((mid, g["id"], i))  # TMDB's order; ord 0 is the main genre
         for c in r.get("production_companies", []):
             companies.append(c)
             movie_companies.append((mid, c["id"]))
@@ -136,7 +136,9 @@ def flatten(records: list[dict[str, Any]]) -> dict[str, pd.DataFrame]:
         "keywords": _entities(keywords, ["name"]),
         "collections": _entities(collections, ["name"]),
         "people": _entities(people, ["name"]),
-        "movie_genres": _links(movie_genres, ["movie_id", "genre_id"]),
+        "movie_genres": _links(movie_genres, ["movie_id", "genre_id", "ord"])
+        .drop_duplicates(["movie_id", "genre_id"])  # a genre listed twice keeps its first position
+        .reset_index(drop=True),
         "movie_companies": _links(movie_companies, ["movie_id", "company_id"]),
         "movie_keywords": _links(movie_keywords, ["movie_id", "keyword_id"]),
         # Cast keeps one row per film and actor: the lowest order (an actor can play two parts).

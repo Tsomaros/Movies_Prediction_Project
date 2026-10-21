@@ -75,6 +75,7 @@ CREATE TABLE movies (
 );
 
 CREATE TABLE movie_genres    (movie_id INTEGER REFERENCES movies(id), genre_id INTEGER REFERENCES genres(id),
+                              ord INTEGER,  -- TMDB's order; 0 is the main genre
                               PRIMARY KEY (movie_id, genre_id));
 CREATE TABLE movie_companies (movie_id INTEGER REFERENCES movies(id), company_id INTEGER REFERENCES companies(id),
                               PRIMARY KEY (movie_id, company_id));

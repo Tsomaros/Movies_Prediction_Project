@@ -132,16 +132,7 @@ class History:
 
     @classmethod
     def from_db(cls, con: sqlite3.Connection) -> History:
-        films = pd.read_sql_query(
-            """
-            SELECT id, release_date, collection_id,
-                   CASE WHEN budget IS NOT NULL AND revenue IS NOT NULL AND NOT money_suspect
-                             AND NOT revenue_incomplete THEN LN(revenue_2025) END AS log_revenue,
-                   CASE WHEN score_ok THEN vote_average END AS score
-            FROM movies WHERE release_date IS NOT NULL
-            """,  # revenue rule = v_train_revenue, score rule = v_train_score
-            con,
-        )
+        films = load_films(con)
         credits = pd.read_sql_query(
             """
             SELECT DISTINCT person_id, movie_id, 'director' AS role FROM movie_crew WHERE job = 'Director'
@@ -202,6 +193,28 @@ class History:
             out.update({f"actors_{k}_max": float(values.max()), f"actors_{k}_mean": float(values.mean()),
                         f"actors_{k}_min": float(values.min())})
         return out
+
+
+def load_films(con: sqlite3.Connection) -> pd.DataFrame:
+    """Every dated film with the revenue and score it may contribute (NaN when unusable)."""
+    return pd.read_sql_query(
+        """
+        SELECT id, release_date, collection_id,
+               CASE WHEN budget IS NOT NULL AND revenue IS NOT NULL AND NOT money_suspect
+                         AND NOT revenue_incomplete THEN LN(revenue_2025) END AS log_revenue,
+               CASE WHEN score_ok THEN vote_average END AS score
+        FROM movies WHERE release_date IS NOT NULL
+        """,  # revenue rule = v_train_revenue, score rule = v_train_score
+        con,
+    )
+
+
+def typical_at(films: pd.DataFrame, days: np.ndarray) -> pd.DataFrame:
+    """The typical film's log revenue and score at each day, from earlier films only (the shrinkage targets)."""
+    films = films.assign(day=pd.to_datetime(films["release_date"]).values.astype("datetime64[D]").astype(np.int64))
+    revenue, score = _ExpandingMedian(*_available(films, "log_revenue")), _ExpandingMedian(*_available(films, "score"))
+    return pd.DataFrame({"typical_revenue": [revenue.at(int(d)) for d in days],
+                         "typical_score": [score.at(int(d)) for d in days]})
 
 
 def _sequel_flags(films: pd.DataFrame) -> np.ndarray:

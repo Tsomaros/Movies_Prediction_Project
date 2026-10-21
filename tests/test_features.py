@@ -233,6 +233,12 @@ def test_film_to_form_is_a_valid_creator_form(tmp_path):
     assert contract.validate(form, themes=ctx.themes)[1] == {}
 
 
+def test_film_to_form_lists_genres_in_tmdb_order(tmp_path):
+    genres = [{"id": 53, "name": "Thriller"}, {"id": 28, "name": "Action"}, {"id": 18, "name": "Drama"}]
+    con = make_db(tmp_path, [film(1, genres=genres)])
+    assert film_to_form(1, FilmForms.from_db(con), context(con))["genres"] == ["Thriller", "Action", "Drama"]
+
+
 def test_later_films_and_the_films_own_results_do_not_change_its_features(tmp_path):
     base = target_row(make_db(tmp_path, RECORDS, "base.db"), tmp_path)
     changed = [dict(r) for r in RECORDS]

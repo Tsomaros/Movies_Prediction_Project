@@ -1,4 +1,4 @@
-.PHONY: setup model data db features test
+.PHONY: setup model data db features evaluate test
 
 # Create .venv and install the locked dependencies (then `make model` for the text model)
 setup:
@@ -21,6 +21,10 @@ db:
 # Build the features table in data/movies.db (needs `make model`; new overviews are embedded, the rest is cached)
 features:
 	uv run python -m ml.features.build
+
+# Evaluate every model on validation, breakdowns and the rolling backtest; writes reports/ (test split untouched)
+evaluate:
+	uv run python -m ml.eval.evaluate
 
 # Run the offline test suite
 test:

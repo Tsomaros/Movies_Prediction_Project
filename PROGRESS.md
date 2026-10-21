@@ -144,3 +144,49 @@
 - Director experience isn't linear: median revenue peaks at 6–10 earlier films ($58M) and dips at 11+ ($43M).
 - 16 synopsis numbers keep 28.5% of the variance; try 32 on Day 5 if the synopsis helps.
 - An earlier film's score is its current TMDB rating, not its rating at the time (README Limitations).
+
+## Day 4: Baselines and evaluation (done 2026-10-21)
+
+- [x] 0. Update the plan document: main genre = TMDB's first genre, PCA refit per backtest fold, B2 fitted per genre, ranges from train residuals
+- [x] 1. Genre order: `movie_genres.ord` in `clean.py`/`build_db.py`, TMDB order in `film_to_form`; rebuilt; features table unchanged (exact)
+- [x] 2. Split module (`ml/eval/splits.py`): views + features, test lock (`final=True`), COVID exclusion, 3 folds
+- [x] 3. Metrics (`ml/eval/metrics.py`)
+- [x] 4. Baselines (`ml/models/baselines.py`): B0–B2 for revenue, budget and score
+- [x] 5. Harness and breakdowns (`ml/eval/evaluate.py`)
+- [x] 6. Rolling backtest with per-fold synopsis PCA (`ml/eval/backtest.py`)
+- [x] 7. Reports and `make evaluate` (`reports/`)
+- [x] 8. Tests (`tests/test_eval.py`, 20 tests; 117 total passing)
+- [x] 9. Run and review
+- [x] 10. Wrap-up and commit
+
+### Results (validation 2016–18; backtest mean over 3 folds)
+
+| Model | Revenue MAE log / within 2× | Budget MAE log / within 2× | Score MAE |
+| --- | --- | --- | --- |
+| B0 | 1.890 / 24.9% | 1.272 / 35.7% | 0.692 |
+| B1 | 1.796 / 26.2% | 1.207 / 36.7% | 0.627 |
+| B2 | **1.316 / 39.8%** | **1.193 / 37.3%** | **0.602** |
+| B2 backtest | 1.309 ± 0.012 | 1.265 ± 0.052 | 0.621 ± 0.014 |
+
+- `make evaluate` runs all 9 baselines in about 5 s. B2 coverage is 80% (revenue), 86% (budget) and 81% (score).
+- Fitted B2 values: revenue multiples from 0.82× (History) to 3.86× (Documentary), 1.69× overall; sequels cost 1.45× their genre median; director weight 1.18.
+
+### Changes from the plan
+
+- **`History` gained `load_films` and `typical_at`**, so B2 score can use the typical score at each film's date. The track-record features are unchanged.
+- **A fold's PCA is fitted on every film from its train years with an overview**, as the saved PCA was, not only on the model's view. As a result, fold 3 reproduces the saved PCA exactly.
+- **Spearman returns empty (—) for constant predictions** (B0) instead of raising a warning.
+- **Peek disclosed:** while building the split module, the revenue test split was loaded once with `final=True`, to count rows (1,485; 1,163 without 2020–21). No targets or predictions were looked at.
+
+### Checks
+
+- Two deliberate bugs were caught by the tests: an unlocked test split and a fold PCA fitted on every year.
+- Every breakdown's groups add up to the validation total, and the hand-computed metric examples match exactly.
+
+### Surprises / inputs for Day 5+
+
+- **B2 revenue uses the real budget**, so it's a "budget known" benchmark. The Day 6 chain must be compared fairly: with predicted budgets, revenue error will rise.
+- **The budget baselines barely beat the median** (1% over B1). At $150M+, 0% of films are within 2× and B2 covers 25%; the budget model has the most room to improve.
+- **One range for every film fits no group.** B2 revenue covers 100% of $150M+ films and 72% of films under $10M and of new directors' films. Day 5's quantile models should fix this; check group coverage, not just the overall figure.
+- New directors and small films are the hardest groups for every target; sequels are the easiest.
+- The score baseline's director term helps only experienced directors (0.61 → 0.57); new directors stay at 0.66.

@@ -188,6 +188,13 @@ def test_flatten_keeps_most_common_spelling_and_one_cast_row_per_actor():
     assert cast[cast["movie_id"] == 1][["person_id", "character", "ord"]].values.tolist() == [[50, "Twin 2", 0]]
 
 
+def test_flatten_keeps_tmdb_genre_order():
+    genres = [{"id": 80, "name": "Crime"}, {"id": 53, "name": "Thriller"}, {"id": 18, "name": "Drama"},
+              {"id": 53, "name": "Thriller"}]  # listed twice: keeps its first position
+    links = flatten([film(1, genres=genres)])["movie_genres"]
+    assert links.sort_values("ord")[["genre_id", "ord"]].values.tolist() == [[80, 0], [53, 1], [18, 2]]
+
+
 def test_report_counts_every_rule():
     _, report = clean([film(1, budget=7), film(2, runtime=0), film(3, vote_count=10)], TEST_CPI)
     assert report["films"] == 3

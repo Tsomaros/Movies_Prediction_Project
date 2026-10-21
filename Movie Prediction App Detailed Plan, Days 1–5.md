@@ -167,6 +167,10 @@ Day 4 ends with one evaluation harness that every model goes through, honest bas
 | Baselines        | B0 global median, B1 genre median, B2 simple rules                                     | B2 is the tough, credible benchmark                                     |
 | Breakdowns       | Included on Day 4                                                                      | Feed the Limitations section and the results-page note                  |
 | Rolling backtest | Included on Day 4                                                                      | Shows stability over time; cut line: run on baselines only if over time |
+| Main genre       | TMDB's first-listed genre: `movie_genres` gets an `ord` column and the database is rebuilt; on the form, the first genre picked; films with no genre form a "none" group | Matches TMDB; the raw pull already keeps the order |
+| Backtest refits  | Synopsis PCA refit per fold from the cached embeddings (fold train years only); vocab and hand-named themes stay as they are | PCA is cheap to refit; vocab and themes don't use targets, so the overlap is small and noted |
+| B2 strength      | Fitted per main genre on train (fallback to global below 30 films); details in the Baselines table | A tougher, more credible benchmark                                       |
+| Ranges           | Every baseline's range is its median plus the 10th/90th percentiles of its own train residuals (log space for money) | Coverage then means something for every baseline                        |
 
 ### Metrics
 
@@ -182,10 +186,11 @@ Day 4 ends with one evaluation harness that every model goes through, honest bas
 | --- | --------------------------------------- | ------------------------------- | ------------------------------------------------------- |
 | B0  | Global median                           | Global median                   | Global median                                           |
 | B1  | Median per main genre                   | Median per main genre           | Median per main genre                                   |
-| B2  | Typical multiple × budget, fit on train | Genre median × franchise factor | Genre median adjusted by the director's earlier average |
+| B2  | Budget × the main genre's median revenue/budget multiple, fit on train | Genre median × a sequel factor (median sequel budget vs its genre median, fit on train) | Genre median + a fitted weight × (director's shrunk earlier score − typical score at that date) |
 
 ### Tasks
 
+0. **Update this plan (5 min)** with the decisions above. Then **genre order (30 min):** keep TMDB's genre position in `clean.py`/`build_db.py` (`movie_genres.ord`) and in `film_to_form`; rebuild with `make db` and `make features`, and check the features table is unchanged.
 1. **Split module (45 min), `ml/eval/splits.py`.** Train ≤2015, validation 2016–18, test 2019+ behind a `final=True` guard; revenue test with and without 2020–21; each model uses its own Day 2 training view.
 2. **Metrics (1 h), `ml/eval/metrics.py`.** The metrics above.
 3. **Baselines (1.5 h), `ml/models/baselines.py`.** B0–B2 for all three targets; ranges from training percentiles so coverage applies too.
@@ -200,7 +205,7 @@ Day 4 ends with one evaluation harness that every model goes through, honest bas
 
    All folds stay before 2019; PCA and baseline multiples refit per fold; metrics per fold plus mean and spread.
 
-6. **Reports (30 min).** `reports/metrics.json`, `metrics.md` (README table), `breakdowns.md`, `backtest.md`.
+6. **Reports (30 min).** `reports/metrics.json`, `metrics.md` (README table), `breakdowns.md`, `backtest.md`; one command, `make evaluate`. Results are shown for review before they go into the README.
 7. **Tests (45 min).** Metrics on hand-computed examples; the split guard; no training row on or after its fold's test start.
 8. **Wrap-up (15 min).** README Evaluation section with baseline results, `PROGRESS.md`, commit.
 
