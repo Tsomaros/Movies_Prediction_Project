@@ -11,7 +11,7 @@
 
 The features table's synopsis PCA was fitted on films up to 2015, so folds 1 and 2 would see their
 test years through it. A model that uses the synopsis numbers sets `uses_synopsis = True` and gets
-fold-fitted ones instead; baselines don't use them. Like the saved PCA, a fold's PCA is fitted on
+fold-fitted ones instead (a `synopsis_components` attribute asks for more than 16); baselines don't use them. Like the saved PCA, a fold's PCA is fitted on
 every film from its train years that has an overview, not only the films in the model's view.
 """
 
@@ -28,7 +28,7 @@ import pandas as pd
 from ml.data.build_db import DB_FILE
 from ml.eval.evaluate import score
 from ml.eval.splits import FOLDS, fold_data
-from ml.features.synopsis import EMBEDDINGS_FILE, FEATURE_NAMES, fit_pca
+from ml.features.synopsis import EMBEDDINGS_FILE, FEATURE_NAMES, N_COMPONENTS, fit_pca
 
 SYNOPSIS_COLUMNS = FEATURE_NAMES[:-1]  # synopsis_00..15 (has_synopsis doesn't change)
 
@@ -46,21 +46,28 @@ def _embeddings(cache: str, db_path: str) -> pd.DataFrame:
     return pd.DataFrame({"movie_id": ids, "year": [years.get(int(i)) for i in ids], "vector": list(vectors)})
 
 
+def synopsis_columns(n_components: int = N_COMPONENTS) -> list[str]:
+    return [f"synopsis_{i:02d}" for i in range(n_components)]
+
+
 def refit_synopsis(train: pd.DataFrame, test: pd.DataFrame, train_last: int,
-                   cache: Path = EMBEDDINGS_FILE, db_path: Path = DB_FILE) -> tuple[pd.DataFrame, pd.DataFrame]:
+                   cache: Path = EMBEDDINGS_FILE, db_path: Path = DB_FILE,
+                   n_components: int = N_COMPONENTS) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """n_components above 16 adds synopsis_16.. columns (the Day 5 ablation's 32-number row)."""
     emb = _embeddings(str(cache), str(db_path))
     fit_on = np.stack(emb.loc[emb["year"] <= train_last, "vector"].to_numpy())
-    pca = fit_pca(fit_on)
+    pca = fit_pca(fit_on, n_components)
     mean, components = np.array(pca["mean"], dtype=np.float32), np.array(pca["components"], dtype=np.float32)
     vector_of = dict(zip(emb["movie_id"].tolist(), emb["vector"]))
+    columns = synopsis_columns(n_components)
 
     def apply(df: pd.DataFrame) -> pd.DataFrame:
         df = df.copy()
-        values = np.zeros((len(df), len(SYNOPSIS_COLUMNS)))
+        values = np.zeros((len(df), len(columns)))
         for i, (movie_id, has) in enumerate(zip(df["movie_id"], df["has_synopsis"])):
             if has and movie_id in vector_of:
                 values[i] = (vector_of[movie_id] - mean) @ components.T
-        df[SYNOPSIS_COLUMNS] = values
+        df[columns] = values
         return df
 
     return apply(train), apply(test)
@@ -72,7 +79,8 @@ def backtest(model_factory: Callable[[], Any], target: str) -> dict[str, Any]:
         train, test = fold_data(target, fold)
         model = model_factory()
         if getattr(model, "uses_synopsis", False):
-            train, test = refit_synopsis(train, test, fold.train_last)
+            train, test = refit_synopsis(train, test, fold.train_last,
+                                         n_components=getattr(model, "synopsis_components", N_COMPONENTS))
         model.fit(train)
         folds.append({
             "fold": fold.name,

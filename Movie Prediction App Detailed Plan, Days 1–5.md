@@ -10,7 +10,7 @@ Week one (Days 1–5) takes the project from an empty repo to tuned, calibrated 
 
 **Outputs.** Every prediction is a range: a low end (10th percentile), an expected value (50th) and a high end (90th). Ranges are calibrated so that about 80% of real outcomes fall inside them.
 
-**Stack.** Python, pandas, LightGBM, MAPIE, Optuna, ONNX Runtime, SQLite, FastAPI and React (Vite). All data comes from our own TMDB API pull.
+**Stack.** Python, pandas, LightGBM, Optuna, ONNX Runtime, SQLite, FastAPI and React (Vite). All data comes from our own TMDB API pull.
 
 **Working principles**
 
@@ -220,9 +220,15 @@ Day 5 ends with tuned, calibrated LightGBM models for revenue and score, compare
 | Topic                | Decision                                                                           | Why                                                                    |
 | -------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | Model shape          | Three LightGBM quantile models per target: 10th, 50th, 90th percentile             | One method everywhere; the 50th is the "expected" value                |
-| Range calibration    | Conformalized quantile regression (MAPIE) on 2016–18                               | Plain quantile ranges are often too narrow; this corrects them         |
-| Tuning               | Optuna with a 15-minute limit per target, on backtest folds                        | Quick and shows method                                                 |
+| Range calibration    | Conformalized quantile regression, our own short function (no MAPIE): widen the 10th–90th range by the 80% quantile of `max(p10 − y, y − p90)` | Plain quantile ranges are often too narrow; this corrects them; no new dependency and easy to test |
+| Calibration data     | Out-of-fold predictions on backtest folds 1–2 (test years 2010–15)                 | 2016–18 is never used to fit, stop or calibrate, so its coverage is an honest check |
+| Tuning               | Optuna with a 15-minute limit per target, on backtest folds 1–2 (≤2015)            | Quick and shows method                                                 |
+| Tree count           | Found by early stopping on the fold test years during tuning; the final model trains on all of train with that fixed count | Validation never helps fit the model                                   |
+| Synopsis size        | Extra ablation row with 32 synopsis numbers (fold-refit PCA); the features table keeps 16 unless the row clearly helps | Day 4 follow-up, tested without changing the table                     |
+| Synopsis in the model | Dropped from both models after the ablation (no gain with 16 or 32 numbers); the features table still stores 16 | Decided by Dimitris after the ablation table                          |
+| Model files          | `.joblib` models gitignored (33 MB) and rebuilt with `make train`; settings, calibration and metadata JSON committed | Too large to commit on every retrain                                   |
 | Monotone constraints | Non-decreasing in budget, director's earlier revenue and franchise earlier revenue | Raising the budget never lowers revenue, so "what if" behaves sensibly |
+| Revenue model shape  | LightGBM refuses monotone constraints on quantile and L1 objectives, so revenue uses a monotone Huber middle model, plus 10th/90th quantile models of its residual that leave out the three monotone columns (range = middle + residual quantiles) | All three outputs stay monotone while the range width still varies per film; score keeps three plain quantile models |
 | Score inputs         | No budget                                                                          | Keeps the score model independent of the chain                         |
 | Ablation             | Full table on Day 5, no cut line                                                   | Answers "is the fancy part worth it?"                                  |
 | Experiment log       | `reports/experiments.csv`                                                          | Simpler than MLflow, enough for three weeks                            |
@@ -233,9 +239,9 @@ Day 5 ends with tuned, calibrated LightGBM models for revenue and score, compare
 1. **Training module (1.5 h), `ml/models/train.py`.**
    - Revenue: log revenue in 2025 dollars, with real log budget as an input during training.
    - Score: `vote_average`, weighted by `log(1 + vote_count)`, no budget input.
-   - Monotone constraints on revenue as decided; outputs sorted if they cross; score clipped to 0–10; early stopping everywhere.
-2. **Tuning (1 h).** Optuna, 15 minutes per target, on the backtest folds (≤2015); the middle model is tuned and the 10th/90th reuse its settings; every trial logged.
-3. **Conformal calibration (1 h).** MAPIE on 2016–18 targeting 80% coverage. Report coverage before calibration on the backtest folds; true calibrated coverage comes from the test set at the end of Day 6.
+   - Monotone constraints on revenue as decided; outputs sorted if they cross; score clipped to 0–10; a fixed tree count from tuning.
+2. **Tuning (1 h).** Optuna, 15 minutes per target, on backtest folds 1–2 (≤2015); the middle model is tuned (early stopping on the fold test years sets the tree count) and the 10th/90th reuse its settings; every trial logged.
+3. **Conformal calibration (1 h).** Own CQR function on fold 1–2 out-of-fold predictions, targeting 80% coverage. Report coverage before and after the correction on those folds, then on 2016–18 as an honest check; final calibrated coverage comes from the test set at the end of Day 6 (the ≤2018 model takes its correction from all three folds).
 4. **Evaluation (45 min).** LightGBM rows next to B0–B2 in the Day 4 harness: validation, backtest folds and breakdowns.
 5. **Ablation table (1 h).**
 
@@ -243,6 +249,7 @@ Day 5 ends with tuned, calibrated LightGBM models for revenue and score, compare
    | ------------------------ | ------- | ----- |
    | Full model               | ✓       | ✓     |
    | No synopsis embeddings   | ✓       | ✓     |
+   | 32 synopsis numbers      | ✓       | ✓     |
    | No track-record features | ✓       | ✓     |
    | No themes                | ✓       | ✓     |
    | No budget                | ✓       | —     |
@@ -272,5 +279,5 @@ Day 5 ends with tuned, calibrated LightGBM models for revenue and score, compare
 - [How IMDb determines the Top 250](https://neurobiology.substack.com/p/how-imdb-determines-top-250_27): Bayesian weighting of low-vote scores
 - [Presenting a Larger Up-to-date Movie Dataset (arXiv 2110.07039)](https://export.arxiv.org/abs/2110.07039): star power and revenue
 - [Does Story Really Matter In The Movie Industry? (EconPapers)](https://econpapers.repec.org/paper/iikwpaper/284.htm): counter-evidence on track record
-- [MAPIE ConformalizedQuantileRegressor](https://mapie.readthedocs.io/en/stable/generated/mapie.regression.ConformalizedQuantileRegressor.html): calibrated ranges
+- [MAPIE ConformalizedQuantileRegressor](https://mapie.readthedocs.io/en/stable/generated/mapie.regression.ConformalizedQuantileRegressor.html): calibrated ranges (the method our own function follows)
 - [Optuna LightGBMTuner](https://optuna.readthedocs.io/en/v3.0.0/reference/generated/optuna.integration.lightgbm.LightGBMTuner.html): time-limited tuning

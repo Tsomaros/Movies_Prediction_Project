@@ -19,6 +19,10 @@ data/movies.db*
 # MiniLM model files (about 90 MB); download with `make model`
 ml/artifacts/minilm/
 
+# Trained LightGBM models (about 33 MB, change on every retrain); rebuild with `make train`.
+# Their settings, calibration and metadata (*.json) are committed.
+ml/artifacts/*.joblib
+
 # Overview embedding cache (about 120 MB, TMDB text); rebuilt by `make features`
 data/overview_embeddings*.npz
 

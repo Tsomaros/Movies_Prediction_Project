@@ -539,6 +539,187 @@
      "width": 0.45130813848659873
     }
    }
+  },
+  {
+   "name": "LightGBM (tuned, calibrated)",
+   "target": "revenue",
+   "validation": {
+    "n": 886,
+    "mae_log": 1.113473303930391,
+    "median_pct_error": 68.83490372147591,
+    "within_2x": 0.45598194130925507,
+    "spearman": 0.794375162537348,
+    "coverage": 0.8318284424379232,
+    "width": 36.74137108765394
+   },
+   "breakdowns": {
+    "budget size": {
+     "<$10M": {
+      "n": 296,
+      "mae_log": 1.3474722605409122,
+      "median_pct_error": 74.64860704971359,
+      "within_2x": 0.375,
+      "spearman": 0.5440355955462862,
+      "coverage": 0.8209459459459459,
+      "width": 76.28940381358521
+     },
+     "$10-50M": {
+      "n": 389,
+      "mae_log": 1.1627122947931787,
+      "median_pct_error": 70.92699092299037,
+      "within_2x": 0.4267352185089974,
+      "spearman": 0.5966758944604625,
+      "coverage": 0.8251928020565553,
+      "width": 35.3931698742731
+     },
+     "$50-150M": {
+      "n": 134,
+      "mae_log": 0.7517928906979632,
+      "median_pct_error": 58.27214005326837,
+      "within_2x": 0.6119402985074627,
+      "spearman": 0.5382336438110201,
+      "coverage": 0.8507462686567164,
+      "width": 14.682969735756364
+     },
+     "$150M+": {
+      "n": 67,
+      "mae_log": 0.5171675840916845,
+      "median_pct_error": 46.02775677796205,
+      "within_2x": 0.6716417910447762,
+      "spearman": 0.4403384148774843,
+      "coverage": 0.8805970149253731,
+      "width": 9.109920188821725
+     }
+    },
+    "language": {
+     "English": {
+      "n": 639,
+      "mae_log": 1.110524215779728,
+      "median_pct_error": 69.2430477577362,
+      "within_2x": 0.4569640062597809,
+      "spearman": 0.8301681326568903,
+      "coverage": 0.8231611893583725,
+      "width": 33.753269429794955
+     },
+     "other languages": {
+      "n": 247,
+      "mae_log": 1.1211027263120663,
+      "median_pct_error": 67.74753070258424,
+      "within_2x": 0.4534412955465587,
+      "spearman": 0.5959219508699474,
+      "coverage": 0.854251012145749,
+      "width": 44.24933825576521
+     }
+    },
+    "director": {
+     "new director": {
+      "n": 159,
+      "mae_log": 1.3439072288108522,
+      "median_pct_error": 70.75644218889863,
+      "within_2x": 0.4025157232704403,
+      "spearman": 0.722459398137091,
+      "coverage": 0.8301886792452831,
+      "width": 78.62028129972185
+     },
+     "experienced director": {
+      "n": 727,
+      "mae_log": 1.0630757880349395,
+      "median_pct_error": 68.2972766728694,
+      "within_2x": 0.4676753782668501,
+      "spearman": 0.7958113318409532,
+      "coverage": 0.8321870701513068,
+      "width": 32.18890146143448
+     }
+    },
+    "franchise": {
+     "sequel": {
+      "n": 137,
+      "mae_log": 0.8084077775548008,
+      "median_pct_error": 53.570285509482574,
+      "within_2x": 0.6058394160583942,
+      "spearman": 0.8913976888756137,
+      "coverage": 0.8102189781021898,
+      "width": 14.03809927644243
+     },
+     "original": {
+      "n": 749,
+      "mae_log": 1.1692730063515606,
+      "median_pct_error": 70.90299262973949,
+      "within_2x": 0.42857142857142855,
+      "spearman": 0.7498280934158867,
+      "coverage": 0.835781041388518,
+      "width": 42.37962309636909
+     }
+    }
+   },
+   "backtest_note": "Range correction learned on folds 1-2, so coverage there is fitted, not tested; fold 3 (2016-18) is the honest check. Settings tuned on folds 1-2 as well.",
+   "backtest": {
+    "folds": [
+     {
+      "fold": "fold 1",
+      "train_years": "<=2009",
+      "test_years": "2010-2012",
+      "train_n": 6202,
+      "metrics": {
+       "n": 943,
+       "mae_log": 1.1253822430720661,
+       "median_pct_error": 62.65802861409313,
+       "within_2x": 0.471898197242842,
+       "spearman": 0.8006630674667995,
+       "coverage": 0.7910922587486744,
+       "width": 32.40760080717049
+      }
+     },
+     {
+      "fold": "fold 2",
+      "train_years": "<=2012",
+      "test_years": "2013-2015",
+      "train_n": 7145,
+      "metrics": {
+       "n": 905,
+       "mae_log": 1.150538122117375,
+       "median_pct_error": 63.29173577501297,
+       "within_2x": 0.450828729281768,
+       "spearman": 0.8041113661044682,
+       "coverage": 0.8110497237569061,
+       "width": 39.05893602508091
+      }
+     },
+     {
+      "fold": "fold 3",
+      "train_years": "<=2015",
+      "test_years": "2016-2018",
+      "train_n": 8050,
+      "metrics": {
+       "n": 886,
+       "mae_log": 1.113473303930391,
+       "median_pct_error": 68.83490372147591,
+       "within_2x": 0.45598194130925507,
+       "spearman": 0.794375162537348,
+       "coverage": 0.8318284424379232,
+       "width": 36.74137108765394
+      }
+     }
+    ],
+    "mean": {
+     "n": 911.3333333333334,
+     "mae_log": 1.1297978897066108,
+     "median_pct_error": 64.92822270352734,
+     "within_2x": 0.45956962261128836,
+     "spearman": 0.7997165320362053,
+     "coverage": 0.811323474981168,
+     "width": 36.06930263996844
+    },
+    "std": {
+     "n": 23.697163449568293,
+     "mae_log": 0.01545042908162353,
+     "median_pct_error": 2.774528623442193,
+     "within_2x": 0.0089678764816204,
+     "spearman": 0.004030745337703597,
+     "coverage": 0.01663160385512361,
+     "width": 2.756667316892466
+    }
+   }
   }
  ],
  "budget": [
@@ -1471,6 +1652,137 @@
      "spearman": 0.021129439360517907,
      "coverage": 0.00938735880702083,
      "width": 0.018859233543804973
+    }
+   }
+  },
+  {
+   "name": "LightGBM (tuned, calibrated)",
+   "target": "score",
+   "validation": {
+    "n": 3600,
+    "mae": 0.49642272837621,
+    "weighted_mae": 0.5005985142805052,
+    "spearman": 0.6868988474819686,
+    "coverage": 0.8097222222222222,
+    "width": 1.684557811956916
+   },
+   "breakdowns": {
+    "language": {
+     "English": {
+      "n": 2154,
+      "mae": 0.4882869850070915,
+      "weighted_mae": 0.49294432585794634,
+      "spearman": 0.6993692421736604,
+      "coverage": 0.8156917363045497,
+      "width": 1.69627853089953
+     },
+     "other languages": {
+      "n": 1446,
+      "mae": 0.508541947751785,
+      "weighted_mae": 0.5135241398708416,
+      "spearman": 0.6338284003089463,
+      "coverage": 0.8008298755186722,
+      "width": 1.6670983177643908
+     }
+    },
+    "director": {
+     "new director": {
+      "n": 1222,
+      "mae": 0.527927484623024,
+      "weighted_mae": 0.5323201936140026,
+      "spearman": 0.695934279604646,
+      "coverage": 0.8101472995090017,
+      "width": 1.7919397786139675
+     },
+     "experienced director": {
+      "n": 2378,
+      "mae": 0.4802331522056437,
+      "weighted_mae": 0.486054445467286,
+      "spearman": 0.6809545810415911,
+      "coverage": 0.8095037846930193,
+      "width": 1.6293766667698188
+     }
+    },
+    "franchise": {
+     "sequel": {
+      "n": 347,
+      "mae": 0.47254253649432243,
+      "weighted_mae": 0.4709410715674632,
+      "spearman": 0.7161735868920005,
+      "coverage": 0.7982708933717579,
+      "width": 1.5687964954697076
+     },
+     "original": {
+      "n": 3253,
+      "mae": 0.4989700467232789,
+      "weighted_mae": 0.5040426876983339,
+      "spearman": 0.6839925958961722,
+      "coverage": 0.8109437442360897,
+      "width": 1.6969061601957913
+     }
+    }
+   },
+   "backtest_note": "Range correction learned on folds 1-2, so coverage there is fitted, not tested; fold 3 (2016-18) is the honest check. Settings tuned on folds 1-2 as well.",
+   "backtest": {
+    "folds": [
+     {
+      "fold": "fold 1",
+      "train_years": "<=2009",
+      "test_years": "2010-2012",
+      "train_n": 15602,
+      "metrics": {
+       "n": 2881,
+       "mae": 0.5132608991526246,
+       "weighted_mae": 0.5053331566979696,
+       "spearman": 0.7147790823725338,
+       "coverage": 0.798333911836168,
+       "width": 1.6661320664324595
+      }
+     },
+     {
+      "fold": "fold 2",
+      "train_years": "<=2012",
+      "test_years": "2013-2015",
+      "train_n": 18483,
+      "metrics": {
+       "n": 3533,
+       "mae": 0.5090301619443596,
+       "weighted_mae": 0.507653439219214,
+       "spearman": 0.7116794423845966,
+       "coverage": 0.8015850551938862,
+       "width": 1.701714982901264
+      }
+     },
+     {
+      "fold": "fold 3",
+      "train_years": "<=2015",
+      "test_years": "2016-2018",
+      "train_n": 22016,
+      "metrics": {
+       "n": 3600,
+       "mae": 0.49642272837621,
+       "weighted_mae": 0.5005985142805052,
+       "spearman": 0.6868988474819686,
+       "coverage": 0.8097222222222222,
+       "width": 1.684557811956916
+      }
+     }
+    ],
+    "mean": {
+     "n": 3338.0,
+     "mae": 0.5062379298243981,
+     "weighted_mae": 0.5045283700658963,
+     "spearman": 0.704452457413033,
+     "coverage": 0.8032137297507589,
+     "width": 1.6841349537635466
+    },
+    "std": {
+     "n": 324.30335592877645,
+     "mae": 0.007152082164551083,
+     "weighted_mae": 0.002935842027434606,
+     "spearman": 0.01247661434371459,
+     "coverage": 0.004789769581892285,
+     "width": 0.014529741747997602
     }
    }
   }

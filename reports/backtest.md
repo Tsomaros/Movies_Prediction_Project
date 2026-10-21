@@ -1,6 +1,6 @@
 # Rolling backtest
 
-_Generated 2026-10-21 13:35 UTC by `make evaluate`. Each fold is fitted on its train years and scored on the next three; the test split (2019+) is not used._
+_Generated 2026-10-21 15:16 UTC by `make evaluate`. Each fold is fitted on its train years and scored on the next three; the test split (2019+) is not used._
 
 | Fold | Train | Test |
 | --- | --- | --- |
@@ -39,6 +39,18 @@ _Generated 2026-10-21 13:35 UTC by `make evaluate`. Each fold is fitted on its t
 | fold 3 (2016-2018) | 886 | 1.316 | 71% | 39.8% | 0.709 | 79.7% | 53.4× |
 | mean | 911 | 1.309 | 70% | 40.2% | 0.729 | 79.8% | 52.8× |
 | spread (std) | — | 0.012 | 1% | 0.6% | 0.014 | 0.8% | 0.5× |
+
+**LightGBM (tuned, calibrated)**
+
+_Range correction learned on folds 1-2, so coverage there is fitted, not tested; fold 3 (2016-18) is the honest check. Settings tuned on folds 1-2 as well._
+
+| Fold | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| fold 1 (2010-2012) | 943 | 1.125 | 63% | 47.2% | 0.801 | 79.1% | 32.4× |
+| fold 2 (2013-2015) | 905 | 1.151 | 63% | 45.1% | 0.804 | 81.1% | 39.1× |
+| fold 3 (2016-2018) | 886 | 1.113 | 69% | 45.6% | 0.794 | 83.2% | 36.7× |
+| mean | 911 | 1.130 | 65% | 46.0% | 0.800 | 81.1% | 36.1× |
+| spread (std) | — | 0.015 | 3% | 0.9% | 0.004 | 1.7% | 2.8× |
 
 ## Budget (log 2025 $)
 
@@ -103,3 +115,15 @@ _Generated 2026-10-21 13:35 UTC by `make evaluate`. Each fold is fitted on its t
 | fold 3 (2016-2018) | 3,600 | 0.602 | 0.599 | 0.485 | 81.0% | 1.96 pts |
 | mean | 3,338 | 0.621 | 0.607 | 0.515 | 79.7% | 1.94 pts |
 | spread (std) | — | 0.014 | 0.006 | 0.021 | 0.9% | 0.02 pts |
+
+**LightGBM (tuned, calibrated)**
+
+_Range correction learned on folds 1-2, so coverage there is fitted, not tested; fold 3 (2016-18) is the honest check. Settings tuned on folds 1-2 as well._
+
+| Fold | Films | MAE | Weighted MAE | Spearman | Coverage 10–90 | Range width |
+| --- | --- | --- | --- | --- | --- | --- |
+| fold 1 (2010-2012) | 2,881 | 0.513 | 0.505 | 0.715 | 79.8% | 1.67 pts |
+| fold 2 (2013-2015) | 3,533 | 0.509 | 0.508 | 0.712 | 80.2% | 1.70 pts |
+| fold 3 (2016-2018) | 3,600 | 0.496 | 0.501 | 0.687 | 81.0% | 1.68 pts |
+| mean | 3,338 | 0.506 | 0.505 | 0.704 | 80.3% | 1.68 pts |
+| spread (std) | — | 0.007 | 0.003 | 0.012 | 0.5% | 0.01 pts |

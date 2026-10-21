@@ -1,0 +1,46 @@
+{
+ "target": "revenue",
+ "params": {
+  "learning_rate": 0.03794249410091412,
+  "num_leaves": 27,
+  "min_data_in_leaf": 18,
+  "feature_fraction": 0.4933578463421754,
+  "bagging_fraction": 0.9369465073461578,
+  "bagging_freq": 1,
+  "lambda_l1": 0.003677236624314356,
+  "lambda_l2": 0.3282824850867227,
+  "huber_delta": 0.6653693854237883
+ },
+ "n_trees": 1032,
+ "fold_mae": [
+  1.119493443375357,
+  1.1555158297827417
+ ],
+ "mean_mae": 1.1375046365790493,
+ "default": {
+  "params": {
+   "learning_rate": 0.05,
+   "num_leaves": 31,
+   "min_data_in_leaf": 20,
+   "feature_fraction": 0.8,
+   "bagging_fraction": 0.8,
+   "bagging_freq": 1,
+   "lambda_l1": 0.001,
+   "lambda_l2": 0.001,
+   "huber_delta": 1.0
+  },
+  "n_trees": 338,
+  "fold_mae": [
+   1.1438962112571305,
+   1.1628942360027033
+  ],
+  "mean_mae": 1.153395223629917
+ },
+ "trials": 178,
+ "minutes": 15.0,
+ "folds": [
+  "fold 1: <=2009 -> 2010-2012",
+  "fold 2: <=2012 -> 2013-2015"
+ ],
+ "tuned_at": "2026-10-21T14:16:53+00:00"
+}

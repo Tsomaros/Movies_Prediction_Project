@@ -60,12 +60,14 @@ make test                  # offline tests, no network needed
 make data                  # pull films from TMDB (resumable), build data/movies.db, then the features table
 make db                    # rebuild data/movies.db from the raw pull only (about 30 s; drops the features table)
 make features              # build the features table (about 1 min; the first run also embeds every overview, about 8 min)
-make evaluate              # baselines on validation, breakdowns and backtest -> reports/ (test split untouched)
+make tune                  # tune the LightGBM settings on backtest folds 1-2 (15 min per target)
+make train                 # calibrate the ranges, then fit and save both models to ml/artifacts/ (about 2 min)
+make evaluate              # baselines and LightGBM on validation, breakdowns and backtest -> reports/ (test split untouched)
 ```
 
 | Folder       | Contents                                         |
 | ------------ | ------------------------------------------------ |
-| `ml/`        | Data pull, features, models and evaluation; `ml/artifacts/` holds the PCA (committed) and the MiniLM files (not in git) |
+| `ml/`        | Data pull, features, models and evaluation; `ml/artifacts/` holds the PCA and the models' settings, calibration and metadata (committed), the MiniLM files and the trained `.joblib` models (not in git; `make model`, `make train`) |
 | `backend/`   | FastAPI app (later)                              |
 | `frontend/`  | React (Vite) app (later)                         |
 | `data/`      | Raw pull and database (not in git), CPI table, summaries |
@@ -139,7 +141,7 @@ The `features` table in `data/movies.db` has 169 features for every film. `ml/fe
 
 ## Evaluation
 
-Every model goes through one harness, `ml/eval/`. Run `make evaluate` to write `reports/metrics.md`, `breakdowns.md`, `backtest.md` and `metrics.json`; it takes about 5 s.
+Every model goes through one harness, `ml/eval/`. Run `make evaluate` to write `reports/metrics.md`, `breakdowns.md`, `backtest.md` and `metrics.json`; it takes about 2 minutes and needs the tuned settings and calibration (`make tune`, `make train`).
 
 - **Splits.** Each model is fitted on train (≤2015) and scored on validation (2016–18). The test split (2019+) is locked behind `final=True` and is opened once, at the end of Day 6. The revenue test will be reported both with and without 2020–21.
 - **Metrics.**
@@ -196,7 +198,77 @@ Rolling backtest, mean ± spread across the three folds (MAE log for money, MAE 
 
 ## Results
 
-_Day 5._
+### Models
+
+Revenue and score each have a LightGBM model (`ml/models/`) with the same `fit` / `predict` interface as the baselines. The budget model comes on Day 6.
+
+- **Revenue:**
+  - The middle prediction is a Huber model on log 2025 dollars, using the film's real budget during training.
+  - It is non-decreasing in budget, the director's earlier revenue and the franchise's earlier revenue, so raising the budget never lowers any prediction. LightGBM doesn't allow these constraints on quantile models.
+  - The 10th/90th come from quantile models of the middle model's out-of-fold errors. They leave out those three columns, so each film gets its own range width and the whole range moves with the middle.
+- **Score:** three quantile models (10th, 50th, 90th) on `vote_average`, weighted by log(1 + votes), with no budget input. Outputs are sorted if they cross and clipped to 0–10.
+- **Features:** every allowed feature except the 16 synopsis numbers, which the ablation below found don't help. That leaves 152 features for revenue and 151 for score.
+- **Tuning:** Optuna, 15 minutes per target, on backtest folds 1–2 only (≤2015).
+  - Early stopping on each fold's test years sets the tree count: 1,032 for revenue and 925 for score.
+  - The final model trains on all of train with that count.
+  - Every trial is logged in `reports/experiments.csv`.
+  - Tuning improved fold MAE by only 1.4% for revenue and 0.8% for score.
+- **Calibration:** conformalized quantile regression, written as our own short function.
+  - Out-of-fold predictions on folds 1–2 (2010–15) give the amount each range is widened on both sides: 0.473 log (about 1.6×) for revenue and 0.165 points for score.
+  - 2016–18 is never used to fit, stop or calibrate anything, so its coverage is an honest check.
+
+### Results (validation, 2016–18)
+
+| Revenue | MAE log | Median % error | Within 2× | Spearman | Coverage | Range width |
+| --- | --- | --- | --- | --- | --- | --- |
+| B2 budget × genre multiple | 1.316 | 71% | 39.8% | 0.709 | 79.7% | 53× |
+| **LightGBM** | **1.113** | **69%** | **45.6%** | **0.794** | 83.2% | **37×** |
+
+| Score | MAE | Weighted MAE | Spearman | Coverage | Range width |
+| --- | --- | --- | --- | --- | --- |
+| B2 genre median + director | 0.602 | 0.599 | 0.485 | 81.0% | 1.96 pts |
+| **LightGBM** | **0.496** | **0.501** | **0.687** | 81.0% | **1.68 pts** |
+
+Rolling backtest, mean ± spread across the three folds:
+
+| | B2 | LightGBM | LightGBM per fold (2010–12 / 2013–15 / 2016–18) |
+| --- | --- | --- | --- |
+| Revenue MAE log | 1.309 ± 0.012 | **1.130 ± 0.015** | 1.125 / 1.151 / 1.113 |
+| Score MAE | 0.621 ± 0.014 | **0.506 ± 0.007** | 0.513 / 0.509 / 0.496 |
+
+**What the results show**
+- **Both models beat B2 on validation and in every backtest fold.** Error is 15% lower for revenue and 18% lower for score, with narrower ranges at about 80% coverage.
+- **They also beat B2 in every breakdown group:**
+
+  | Group | LightGBM | B2 |
+  | --- | --- | --- |
+  | $150M+ films, MAE log | 0.52 | 0.65 |
+  | Sequels, revenue within 2× | 61% | 48% |
+  | New directors, score MAE | 0.53 | 0.66 |
+
+- **Ranges now fit the groups better.** Revenue coverage is 81–88% in every group (B2: 72–100%), and score coverage is 80–82%.
+- **Revenue coverage on 2016–18 is 83%, a little above the target.** Calibrated on 2010–15, the ranges are slightly cautious for 2016–18. The test set (Day 6) gives the final figure.
+- **Small films are still hard.** Under $10M, MAE log is 1.35 and only 38% are within 2× (B2: 35%).
+- **Revenue ranges are wide.** The high end is typically 37× the low end, meaning a film's revenue is honestly very uncertain before release. Score ranges average 1.7 points.
+
+### Ablation
+
+Each row removes one part and reuses the tuned settings. The full model here means every allowed feature, synopsis included. Lower error is better, and the change is the row minus the full model (`reports/ablation.md`).
+
+| Run | Revenue MAE log | Change | Backtest change | Score MAE | Change | Backtest change |
+| --- | --- | --- | --- | --- | --- | --- |
+| Full model | 1.126 | — | — | 0.498 | — | — |
+| No synopsis embeddings | 1.113 | −0.013 | −0.006 | 0.496 | −0.001 | −0.000 |
+| 32 synopsis numbers | 1.124 | −0.002 | +0.008 | 0.498 | +0.001 | +0.004 |
+| No track-record features | 1.136 | +0.010 | +0.017 | 0.501 | +0.003 | +0.016 |
+| No themes | 1.135 | +0.008 | +0.012 | 0.503 | +0.005 | +0.007 |
+| No budget | 1.219 | +0.092 | +0.108 | — | — | — |
+| No monotone constraints | 1.122 | −0.004 | −0.001 | — | — | — |
+
+- **Budget is by far the strongest revenue input.** Without it, revenue within 2× falls from 44.7% to 39.3%.
+- **Track record and themes earn their place** in both models, by about 0.01–0.02 in the backtest.
+- **The synopsis embeddings don't help either model, and 32 numbers don't help either**, so the saved models leave them out. The features table still stores 16, for the app and for later tries.
+- **Monotone constraints cost no accuracy**, so "what if" changes in the app behave sensibly for free.
 
 ## Limitations
 
@@ -206,8 +278,10 @@ _Day 5._
 - **US certification is missing for 65% of films**, so the creator form has an "unrated/unknown" option (70.5% of films, counting NR).
 - **Track-record scores use today's ratings.** An earlier film's score is its current TMDB rating, not its rating when the later film came out; the pull has no rating history.
 - **COVID can't be learned from training data.** `covid_period` is always 0 in the train split, because 2020–21 films are all in the test split.
-- **The revenue benchmark assumes a known budget.** B2 revenue uses each film's real budget. In the app, the budget is sometimes a prediction (Day 6), which will make revenue predictions less accurate than these numbers.
-- **Coverage close to 80% overall can hide groups that are far off.** For example, B2 revenue covers 100% of $150M+ films but 72% of films under $10M. `reports/breakdowns.md` has the coverage for each group.
+- **The revenue results assume a known budget.** B2 and LightGBM revenue use each film's real budget. In the app, the budget is sometimes a prediction (Day 6), which will make revenue predictions less accurate than these numbers.
+- **Coverage close to 80% overall can hide groups that are far off.** For example, B2 revenue covers 100% of $150M+ films but 72% of films under $10M. LightGBM narrows this to 81–88%. `reports/breakdowns.md` has the coverage for each group.
+- **The tuned settings were found with the synopsis numbers included.** The ablation dropped them afterwards, and the settings were reused without retuning. `make tune` now tunes the model without them.
+- **Synopsis meaning doesn't help yet.** MiniLM embeddings reduced to 16 or 32 numbers add nothing beyond genres and themes. Other text features remain an open question.
 - **Themes depend on TMDB's keywords.** Only 48% of films have a theme, and some keywords are loose: "rape" puts *The Revenant* in "sex and erotica", and "hilarious" puts some action films in "comedy and satire".
 
 ## Next steps

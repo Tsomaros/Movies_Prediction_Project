@@ -10,8 +10,9 @@ It is fitted on the train split and scored on validation; the test split is neve
 Breakdowns (validation): budget size (revenue and budget only), English vs other languages,
 new vs experienced director, franchise (sequel) vs original.
 
-CLI: uv run python -m ml.eval.evaluate   (B0-B2 for every target -> reports/metrics.json, metrics.md,
-                                          breakdowns.md, backtest.md)
+CLI: uv run python -m ml.eval.evaluate   (B0-B2 for every target and LightGBM for revenue and score
+                                          -> reports/metrics.json, metrics.md, breakdowns.md, backtest.md)
+LightGBM needs `make tune` and the calibration (ml.models.calibrate) to have run first.
 """
 
 from __future__ import annotations
@@ -76,6 +77,8 @@ def evaluate(model_factory: Callable[[], Any], target: str, with_backtest: bool 
         "validation": score(target, validation, predictions),
         "breakdowns": breakdowns(target, validation, predictions),
     }
+    if getattr(model, "backtest_note", None):
+        result["backtest_note"] = model.backtest_note
     if with_backtest:
         result["backtest"] = backtest(model_factory, target)
     return result
@@ -155,16 +158,31 @@ def write_reports(results: dict[str, list[dict[str, Any]]], out_dir: Path = REPO
             bt = r["backtest"]
             rows = [(f"{f['fold']} ({f['test_years']})", f["metrics"]) for f in bt["folds"]]
             rows += [("mean", bt["mean"]), ("spread (std)", {**bt["std"], "n": None})]
-            lines += [f"**{r['name']}**", "", *_table(rows, _kind(target), first="Fold"), ""]
+            note = [f"_{r['backtest_note']}_", ""] if r.get("backtest_note") else []
+            lines += [f"**{r['name']}**", "", *note, *_table(rows, _kind(target), first="Fold"), ""]
     (out_dir / "backtest.md").write_text("\n".join(lines), encoding="utf-8")
 
 
-def main() -> None:
+def model_factories() -> dict[str, list[Callable[[], Any]]]:
+    """B0-B2 for every target, plus the tuned and calibrated LightGBM model for revenue and score."""
     from ml.models.baselines import BASELINES
+    from ml.models.calibrate import load_q
+    from ml.models.train import TARGETS, LgbmQuantile
+    from ml.models.tune import load_params
 
+    factories = {target: list(classes) for target, classes in BASELINES.items()}
+    for target in TARGETS:
+        params, n_trees = load_params(target)
+        q = load_q(target)
+        factories[target].append(lambda target=target, params=params, n_trees=n_trees, q=q:
+                                 LgbmQuantile(target, params, n_trees, q=q, name="LightGBM (tuned, calibrated)"))
+    return factories
+
+
+def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     start = time.perf_counter()
-    results = {target: [evaluate(cls, target) for cls in classes] for target, classes in BASELINES.items()}
+    results = {target: [evaluate(f, target) for f in factories] for target, factories in model_factories().items()}
     write_reports(results)
     print(f"Evaluated {sum(map(len, results.values()))} models in {time.perf_counter() - start:.0f} s; "
           f"wrote {REPORTS_DIR}/metrics.json, metrics.md, breakdowns.md, backtest.md")

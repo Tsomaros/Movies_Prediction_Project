@@ -190,3 +190,58 @@
 - **One range for every film fits no group.** B2 revenue covers 100% of $150M+ films and 72% of films under $10M and of new directors' films. Day 5's quantile models should fix this; check group coverage, not just the overall figure.
 - New directors and small films are the hardest groups for every target; sequels are the easiest.
 - The score baseline's director term helps only experienced directors (0.61 → 0.57); new directors stay at 0.66.
+
+## Day 5: First models (revenue and score) (done 2026-10-21)
+
+- [x] 0. Update the plan document: calibration on folds 1–2, our own CQR function instead of MAPIE, tree count from tuning, a 32-synopsis ablation row
+- [x] 1. Dependencies: `lightgbm` 4.7.0, `optuna` 5.0.0
+- [x] 2. Training module (`ml/models/train.py`, `LgbmQuantile`)
+- [x] 3. Tuning (`ml/models/tune.py`, `make tune`): 178 revenue and 67 score trials
+- [x] 4. Conformal calibration (`ml/models/calibrate.py`)
+- [x] 5. Evaluation: LightGBM in `make evaluate` next to B0–B2
+- [x] 6. Ablation (`ml/models/ablation.py` → `reports/ablation.md`); synopsis then dropped from both models
+- [x] 7. Saved artifacts (`make train` → `ml/artifacts/{target}_p10|p50|p90.joblib` + `{target}_meta.json`)
+- [x] 8. Tests (`tests/test_models.py`, 23 tests; 140 total passing)
+- [x] 9. Wrap-up and commit
+
+### Results (validation 2016–18; backtest mean over 3 folds)
+
+| Model | Revenue MAE log / within 2× | Revenue coverage / width | Score MAE | Score coverage / width |
+| --- | --- | --- | --- | --- |
+| B2 | 1.316 / 39.8% | 79.7% / 53× | 0.602 | 81.0% / 1.96 pts |
+| **LightGBM** | **1.113 / 45.6%** | 83.2% / 37× | **0.496** | 81.0% / 1.68 pts |
+| B2 backtest | 1.309 ± 0.012 | | 0.621 ± 0.014 | |
+| LightGBM backtest | 1.130 ± 0.015 | | 0.506 ± 0.007 | |
+
+- **Calibration** is +0.473 log for revenue and +0.165 points for score, learned from 1,848 and 6,414 fold films. On 2016–18, coverage rises from 66% to 83% for revenue and from 71% to 81% for score.
+- **Ablation:**
+  - Removing budget costs +0.092 on validation and +0.108 in the backtest.
+  - Removing track record costs +0.017 (revenue) and +0.016 (score) in the backtest; removing themes costs +0.012 and +0.007.
+  - Removing synopsis changes −0.006 and −0.000, and 32 synopsis numbers +0.008 and +0.004.
+  - Removing the monotone constraints changes −0.001.
+- **Sizes:** the models are 7.9 MB for revenue and 25.1 MB for score. They're gitignored and rebuilt by `make train` in about 35 s, plus about 1.5 min of calibration.
+
+### Changes from the plan
+
+- **Revenue model shape:** LightGBM refuses monotone constraints on quantile and L1 objectives. Revenue therefore uses a monotone Huber middle model, plus quantile models of its out-of-fold residuals that leave out the three monotone columns. Score keeps three quantile models.
+- **Calibration:** our own CQR function on folds 1–2 instead of MAPIE on 2016–18, so validation coverage stays honest.
+- **Tree count:** set by early stopping on folds 1–2 during tuning. Nothing is fitted or stopped on 2016–18.
+- **Score never gets `log_budget`.** `feature_list.json` allows it, so `train.py` excludes it (`EXCLUDED`).
+- **Synopsis dropped after the ablation**, by your decision. `DEFAULT_DROP = ("synopsis",)`, and the calibration and evaluation were rerun. The tuned settings came from the run with synopsis included and were reused without retuning.
+- **Model files are not in git.** At 33 MB they are too large, and they change on every retrain; their JSON settings, calibration and metadata are committed.
+- **Artifacts:** `.joblib` per quantile model, as planned.
+
+### Checks
+
+- Raising budget, director revenue or franchise revenue never lowers p10, p50 or p90 (on real validation rows and in the tests).
+- Saved models reload with identical predictions; a fresh refit matches exactly, so training is deterministic.
+- Two deliberate bugs were caught by the tests: monotone columns leaking into the range models, and an off-by-one in the conformal quantile.
+- A 30-second tuning dry run wrote to `reports/experiments.csv` because the log path was bound at definition time. This was fixed and the 10 dry-run rows removed.
+
+### Surprises / inputs for Day 6+
+
+- **Revenue coverage on 2016–18 is 83%,** slightly cautious. For the ≤2018 model, recompute the correction from all three folds and check it on the test set.
+- **Small films remain the hardest group:** under $10M, 38% are within 2× (B2: 35%).
+- **The budget chain will cost revenue accuracy.** Without budget, MAE log rises by about 0.1 (validation 1.219), which is roughly the floor if the predicted budget were useless.
+- **Synopsis adds nothing.** Consider removing it from the creator form's "helps the prediction" messaging, or trying other text features later.
+- **Optional retune without synopsis** (`make tune`, 30 min). Tuning gained only about 1% the first time.

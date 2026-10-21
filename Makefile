@@ -1,4 +1,4 @@
-.PHONY: setup model data db features evaluate test
+.PHONY: setup model data db features tune train evaluate test
 
 # Create .venv and install the locked dependencies (then `make model` for the text model)
 setup:
@@ -21,6 +21,15 @@ db:
 # Build the features table in data/movies.db (needs `make model`; new overviews are embedded, the rest is cached)
 features:
 	uv run python -m ml.features.build
+
+# Tune the LightGBM settings on backtest folds 1-2 (15 minutes per target); writes ml/artifacts/*_params.json
+tune:
+	uv run python -m ml.models.tune
+
+# Calibrate the ranges on folds 1-2, then fit both models on train and save them to ml/artifacts/
+train:
+	uv run python -m ml.models.calibrate
+	uv run python -m ml.models.train
 
 # Evaluate every model on validation, breakdowns and the rolling backtest; writes reports/ (test split untouched)
 evaluate:
