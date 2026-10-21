@@ -32,7 +32,7 @@ A value of `0` in TMDB's `budget` or `revenue` means "unknown", not zero. See [C
 
 ## Data
 
-- **Source:** our own TMDB API pull. The 700 most-voted films per year, 1960–2025, in all languages (about 46,000 films).
+- **Source:** our own TMDB API pull. The 1,200 most-voted films per year, 1960–2025, in all languages (79,199 films). The first 700 per year carry almost all the money data; the extra 500 mostly add score data.
 - **Per film:** basic info, genres, overview, runtime, budget, revenue, collection, US certification, keywords, production companies and countries, the top 15 cast, and key crew (director, writers, producers, composer, cinematographer, editor).
 - **Raw output:** `data/raw/tmdb_movies.jsonl`. It is not committed to git.
 - **Database:** `data/movies.db` (SQLite), built from the raw pull by `make db`. It is not committed to git either. It holds the cleaned films, people, genres, companies, keywords and collections, full-text search on titles and overviews, and these views:
@@ -57,7 +57,7 @@ make setup                 # create .venv and install locked dependencies
 cp .env.example .env       # then paste your TMDB API Read Access Token into .env
 make test                  # offline tests, no network needed
 make data                  # pull films from TMDB into data/raw/ (resumable), then build data/movies.db
-make db                    # rebuild data/movies.db from the raw pull only (about 20 s)
+make db                    # rebuild data/movies.db from the raw pull only (about 30 s)
 ```
 
 | Folder       | Contents                                         |
@@ -71,7 +71,7 @@ make db                    # rebuild data/movies.db from the raw pull only (abou
 
 ## Cleaning rules
 
-All rules live in `ml/data/clean.py` and are tested in `tests/test_clean.py`. **Every released film is kept** for browsing; bad values become NULL, and suspect money is flagged rather than deleted. Each model trains on its own view. The counts are from the 2026-10-21 pull (46,199 films), and every build stores them in the database's `meta` table.
+All rules live in `ml/data/clean.py` and are tested in `tests/test_clean.py`. **Every released film is kept** for browsing; bad values become NULL, and suspect money is flagged rather than deleted. Each model trains on its own view. The counts are from the 2026-10-21 pull (79,199 films), and every build stores them in the database's `meta` table.
 
 | Rule | What happens | Films affected |
 | --- | --- | --- |
@@ -79,22 +79,22 @@ All rules live in `ml/data/clean.py` and are tested in `tests/test_clean.py`. **
 | Duplicate ids | The latest pull (`pulled_at`) is kept | 0 dropped |
 | Text | Whitespace trimmed and empty text becomes NULL; a missing title falls back to `original_title` | 0 titles |
 | Release date | Parsed into `release_date`, `year` and `month`; `split` is set from the year | 0 unparseable |
-| Runtime | 0 or over 600 minutes → NULL | 218 |
-| Placeholder money | Budget or revenue below $1,000 → NULL (TMDB shorthand such as `7` meaning $7M) | 87 budgets, 96 revenues |
+| Runtime | 0 or over 600 minutes → NULL | 1,238 |
+| Placeholder money | Budget or revenue below $1,000 → NULL (TMDB shorthand such as `7` meaning $7M) | 167 budgets, 151 revenues |
 | Inflation | `budget_2025` / `revenue_2025` = nominal × CPI(2025) / CPI(release year) | All films with money |
-| Low ratio | Revenue below 0.0001 × budget → `money_suspect` (token box office, e.g. streaming releases) | 2 |
-| Currency | A non-English budget above 3× the 99th percentile of its language's *other* budgets (in 2025 dollars) → `money_suspect`. Languages with fewer than 30 budgets are compared with all other non-English budgets | 2 |
+| Low ratio | Revenue below 0.0001 × budget → `money_suspect` (token box office, e.g. streaming releases) | 3 |
+| Currency | A non-English budget above 3× the 99th percentile of its language's *other* budgets (in 2025 dollars) → `money_suspect`. Languages with fewer than 30 budgets are compared with all other non-English budgets | 3 |
 | Still earning | Released less than 182 days before the pull → `revenue_incomplete` | 0 |
-| COVID | Released 2020–2021 → `covid_period` | 1,400 |
-| Score | 0 votes → score NULL; `score_ok` needs at least 50 votes; `score_weight` = log(1 + votes) | 26,296 `score_ok` |
+| COVID | Released 2020–2021 → `covid_period` | 2,400 |
+| Score | 0 votes → score NULL; `score_ok` needs at least 50 votes; `score_weight` = log(1 + votes) | 33,077 `score_ok` |
 
 There is no rule for very *high* revenue-to-budget ratios. The only films above 1,000× were real micro-budget hits (*The Blair Witch Project*, *Paranormal Activity*).
 
 | Training view | Films included | Train / validation / test |
 | --- | --- | --- |
-| `v_train_revenue` | Budget and revenue known, not `money_suspect`, not `revenue_incomplete` | 7,587 / 796 / 1,293 |
-| `v_train_budget` | Budget known, not `money_suspect` | 9,835 / 955 / 1,584 |
-| `v_train_score` | `score_ok` | 19,296 / 2,100 / 4,900 |
+| `v_train_revenue` | Budget and revenue known, not `money_suspect`, not `revenue_incomplete` | 8,050 / 886 / 1,485 |
+| `v_train_budget` | Budget known, not `money_suspect` | 11,334 / 1,162 / 1,964 |
+| `v_train_score` | `score_ok` | 22,016 / 3,600 / 7,461 |
 
 `notebooks/02_clean_check.ipynb` re-checks every rule and the view sizes after each build.
 
@@ -108,10 +108,10 @@ _Day 5._
 
 ## Limitations
 
-- **The revenue model is mostly an English-language, post-1980 model.** Only 32% of English films have both budget and revenue, and most other languages are under 10%. There are only 271 revenue training films from the 1960s and 458 from the 1970s.
-- **Some revenues are incomplete.** 151 training films (1.8%) earned less than 1% of their budget. Some are real flops, but others seem to record only part of the box office, probably the US share (e.g. *Flying Swords of Dragon Gate*, $128k). No rule catches these yet.
+- **The revenue model is mostly an English-language, post-1980 model.** Only 21% of English films have both budget and revenue (32% among the first 700 per year), and most other languages are under 10%. There are only 286 revenue training films from the 1960s and 471 from the 1970s.
+- **Some revenues are incomplete.** 178 training films (2.0%) earned less than 1% of their budget. Some are real flops, but others seem to record only part of the box office, probably the US share (e.g. *Flying Swords of Dragon Gate*, $128k). No rule catches these yet.
 - **Local-currency budgets are only caught when they're extreme.** The currency rule flags budgets far above their language's norm. Smaller mistakes sit near the cap: a budget entered in Brazilian reais (about 3.5 to the dollar in 2016) is only around 3.5× too high, and *The Ten Commandments: The Movie* was flagged only narrowly.
-- **US certification is missing for 52% of films**, so the creator form needs an "unrated/unknown" option.
+- **US certification is missing for 65% of films**, so the creator form needs an "unrated/unknown" option.
 
 ## Next steps
 

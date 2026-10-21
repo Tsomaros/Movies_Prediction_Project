@@ -22,7 +22,7 @@ Week one (Days 1–5) takes the project from an empty repo to tuned, calibrated 
 
 ## Day 1: Setup, data collection and first look
 
-Day 1 ends with a working repo, a full TMDB pull of about 46,000 films (1960–2025), and numbers showing whether the data is good enough for Day 2.
+Day 1 ends with a working repo, a full TMDB pull of about 79,000 films (1960–2025), and numbers showing whether the data is good enough for Day 2.
 
 ### Decisions
 
@@ -30,7 +30,7 @@ Day 1 ends with a working repo, a full TMDB pull of about 46,000 films (1960–2
 | --------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | Score target    | TMDB `vote_average`                                                                   | Comes in the same API call; IMDb (via OMDb) noted as a next step                                             |
 | Data source     | Our own TMDB API pull only, no Kaggle                                                 | Fresh data with credits and recent films, which an honest 2019+ test needs; one source keeps cleaning simple |
-| Films           | 1960–2025, the 700 most-voted films per year, all languages                           | About 46k films; global, with `original_language` as a feature                                              |
+| Films           | 1960–2025, the 1,200 most-voted films per year, all languages (first pulled at 700, extended on Day 2) | About 79k films; global, with `original_language` as a feature; the extra 500 per year mostly add score data |
 | Extra fields    | Collection, US certification, keywords, production countries, overview, `poster_path` | All known before release; the poster comes free and avoids a second pull for the browse pages                |
 | Fields left out | Cast photos, IMDb id                                                                  | UI-only; not needed                                                                                          |
 | Tooling         | `uv`, Makefile, `.env`; no CI or lint                                                 | Speed over ceremony                                                                                          |
@@ -44,11 +44,11 @@ TMDB terms to respect: free for non-commercial use with attribution; logo less p
 2. **Repo setup (45 min).** Monorepo `/ml`, `/backend`, `/frontend`, `/data`, `/tests`, `/notebooks`; `uv` with Python 3.11 and a lockfile; `.env` + `.env.example`; `.gitignore`; Makefile with `make setup`, `make data`, `make test`; README skeleton, `PROGRESS.md`, first commit.
 3. **TMDB client (1 h).** Read Access Token auth; throttled to about 20 requests/second; retries on 429 and 5xx; 404s skipped; offline tests with a fake TMDB.
 4. **Pull script (2 h).**
-   - Discover: the 700 most-voted films per year, 1960–2025 (35 pages of 20).
+   - Discover: the 1,200 most-voted films per year, 1960–2025 (60 pages of 20).
    - Details: one request per film, `/movie/{id}?append_to_response=credits,keywords,release_dates`.
    - Keeps basic info, the new fields, production companies, top 15 cast and key crew (director, writers, producers, composer, cinematographer, editor).
-   - Resumable, writes each line as soon as it's fetched; output `data/raw/tmdb_movies.jsonl`; about 40–45 min for the full pull.
-5. **Run it (40 min).** Smoke test with 20 films, then the full pull; write step 6 while it runs.
+   - Resumable, writes each line as soon as it's fetched; output `data/raw/tmdb_movies.jsonl`; about 70 min for the full pull from scratch.
+5. **Run it (40 min; the extension to 1,200 per year added about 30 min).** Smoke test with 20 films, then the full pull; write step 6 while it runs.
 6. **Exploration notebook (1 h), `notebooks/01_first_look.ipynb`.**
    - Coverage by decade: % with budget, revenue, director, certification.
    - Split sizes (train ≤2015, validation 2016–18, test 2019+).

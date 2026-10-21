@@ -31,7 +31,7 @@ MOVIES_FILE = "tmdb_movies.jsonl"
 MISSING_FILE = "missing_ids.txt"
 
 FIRST_YEAR, LAST_YEAR = 1960, 2025
-PAGES_PER_YEAR = 35  # 20 films per page -> 700 most-voted films per year
+PAGES_PER_YEAR = 60  # 20 films per page -> 1,200 most-voted films per year
 TOP_CAST = 15
 KEY_CREW_JOBS = {
     "Director",

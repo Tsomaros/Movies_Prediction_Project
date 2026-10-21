@@ -12,14 +12,14 @@
 - [x] 7. Exploration notebook `notebooks/01_first_look.ipynb` → `data/day1_summary.json`
 - [x] 8. Wrap-up and commit
 
-### Pull stats (2026-10-21)
+### Pull stats (2026-10-21, at 700 per year; see "Extension" below for the current pull)
 
 - 46,199 films, 1960–2025 (700 per year; 2005 has 699). 0 missing (404), 0 failed, 0 duplicates.
 - About 39 min at 19.9 requests/second; `data/raw/tmdb_movies.jsonl` is 126 MB and not in git.
 - A rerun fetches nothing (resume check passed).
 - TMDB caching rule: re-pull or delete the raw data by 2027-04-21.
 
-### Key numbers (details in the notebook's Findings)
+### Key numbers (at 700 per year; the notebook's Findings now show the 1,200-per-year numbers)
 
 - 21% of films have both budget and revenue: 3.9% in the 1960s, 38% in the 2010s, 26% in the 2020s.
 - Films with both budget and revenue: train 7,616, validation 799, test 1,305.
@@ -53,7 +53,7 @@
 - [x] 7. Build and re-check notebook `notebooks/02_clean_check.ipynb`. Gate passed
 - [x] 8. Wrap-up and commit
 
-### Build stats (2026-10-21)
+### Build stats (2026-10-21, at 700 per year; see "Extension" below)
 
 - `make db` takes about 17 s. `data/movies.db` is 141 MB and not in git; it falls under the same TMDB 6-month rule as the raw pull.
 - 46,199 films; 296,496 people; 601,306 cast rows; 330,010 crew rows; full-text search over title, original title and overview.
@@ -79,3 +79,21 @@
 - Search ranks only by text match ("godfather" puts *Hong Kong Godfather* first), so the Day 8 API should break ties by `vote_count`.
 - The CPI table ends at 2025: add a row before pulling 2026 films, or their 2025-dollar values stay empty.
 - `numpy` is used directly but comes in through pandas; it is not listed in `pyproject.toml`.
+
+## Extension: 1,200 films per year (2026-10-21)
+
+- **How:** the 700-per-year discover list was renamed to `data/raw/discover_ids_700.csv`, then the pull ran with `--pages 60`. `PAGES_PER_YEAR` in `ml/data/pull.py` is now 60, so `make data` keeps 1,200 per year.
+- **Pull:** 33,000 new films in about 31 min at 20 requests/second, with 0 missing and 0 failed. That's 79,199 in total; 2005 and 2025 have 1,199. One film from the first pull fell out of its year's top 1,200 but stays in the data. `data/raw/tmdb_movies.jsonl` is 201 MB.
+- **Database:** `make db` takes about 27 s and `data/movies.db` is 222 MB, with 434,571 people, 968,355 cast rows and 512,526 crew rows.
+- **The extra 500 per year are thin:** median 9 votes (75 in the first 700), 21% `score_ok` (57%), 6.3% with a budget (27%), 2.3% with budget and revenue (21%).
+- **Rows changed:** 1,238 runtimes, 167 budgets and 151 revenues set to NULL. `money_suspect`: 6 films, adding *Deewangee* (2002, hi, $220M budget, currency) and *Java Heat* (2013, $1,061 revenue, low ratio). There are now 23 language caps instead of 17.
+- Both notebooks were rerun and their findings refreshed. The gate passed.
+
+| Training view | Train | Validation | Test | Change from 700 per year |
+| --- | --- | --- | --- | --- |
+| Revenue | 8,050 | 886 | 1,485 | +6% / +11% / +15% |
+| Budget | 11,334 | 1,162 | 1,964 | +15% / +22% / +24% |
+| Score | 22,016 | 3,600 | 7,461 | +14% / +71% / +52% |
+
+- Updated inputs for later days: revenue training before 1980 is still thin (286 films in the 1960s, 471 in the 1970s); 178 training films (2.0%) earned less than 1% of their budget; US certification is missing for 65% of films.
+- The TMDB caching deadline is unchanged: re-pull or delete the raw data and database by 2027-04-21.
