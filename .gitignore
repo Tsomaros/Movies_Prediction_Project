@@ -24,6 +24,9 @@ ml/artifacts/minilm/
 ml/artifacts/*.joblib
 ml/artifacts/final/*.joblib
 
+# Comparable-films index (about 26 MB, TMDB data); rebuild with `uv run python -m ml.explain.comparables`
+ml/artifacts/final/comparables.npz
+
 # Overview embedding cache (about 120 MB, TMDB text); rebuilt by `make features`
 data/overview_embeddings*.npz
 

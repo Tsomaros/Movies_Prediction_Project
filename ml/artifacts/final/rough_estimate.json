@@ -1,0 +1,38 @@
+{
+ "cutoff": {
+  "revenue": 81.0,
+  "budget": 12.0
+ },
+ "quantile": 0.75,
+ "validation": {
+  "revenue given": {
+   "films": 886,
+   "labelled_share": 0.2505643340857788,
+   "mae_labelled": 1.5367257302368251,
+   "mae_rest": 0.9450407482423661,
+   "mae_ratio": 1.6260946769701776,
+   "within_2x_labelled": 0.33783783783783783,
+   "within_2x_rest": 0.5120481927710844
+  },
+  "revenue estimated": {
+   "films": 886,
+   "labelled_share": 0.3160270880361174,
+   "mae_labelled": 1.547215918775444,
+   "mae_rest": 0.9449252340198973,
+   "mae_ratio": 1.6373950690186185,
+   "within_2x_labelled": 0.3142857142857143,
+   "within_2x_rest": 0.49834983498349833
+  },
+  "budget": {
+   "films": 1162,
+   "labelled_share": 0.2719449225473322,
+   "mae_labelled": 0.8626714779746186,
+   "mae_rest": 0.5201050498965145,
+   "mae_ratio": 1.658648532919003,
+   "within_2x_labelled": 0.5411392405063291,
+   "within_2x_rest": 0.7718676122931442
+  }
+ },
+ "about": "high / low above cutoff -> rough estimate; fitted on 2016-18 with the <=2015 models",
+ "fitted_at": "2026-10-21T18:11:15+00:00"
+}

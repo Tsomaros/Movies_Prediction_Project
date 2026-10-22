@@ -56,7 +56,7 @@ Requirements: [uv](https://docs.astral.sh/uv/) and GNU make. uv installs Python 
 make setup                 # create .venv and install locked dependencies
 make model                 # download the MiniLM text model (about 90 MB, once)
 cp .env.example .env       # then paste your TMDB API Read Access Token into .env
-make test                  # offline tests, no network needed
+make test                  # offline tests, no network needed (about 25 s; the golden examples need the database and models)
 make data                  # pull films from TMDB (resumable), build data/movies.db, then the features table
 make db                    # rebuild data/movies.db from the raw pull only (about 30 s; drops the features table)
 make features              # build the features table (about 1 min; the first run also embeds every overview, about 8 min)
@@ -66,11 +66,13 @@ make evaluate              # baselines and LightGBM on validation, breakdowns an
 uv run python -m ml.models.rough           # the rough-estimate cut-offs (fitted once on Day 6, then frozen)
 uv run python -m ml.eval.final test        # the one-time test run (done on Day 6; refuses to run again)
 uv run python -m ml.eval.final all-data    # retrain the app's models on 1960-2025 -> ml/artifacts/final/ (about 1 min)
+uv run python -m ml.explain.comparables    # the comparable-films index -> ml/artifacts/final/comparables.npz (3 s)
+uv run python -m ml.predict manifest       # checksums of the app's model files -> ml/artifacts/final/manifest.json
 ```
 
 | Folder       | Contents                                         |
 | ------------ | ------------------------------------------------ |
-| `ml/`        | Data pull, features, models and evaluation; `ml/artifacts/` holds the PCA and the models' settings, calibration and metadata (committed), the MiniLM files and the trained `.joblib` models (not in git; `make model`, `make train`); `ml/artifacts/final/` holds the app's all-data models |
+| `ml/`        | Data pull, features, models and evaluation; `ml/artifacts/` holds the PCA and the models' settings, calibration and metadata (committed), the MiniLM files and the trained `.joblib` models (not in git; `make model`, `make train`); `ml/artifacts/final/` holds the app's all-data models, their `manifest.json` and the comparables index; `ml/explain/` and `ml/predict.py` turn them into explained predictions |
 | `backend/`   | FastAPI app (later)                              |
 | `frontend/`  | React (Vite) app (later)                         |
 | `data/`      | Raw pull and database (not in git), CPI table, summaries |
@@ -288,7 +290,7 @@ The cut-offs were chosen on these films, so the test set gives the honest check.
 
 ### Budget comparison
 
-Every prediction includes "Similar films usually cost $X–Y": the budget model's calibrated 10th–90th range for the same form. It is shown even when the creator gives a budget, and the budget is then placed below, within or above that range (`Chain.compare_budget` in `ml/models/chain.py`). On 2016–18, 84% of real budgets fall within, 11% below and 5% above, so the model overestimates more often than it underestimates. For example, *Get Out* ($5.9M) gets "$1.4M–$20M" and *Avengers: Infinity War* ($380M) gets "$180M–$580M".
+Every prediction includes "Similar films usually cost $X–Y": the budget model's calibrated 10th–90th range for the same form. It is shown even when the creator gives a budget, and the budget is then placed below, within or above that range (`Chain.compare_budget` in `ml/models/chain.py`; `predict()` also says "at the low / high end" within 5% of an edge). On 2016–18, 84% of real budgets fall within, 11% below and 5% above, so the model overestimates more often than it underestimates. For example, *Get Out* ($5.9M) gets "$1.4M–$20M" and *Avengers: Infinity War* ($380M) gets "$180M–$580M".
 
 ### Ablation
 
@@ -363,6 +365,57 @@ The test split was opened once, on 2026-10-21, after everything was frozen at th
 
 The app's models are then retrained on every film from 1960–2025 with the same settings, tree counts and ≤2018 corrections (`uv run python -m ml.eval.final all-data` → `ml/artifacts/final/`). Their own accuracy can't be measured, since no later films are left to test on.
 
+## Explanations and `predict()`
+
+Day 7 turns the app's models into one call: `ml.predict.predict(form)` returns budget, revenue and score ranges, the top 5 drivers of each in plain English, 5 comparable past films and warnings. `notebooks/07_explanations.ipynb` checks the cut-offs and weights below and runs six famous films through it.
+
+### Drivers
+
+- **What is explained:** each target's middle (p50) model. LightGBM's `pred_contrib` splits a prediction into one amount per feature plus the typical film's value, and these add up exactly to the middle that is shown (`ml/explain/drivers.py`). When the budget or score quantile models cross, the sorted middle is not the p50 model's own (about 3% of 2016–18 budget films), and those amounts are scaled to match.
+- **Groups:** the 158 features are merged into 12 groups a creator recognises: budget, director, cast, franchise, studio, genre, themes, release timing, runtime, certification, language and country (`ml/explain/groups.py`). The budget track record joins the group it describes, and the synopsis numbers have no group because no model uses them.
+- **Strength:** money effects are "strong" from +50% (or −33%), "moderate" from +20% (or −17%), otherwise "slight"; score effects from 0.3 and 0.1 points. The plan started at +25% / +10%, which made 99% of top revenue drivers on 2016–18 "strong"; with +50% / +20%, 30% of the top 5 drivers are strong, 53% moderate and 17% slight.
+- **Sentences:** one template per group, filled with the creator's values (`ml/explain/sentences.py`), for example "Being part of The Avengers Collection (2 earlier films) strongly raises the expected revenue." or "Jordan Peele, with no earlier films as director in our data, lowers the expected revenue." Release timing names whichever part pushes most: "Releasing in 2026 (recent films earn less in our data)" or "Releasing in December (holiday season)". In "budget estimated" mode the budget driver says so: "The estimated budget of about $29M …".
+
+| 2016–18, ≤2015 models | Most often the top driver |
+| --- | --- |
+| Revenue | budget 70%, studio 9% |
+| Budget | studio 73% (90% of it the companies' earlier budgets), cast 14% |
+| Score | cast 44%, genre 26%, runtime 19% |
+
+### Comparable films
+
+`ml/explain/comparables.py` returns 5 earlier films like the planned one, with their real budget, revenue (2025 $) and score. The pool is the 33,077 films with a usable score; only films released before the planned date can be returned, and of the 50 most similar, those with a reported budget or revenue come first. Similarity is a weighted average of genres (0.3), themes (0.2), synopsis (0.3, cosine on the MiniLM vectors, skipped without a synopsis), era (0.1), budget level (0.2, the creator's budget or the budget model's estimate) and the same original language (0.1). The index (`ml/artifacts/final/comparables.npz`, 26 MB, not in git) is built by `uv run python -m ml.explain.comparables`; a query takes about 8 ms.
+
+The language weight and the doubled budget weight were chosen on 600 films from 2016–18, each judged at its release:
+
+| Weights | Comparables' revenue vs the film's (MAE log) | Score MAE | Same language |
+| --- | --- | --- | --- |
+| Planned (no language, budget 0.1) | 1.883 | 0.602 | 60% |
+| Chosen (language 0.1, budget 0.2) | 1.802 | 0.584 | 84% |
+| Chosen + a tie-break towards well-known films | 1.931 | 0.572 | 83% |
+
+For example, *Avengers: Infinity War* gets *Green Lantern*, *Avengers: Age of Ultron*, *Captain America: Civil War*, *Justice League* and *X-Men: Days of Future Past*, and *Paddington 2* gets *Paddington* first.
+
+### `predict()`
+
+`Predictor.load()` loads the all-data models from `ml/artifacts/final/`, the feature context from `data/movies.db` (read-only) and the comparables index, about 11 s once; `predictor.predict(form)` then takes about 150 ms (median of 30 calls for each of three forms, under the 400 ms target). The steps are: validate the form (`ml/features/contract.py`; an invalid form raises `InvalidForm` with one message per field), build the features, predict the budget, revenue (with the creator's budget, or the estimated one) and score, then the drivers and comparables. The output is a JSON-ready dict:
+
+- `budget`, `revenue`, `score`: low, middle and high (2025 $ or points), a text range such as "$5.2M–$62M", and the rough-estimate flag (revenue and budget only); revenue also has its `mode` and the budget it used;
+- `budget.comparison`: "Similar films usually cost $X–Y" and, with a budget, "Your budget of $X is below / at the low end of / within / at the high end of / above what similar films usually cost" (within 5% of an edge counts as "at the end", since both can round to the same figure);
+- `drivers`, `comparables`, `warnings`, `model_version` and `as_of` (the 1st of the release month, the date the film is judged at).
+
+Warnings appear for a budget of $150M or more (revenue for these films was the weak spot on 2019+), a director or actors we can't match, an empty production country or studio (past films with none recorded are mostly small, so an empty field lowers the ranges), and a release after 2025, where the data ends.
+
+`ml/artifacts/final/manifest.json` (`uv run python -m ml.predict manifest`) lists every model file with its checksum, the training years, the corrections, the LightGBM version and the `final-models` tag; the predictor refuses to load models that don't match it. The rough-estimate rule is copied into the same folder, so it holds everything the app reads except the database.
+
+| Example form | Budget | Revenue | Score |
+| --- | --- | --- | --- |
+| Franchise blockbuster (Russo brothers, Avengers cast, Marvel, $300M, May 2027) | $180M–$600M | $500M–$3.6B | 6.4–8.2 |
+| Small drama (Greta Gerwig, A24, no budget given, October 2026) | $5.2M–$62M, rough | $2M–$170M (budget estimated), rough | 6.2–7.6 |
+| Unknown cast (horror, new director and actors, $2M, no studio or country) | $18K–$7M, rough | $38K–$14M, rough | 4.8–6.9 |
+
+These three forms are the golden examples in `tests/test_golden.py`: the tests check rules (ordered ranges, mode, warnings, earlier comparables, speed) and a snapshot of the output in `tests/golden/predictions.json`, which is rewritten only on purpose (`UPDATE_GOLDEN=1 uv run pytest tests/test_golden.py`).
+
 ## Limitations
 
 - **The revenue model is mostly an English-language, post-1980 model.** Only 21% of English films have both budget and revenue (32% among the first 700 per year), and most other languages are under 10%. There are only 286 revenue training films from the 1960s and 471 from the 1970s.
@@ -377,6 +430,10 @@ The app's models are then retrained on every film from 1960–2025 with the same
 - **The app's models have no test score of their own.** They are retrained on 1960–2025 and reuse the ≤2018 corrections and tree counts; the 2019+ results above are the best estimate of their accuracy.
 - **The revenue and score settings were tuned with the synopsis numbers included and without the budget track record.** The ablation dropped the synopsis afterwards and Day 6 added the budget track record to revenue; the settings were reused without retuning. The budget model was tuned on Day 6 with its saved features, and `make tune` now tunes every model with its saved features.
 - **Synopsis meaning doesn't help yet.** MiniLM embeddings reduced to 16 or 32 numbers add nothing beyond genres and themes. Other text features remain an open question.
+- **Drivers describe the model, not causes.** "A budget of $40M strongly raises the expected revenue" says what the model leans on for films like this one; spending more would not by itself earn more. The drivers explain the middle prediction only, not the width of the range.
+- **Breakouts stay outside the range.** *Get Out* earned $340M against a range of $160K–$59M, even with the all-data models that saw it in training; its drivers (small budget, new director, small studios) describe the typical film like it.
+- **Empty optional fields count against a film.** No production country or studio looks like the obscure films in the data that have none (no country: about −38% revenue for a small horror film). `predict()` warns about it.
+- **Some comparable films are obscure.** *Get Out*'s are small horror films scored about 4.5–6. A tie-break towards well-known films was tried and made the comparables' revenue less like the film's own, so it was dropped.
 - **Themes depend on TMDB's keywords.** Only 48% of films have a theme, and some keywords are loose: "rape" puts *The Revenant* in "sex and erotica", and "hilarious" puts some action films in "comedy and satire".
 
 ## Next steps

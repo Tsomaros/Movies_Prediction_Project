@@ -69,41 +69,55 @@ Day 7 ends with one `predict()` call that returns budget, revenue and score rang
 
 | Topic                  | Decision                                                                                                               | Why                                                                     |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| How to compute drivers | LightGBM's built-in `pred_contrib` on each 50th-percentile model, rescaled to add up to the prediction                 | No `shap` package in the app; quantile models don't add up on their own |
+| How to compute drivers | LightGBM's built-in `pred_contrib` on each 50th-percentile model (revenue's monotone Huber middle, the budget and score quantile-0.5 models); no rescaling, because the contributions plus the expected value add up exactly to the middle prediction | No `shap` package in the app; the range correction `q` only moves p10/p90, so the middle is what gets explained |
+| Baseline               | Effects are relative to the model's expected value, worded as "compared with a typical film"                          | It is what the contributions add up from                                |
 | How to show them       | Rank and direction prominent; size as strong / moderate / slight, no exact amounts                                     | Honest about the approximation, still informative                       |
-| Strength thresholds    | Budget/revenue: strong ≥ 25%, moderate 10–25%, slight < 10%. Score: strong ≥ 0.3 stars, moderate 0.1–0.3, slight < 0.1 | Starting point, tuned in the notebook                                   |
-| Feature groups         | Raw features merged into creator-friendly groups                                                                       | Users never see names like `pca_emb_7`                                  |
+| Strength thresholds    | Budget/revenue (log units, effect = e^c − 1): strong ≥ 50%, moderate 20–50%, slight < 20%, the same size up or down in log terms. Score: strong ≥ 0.3 points, moderate 0.1–0.3, slight < 0.1 (TMDB's 0–10 scale) | Decided by Dimitris in the notebook: the starting 25% / 10% made 72% of revenue's top-5 drivers on 2016–18 "strong" (99% of top drivers); 50% / 20% gives 30% |
+| Feature groups         | Raw features merged into creator-friendly groups; every model feature belongs to exactly one group (tested)           | Users never see names like `synopsis_07`                                |
+| Synopsis               | Not a driver: no model uses the synopsis numbers (`DEFAULT_DROP`, Day 5). It is used only to find comparable films   | Never show a driver the model doesn't have                              |
+| Estimated budget       | In "budget estimated" mode revenue's budget driver is one group, "Budget (estimated at about $X)"; what drove the estimate is listed under budget's own drivers | Decided by Dimitris; simple to read and to test                          |
 | Top drivers            | Top 5 per target (budget, revenue, score)                                                                              | What drives budget isn't what drives score                              |
-| Comparable films       | 5 similar past films with real budget, revenue, score; prefer known money, fall back to "not reported"                 | Creators think in comparables; the biggest UX win of the week           |
-| Speed                  | Under 400 ms per prediction                                                                                            | The form should feel instant                                            |
+| Comparable films       | 5 similar past films with real budget, revenue, score. Pool: films with a usable score (`score_ok`) released before the planned date; the 50 most similar, then the 5 nearest with a real budget or revenue, "not reported" only if fewer than 5 have one | Decided by Dimitris; creators think in comparables                       |
+| Comparables similarity | Genres 0.3, themes 0.2, synopsis 0.3 (cosine on the full 384-number MiniLM vectors, skipped without a synopsis), era 0.1, budget level 0.2 (the creator's budget or the budget model's middle), same original language 0.1. The index is a gitignored file rebuilt by one command | Decided by Dimitris; the 16 PCA numbers match stories too roughly. Language and budget 0.2 chosen in the notebook on 600 films from 2016–18: comparables' revenue closer (MAE log 1.88 → 1.80), same language 60% → 84%; a well-known tie-break made revenue worse and was dropped |
+| Big-budget warning     | When the given or estimated budget is $150M or more, a warning that revenue ranges for big films were less reliable on 2019+ | Decided by Dimitris; Day 6 test: $150M+ revenue worse than B2, 64% coverage |
+| Empty optional fields  | A warning when no production country or studio is given: past films with none recorded are mostly small, so an empty field lowers the ranges (no country: about −38% revenue for a horror film) | Decided by Dimitris; the models stay frozen, and the Day 10 form can nudge creators to fill these in |
+| Release-timing wording | Worded by whichever part pushes most: "Releasing in 2026 (recent films earn less in our data)" when the year dominates, "Releasing in December (holiday season)" otherwise | Decided by Dimitris; for a 2026 film the year contributes −16% and the month much less |
+| Budget comparison wording | A budget within 5% of an edge of the "similar films" range is "at the low/high end" rather than below/above        | Rounded to two figures, both can show the same dollar amount (*The Shape of Water*) |
+| Models used            | The all-data models in `ml/artifacts/final/`, listed with their checksums in `manifest.json`                          | The Day 6 `final-models` state                                          |
+| Speed                  | Under 400 ms per prediction, after a one-time startup load (the feature context takes about 20 s)                      | The form should feel instant                                            |
 
 ### Feature groups
 
-| Group                       | Raw features merged                               |
-| --------------------------- | ------------------------------------------------- |
-| Story (synopsis)            | the 16 embedding components                       |
-| Genre                       | all genre columns                                 |
-| Themes                      | all theme columns                                 |
-| Director's track record     | earlier films, revenue, score, budget, experience |
-| Cast's track record         | actor max/mean/min columns                        |
-| Franchise                   | `is_franchise` and earlier collection results     |
-| Budget                      | log budget (marked "estimated" in estimated mode) |
-| Release timing              | month, summer/holiday flags, year                 |
-| Studio / country / language | their columns                                     |
-| Runtime, certification      | as-is                                             |
+| Group                       | Raw features merged                                                     |
+| --------------------------- | ----------------------------------------------------------------------- |
+| Genre                       | all genre columns                                                       |
+| Themes                      | all theme columns                                                       |
+| Director's track record     | earlier films, revenue, score, budget (`director_budget`), experience   |
+| Cast's track record         | actor max/mean/min columns, including `actors_budget_*`                  |
+| Franchise                   | `is_franchise`, earlier collection results, `franchise_budget`          |
+| Budget                      | log budget (marked "estimated" in estimated mode)                       |
+| Release timing              | month, summer/holiday flags, year, `covid_period`                       |
+| Studio                      | company columns and `company_budget`                                    |
+| Country, language           | their columns                                                           |
+| Runtime, certification      | as-is                                                                   |
+
+No "Story" group: the synopsis numbers and `has_synopsis` are in no model.
 
 ### Tasks
 
-1. **Drivers (1.5 h), `ml/explain/drivers.py`.** `pred_contrib`, rescaling, grouping, strength labels.
-2. **Feature groups (45 min).** The mapping above.
-3. **Plain-English sentences (1 h).** One template per group, filled with the creator's values ("Releasing in **December**…"); top 5 per target, split into "pushing up" and "pushing down".
-4. **Comparable films (1.5 h), `ml/explain/comparables.py`.** Nearest past films by genre, themes, synopsis embedding, era and budget level; only films released before the hypothetical date; TMDB ids for links; precomputed index loaded at startup.
-5. **`predict()` package (1.5 h), `ml/predict.py`.** Validate → features → budget → revenue (given or estimated mode) → score → drivers → comparables. Output: three ranges, revenue mode, rough flag, budget comparison, drivers, comparables, warnings, model version. Artifacts in one folder with `manifest.json`.
-6. **Tests (1 h).** Golden examples (franchise blockbuster, small drama, unknown cast); drivers add up and never expose raw names; comparables never from the future; under 400 ms.
-7. **Sanity notebook (45 min), `07_explanations.ipynb`.** Drivers and comparables for famous films.
-8. **Wrap-up (15 min).** `PROGRESS.md` and commit.
+0. **Update the plan document (15 min).** No rescaling, no synopsis driver, log-based thresholds, the budget track record inside the groups, the comparables pool and similarity, the estimated-budget driver, the $150M+ warning, "at the low/high end" wording.
+1. **Drivers (1.5 h), `ml/explain/drivers.py`.** `pred_contrib` on each middle model, grouping, strength labels; contributions plus the expected value equal the middle (tested).
+2. **Feature groups (45 min), `ml/explain/groups.py`.** The mapping above; every model feature maps to exactly one group.
+3. **Plain-English sentences (1 h), `ml/explain/sentences.py`.** One template per group, filled with the creator's values ("Releasing in **December**…", "Budget of about $40M (estimated)"); top 5 per target, split into "pushing up" and "pushing down".
+4. **Comparable films (1.5 h), `ml/explain/comparables.py`.** Index of `score_ok` films (genre and theme flags, unit MiniLM vectors as float16, log budget) in `ml/artifacts/final/comparables.npz`, gitignored and rebuilt by `uv run python -m ml.explain.comparables`. Only films released before the planned date; the 50 most similar, then the 5 nearest with money; TMDB ids and poster paths for links.
+5. **`predict()` package (1.5 h), `ml/predict.py`.** Validate → features → budget → revenue (given or estimated mode) → score → drivers → comparables. Output: three ranges, revenue mode, rough flag (revenue and budget only), budget comparison, drivers, comparables, warnings ($150M+ budget, unknown director or cast, release after 2025), model version. The all-data models in `ml/artifacts/final/` with `manifest.json` (checksums, `final-models` tag, training years, LightGBM version).
+6. **Tests (1 h).** Golden examples (franchise blockbuster, small drama, unknown cast) on the real models, skipped without the files; drivers add up and never expose raw names; comparables never from the future; both revenue modes; under 400 ms.
+7. **Sanity notebook (45 min), `07_explanations.ipynb`.** Drivers and comparables for famous films judged at their release date; comparables weights and strength cut-offs checked by eye.
+8. **Wrap-up (30 min).** README, `PROGRESS.md`, CLAUDE.md, commit.
 
 **Done when** `predict()` returns the full output for any valid input within 400 ms and the golden tests pass.
+
+**Outcome (2026-10-22):** done. `ml.predict.predict(form)` returns ranges, rough flags, the budget comparison, 5 drivers per target as sentences, 5 earlier comparable films and warnings in about 150 ms (about 11 s to load once). Strength cut-offs +50% / +20% and comparables weights with language (0.1) and budget 0.2 were chosen in `07_explanations.ipynb`; golden examples in `tests/test_golden.py`; 250 tests.
 
 ## Day 8: FastAPI backend
 

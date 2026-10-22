@@ -1,0 +1,44 @@
+{
+ "version": "2026-10-21.849304a7",
+ "tag": "final-models",
+ "models": {
+  "revenue": {
+   "trained_on": "films released 1960-2025",
+   "train_films": 10421,
+   "q": 0.3991656552095577,
+   "q_estimated": 0.5045955491782799
+  },
+  "budget": {
+   "trained_on": "films released 1960-2025",
+   "train_films": 14460,
+   "q": 0.36266781081860344
+  },
+  "score": {
+   "trained_on": "films released 1960-2025",
+   "train_films": 33077,
+   "q": 0.15905622799536623
+  }
+ },
+ "lightgbm": "4.7.0",
+ "files": {
+  "revenue_p10.joblib": "4bf8dc940bb8f324ceb788d6b0bd17696b8fb965971bb1ce6c2c1fa9d4361e8f",
+  "revenue_p50.joblib": "678ce28f4ba90108c7ee14e97516403f6eb76995b4ac0c651306ca269827cc53",
+  "revenue_p90.joblib": "e39cfd86b77f1eda9c3a4b9b864561ae8408a28448549b5436e513a9ff12b965",
+  "budget_p10.joblib": "448e602e48a369cb1266775fd4230f3933827b086b66a8794646eb30cbad218e",
+  "budget_p50.joblib": "54fb8eea971dc7fc01c49320150f97f666160c35a4d61bc92f17164a4adb51a0",
+  "budget_p90.joblib": "2d55d1e1adcc78dc25add08c2147ce6e59db51d3f58cd5c0940d908a4f520b03",
+  "score_p10.joblib": "85e9991cec3b867344246761c03ab315f027a6fc60744bba8d9e3f18c03ab7ed",
+  "score_p50.joblib": "60e38959fd5d65a61c2eb165ba7cf82d41299aa5d556f7580d37d86098bd83b7",
+  "score_p90.joblib": "55df037900fa8e9daa0996d89de9061b804d19b8b3207505f82e78ae8ed188e6",
+  "revenue_meta.json": "3bab429cc054bc5a4fb0cd904dd63daefed76f1ad54e6c75f5aca2a2b0b168dd",
+  "budget_meta.json": "51b2a91a56c6066ad2edfc586bf7cf2dd95d8f7527b85136c5218a574b7b1259",
+  "score_meta.json": "9436a061a3d8c59b5cd93e86df709cfe79e0c04f8b440691298ea155f1a6f167",
+  "rough_estimate.json": "bb7460e47e7a6d41826275f1a7715e7108e66d4d075d922b8ed41271fdcca817"
+ },
+ "comparables": {
+  "file": "comparables.npz",
+  "built_by": "uv run python -m ml.explain.comparables",
+  "checked": false
+ },
+ "written_at": "2026-10-22T08:01:13+00:00"
+}
