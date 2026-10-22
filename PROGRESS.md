@@ -1045,3 +1045,192 @@ Write-up: `reports/audit.md`.
   - show `n_films` in autocomplete;
   - show `score.note` under the score range.
 - **Day 14:** behind Render's proxy the rate limit must read `X-Forwarded-For`.
+
+## Day 9: Tests and Docker (done 2026-10-22)
+
+- [x] 0. Plan document: left untouched, as on Day 8. Today's decisions are recorded here and in the README:
+  - Dimitris installs Docker Desktop while tasks 1–3 run;
+  - for the memory gate, measure first, then propose cuts;
+  - his picks: scikit-learn/scipy training-only, the 8-bit MiniLM, prebuilt track records, `malloc_trim`, the packed name lookups, flat arrays for companies and franchises, and plain-string titles.
+- [x] 1. End-to-end pipeline test (`tests/test_e2e.py`, `tests/fixtures/mini_raw.jsonl`)
+- [x] 2. Time-travel leakage test (`tests/test_time_travel.py`)
+- [x] 3. Test hardening (fuzzing, coverage, the manifest check at startup)
+- [x] 4. Docker image (`backend/Dockerfile`, `.dockerignore`, the dependency groups, the slim database)
+- [x] 5. Compose, Make and smoke test (`docker-compose.yml`, `scripts/smoke.py`)
+- [x] 6. Memory and startup gate (407 MB after 100 predictions, under 450 MB)
+- [x] 7. Wrap-up and commit
+
+### Task 1: end-to-end pipeline test
+
+- **The fake pull** (`tests/fixtures/mini_raw.py` generates `mini_raw.jsonl`; a test checks the file is current):
+  - **200 normal films (2005–2020):** 20 directors and 60 actors who recur, budgets that grow with the director's level, about 30 French films, sequels in a "Mini Saga" collection, and real theme keywords from `themes.json` (heist 395, friendship 3230).
+  - **13 messy records:** a $0 and a $7 budget, token box office, a budget in local currency, runtimes of 0 and 900 minutes, an unreleased film, a film pulled twice, a blank title, no votes, no genres, and a film still earning.
+- **The test (11 tests, about 4 s, marked `slow`):** raw → `build_db` → `FeatureContext.load` with a fake text model → the features table → tiny real `LgbmQuantile` models → `conformal_q` from backtest fold 2 → `Chain` + score model → `Index.build` → `Predictor` → `create_app` → HTTP.
+  - each messy record trips its cleaning rule exactly once;
+  - the training views keep the bad money out;
+  - the feature columns match `feature_list.json`;
+  - the budget model ranks 2016–18 films with Spearman above 0.3, and revenue stays monotone in budget;
+  - `/predict` works in both modes, with comparables only from before the date;
+  - movie pages, autocomplete and health answer.
+- **`make test-fast`:** skips the `slow` and `real_data` tests (registered markers; the golden, sanity and real-API tests are now marked `real_data`).
+
+### Changes from the plan (task 1)
+
+- **The feature context uses the app's real loader** with the committed vocab, themes and PCA, and real theme keyword ids. With the fixture's own vocab, the column names would not have matched `feature_list.json`.
+- **The estimated-mode correction is 1.25 × the given one** in this test. The real calibration code reads the default database only, and the test checks the pipeline works, not its accuracy.
+
+### Checks (task 1)
+
+- A mutation removing `money_suspect` from the revenue view → 2 end-to-end tests fail.
+- `make test-fast`: 289 tests in about 13 s.
+
+### Task 2: time-travel leakage test
+
+- **The rule:** copy the database, delete every film released on or after a cut date with all its links, then judge the deleted films at the cut date with both databases. Every feature must be identical.
+- **Fixture, cut 1 January 2017:** a film is released on the cut day itself, so a same-day leak would show; identical.
+- **Real database, cut 1 January 2010:** 300 films sampled from the 2010–2025 films the cut deletes; identical, in about 25 s. The copy is made with SQLite's backup API in a temp folder, and `data/movies.db` has the same checksum before and after.
+- **Refits on train films:** the refitted vocab equals `vocab.json`; every theme keyword is among the 300 most common keywords in train films; the PCA refitted on the cached train vectors has the same mean and the same 16 directions.
+
+### Changes from the plan (task 2)
+
+- **The forms are built once, from the full database.** The first real run flagged *Scare Package* (2019), an anthology with 8 directors. `film_to_form` picks the most experienced director at the film's own release, after the cut, so that choice may rightly differ. Only the features at the cut date are compared.
+
+### Checks (task 2)
+
+- A history that counts films released on the judging day is caught (a check built into the test).
+- A franchise that counts its later films is caught: films 29 and 79 would see 8 earlier films instead of 6, and the real-database version fails too.
+
+### Task 3: test hardening
+
+- **Fuzzing (`tests/test_fuzz.py`, hypothesis, derandomized, marked `slow`):**
+  - 300 random bodies go to `/predict` and 100 to `/compare`;
+  - they include valid forms with every edge, values just past the limits or of the wrong type, NaN and ±Infinity, huge and unicode strings, unknown fields and non-objects;
+  - the answer must be a 200 with ordered, finite ranges, or a 422 naming a field;
+  - 23% of `/predict` cases and 42% of `/compare` cases get a 200.
+- **A real bug, fixed:** a whole-number field sent as NaN or Infinity crashed `int(value)` with an `OverflowError`, inside the 422 handler, so the API answered 500. `contract._number` now refuses non-finite values ("must be a number"). There are 12 new contract tests, and 15 tests fail without the fix.
+- **The manifest at startup:** with one byte of `score_meta.json` changed, the app refuses to start ("score_meta.json changed") and serves nothing.
+- **Coverage (`make coverage`):**
+
+  | Part | Coverage |
+  | --- | --- |
+  | Everything | 78.0% |
+  | The code the app runs | 92.2% |
+  | Data, evaluation, baselines and calibration | 82.3% |
+  | The one-off scripts (audit, ablation, tune, final) | 13.3% |
+
+### Changes from the plan (task 3)
+
+- **The fuzz requests send raw JSON.** httpx refuses NaN in `json=`, so at first no NaN ever reached the server; a real client can still send it.
+- **A valid-form branch was added**, because at first only 5% of `/predict` and 0.8% of `/compare` cases got a 200.
+- **Coverage is reported in parts.** The 80% aim isn't met overall (78.0%), only on the code the app runs.
+
+### Task 4: Docker image
+
+- **Docker Desktop 4.96.2** is installed per user (`%LOCALAPPDATA%\Programs\DockerDesktop`); the shell used the full path until the PATH was refreshed.
+- **`backend/Dockerfile`:**
+  - two stages: `uv` 0.13.4 installs the locked runtime dependencies, then `python:3.11-slim` with `libgomp1`;
+  - a non-root user and one uvicorn worker;
+  - a healthcheck on `/api/v1/health`.
+- **`.dockerignore`** whitelists `pyproject.toml`, `uv.lock`, `ml/`, `backend/` and `build/`, and leaves out the ≤2015 `.joblib` models and the full `model.onnx`.
+- **Dependencies:**
+  - runtime is 10 packages;
+  - the `ml` group holds `optuna`, `matplotlib`, `scikit-learn` and `onnx`, `joblib` is now a direct dependency, and `[tool.uv] default-groups = ["dev", "ml"]` keeps `uv sync` complete locally;
+  - the app no longer imports `optuna`: `Chain.load` imported it through `calibrate` and `tune`, and now does so only for models without `q_estimated`;
+  - the three sklearn imports (GroupKFold, PCA, KMeans) moved inside the training functions.
+- **`scripts/slim_db.py`:** a read-only backup, the `features` table dropped, VACUUM, and an FTS integrity check. 309 → 220 MB.
+- **The 8-bit MiniLM:**
+  - `text.quantize_model()` writes `model_q8.onnx` (uint8, per output channel, 23 MB), and `make model` builds it;
+  - only `FeatureContext.embed`, the creator's synopsis, uses it;
+  - on 1,000 overviews it has a mean cosine of 0.993 with the full model, and 89% find the same nearest overview (plain int8: 0.956 and 71%);
+  - the golden comparables are unchanged, and a new test keeps the two models close.
+- **Size:** 1.03 GB → 928 MB unpacked (436 → 357 MB compressed); 984 MB once the prebuilt file was added in task 6.
+
+### Changes from the plan (task 4)
+
+- **scipy stays:** LightGBM imports `scipy.sparse` at load time (143 MB).
+- **The 100 MB of precompiled bytecode stays**, so startup doesn't recompile everything.
+- **The image is above the ~700 MB aim** (README Limitation).
+
+### Task 5: compose, Make and smoke test
+
+- **`docker-compose.yml`:** the backend, with `CORS_ORIGINS` for the Vite dev server and port 8080 for the Day 10 frontend container.
+- **Make:** `make docker-build` (slim database, prebuilt context, image), `make docker-run` (`compose up -d --wait`) and `make smoke` (`URL=` for the live site).
+- **`scripts/smoke.py`:** waits for `/health`, then runs 10 checks:
+  - the model version;
+  - the three golden forms, middles equal to the snapshot to 6 significant figures;
+  - compare, a bad form's 422, search, the *Infinity War* page, autocomplete and options.
+
+  It exits 1 on any failure.
+- **The golden forms** moved to `tests/golden/forms.json`, so the smoke script doesn't import the test code.
+
+### Checks (task 5)
+
+- All 10 smoke checks pass against the container.
+- A wrong expected version → the `/health` check fails, exit 1.
+- Nothing listening → "no healthy API … after 4 s", exit 1.
+
+### Task 6: memory and startup gate
+
+- **Measured with `/proc/1/status` and `docker stats`:** 100 different forms with synopses, so nothing comes from the cache, with the rate limit raised for the run.
+
+| In the container | Task 6 start | Prebuilt + `malloc_trim` | All cuts |
+| --- | --- | --- | --- |
+| After startup | 576 MB | 466 MB | 323 MB |
+| Highest point, during startup | 651 MB | 578 MB | 489 MB |
+| After 100 predictions | 663 MB | 551 MB | **407 MB** (`docker stats` 385 MiB) |
+| Until healthy | 12 s | 8.5 s | 8.3 s |
+| `/predict` median | 171 ms | 165 ms | 175 ms |
+
+- **The breakdown that drove the cuts:**
+
+  | Part | Memory |
+  | --- | --- |
+  | Imports | 136 MB |
+  | History built with pandas | +401 MB, of which about 320 MB freed but kept |
+  | History's name dict, after prebuilding | 83 MB |
+  | Companies + Franchises dicts | 52 MB |
+  | Comparables index (incl. 17 MB of fixed-width titles) | 72 MB |
+  | Models | 38 MB |
+  | Lookups | 33 MB |
+  | MiniLM session | 41 MB |
+- **The cuts (all decided by Dimitris):**
+  - `FeatureContext.load(con, prebuilt=path)` with `save_prebuilt` / `python -m ml.features.build prebuilt` (57 MB, stamped with `built_at` and the film count, refused on a mismatch), used through `CONTEXT_FILE` in the image;
+  - `release_free_memory()` (glibc `malloc_trim`) after the lifespan loads, plus `MALLOC_ARENA_MAX=2`;
+  - `history.NameMap` (packed sorted names) for History's and Companies' name lookups;
+  - `history.Groups` (offsets into flat arrays) for Companies and Franchises;
+  - comparables titles and posters as plain strings.
+- **Identical:**
+  - the full features table (79,199 × 177) matches bit for bit, built at startup and from the prebuilt file;
+  - all 344,445 person and 42,519 company names resolve as before;
+  - the golden snapshot, time-travel, end-to-end and smoke checks pass.
+- **Under `--memory=512m`, like Render Free:** no out-of-memory kill, 100 predictions and the smoke test pass. A full 1,000-entry cache should add about 10 MB (100 entries added about 1 MB).
+
+### Changes from the plan (task 6)
+
+- **Five cuts instead of "an int8 encoder and smaller indexes".** The measurements showed the memory was in History's build and in Python containers, not in the encoder.
+- **My first estimate for the name lookup was too low:** 35 MB estimated, 83 MB measured.
+
+### Task 7: wrap-up
+
+- **README:**
+  - new "Running with Docker" and "Testing" sections;
+  - updated setup commands, the folder table (`scripts/`), the API memory line, and the API test count (55);
+  - four new Limitations: the image size, the 489 MB startup peak, the 8-bit model against the full-model index, and memory depending on the system.
+- **CLAUDE.md:**
+  - the new commands and test markers;
+  - the Docker architecture and the rules that keep memory down: no `ml`-group imports when the app starts, the prebuilt stamp, and packed `NameMap` / `Groups` instead of dicts of small objects.
+- **Commit:** `73a2cce` on `day6` (36 files).
+
+### Surprises / inputs for Day 10+
+
+- **Day 10 (frontend in compose):**
+  - add the frontend service to `docker-compose.yml`; `CORS_ORIGINS` already allows port 8080;
+  - the smoke script should check the home page too, as the plan says;
+  - the API's JSON schema for `openapi-typescript` is at `/openapi.json` in the running container.
+- **Day 14 (Render):**
+  - the image is 370 MB compressed;
+  - startup peaks at 489 MB under a 512 MB limit, so watch the first deploy's memory graph;
+  - the rate limit must read `X-Forwarded-For` behind the proxy;
+  - run `make smoke URL=https://…` with `--wait 180` against a sleeping free instance.
+- **A new database build** means rerunning `make docker-build`, which rebuilds `build/movies.db` and `build/context.joblib`. A stale context file is refused at startup, so it can't silently serve old track records.
+- **`make test` now takes about 2–2.5 min**; `make test-fast` (307 tests, about 15 s) is the quick loop.
