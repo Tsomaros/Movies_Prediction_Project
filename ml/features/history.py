@@ -54,17 +54,24 @@ def day_number(d: date | str | np.datetime64) -> int:
 
 
 @dataclass
-class _Track:
-    """One person's films in one role, sorted by date (days since 1970-01-01)."""
+class _Values:
+    """One kind of value (revenue, score or budget) for every track, packed: track t's values are
+    values[offsets[t]:offsets[t + 1]], sorted by the day they belong to."""
 
-    dates: np.ndarray
-    sequel_cumsum: np.ndarray  # sequel_cumsum[i] = sequels among the first i films
-    revenue_dates: np.ndarray
-    revenue: np.ndarray  # log revenue in 2025 dollars
-    score_dates: np.ndarray
-    score: np.ndarray
-    budget_dates: np.ndarray
-    budget: np.ndarray  # log budget in 2025 dollars
+    days: np.ndarray  # int64
+    values: np.ndarray  # float64: log revenue / score / log budget (2025 dollars for money)
+    offsets: np.ndarray  # int64, number of tracks + 1
+
+    @classmethod
+    def pack(cls, track_of_row: np.ndarray, n_tracks: int, days: np.ndarray, values: np.ndarray) -> _Values:
+        ok = ~np.isnan(values)
+        counts = np.bincount(track_of_row[ok], minlength=n_tracks)
+        return cls(days[ok], values[ok], np.concatenate([[0], np.cumsum(counts)]).astype(np.int64))
+
+    def until(self, track: int, day: int, side: str) -> np.ndarray:
+        """Track's values dated before `day` (side="left") or on or before it (side="right")."""
+        s, e = self.offsets[track], self.offsets[track + 1]
+        return self.values[s:s + int(np.searchsorted(self.days[s:e], day, side))]
 
 
 class _ExpandingMedian:
@@ -113,28 +120,27 @@ class History:
         self.score_typical = _ExpandingMedian(*_available(films, "score"))
         self.budget_typical = _ExpandingMedian(*_available(films, "log_budget", delay=1))
 
-        rows = credits.merge(films, left_on="movie_id", right_on="id")
+        used = films[["id", "day", "sequel", "log_revenue", "score", "log_budget"]]  # numbers only: a smaller merge
+        rows = credits.merge(used, left_on="movie_id", right_on="id")
         rows = rows.sort_values(["role", "person_id", "day"], kind="stable").reset_index(drop=True)
-        # One flat sorted array per column; each track is a view into it (no per-person copies).
-        keys = list(zip(rows["person_id"].astype(int), rows["role"]))
-        day, sequel = rows["day"].to_numpy(np.int64), rows["sequel"].to_numpy()
-        revenue, score = rows["log_revenue"].to_numpy(float), rows["score"].to_numpy(float)
-        budget = rows["log_budget"].to_numpy(float)
-        starts = np.flatnonzero(np.r_[True, [a != b for a, b in zip(keys[1:], keys[:-1])]])
-        ends = np.r_[starts[1:], len(rows)]
-        self.tracks: dict[tuple[int, str], _Track] = {}
-        for s, e in zip(starts, ends):
-            rev_ok, score_ok, budget_ok = ~np.isnan(revenue[s:e]), ~np.isnan(score[s:e]), ~np.isnan(budget[s:e])
-            self.tracks[keys[s]] = _Track(
-                dates=day[s:e],
-                sequel_cumsum=np.concatenate([[0], np.cumsum(sequel[s:e])]),
-                revenue_dates=day[s:e][rev_ok],
-                revenue=revenue[s:e][rev_ok],
-                score_dates=day[s:e][score_ok],
-                score=score[s:e][score_ok],
-                budget_dates=day[s:e][budget_ok],
-                budget=budget[s:e][budget_ok],
-            )
+        # A track is one person's films in one role. Everything is packed into a few flat arrays sorted by
+        # (role, person, day): track t's films are rows row_offsets[t]:row_offsets[t + 1]. One small object per
+        # person took about 870 MB for the 350k tracks; this takes a few tens of MB.
+        role = rows["role"].to_numpy()
+        person = rows["person_id"].to_numpy(np.int64)
+        new_track = np.r_[True, (role[1:] != role[:-1]) | (person[1:] != person[:-1])] if len(rows) else np.zeros(0, bool)
+        track_of_row = np.cumsum(new_track) - 1
+        starts = np.flatnonzero(new_track)
+        n_tracks = len(starts)
+        self.row_offsets = np.r_[starts, len(rows)].astype(np.int64)
+        self.days = rows["day"].to_numpy(np.int64)
+        self.sequels = np.r_[0, np.cumsum(rows["sequel"].to_numpy())].astype(np.int32)  # sequels among rows[:i]
+        self.revenue = _Values.pack(track_of_row, n_tracks, self.days, rows["log_revenue"].to_numpy(float))
+        self.score = _Values.pack(track_of_row, n_tracks, self.days, rows["score"].to_numpy(float))
+        self.budget = _Values.pack(track_of_row, n_tracks, self.days, rows["log_budget"].to_numpy(float))
+        # role -> sorted person ids and the index of each one's track
+        self.people = {r: person[starts][role[starts] == r] for r in ROLES}
+        self.first_track = {r: np.flatnonzero(role[starts] == r) for r in ROLES}
 
         # Name lookup for free-text form entries: lower-cased name -> the person with the most films in that role.
         counts = credits.groupby(["person_id", "role"]).size().rename("n").reset_index()
@@ -142,7 +148,14 @@ class History:
         named["key"] = named["name"].str.casefold()
         named = named.sort_values(["role", "key", "n", "person_id"], ascending=[True, True, False, True])
         self.by_name = {(r.role, r.key): int(r.person_id) for r in named.drop_duplicates(["role", "key"]).itertuples()}
-        self.known_ids = {role: {pid for pid, r in self.tracks if r == role} for role in ROLES}
+
+    def _track(self, person_id: int | None, role: str) -> int | None:
+        """Index of the person's track in that role, or None if they have no film in it."""
+        if person_id is None:
+            return None
+        ids = self.people[role]
+        i = int(np.searchsorted(ids, person_id))
+        return int(self.first_track[role][i]) if i < len(ids) and ids[i] == person_id else None
 
     @classmethod
     def from_db(cls, con: sqlite3.Connection) -> History:
@@ -170,7 +183,7 @@ class History:
         """An id we know in this role, else a case-insensitive name match, else None (a new person)."""
         if not ref:
             return None
-        if ref.get("id") is not None and ref["id"] in self.known_ids[role]:
+        if ref.get("id") is not None and self._track(int(ref["id"]), role) is not None:
             return int(ref["id"])
         if ref.get("name"):
             return self.by_name.get((role, ref["name"].strip().casefold()))
@@ -179,21 +192,23 @@ class History:
     def person(self, person_id: int | None, role: str, as_of: int) -> dict[str, float]:
         typical_revenue, typical_score = self.priors(as_of)
         typical_budget = self.typical_budget(as_of)
-        track = self.tracks.get((person_id, role)) if person_id is not None else None
-        n = bisect_left(track.dates, as_of) if track is not None else 0
+        track = self._track(person_id, role)
+        if track is not None:
+            s, e = self.row_offsets[track], self.row_offsets[track + 1]
+            n = int(np.searchsorted(self.days[s:e], as_of, "left"))
+        else:
+            n = 0
         if n == 0:
             return {"n_films": 0, "years_active": 0.0, "revenue": typical_revenue, "score": typical_score,
                     "budget": typical_budget, "franchise_films": 0, "is_new": 1}
         mature = as_of - MATURE_DAYS
-        revenue = track.revenue[: bisect_right(track.revenue_dates, mature)]
-        score = track.score[: bisect_right(track.score_dates, mature)]
         return {
             "n_films": n,
-            "years_active": (as_of - int(track.dates[0])) / 365.25,
-            "revenue": _shrunk(revenue, typical_revenue),
-            "score": _shrunk(score, typical_score),
-            "budget": _shrunk(track.budget[: bisect_left(track.budget_dates, as_of)], typical_budget),
-            "franchise_films": int(track.sequel_cumsum[n]),
+            "years_active": (as_of - int(self.days[s])) / 365.25,
+            "revenue": _shrunk(self.revenue.until(track, mature, "right"), typical_revenue),
+            "score": _shrunk(self.score.until(track, mature, "right"), typical_score),
+            "budget": _shrunk(self.budget.until(track, as_of, "left"), typical_budget),
+            "franchise_films": int(self.sequels[s + n] - self.sequels[s]),
             "is_new": 0,
         }
 

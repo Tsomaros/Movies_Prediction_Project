@@ -5,6 +5,7 @@ description = "Predict budget, revenue and audience score ranges for planned mov
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
 dependencies = [
+    "fastapi>=0.159.1",
     "httpx>=0.28.1",
     "lightgbm>=4.7.0",
     "matplotlib>=3.11.2",
@@ -15,6 +16,7 @@ dependencies = [
     "python-dotenv>=1.2.4",
     "scikit-learn>=1.9.1",
     "tokenizers>=0.23.3",
+    "uvicorn>=0.54.0",
 ]
 
 [tool.pytest.ini_options]

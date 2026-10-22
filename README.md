@@ -56,13 +56,14 @@ Requirements: [uv](https://docs.astral.sh/uv/) and GNU make. uv installs Python 
 make setup                 # create .venv and install locked dependencies
 make model                 # download the MiniLM text model (about 90 MB, once)
 cp .env.example .env       # then paste your TMDB API Read Access Token into .env
-make test                  # offline tests, no network needed (about 80 s; the golden and sanity tests need the database and models, about 7 s without)
+make test                  # offline tests, no network needed (about 2 min; the golden, sanity and real-API tests need the database and models)
 make data                  # pull films from TMDB (resumable), build data/movies.db, then the features table
 make db                    # rebuild data/movies.db from the raw pull only (about 30 s; drops the features table)
 make features              # build the features table (about 1 min; the first run also embeds every overview, about 8 min)
 make tune                  # tune the LightGBM settings on backtest folds 1-2 (15 min per target, 45 min in all)
 make train                 # calibrate the ranges, then fit and save all three models to ml/artifacts/ (about 5 min)
 make evaluate              # baselines and LightGBM on validation, breakdowns and backtest -> reports/ (test split untouched)
+make api                   # the API on http://localhost:8000, docs at /docs (needs the database and the app's models)
 uv run python -m ml.models.rough           # the rough-estimate cut-offs (fitted once on Day 6, then frozen)
 uv run python -m ml.eval.final test        # the one-time test run (done on Day 6; refuses to run again)
 uv run python -m ml.eval.final all-data    # retrain the app's models on 1960-2025 -> ml/artifacts/final/ (about 1 min)
@@ -73,7 +74,7 @@ uv run python -m ml.predict manifest       # checksums of the app's model files 
 | Folder       | Contents                                         |
 | ------------ | ------------------------------------------------ |
 | `ml/`        | Data pull, features, models and evaluation; `ml/artifacts/` holds the PCA and the models' settings, calibration and metadata (committed), the MiniLM files and the trained `.joblib` models (not in git; `make model`, `make train`); `ml/artifacts/final/` holds the app's all-data models, their `manifest.json` and the comparables index; `ml/explain/` and `ml/predict.py` turn them into explained predictions |
-| `backend/`   | FastAPI app (later)                              |
+| `backend/`   | FastAPI app: `backend/app/` with one router per resource, schemas, read-only repo queries and services ([API](#api)) |
 | `frontend/`  | React (Vite) app (later)                         |
 | `data/`      | Raw pull and database (not in git), CPI table, summaries |
 | `tests/`     | Offline tests                                    |
@@ -416,6 +417,72 @@ Warnings appear for a budget of $150M or more (revenue for these films was the w
 
 These three forms are the golden examples in `tests/test_golden.py`: the tests check rules (ordered ranges, mode, warnings, earlier comparables, speed) and a snapshot of the output in `tests/golden/predictions.json`, which is rewritten only on purpose (`UPDATE_GOLDEN=1 uv run pytest tests/test_golden.py`).
 
+## API
+
+A FastAPI backend in `backend/app/`. Every endpoint lives under `/api/v1`, and the interactive docs are at `/docs`. Run it with `make api` (http://localhost:8000; about 10 s to load the models and lookups once). The React app (Days 10–13) is built against this API.
+
+| Method | Path | What it does |
+| --- | --- | --- |
+| POST | `/api/v1/predict` | A creator form in; ranges, drivers, comparable films and warnings out |
+| POST | `/api/v1/predict/compare` | A base form and 1–3 variants; every prediction plus the differences |
+| GET | `/api/v1/movies` | Search (`q`), filters (`genre`, `year_from`, `year_to`, `language`, `has_money`), `sort` (popularity, newest, title, score), `page`, `page_size` (at most 48) |
+| GET | `/api/v1/movies/{id}` | Facts, themes, cast and crew, money (as reported and in 2025 $), score, posters and 6 similar films |
+| GET | `/api/v1/people?role=director\|actor&q=` | Director and actor autocomplete |
+| GET | `/api/v1/companies?q=`, `/api/v1/collections?q=` | Studio and franchise autocomplete |
+| GET | `/api/v1/meta/options` | Every form field and limit from the contract, the 27 themes, common languages and countries, suggested years |
+| GET | `/api/v1/health` | Status, model version, database build, uptime and the prediction cache |
+
+**Predictions.**
+- **The form:** `/predict` takes the creator form from `ml/features/contract.py`. People, companies and the franchise can be an id from autocomplete, a typed name or `{id, name}`. Leave `budget` out and it is estimated.
+- **The output:** exactly what `predict()` returns, plus `cached` and full TMDB poster URLs for the comparables. The OpenAPI schema documents every field, for the Day 10 TypeScript types.
+- **Compare:** each variant lists only the fields it changes, and `null` clears an optional one. For each variant, `differences` gives the changed fields, the money middles as a ratio of the base's (×1.8), the score as a point difference (+0.3), and whether the revenue mode changed.
+
+```bash
+curl -s localhost:8000/api/v1/predict -H 'Content-Type: application/json' -d '{
+  "genres": ["Drama"], "release_year": 2026, "release_month": 10, "runtime": 105, "language": "en",
+  "certification": "R", "director": 45400, "actors": [36592, 1373737, 1190668, "Ann Newcomer", "Bo Unknown"],
+  "themes": ["family", "coming of age and school"], "companies": [41077], "countries": ["US"]}'
+```
+
+**Errors.** Every 422 has one shape, `{"detail": "Some fields need fixing", "errors": {field: message}}`, and one response lists every problem:
+- **Messages:** they come from the contract, so a wrong type reads like a wrong value: `{"runtime": "must be a number", "themes": "required", "genres": "unknown value(s): 'Cartoon'"}`.
+- **Compare:** errors name the variant, e.g. `variants.1.budget`.
+- **Other errors:** an unknown film is a 404, and a wrong method a 405.
+
+**Limits and caching.**
+- **Rate limit:** 30 prediction requests a minute per IP, shared by `/predict` and `/compare` (our own sliding window, in memory). The 31st gets a 429, "Please try again in a minute", with `Retry-After`.
+- **Prediction cache:** the 1,000 most recently used predictions are kept (LRU), keyed by the validated form, so the same film written two ways is one entry.
+- **HTTP caching:** movie, autocomplete and options responses are cacheable for an hour (`Cache-Control: public, max-age=3600`); health is `no-store`.
+- **Settings:** `MOVIES_DB`, `MODELS_DIR`, `CORS_ORIGINS` (default the Vite dev server), `RATE_LIMIT` and `CACHE_SIZE` come from environment variables.
+
+**Search and lookups.**
+- **Search:** every word of `q` is a quoted prefix in SQLite FTS5, over titles, original titles and overviews, with accents ignored. Typed text can never be FTS syntax.
+- **Similar films:** they come from the Day 7 index with no date rule, any year but never the film itself.
+- **Autocomplete:** in memory. Any word of a name can start the match ("hanks", "tom ha"), and the names with the most films come first. The 398k names and their word keys are packed into byte blobs, about 33 MB; plain Python lists took about 207 MB.
+- **The database:** opened read-only (`mode=ro`), with one connection per request, so the API cannot write to it.
+
+**Measured** on this Windows laptop with the real models:
+
+| | |
+| --- | --- |
+| Startup (models, feature context, comparables, lookups) | about 10 s |
+| `/predict` over HTTP, uncached | median 167 ms (under the 400 ms target); about 3 ms from the cache |
+| `/predict/compare` with 3 variants, uncached | about 0.5 s |
+| Autocomplete / movie search / movie page | 2–10 ms / 5–90 ms / about 20 ms |
+| Memory after startup / after predictions with a synopsis (MiniLM loaded) | 639 MB / 746 MB |
+
+Memory was 1,236 MB at first. The track record (`ml/features/history.py`) kept 350k small objects (about 870 MB); it now packs them into flat arrays (about 108 MB), and the rebuilt features table is bit-for-bit identical to the stored one. The 450 MB gate for the free host is Day 9's work.
+
+`tests/test_api.py` (54 tests, offline, on a small fake database and small models) checks:
+- every endpoint, pinned to a list so a new one must get a test;
+- both revenue modes, the cache, compare's differences, every kind of 422, and the 31st request;
+- FTS input that would be syntax, pages, filters and sorting;
+- similar films that never include the film itself, read-only connections, and parallel requests.
+
+`tests/test_api_golden.py` (10 tests, skipped without the real data and models) checks:
+- the golden forms over HTTP equal `predict()` and the snapshot, in under 400 ms;
+- real autocomplete, movie pages, options and health.
+
 ## Audit after Day 7
 
 The whole pipeline was reviewed stage by stage against the methods it uses, the app's logic was tested on the real models, and performance was measured again without opening the locked test split. The full write-up with sources is in [`reports/audit.md`](reports/audit.md); the numbers come from `uv run python -m ml.eval.audit` (`reports/audit_metrics.md`).
@@ -466,6 +533,8 @@ The money models hold up on new films; the score ranges under-cover, because you
 - **Drivers describe the model, not causes.** "A budget of $40M strongly raises the expected revenue" says what the model leans on for films like this one; spending more would not by itself earn more. The drivers explain the middle prediction only, not the width of the range.
 - **Breakouts stay outside the range.** *Get Out* earned $340M against a range of $160K–$59M, even with the all-data models that saw it in training; its drivers (small budget, new director, small studios) describe the typical film like it.
 - **Empty optional fields count against a film.** No production country or studio looks like the obscure films in the data that have none (no country: about −38% revenue for a small horror film). `predict()` warns about it.
+- **The default browse order is TMDB's popularity on the day of the pull.** It is a trending number, so the first page starts with *Clue* (1985) rather than the best-known films.
+- **The rate limit sees the proxy, not the visitor, behind a hosting proxy.** It counts per client IP from the connection; on Render (Day 14) it must read `X-Forwarded-For` instead.
 - **Some comparable films are obscure.** *Get Out*'s are small horror films scored about 4.5–6. A tie-break towards well-known films was tried and made the comparables' revenue less like the film's own, so it was dropped.
 - **Themes depend on TMDB's keywords.** Only 48% of films have a theme, and some keywords are loose: "rape" puts *The Revenant* in "sex and erotica", and "hilarious" puts some action films in "comedy and satire".
 

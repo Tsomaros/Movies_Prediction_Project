@@ -1,4 +1,4 @@
-.PHONY: setup model data db features tune train evaluate test
+.PHONY: setup model data db features tune train evaluate test api
 
 # Create .venv and install the locked dependencies (then `make model` for the text model)
 setup:
@@ -38,3 +38,7 @@ evaluate:
 # Run the offline test suite
 test:
 	uv run pytest
+
+# Run the API on http://localhost:8000 with reload (docs at /docs); loads the app's models once (about 15 s)
+api:
+	uv run uvicorn backend.app.main:app --reload --port 8000

@@ -2,8 +2,10 @@
 
     Index.build(con, cache, theme_names=None)    -> the pool, from data/movies.db and the embedding cache
     index.save(path) / Index.load(path)          -> ml/artifacts/final/comparables.npz (not in git)
-    index.query(genres, themes, language, vector, year, log_budget, as_of, n=5)
-                                                 -> up to n films as JSON-ready dicts, most similar first
+    index.query(genres, themes, language, vector, year, log_budget, as_of, n=5, exclude=None)
+                                                 -> up to n films as JSON-ready dicts, most similar first;
+                                                    as_of=None (movie pages) allows any year, exclude skips one id
+    index.row(movie_id)                          -> the film's position in the pool, or None
     similarity(index, ...)                       -> the similarity of every film in the pool (0-1)
 
 The pool is every released film with a usable audience score (`score_ok`, about 33,000). Only films
@@ -117,10 +119,20 @@ class Index:
     def __len__(self) -> int:
         return len(self.ids)
 
+    def row(self, movie_id: int) -> int | None:
+        i = int(np.searchsorted(self.ids, movie_id))  # ids are sorted (ORDER BY m.id)
+        return i if i < len(self.ids) and self.ids[i] == movie_id else None
+
     def query(self, genres: Sequence[str], themes: Sequence[str], language: str | None, vector: np.ndarray | None,
-              year: int, log_budget: float | None, as_of: int, n: int = N_COMPARABLES) -> list[dict[str, Any]]:
+              year: int, log_budget: float | None, as_of: int | None, n: int = N_COMPARABLES,
+              exclude: int | None = None) -> list[dict[str, Any]]:
+        """as_of=None drops the date rule (a movie page's similar films, any year); `exclude` is a TMDB id
+        that is never returned (the film itself)."""
         sim = similarity(self, genres, themes, language, vector, year, log_budget)
-        sim[self.days >= as_of] = -np.inf  # only films released before the planned date
+        if as_of is not None:
+            sim[self.days >= as_of] = -np.inf  # only films released before the planned date
+        if exclude is not None:
+            sim[self.ids == exclude] = -np.inf
         k = min(TOP_POOL, int(np.isfinite(sim).sum()))
         if k == 0:
             return []
