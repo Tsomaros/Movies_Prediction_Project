@@ -56,7 +56,7 @@ Requirements: [uv](https://docs.astral.sh/uv/) and GNU make. uv installs Python 
 make setup                 # create .venv and install locked dependencies
 make model                 # download the MiniLM text model (about 90 MB, once)
 cp .env.example .env       # then paste your TMDB API Read Access Token into .env
-make test                  # offline tests, no network needed (about 25 s; the golden examples need the database and models)
+make test                  # offline tests, no network needed (about 80 s; the golden and sanity tests need the database and models, about 7 s without)
 make data                  # pull films from TMDB (resumable), build data/movies.db, then the features table
 make db                    # rebuild data/movies.db from the raw pull only (about 30 s; drops the features table)
 make features              # build the features table (about 1 min; the first run also embeds every overview, about 8 min)
@@ -416,6 +416,35 @@ Warnings appear for a budget of $150M or more (revenue for these films was the w
 
 These three forms are the golden examples in `tests/test_golden.py`: the tests check rules (ordered ranges, mode, warnings, earlier comparables, speed) and a snapshot of the output in `tests/golden/predictions.json`, which is rewritten only on purpose (`UPDATE_GOLDEN=1 uv run pytest tests/test_golden.py`).
 
+## Audit after Day 7
+
+The whole pipeline was reviewed stage by stage against the methods it uses, the app's logic was tested on the real models, and performance was measured again without opening the locked test split. The full write-up with sources is in [`reports/audit.md`](reports/audit.md); the numbers come from `uv run python -m ml.eval.audit` (`reports/audit_metrics.md`).
+
+- **Method:** no leak found. The 182-day lag, strictly-earlier history, time-ordered splits, CQR exactly as Romano et al. (2019) publish it, and TreeSHAP drivers are all standard. Judging a film at the 1st of its month instead of its release day moves the middle by a median of under 0.01.
+- **Logic:** 42 rule tests in `tests/test_sanity.py` all pass on the real models:
+  - ordered, finite ranges, with the score within 0–10;
+  - a higher budget never lowers any part of the revenue range;
+  - the synopsis and the order of list fields change nothing;
+  - estimated mode equals given mode at the estimated budget, only wider;
+  - edge and out-of-form inputs are handled;
+  - matched pairs move the way film-economics studies report.
+- **Reproduction:** all 13 models refitted from scratch match `reports/metrics.md` to the last digit.
+- **Proper scores (2016–18):** the interval score (width plus 10× every miss) drops from B2 to LightGBM:
+  - revenue 6.69 → 5.24;
+  - budget 5.49 → 3.25;
+  - score 2.67 → 2.28.
+
+  LightGBM wins in every backtest fold, and every 95% bootstrap interval of its MAE gain over B2 excludes zero.
+- **A fresh holdout, films released in 2026:** this is the first test of the app's own all-data models.
+
+| 2026 films (judged at the 1st of their month) | Films | B2 MAE | App MAE (95% CI) | App R² | App coverage (target 80%) |
+| --- | --- | --- | --- | --- | --- |
+| Revenue, budget given (182+ days old) | 70 | 1.295 log | 1.052 (0.86–1.25) | 0.56 | 81.4% |
+| Budget | 223 | 1.366 log | 0.781 (0.67–0.92) | 0.62 | 81.2% |
+| Score (182+ days old) | 190 | 0.731 pts | 0.590 (0.52–0.66) | 0.32 | 73.7% |
+
+The money models hold up on new films; the score ranges under-cover, because young films' TMDB scores are still settling (below).
+
 ## Limitations
 
 - **The revenue model is mostly an English-language, post-1980 model.** Only 21% of English films have both budget and revenue (32% among the first 700 per year), and most other languages are under 10%. There are only 286 revenue training films from the 1960s and 471 from the 1970s.
@@ -427,7 +456,11 @@ These three forms are the golden examples in `tests/test_golden.py`: the tests c
 - **Revenue with an estimated budget is less accurate.** When a creator leaves the budget out, the app predicts it first; validation MAE log rises from 1.093 to 1.135 (test: 1.230 to 1.266), and the ranges widen from about 34× to 42× on the test years.
 - **Coverage close to 80% overall can hide groups that are far off.** For example, B2 revenue covers 100% of $150M+ films but 72% of films under $10M. LightGBM narrows this to 82–91% on 2016–18, but on the test years it covers only 64% of $150M+ revenue films and 74–77% of $50M+ budgets. `reports/breakdowns.md` and `reports/final_test.md` have the coverage for each group.
 - **Big-budget revenue is no better than the simple baseline on the test years.** For $150M+ films from 2019 on, LightGBM's revenue error (MAE log 1.04) is slightly worse than B2's (0.99), and its ranges are too narrow (64% coverage). Why isn't known yet; the test split stays closed, so it can only be studied on newer films.
-- **The app's models have no test score of their own.** They are retrained on 1960–2025 and reuse the ≤2018 corrections and tree counts; the 2019+ results above are the best estimate of their accuracy.
+- **The app's models have only a small test of their own.** They are retrained on 1960–2025 and reuse the ≤2018 corrections and tree counts. The 2019+ results above estimate their accuracy, and the 2026 holdout (70 revenue, 223 budget and 190 score films) confirms the money models; a bigger check needs a pull in 2027.
+- **Young films' scores are still settling.** TMDB scores start high, when fans vote first, and drift down. 2026 films under six months old score +0.41 above the app's middle, and those 6–12 months old +0.17, so score ranges cover 60% and 74% of them instead of 80%. The ranges describe a film's settled score.
+- **Releases after 2025 look slightly worse the further away they are.** The track record's "years active" keeps growing after the data ends, although no new films can be counted: the same small drama's revenue middle falls from $23M in 2026 to $17M in 2030.
+- **Revenue stops rising with the budget above about $300M.** Trees can't extrapolate past the 130 training films with a budget over $250M, so $300M, $400M and $1B give the same revenue.
+- **Coverage is uneven in some groups on 2016–18:** budgets of films under $10M (77%, with 22% cheaper than the low end), and the scores of animated (72%) and romance (74%) films, which are mostly higher than the high end.
 - **The revenue and score settings were tuned with the synopsis numbers included and without the budget track record.** The ablation dropped the synopsis afterwards and Day 6 added the budget track record to revenue; the settings were reused without retuning. The budget model was tuned on Day 6 with its saved features, and `make tune` now tunes every model with its saved features.
 - **Synopsis meaning doesn't help yet.** MiniLM embeddings reduced to 16 or 32 numbers add nothing beyond genres and themes. Other text features remain an open question.
 - **Drivers describe the model, not causes.** "A budget of $40M strongly raises the expected revenue" says what the model leans on for films like this one; spending more would not by itself earn more. The drivers explain the middle prediction only, not the width of the range.

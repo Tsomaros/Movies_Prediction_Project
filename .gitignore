@@ -13,6 +13,9 @@ __pycache__/
 # Raw TMDB pull: large, and TMDB terms limit caching to six months
 data/raw/
 
+# Audit holdout: films of 2026 (same TMDB terms); `uv run python -m ml.data.pull --years 2026 --out-dir data/holdout_2026`
+data/holdout_2026/
+
 # Built from the raw pull (same TMDB terms); rebuild with `make db`
 data/movies.db*
 

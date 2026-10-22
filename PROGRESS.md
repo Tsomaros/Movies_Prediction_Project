@@ -747,3 +747,71 @@
 - **Day 10 (form):** nudge creators to fill in the production country and studio, since empty fields lower the ranges (warnings `no_country` and `no_studio`). The 27 theme names come from `themes.json` (`load_themes()`); `contract.describe()` leaves the theme choices empty, so `meta/options` must add them.
 - **`make test` takes about 25 s** because the golden examples load the real predictor. Without the database or models they are skipped, and the suite takes about 7 s.
 
+## Audit after Day 7 (2026-10-22)
+
+Asked by Dimitris: review everything from Day 1 for logic and science, test that the app stays within the bounds of logic, and measure performance. Decisions (asked today):
+- the 2019+ test split stays locked, and its Day 6 numbers are quoted;
+- films of 2026 are pulled from TMDB as a fresh holdout;
+- clear code bugs are fixed, and anything touching the models becomes a proposal.
+
+Write-up: `reports/audit.md`.
+
+- [x] **Method review**, stage by stage (data, targets, leakage, track record, splits, models, calibration, metrics, drivers, domain sense), with sources checked by web search. No leak and no method error. Three data caveats became Findings 1–3.
+- [x] **`tests/test_sanity.py`: 42 rule tests** on the real app models, about 55 s, all passing. They cover:
+  - bounds, on the 3 golden forms and 60 real 2016–18 films;
+  - no range narrower than 2q;
+  - a monotone budget, over 12 budgets × 3 forms;
+  - invariance to the synopsis and to list order;
+  - estimated vs given mode;
+  - 10 edge and 7 out-of-form inputs;
+  - 5 matched-pair directions;
+  - future-free comparables;
+  - train/serve date drift.
+- [x] **`ml/eval/audit.py`** (CLI `uv run python -m ml.eval.audit [validation|holdout|all]` → `reports/audit_metrics.md` / `.json`):
+  - all 13 models are refitted, and their validation and backtest MAE match the reports exactly;
+  - new measures: pinball loss, interval score, R², bias, bootstrap 95% CIs, and coverage by year, genre, language and budget.
+- [x] **2026 holdout:** `ml.data.pull --years 2026 --out-dir data/holdout_2026` gave 1,199 films in about 1 min (gitignored). `data/movies.db` has the same checksum before and after. 609 films were 182+ days old.
+
+### Stats
+
+| | Revenue (given) | Budget | Score |
+| --- | --- | --- | --- |
+| Interval score 2016–18, B2 → LightGBM | 6.69 → 5.24 | 5.49 → 3.25 | 2.67 → 2.28 |
+| R² 2016–18, B2 → LightGBM | 0.41 → 0.58 | 0.12 → 0.70 | 0.22 → 0.46 |
+| LightGBM − B2 MAE, 95% CI | −0.27 to −0.18 | −0.64 to −0.53 | −0.12 to −0.09 |
+| 2026 holdout films | 70 | 223 | 190 (182+ days) |
+| 2026 MAE, B2 → app | 1.295 → 1.052 | 1.366 → 0.781 | 0.731 → 0.590 |
+| 2026 coverage, app | 81.4% | 81.2% | 73.7% (60.0% under 182 days) |
+
+### Changes from the plan
+
+- **Score on the holdout uses films 182+ days old,** like revenue, because young films' scores were found to be still rising. Younger films are reported in a separate row.
+- **Baselines on the holdout are fitted on ≤2018,** not 1960–2025, so that nothing reads the locked test split; the app models themselves saw 1960–2025.
+- **Mutation "unsorted crossed quantiles" survives.** The app models' crossings never put p10 above p90, and `apply_q` clamps the ends to the middle, so both versions are valid. Kept as a design note, not a gap. A new rule (no range narrower than 2q) was added anyway.
+- **The estimated-mode test was made strict** (the estimated range must be wider) after a mutation that gave estimated mode the "given" correction failed only the golden snapshot.
+- **The planned "all 19 genres" and "runtime 1 / 400" edge cases** are out-of-form inputs (at most 5 genres, runtimes 40–300), so they are tested as rejections.
+
+### Checks
+
+- `make test`: 292 passed (250 + 42).
+- Mutation checks:
+  - same-day comparables → the sanity test fails;
+  - estimated mode with the given correction → 3 sanity tests and 2 golden tests fail;
+  - unsorted quantiles → survives (see above).
+- `ml.eval.audit validation` reproduces `reports/metrics.md` with difference 0 for all 13 models, in 257 s.
+
+### Findings for Dimitris (nothing changed; each would change frozen models or app numbers)
+
+1. Young films' TMDB scores are still settling. Options:
+   - a note on the score in the app (Day 8–10);
+   - a maturity rule for the score target (needs a retrain).
+2. Revenue is learned from the 13% of films that report money. Keep it as a Limitation.
+3. Releases after 2025 stretch "years active". `predict()` could judge the track record at 2025-12-31 for later releases (about 5 lines; changes the golden snapshot).
+4. Revenue plateaus above about $300M. Add a sentence to the big-budget warning.
+5. The holdout is small. Rerun `ml.eval.audit holdout` after a 2027 pull.
+6. Coverage is uneven in some groups: budgets under $10M, animation and romance scores. A per-group conformal correction (Mondrian CQR) needs a retrain.
+
+### Inputs for Day 8
+
+- `make test` now includes `tests/test_sanity.py` (the whole suite takes about 80 s with the database and models; the sanity tests are skipped without them).
+- If Dimitris picks Finding 1's note or Finding 4's sentence, it is a text change in `ml/predict.py` warnings, plus a golden snapshot update.
