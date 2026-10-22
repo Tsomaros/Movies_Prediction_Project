@@ -19,7 +19,8 @@
     "low": 6.35532,
     "middle": 7.35704,
     "high": 8.21867,
-    "rough": false
+    "rough": false,
+    "note": "TMDB scores of new films usually start higher and settle during their first year; this range is for the settled score."
    }
   },
   "comparison": "within",
@@ -56,6 +57,10 @@
   "warnings": [
    "big_budget",
    "future_release"
+  ],
+  "warning_texts": [
+   "Your budget is $150M or more. Revenue ranges for films this big were less reliable on 2019+ films than for smaller ones, and budgets above $300M don't raise the revenue estimate any further.",
+   "Our data ends in 2025. A release in 2027 is judged on films up to 2025, so later trends are not included."
   ]
  },
  "small_drama": {
@@ -78,7 +83,8 @@
     "low": 6.19851,
     "middle": 6.83034,
     "high": 7.57034,
-    "rough": false
+    "rough": false,
+    "note": "TMDB scores of new films usually start higher and settle during their first year; this range is for the settled score."
    }
   },
   "comparison": null,
@@ -115,6 +121,10 @@
   "warnings": [
    "new_actors",
    "future_release"
+  ],
+  "warning_texts": [
+   "We don't know 2 of the 5 actors, so they count as having no earlier films.",
+   "Our data ends in 2025. A release in 2026 is judged on films up to 2025, so later trends are not included."
   ]
  },
  "unknown_cast": {
@@ -137,7 +147,8 @@
     "low": 4.78594,
     "middle": 5.7003,
     "high": 6.90018,
-    "rough": false
+    "rough": false,
+    "note": "TMDB scores of new films usually start higher and settle during their first year; this range is for the settled score."
    }
   },
   "comparison": "within",
@@ -177,6 +188,13 @@
    "no_country",
    "no_studio",
    "future_release"
+  ],
+  "warning_texts": [
+   "We don't know this director, so they count as a first-time director with no track record.",
+   "We don't know 5 of the 5 actors, so they count as having no earlier films.",
+   "No production country given. Past films with none recorded are mostly small ones, so leaving it empty lowers the ranges; fill it in if you know it.",
+   "No studio given. Past films with none recorded are mostly small ones, so leaving it empty lowers the ranges; fill it in if you know it.",
+   "Our data ends in 2025. A release in 2026 is judged on films up to 2025, so later trends are not included."
   ]
  }
 }

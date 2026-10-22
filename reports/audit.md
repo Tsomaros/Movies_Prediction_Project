@@ -119,7 +119,7 @@ What this shows:
 
 ## Findings and proposals
 
-Nothing below was changed: each item would change the frozen models, the data or the app's numbers, so each is Dimitris's decision.
+Nothing below changed the models or the app's numbers. Dimitris chose to apply 1A and 4 as text, on 2026-10-22: `score.note` and one more sentence in the `big_budget` warning (`ml/predict.py`); the golden snapshot now also keeps warning texts and the note. The others stay open.
 
 1. **Young films' scores are not settled.**
    - *Proposal A (cheap, for Day 8–10):* show a note on the score: "TMDB scores of new films usually start higher and settle in the first year."

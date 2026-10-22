@@ -815,3 +815,11 @@ Write-up: `reports/audit.md`.
 
 - `make test` now includes `tests/test_sanity.py` (the whole suite takes about 80 s with the database and models; the sanity tests are skipped without them).
 - If Dimitris picks Finding 1's note or Finding 4's sentence, it is a text change in `ml/predict.py` warnings, plus a golden snapshot update.
+
+### Follow-up: Findings 1A and 4 applied as text (2026-10-22, asked by Dimitris)
+
+- `predict()` output: `score.note` = "TMDB scores of new films usually start higher and settle during their first year; this range is for the settled score." (`SCORE_NOTE` in `ml/predict.py`).
+- The `big_budget` warning ends with "…and budgets above $300M don't raise the revenue estimate any further." (`PLATEAU_BUDGET`).
+- `tests/test_golden.py`: the snapshot now also keeps the warning texts and the score note, so wording changes show up; two new asserts check both texts. The snapshot was rewritten with `UPDATE_GOLDEN=1`, and its diff contains only the new texts (no number, driver or comparable changed).
+- `make test`: 292 passed. README warnings paragraph and two Limitations updated; `reports/audit.md` marks 1A and 4 as applied.
+- Day 10 form: show `score.note` under the score range.

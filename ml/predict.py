@@ -9,7 +9,8 @@
 The steps follow the plan: validate -> features -> budget -> revenue (budget given or estimated) ->
 score -> drivers -> comparables. The output has
 - "budget", "revenue", "score": low / middle / high (2025 $, or score points), a text range, the rough
-  flag (revenue and budget only), plus revenue's "mode" and the budget comparison;
+  flag (revenue and budget only), plus revenue's "mode", the budget comparison and the score's "note"
+  (young films' TMDB scores are still settling);
 - "drivers": per target the top 5 groups as sentences, split into "up" and "down";
 - "comparables": up to 5 earlier films; "warnings": codes with a sentence; "model_version", "as_of".
 
@@ -51,6 +52,9 @@ FINAL_DIR = Path("ml/artifacts/final")
 MANIFEST = "manifest.json"
 MODELS_TAG = "final-models"  # the git tag of the Day 6 all-data models
 BIG_BUDGET = 150_000_000  # 2025 $; revenue for $150M+ films was the weak spot on 2019+ (Day 6)
+PLATEAU_BUDGET = 300_000_000  # 2025 $; revenue stops rising above about this (audit, Finding 4)
+SCORE_NOTE = ("TMDB scores of new films usually start higher and settle during their first year; "
+              "this range is for the settled score.")  # audit, Finding 1
 EDGE = 0.05  # a budget within 5% of an edge of the similar-films range is "at the low / high end"
 POSITION_WORDS = {"below": "below", "at the low end": "at the low end of", "within": "within",
                   "at the high end": "at the high end of", "above": "above"}
@@ -218,7 +222,8 @@ class Predictor:
             "revenue": {**_money_range(*np.exp([r["p10"], r["p50"], r["p90"]]).tolist()),
                         "rough": bool(is_rough("revenue", [r["p10"]], [r["p90"]], self.rule)[0]), "mode": mode,
                         "budget_used": budget if mode == "given" else math.exp(log_budget)},
-            "score": {**_score_range(float(s["p10"]), float(s["p50"]), float(s["p90"])), "rough": False},
+            "score": {**_score_range(float(s["p10"]), float(s["p50"]), float(s["p90"])), "rough": False,
+                      "note": SCORE_NOTE},
             "drivers": {
                 "budget": self._drivers("budget", self.chain.budget, X, clean, names),
                 "revenue": self._drivers("revenue", self.chain.revenue, X_revenue, clean, names,
@@ -238,7 +243,8 @@ class Predictor:
             which = "Your budget" if mode == "given" else "The estimated budget"
             out.append({"code": "big_budget", "text": (
                 f"{which} is {format_money(BIG_BUDGET)} or more. Revenue ranges for films this big were less "
-                "reliable on 2019+ films than for smaller ones.")})
+                f"reliable on 2019+ films than for smaller ones, and budgets above {format_money(PLATEAU_BUDGET)} "
+                "don't raise the revenue estimate any further.")})
         if self.ctx.history.resolve(form.get("director"), "director") is None:
             out.append({"code": "new_director", "text": (
                 "We don't know this director, so they count as a first-time director with no track record.")})

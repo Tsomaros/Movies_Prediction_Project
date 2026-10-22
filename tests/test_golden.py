@@ -68,11 +68,13 @@ def drivers(out, target):
 
 
 def snapshot(out):
-    """What the golden file keeps: numbers to 6 significant figures, drivers, comparables, warnings."""
+    """What the golden file keeps: numbers to 6 significant figures, drivers, comparables, warnings (codes and
+    texts) and the score note."""
     rounded = lambda x: None if x is None else float(f"{x:.6g}")
     ranges = {t: {k: rounded(out[t][k]) for k in ("low", "middle", "high")} | {"rough": out[t]["rough"]}
               for t in TARGETS}
     ranges["revenue"]["mode"] = out["revenue"]["mode"]
+    ranges["score"]["note"] = out["score"]["note"]
     return {
         "model_version": out["model_version"],
         "ranges": ranges,
@@ -80,6 +82,7 @@ def snapshot(out):
         "drivers": {t: [d["text"] for d in drivers(out, t)] for t in TARGETS},
         "comparables": [f["id"] for f in out["comparables"]],
         "warnings": [w["code"] for w in out["warnings"]],
+        "warning_texts": [w["text"] for w in out["warnings"]],
     }
 
 
@@ -98,6 +101,7 @@ def test_every_output_is_complete_and_ordered(outputs, name):
         assert out[t]["low"] <= out[t]["middle"] <= out[t]["high"]
         assert 0 < len(drivers(out, t)) <= 5 and all("_" not in d["text"] for d in drivers(out, t))
     assert out["score"]["rough"] is False and 0 <= out["score"]["low"] and out["score"]["high"] <= 10
+    assert "settle" in out["score"]["note"]
     assert 0 < len(out["comparables"]) <= 5
 
 
@@ -113,6 +117,8 @@ def test_franchise_blockbuster(outputs):
     assert out["revenue"]["mode"] == "given" and out["revenue"]["budget_used"] == 300_000_000
     assert out["revenue"]["middle"] > 500_000_000 and out["budget"]["comparison"]["position"] == "within"
     assert {"big_budget", "future_release"} == {w["code"] for w in out["warnings"]}
+    big = next(w["text"] for w in out["warnings"] if w["code"] == "big_budget")
+    assert "budgets above $300M don't raise the revenue estimate" in big
     up = {d["group"] for d in out["drivers"]["revenue"]["up"]}
     assert {"budget", "franchise", "studio"} <= up
     assert 299536 in [f["id"] for f in out["comparables"]]  # Avengers: Infinity War
