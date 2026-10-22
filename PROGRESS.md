@@ -823,3 +823,225 @@ Write-up: `reports/audit.md`.
 - `tests/test_golden.py`: the snapshot now also keeps the warning texts and the score note, so wording changes show up; two new asserts check both texts. The snapshot was rewritten with `UPDATE_GOLDEN=1`, and its diff contains only the new texts (no number, driver or comparable changed).
 - `make test`: 292 passed. README warnings paragraph and two Limitations updated; `reports/audit.md` marks 1A and 4 as applied.
 - Day 10 form: show `score.note` under the score range.
+
+## Day 8: FastAPI backend (done 2026-10-22)
+
+- [x] 0. Plan document: left untouched (decided by Dimitris). Today's decisions are recorded here and in the README:
+  - our own in-memory rate limiter;
+  - similar films from any year, never the film itself;
+  - compare returns the changed fields and the middle shifts;
+  - a packed in-memory autocomplete;
+  - the History memory fix.
+- [x] 1. Project structure (`backend/app/`, `make api`)
+- [x] 2. Startup and database (lifespan, read-only connection per request, autocomplete index)
+- [x] 3. Prediction endpoints (`/predict`, `/predict/compare`, cache, rate limit, 422s)
+- [x] 4. Public endpoints (`/movies`, `/movies/{id}`)
+- [x] 5. Form support endpoints (`/people`, `/companies`, `/collections`, `/meta/options`, `/health`)
+- [x] 6. Tests (`tests/test_api.py`, `tests/test_api_golden.py`)
+- [x] 7. Wrap-up and commit
+
+### Task 1: project structure
+
+- **New dependencies:** `fastapi` 0.159.1 and `uvicorn` 0.54.0 (with pydantic 2.14.1 and starlette 1.9.0). `make api` runs `uvicorn backend.app.main:app --reload --port 8000`.
+- **Layout (`backend/app/`):**
+  - `main.py` has `create_app(settings, predictor, lookups)`; tests inject a small `Predictor`, so the real models never load offline;
+  - `settings.py` reads `MOVIES_DB`, `MODELS_DIR`, `CORS_ORIGINS` (default `http://localhost:5173`), `RATE_LIMIT` (30) and `CACHE_SIZE` (1000);
+  - one router per resource in `routers/`, plus `schemas/`, `repo/` and `services/`;
+  - CORS allows GET and POST from the configured origins only.
+- **Real start:** with the real models the app was ready in about 14 s, with `/docs` served.
+
+### Changes from the plan (task 1)
+
+- **The router test reads the OpenAPI paths.** FastAPI 0.159 wraps included routers (`_IncludedRouter`), so `app.routes` no longer lists their paths.
+
+### Checks (task 1)
+
+- 5 tests: the injected predictor is used, docs and schema are served, every route is under `/api/v1`, CORS allows only the frontend origin, and settings come from the environment.
+
+### Task 2: startup and database
+
+- **Lifespan:** it loads the `Predictor` (manifest check, models, feature context, comparables), then builds the autocomplete lookups, the prediction service and the rate limiter onto `app.state`, plus `load_seconds` and `started` for `/health`.
+- **Database:** `deps.get_db` opens one read-only connection per request (`mode=ro`) and closes it afterwards. It needs `check_same_thread=False` because sync endpoints run in the thread pool. A missing file is an error, never a new empty database.
+- **Autocomplete (`services/lookups.py`):**
+  - 29,012 directors, 321,259 actors, 43,310 companies and 4,263 franchises;
+  - any word of a name can start the match ("hanks", "tom ha"), most films first, at most 10;
+  - it builds in 2.3 s and takes 33 MB;
+  - a lookup takes under 1 ms (7 ms for "a"; about 39 ms for the very first search).
+
+### Changes from the plan (task 2)
+
+- **A packed autocomplete index instead of plain lists (decided by Dimitris).** Plain Python lists of the 350k people and their 730k word keys took about 207 MB, which threatened Day 9's 450 MB gate. Names and keys now sit in byte blobs with int64 offsets, searched by binary search. Plain SQL per request was the other option (50–70 ms, up to about 140 ms for one letter).
+- **The History memory fix (asked by Dimitris, outside the plan).**
+  - The whole app took 1,236 MB after startup, of which `History` was about 874 MB: 350k small `_Track` objects with 8 numpy views each.
+  - The tracks are now offsets into a few flat arrays: `row_offsets`, `days`, a running sequel count, and one `_Values` (days, values, offsets) each for revenue, score and budget. People are found by `np.searchsorted` in sorted ids per role. The merge now takes only the 5 numeric columns.
+  - `History` now keeps 108 MB (43 MB of arrays plus the 41 MB name lookup). Building it briefly peaks at 476 MB (493 MB before the smaller merge).
+  - **Identical:** the features table rebuilt in memory (79,199 × 177) matched the stored one bit for bit, after the rewrite and again after the merge change. The golden snapshot and all feature, leakage and sanity tests are unchanged.
+
+| Whole app (Windows, real models) | Before | After |
+| --- | --- | --- |
+| After startup | 1,236 MB | 639 MB |
+| After 50 more predictions with a synopsis (MiniLM loaded) | — | 746 MB |
+| Startup | 14 s | about 10 s |
+
+### Checks (task 2)
+
+- 7 tests:
+  - startup builds the lookups from the settings' database;
+  - each request gets its own connection, closed after it, where a DELETE fails with "readonly";
+  - a missing database raises and leaves no file;
+  - the index rules: any word, running on into later words, case and spaces ignored, accents kept, most films first, limit, empty queries.
+
+### Task 3: prediction endpoints
+
+- **`POST /api/v1/predict`:**
+  - the `PredictForm` schema (strict types, unknown fields refused) documents the form in `/docs`;
+  - the rules stay in `contract.validate`, through `PredictionService`;
+  - the output is `predict()`'s dict, plus `cached` and full poster URLs for the comparables;
+  - the response models document every field for the Day 10 TypeScript types.
+- **`POST /api/v1/predict/compare`:**
+  - the body is `{base, variants: 1–3}`; each variant lists only what it changes, and `null` clears a field;
+  - `differences` gives the changed fields, the money middles as a ratio, the score as points, and `mode_changed`;
+  - all forms are checked first, so one 422 lists every problem as `base.x` or `variants.i.x`.
+- **Cache:** an LRU of 1,000 entries keyed by the validated form as canonical JSON, guarded by a lock. The prediction itself runs outside the lock.
+- **Rate limit:** 30 requests a minute per client IP, a sliding window shared by both endpoints. The 31st gets 429 "Please try again in a minute" with `Retry-After`.
+- **Errors (`errors.py`):** every 422 is `{"detail": "Some fields need fixing", "errors": {dotted.field: message}}`. A shape error also lists every rule problem the contract finds, using the contract's wording ("must be a number", "unknown field", "required").
+- **Measured over HTTP (real models):**
+  - a prediction takes a median of 167 ms, about 400–500 ms on the first call (MiniLM loading), and about 3 ms from the cache;
+  - compare with 3 variants takes about 0.53 s;
+  - 12 different forms sent 8 at a time gave exactly the same answers as one at a time.
+
+### Changes from the plan (task 3)
+
+- **Shape errors list the rule errors too.** At first a Pydantic error hid the form's other problems (missing themes, year 2040), so the handler now merges the contract's messages for the whole body.
+- **0 or 4 variants** read "needs 1 to 3 variants" instead of Pydantic's wording.
+- **Behind a proxy**, `request.client.host` is the proxy. Day 14 must read `X-Forwarded-For`; this is in the README Limitations.
+
+### Checks (task 3)
+
+- 12 tests:
+  - both revenue modes equal `predict()`, and comparables get posters;
+  - the same film written two ways is one cache entry, and the cache drops the least recently used form;
+  - rule errors and shape errors name every field;
+  - compare's differences match separate predictions, and errors name the variant and field;
+  - the 31st request is refused, the window slides and forgets idle clients;
+  - `merge`, and the OpenAPI schema (required fields, limits, 422 and 429).
+- Mutations:
+  - a cache keyed on the raw form → 2 tests fail;
+  - a rate limit off by one → 2 tests fail.
+
+### Task 4: public endpoints
+
+- **`GET /api/v1/movies`:**
+  - `q` turns every word into a quoted prefix for FTS5 (`"spider"* "man"*`), so typed text is never syntax;
+  - filters: `genre`, `year_from` / `year_to`, `language`, `has_money` (budget and revenue known, not suspect);
+  - `sort` is popularity (default), newest, title or score (score only over films with a usable score);
+  - `page` and `page_size` (at most 48), returning items, total, page, page_size and pages.
+- **`GET /api/v1/movies/{id}`:** facts, our story themes, franchise, companies, countries, spoken languages, top 15 cast, key crew in job order, money (nominal and 2025 $, suspect flag and reason, incomplete flag), rating, posters (`w342` / `w780`) and 6 similar films. An unknown id is a 404.
+- **Similar films:** `Index.query(..., as_of=None, exclude=id)` and `Index.row(id)` in `ml/explain/comparables.py`; the creator's comparables keep the date rule. A film outside the pool is matched on genres, themes, language, era and budget, without a synopsis.
+- **Caching:** `Cache-Control: public, max-age=3600` on both endpoints.
+- **On the real database:** 5–90 ms per request.
+  - "spider-man" → 43 films, Spider-Man first;
+  - "amelie" finds *Amélie*;
+  - *Avengers: Infinity War*'s similar films are *Endgame*, *Green Lantern*, *Age of Ultron*, *Civil War*, *Justice League* and *Days of Future Past*.
+
+### Changes from the plan (task 4)
+
+- **A "relevance" sort (bm25) was tried and removed.** It put *LEGO Marvel Avengers* first for "avengers"; popularity orders searches better.
+- **Movie pages show the film's themes** (not in the plan); they come from the same `themes.json` the model uses.
+- **The default order is TMDB's popularity on the pull day**, a trending number: the first page starts with *Clue* (1985). It is a README Limitation; vote count would put the best-known films first.
+
+### Checks (task 4)
+
+- 21 tests:
+  - paging through all 300 fixture films with the cache header;
+  - prefix search in titles and overviews;
+  - 11 hostile FTS inputs, and punctuation only finds nothing;
+  - filters that combine, every sort, and named bad parameters;
+  - a full movie page;
+  - similar films never the film itself, and from the first year (2008) too, where a date rule would leave none;
+  - a film outside the pool; 404 and 422 ids.
+- Mutations:
+  - letting a film list itself → 2 tests fail;
+  - adding a date rule → 3 tests fail.
+
+### Task 5: form support endpoints
+
+- **Autocomplete:** `GET /people?role=director|actor&q=`, `/companies?q=` and `/collections?q=` return `[{id, name, n_films}]`, at most 10, cacheable for an hour. They answer in 2–10 ms on the real data: "tom ha" → Tom Hanks (85 films), Tom Hardy…; "gerwig" → Greta Gerwig; "marvel" → Marvel Studios (75); "harry pot" → Harry Potter Collection.
+- **`GET /meta/options`:**
+  - `contract.describe()` with the 27 themes filled in, plus genres and certifications;
+  - the 60 most common languages and countries with counts;
+  - months, and suggested release years from this year to +4, never past the contract's last year (2035);
+  - it is built once per process: 30 ms the first time, about 3 ms after.
+- **`GET /health`:** status, API and model version, what each model was trained on, the database build date and film count, start time, uptime, load time and the prediction cache's size, hits and misses. About 14 ms, `no-store`.
+
+### Changes from the plan (task 5)
+
+- **Languages and countries come as ISO codes only.** The browser can name them (`Intl.DisplayNames`), so no name table was added.
+- **`/health` runs a COUNT on the database**, so a broken database makes it fail instead of reporting "ok".
+
+### Checks (task 5)
+
+- 6 tests:
+  - people by role, most films first, with roles kept apart;
+  - company and franchise autocomplete, and parameter errors;
+  - options against the contract with themes filled in;
+  - the year cap;
+  - health's models, database and cache counts after one fresh and one cached prediction.
+
+### Task 6: tests
+
+- **`tests/test_api_golden.py`** (10 tests on the real models and database; skipped without them):
+  - the golden forms over HTTP equal `predict()` and the golden snapshot;
+  - a fresh prediction over HTTP takes a median under 400 ms;
+  - compare, autocomplete, movie pages, options and health on the real data.
+- **Added to `tests/test_api.py`:**
+  - `ENDPOINTS` pins each of the 9 endpoints to the test that covers it, and the served set must equal it;
+  - a wrong method is a 405;
+  - 8 parallel requests with an empty cache equal the sequential answers.
+
+### Changes from the plan (task 6)
+
+- **Optional comparison fields are explicit `null` over HTTP.** When no budget is given, the response model writes the comparison's optional fields (`budget`, `position`, `ratio`, `sentence`) as `null`, where `predict()` leaves them out. That suits the generated TypeScript types, so the golden HTTP test treats missing and `null` as the same.
+
+### Checks (task 6)
+
+- A mutation adding an untested `/ping` endpoint fails the endpoint pin.
+- `make test`: 356 passed in about 1.5–2 min (64 API tests: 54 offline, 10 on the real models).
+
+### Task 7: wrap-up
+
+- **README:**
+  - a new "API" section: endpoint table, example request, prediction, compare, errors, limits and caching, search and lookups, measured timings and memory, and the tests;
+  - the `make api` setup line, the `backend/` folder row, and the test time (about 2 min);
+  - two new Limitations: popularity on the pull day; the rate limit behind a proxy.
+- **CLAUDE.md:** the `backend/app/` architecture, `make api`, and the two API test files.
+- **Commit:** `4b28ac1` on `day6`.
+
+### Surprises / inputs for Day 9+
+
+- **The memory gate is the biggest Day 9 risk.** The app takes 639 MB after startup and 746 MB once MiniLM loads, against a 450 MB gate. The biggest parts:
+
+  | Part | Memory |
+  | --- | --- |
+  | Python libraries | about 180 MB |
+  | History | 108 MB kept; a 476 MB peak while building, which Windows doesn't return |
+  | MiniLM | about 105 MB once a synopsis comes in |
+  | Comparables index | about 77 MB |
+  | Models | about 43 MB |
+  | Lookups | about 33 MB |
+
+  Linux in Docker may return the build peak differently, so measure there first. The options already in the plan are an int8 encoder and smaller indexes; the History name lookup (41 MB) and the build peak are further ones.
+- **Docker:**
+  - the image needs `data/movies.db`, the 9 `.joblib` files and `manifest.json` in `ml/artifacts/final/`, `comparables.npz` and the MiniLM files;
+  - the healthcheck is `GET /api/v1/health`;
+  - one uvicorn worker, because the cache and rate limiter are per process;
+  - `CORS_ORIGINS` must list the frontend's origin.
+- **Smoke script:** `/health`, the three golden forms through `/predict`, and one `/predict/compare`. The golden HTTP test already does this in-process.
+- **Day 10:**
+  - generate the TypeScript types from `/openapi.json`;
+  - required fields are documented in `PredictForm`, and optional fields are explicit `null`s in responses;
+  - map 422 `errors` keys straight to form fields (`variants.1.budget` for compare), and a 429 to "try again in a minute" using `Retry-After`;
+  - fill the theme chips from `/meta/options`, and name languages and countries with `Intl.DisplayNames`;
+  - show `n_films` in autocomplete;
+  - show `score.note` under the score range.
+- **Day 14:** behind Render's proxy the rate limit must read `X-Forwarded-For`.
