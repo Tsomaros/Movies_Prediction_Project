@@ -1234,3 +1234,132 @@ Write-up: `reports/audit.md`.
   - run `make smoke URL=https://…` with `--wait 180` against a sleeping free instance.
 - **A new database build** means rerunning `make docker-build`, which rebuilds `build/movies.db` and `build/context.joblib`. A stale context file is refused at startup, so it can't silently serve old track records.
 - **`make test` now takes about 2–2.5 min**; `make test-fast` (307 tests, about 15 s) is the quick loop.
+
+## Day 10: Frontend setup and the creator form (done 2026-10-22)
+
+- [x] 0. Plan document: left untouched, as on Days 8–9. Today's decisions are recorded here and in the README:
+  - Dimitris installs Node 24 LTS (22.11 was too old for Vite 8, Vitest 5 and React Router 8);
+  - actors: 5 required, up to 10, as the contract says;
+  - companies and countries: up to 5 each, as chips;
+  - after task 4, his picks from his other project's form: a card layout that keeps the "More details" fold, typing straight into the name boxes, one cast box with numbered chips, counters in the labels, prefilled defaults, a teal palette with the system font, and the budget in millions.
+- [x] 1. Project setup (`frontend/`, Make targets, `npm run gen:api`)
+- [x] 2. App skeleton (routes, layout, theme)
+- [x] 3. API layer (`src/api/`; the backend schema now documents the real error bodies)
+- [x] 4. The form (`src/form/`), then reworked with the ideas from the other project
+- [x] 5. Demo helpers (examples, the URL, the draft)
+- [x] 6. Docker (`frontend/Dockerfile`, `nginx.conf`, compose, smoke)
+- [x] 7. Checks (106 Vitest tests, 97% of lines; manual check on phone and desktop in both themes)
+- [x] 8. Wrap-up and commit
+
+### Task 1: project setup
+
+- **`npm create vite` (react-ts) in `frontend/`:** Vite 8.3, React 19.3, TypeScript 6.0, Tailwind 4.3 (`@tailwindcss/vite`), shadcn 4.22 (Radix, "Nova" style) with button, input, select, command, popover, slider, textarea, accordion, badge, label and sonner; React Router 8.5, TanStack Query 5.104, React Hook Form 7.90, Zod 4.6, Vitest 5 with Testing Library and jsdom, openapi-typescript 7.13.
+- **Vite** proxies `/api` to `localhost:8000` and resolves `@/` to `src/`.
+- **`npm run gen:api`** writes `src/api/schema.d.ts` from the running API's `/openapi.json` (committed); running it twice gives the same file.
+- **`npm run check`:** `tsc -b`, oxlint and `vitest run`.
+- **Make:** `web-setup` (`npm ci`), `web`, `web-test` and `gen-api`.
+
+### Changes from the plan (task 1)
+
+- **oxlint instead of ESLint:** Vite's template now comes with it. shadcn's generated components and the generated types are left out of the lint.
+- **`@hookform/resolvers` 5.9.2, not 6.0.0:** version 6 was 3 days old, and npm 11 refused it over an optional peer dependency.
+- **`frontend/.npmrc` sets `legacy-peer-deps=true`:** npm 11 also refused `openapi-typescript` (it declares TypeScript 5; it works with 6). The file explains both cases, and Docker's `npm ci` reads it.
+- **The shadcn CLI is a dev dependency:** its own dependencies carry all 7 of npm's "high" warnings; `npm audit --omit=dev` finds none.
+
+### Task 2: app skeleton
+
+- **Routes** (`src/app/routes.tsx`): `/`, `/predict`, `/predict/result` (Day 11), `/movies` and `/movies/:id` (Day 12), and a 404 page. A route that crashes shows "Something went wrong" with Reload instead of a blank screen.
+- **Layout:** a sticky header with the brand, the navigation (marking the current page; a second row on a phone) and the theme toggle; a footer with "Ranges are estimates from past films, not guarantees" and the TMDB notice (the logo is Day 12's).
+- **Theme:** next-themes, starting from the system preference and remembering the choice; a script in `index.html` sets it before the page draws, so dark mode doesn't flash.
+- **Each page sets the tab title** ("Plan a film · Movie Prediction") with React 19's `<title>`.
+
+### Task 3: API layer
+
+- **`client.ts`:** one `fetch` wrapper; every failure is an `ApiError` with a `kind`: validation (422, with the field messages), rate_limited (429, with Retry-After), not_found, network, server (any other status, or a reply that isn't JSON). A cancelled request stays a cancellation.
+- **`hooks.ts`:** `useMetaOptions` (cached an hour), `usePeopleSearch` / `useCompanySearch` / `useCollectionSearch` (250 ms after the last keystroke, from 1 character), `usePredict` (toasts 429, network and server errors by itself).
+- **`errors.ts`:** `notifyError` ("Too many predictions – try again in a minute"; Retry on network and server errors) and `applyFieldErrors` (a 422's messages on the form fields, the first focused; the rest returned for above the form).
+- **Checked against the real API:** autocomplete found Saoirse Ronan, A24 and The Avengers Collection; a bad form came back as two field messages; the 31st prediction in a minute came back as `rate_limited` with Retry-After 47 s.
+
+### Changes from the plan (task 3)
+
+- **The backend's OpenAPI schema now shows the real bodies.** It documented FastAPI's default 422 shape, which the API never sends, and left the options' fields untyped:
+  - `backend/app/schemas/errors.py`: `FieldErrors` for every 422 and `Message` for 404 and 429, attached to the routers;
+  - `FieldSpec` types the fields of `/meta/options`, whose answer stays the same (`response_model_exclude_none`);
+  - a test fails if the default 422 shape comes back.
+
+### Task 4: the form
+
+- **First version:** sections ("The film", "People") and a fold, a button-and-popover picker per name and 5 actor boxes, the budget in dollars formatted as you type.
+- **Zod rules** (`src/form/model.ts`) mirror the contract with every limit read from `/meta/options`; a test with a changed limit proves it. The messages appear under each field, the first field with an error gets the focus, the fold opens for an error inside it, and a 422 from the API lands on the same fields.
+- **A bug found in the browser and fixed:** Enter right after typing "saoirse" chose "Use 'saoirse' as a new person" over Saoirse Ronan, because "new" was the only option while the search waited. The options now appear only once the search for the current text is done; a mutation check confirms the test catches it.
+- **The rework** (after Dimitris pointed to his other project's form, `Movie_Prediction_Project/frontend`):
+  - one card with two columns, the fold kept;
+  - name boxes you type into (`src/form/inputs/NameSearch.tsx`), with chips for picks, "No earlier films in our data" under "new", and a hint when typed text isn't picked;
+  - one cast box with numbered chips (5–10), counters such as "Genres (2/5)" and "Top-billed cast (2/5–10)";
+  - prefilled 110 minutes, June of next year, English;
+  - the budget in millions ("12.5" → $12,500,000, shown as "= $12.5M");
+  - the teal palette (`#0d6e6e`, dark `#4fb3b3`) on a tinted page, the system font (Geist removed), a white header.
+- **Checked against the real API:** forms filled in by hand came back with the raw prediction, with the right warnings (new director, new actors, no studio, no country).
+
+### Changes from the plan (task 4)
+
+- **5–10 actors instead of "top 3"**, as the contract requires, in one box with numbered chips rather than separate boxes.
+- **Up to 5 companies and 5 countries** instead of one of each.
+- **The budget in millions**, not formatted dollars.
+- **Prefilled runtime, date and language**; the rating stays a choice.
+- **The design follows Dimitris's other project** (card, teal, typed-in name boxes); the plan said only "shadcn/ui".
+
+### Task 5: demo helpers
+
+- **Three examples** (`src/form/examples.ts`): the golden forms of `tests/golden/forms.json` with the names added. A test checks each sends exactly its golden form; in the browser, the Superhero sequel matched the golden snapshot to 6 significant figures (revenue middle $1.58B, budget $407M, score 7.36).
+- **The form in the URL** (`src/form/persist.ts`): `?f=` holds the form as base64url JSON, written 400 ms after the last change; a bad or tampered value is checked field by field. "Copy link" builds the link from the current values, so it's right before the address bar catches up.
+- **Draft auto-save** in localStorage (blocked storage means no draft, never an error). On load, a link wins over the draft, and the draft over a fresh form; "Clear form" empties all three.
+
+### Task 6: Docker
+
+- **`frontend/Dockerfile`:** `node:24-alpine` runs `npm ci` and the build, then `nginxinc/nginx-unprivileged:1.28-alpine` serves `dist/` on 8080 as a non-root user, with a healthcheck. 82.5 MB.
+- **`nginx.conf`:** `/api/` proxied to `backend:8000`, every other path served as the app, hashed bundles cached for a year and the page not at all, gzip.
+- **`docker-compose.yml`:** a `frontend` service that starts once the backend is healthy.
+- **`scripts/smoke.py --web-url`:** the home page, the script bundle (gzipped, cached for a year), a client-side route, and the API through nginx. `make smoke` passes `WEB` (default :8080; `WEB=` skips it).
+- **All 14 smoke checks pass** against the two containers.
+
+### Changes from the plan (task 6)
+
+- **The type-check is split:** the image's build failed because a test imports the golden forms from outside `frontend/`. `tsconfig.app.json` (the build) checks the app only, so an API change still fails it; `tsconfig.test.json` covers the tests for `npm run check`.
+- **The form page loads on demand:** the single bundle had grown to 725 kB (227 kB gzipped). The home page now loads 134 kB gzipped, and the form adds 95 kB when it opens.
+- **The backend image was rebuilt** for task 3's schema change. `docker images` shows 1.36 GB: Docker Desktop's image store adds the unpacked (984 MB) and compressed (370 MB) sizes, so the image hasn't grown.
+
+### Task 7: checks
+
+- **The plan's three checks:** invalid input blocked (23 rule tests on the API's real limits, 5 form tests), the examples fill every required field and send the golden forms, the URL round-trips every example and refuses bad links.
+- **Added:** `npm run coverage` (v8, shadcn's components left out) and tests for the language and country pickers and the crash page.
+
+  | Frontend | |
+  | --- | --- |
+  | Tests | 106 (Vitest, Testing Library, offline) |
+  | Lines / branches covered | 97.0% / 87.7% |
+
+- **`make test`:** 392 Python tests pass, so task 3's schema changes broke nothing.
+- **By hand through `docker compose`:** phone (375 px) and desktop (1280 px), in light and dark, each with an example submitted and no sideways scrolling; the toggle switched and remembered on the phone.
+- **A tool quirk, not an app bug:** twice the browser pane's screenshot showed an old frame (old chip colours, a page lighter than its theme); the page itself, checked through its computed colours and selected chips, was right.
+
+### Task 8: wrap-up
+
+- **README:** a new "Frontend" section; "Running with Docker" with both containers and both image sizes; the test counts (392 / 309, API 57) and a frontend row in "Testing"; the setup commands and folder table; two new Limitations (the shared rate limit behind nginx, the examples' dates).
+- **CLAUDE.md:** Node 24, the frontend commands, and a frontend architecture entry with its rules (never edit `schema.d.ts`, rerun `make gen-api` after a schema change, limits only from `/meta/options`, name suggestions only once settled).
+- **Also:** a teal clapperboard favicon instead of Vite's logo; the template's unused `icons.svg` removed.
+- **Commit:** `a92e23c` on `day6` (84 files).
+
+### Surprises / inputs for Day 11+
+
+- **Day 11 (results page):**
+  - the raw answer is under the form in `src/pages/Predict.tsx`; `/predict/result` is a placeholder;
+  - the types for the ranges, drivers, comparables, warnings and `score.note` are in `src/api/schema.d.ts`;
+  - the comparables carry poster URLs, and the examples give three ready demo results.
+- **Day 12 (film pages):** the TMDB logo goes next to the footer's notice; `/movies` and `/movies/:id` are placeholders.
+- **Day 13:** "Your draft from last time is back." stays on screen after Clear form (harmless). Compare can reuse the form's `toApiBody` and `persist.ts`.
+- **Day 14 (Render):**
+  - behind nginx, and behind Render's proxy, every visitor shares one rate-limit count until the API reads `X-Forwarded-For`;
+  - `make smoke URL=https://… WEB=https://…` checks both live services.
+- **Once October 2026 has passed,** the year list won't offer the small-drama and horror examples' year, though they still send it.
+- **The quick loops:** `make test-fast` (309 tests, about 15 s) and `make web-test` (106 tests, about 10 s).
