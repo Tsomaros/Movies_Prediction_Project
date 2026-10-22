@@ -3,6 +3,7 @@
     fit_vocab(con)                    -> top languages, countries and companies in train films (saved to vocab.json)
     load_vocab(path)                  -> the committed vocab
     Franchises.from_db(con)           -> each collection's dated films, for leak-safe franchise features
+    franchises.budget(cid, as_of)     -> franchise_budget, the median earlier log budget in the collection
     basic_features(form, as_of, ...)  -> one dict of feature columns for a contract-shaped form
 
 Lists are fitted on train films (<=2015) only. A film counts as a franchise film only when its
@@ -25,7 +26,7 @@ import pandas as pd
 
 from ml.data.clean import COVID_YEARS
 from ml.features.contract import CERTIFICATIONS, GENRES, UNRATED
-from ml.features.history import MATURE_DAYS
+from ml.features.history import LOG_BUDGET_SQL, MATURE_DAYS
 
 VOCAB_FILE = Path("ml/features/vocab.json")
 N_LANGUAGES, N_COUNTRIES, N_COMPANIES = 15, 15, 30
@@ -97,18 +98,22 @@ def _company_ids(refs: Iterable[dict[str, Any]], vocab: dict[str, Any]) -> list[
 
 class Franchises:
     def __init__(self, films: pd.DataFrame, collections: pd.DataFrame) -> None:
-        """films: collection_id, release_date, log_revenue (NaN if unusable). collections: id, name."""
+        """films: collection_id, release_date, log_revenue, log_budget (NaN if unusable). collections: id, name."""
         films = films[films["collection_id"].notna()].copy()
         films["day"] = pd.to_datetime(films["release_date"]).values.astype("datetime64[D]").astype(np.int64)
         films = films.sort_values(["collection_id", "day"], kind="stable")
         self.days: dict[int, np.ndarray] = {}
         self.revenue_days: dict[int, np.ndarray] = {}
         self.revenue: dict[int, np.ndarray] = {}
+        self.budget_days: dict[int, np.ndarray] = {}
+        self.budget_values: dict[int, np.ndarray] = {}
         for cid, g in films.groupby("collection_id", sort=False):
-            rev = g[g["log_revenue"].notna()]
+            rev, bud = g[g["log_revenue"].notna()], g[g["log_budget"].notna()]
             self.days[int(cid)] = g["day"].to_numpy()
             self.revenue_days[int(cid)] = rev["day"].to_numpy()
             self.revenue[int(cid)] = rev["log_revenue"].to_numpy()
+            self.budget_days[int(cid)] = bud["day"].to_numpy()
+            self.budget_values[int(cid)] = bud["log_budget"].to_numpy()
         named = collections.assign(key=collections["name"].str.casefold()).sort_values(["key", "id"])
         named = named[named["id"].isin(self.days)]
         self.by_name = {r.key: int(r.id) for r in named.drop_duplicates("key").itertuples()}
@@ -116,12 +121,13 @@ class Franchises:
     @classmethod
     def from_db(cls, con: sqlite3.Connection) -> Franchises:
         films = pd.read_sql_query(
-            """
+            f"""
             SELECT collection_id, release_date,
                    CASE WHEN budget IS NOT NULL AND revenue IS NOT NULL AND NOT money_suspect
-                             AND NOT revenue_incomplete THEN LN(revenue_2025) END AS log_revenue
+                             AND NOT revenue_incomplete THEN LN(revenue_2025) END AS log_revenue,
+                   {LOG_BUDGET_SQL} AS log_budget
             FROM movies WHERE collection_id IS NOT NULL AND release_date IS NOT NULL
-            """,  # same revenue rule as v_train_revenue
+            """,  # same revenue rule as v_train_revenue, budget rule as v_train_budget
             con,
         )
         return cls(films, pd.read_sql_query("SELECT id, name FROM collections", con))
@@ -145,6 +151,12 @@ class Franchises:
             "franchise_earlier_films": earlier,
             "franchise_revenue": float(np.median(revenue)) if len(revenue) else float("nan"),
         }
+
+    def budget(self, collection_id: int | None, as_of: int) -> dict[str, float]:
+        """Median log budget of the collection's films released strictly earlier (NaN for none, like franchise_revenue)."""
+        days = self.budget_days.get(collection_id) if collection_id is not None else None
+        n = bisect_left(days, as_of) if days is not None else 0
+        return {"franchise_budget": float(np.median(self.budget_values[collection_id][:n])) if n else float("nan")}
 
 
 # ---------------------------------------------------------------- features

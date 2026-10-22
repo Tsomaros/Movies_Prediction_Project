@@ -10,7 +10,7 @@ It is fitted on the train split and scored on validation; the test split is neve
 Breakdowns (validation): budget size (revenue and budget only), English vs other languages,
 new vs experienced director, franchise (sequel) vs original.
 
-CLI: uv run python -m ml.eval.evaluate   (B0-B2 for every target and LightGBM for revenue and score
+CLI: uv run python -m ml.eval.evaluate   (B0-B2 and LightGBM for every target, revenue in both budget modes
                                           -> reports/metrics.json, metrics.md, breakdowns.md, backtest.md)
 LightGBM needs `make tune` and the calibration (ml.models.calibrate) to have run first.
 """
@@ -164,9 +164,10 @@ def write_reports(results: dict[str, list[dict[str, Any]]], out_dir: Path = REPO
 
 
 def model_factories() -> dict[str, list[Callable[[], Any]]]:
-    """B0-B2 for every target, plus the tuned and calibrated LightGBM model for revenue and score."""
+    """B0-B2 for every target, plus its tuned and calibrated LightGBM model; revenue also in estimated-budget mode."""
     from ml.models.baselines import BASELINES
     from ml.models.calibrate import load_q
+    from ml.models.chain import EstimatedBudgetRevenue
     from ml.models.train import TARGETS, LgbmQuantile
     from ml.models.tune import load_params
 
@@ -176,6 +177,10 @@ def model_factories() -> dict[str, list[Callable[[], Any]]]:
         q = load_q(target)
         factories[target].append(lambda target=target, params=params, n_trees=n_trees, q=q:
                                  LgbmQuantile(target, params, n_trees, q=q, name="LightGBM (tuned, calibrated)"))
+    revenue, budget = load_params("revenue"), load_params("budget")
+    q_estimated = max(load_q("revenue", estimated=True), load_q("revenue"))  # as in ml.models.chain.Chain
+    factories["revenue"].append(lambda: EstimatedBudgetRevenue(*revenue, *budget, q=q_estimated,
+                                                               name="LightGBM, budget estimated (calibrated)"))
     return factories
 
 

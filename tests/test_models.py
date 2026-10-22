@@ -7,13 +7,17 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from ml.features.history import BUDGET_FEATURES
 from ml.models.calibrate import conformal_q
+from ml.models.chain import Chain, compare_budget, format_money, with_budget
+from ml.models.rough import fit_rule, is_rough
 from ml.models.train import MONOTONE, LgbmQuantile, load_model, model_features, save_model
 from ml.models.tune import log_experiment
 
 SMALL = {"num_leaves": 7, "min_data_in_leaf": 5, "learning_rate": 0.1}
 REVENUE_FEATURES = ["log_budget", "director_revenue", "franchise_revenue", "runtime", "genre_action"]
 SCORE_FEATURES = ["director_score", "runtime", "genre_drama"]
+BUDGET_MODEL_FEATURES = ["director_budget", "company_budget", "runtime", "genre_action"]
 
 
 def revenue_rows(n=400, seed=0):
@@ -27,6 +31,20 @@ def revenue_rows(n=400, seed=0):
         "year": rng.integers(2000, 2010, n),
     })
     df["target"] = 0.9 * df["log_budget"] + 0.2 * (df["director_revenue"] - 16) + rng.normal(0, 1.0, n)
+    return df
+
+
+def budget_rows(n=400, seed=0):
+    rng = np.random.default_rng(seed)
+    df = pd.DataFrame({
+        "director_budget": rng.uniform(14, 19, n),
+        "company_budget": rng.uniform(14, 19, n),
+        "runtime": rng.uniform(80, 160, n),
+        "genre_action": rng.integers(0, 2, n),
+        "year": rng.integers(2000, 2010, n),
+    })
+    df["target"] = 0.5 * df["director_budget"] + 0.4 * df["company_budget"] + 0.5 * df["genre_action"] \
+        + rng.normal(0, 0.8, n)
     return df
 
 
@@ -49,6 +67,11 @@ def revenue_model():
 
 
 @pytest.fixture(scope="module")
+def budget_model():
+    return LgbmQuantile("budget", SMALL, 60, features=BUDGET_MODEL_FEATURES).fit(budget_rows())
+
+
+@pytest.fixture(scope="module")
 def score_model():
     return LgbmQuantile("score", SMALL, 60, features=SCORE_FEATURES).fit(score_rows())
 
@@ -56,7 +79,10 @@ def score_model():
 # ---------------------------------------------------------------- predictions
 
 
-@pytest.mark.parametrize("model_name, rows", [("revenue_model", revenue_rows), ("score_model", score_rows)])
+MODELS = [("revenue_model", revenue_rows), ("budget_model", budget_rows), ("score_model", score_rows)]
+
+
+@pytest.mark.parametrize("model_name, rows", MODELS)
 def test_low_middle_high_are_ordered(request, model_name, rows):
     p = request.getfixturevalue(model_name).predict(rows(300, seed=1))
     assert list(p.columns) == ["p10", "p50", "p90"]
@@ -93,9 +119,17 @@ def test_range_models_never_see_monotone_columns(revenue_model):
     assert revenue_model.models["p50"].feature_name() == REVENUE_FEATURES
 
 
+def test_budget_model_is_three_plain_quantile_models(budget_model):
+    assert set(budget_model.models) == {"p10", "p50", "p90"} and not budget_model.monotone
+    for key in ("p10", "p50", "p90"):
+        assert budget_model.models[key].feature_name() == BUDGET_MODEL_FEATURES
+    p = budget_model.predict(budget_rows(300, seed=1))
+    assert (p["p90"] - p["p10"]).std() > 0  # each film gets its own range width
+
+
 def test_unknown_target_is_refused():
     with pytest.raises(ValueError):
-        LgbmQuantile("budget")
+        LgbmQuantile("popularity")
 
 
 # ---------------------------------------------------------------- features per model
@@ -107,15 +141,26 @@ def test_score_model_never_gets_budget():
     assert "log_budget" in model_features("revenue", ())
 
 
+def test_budget_model_never_gets_its_own_target():
+    assert "log_budget" not in model_features("budget", ()) and "log_budget" not in LgbmQuantile("budget").features
+    assert set(BUDGET_FEATURES) <= set(LgbmQuantile("budget").features)  # but every earlier budget
+
+
 def test_default_model_leaves_out_synopsis():
-    for target in ("revenue", "score"):
+    for target in ("revenue", "budget", "score"):
         features = LgbmQuantile(target).features
         assert not any(c.startswith("synopsis_") or c == "has_synopsis" for c in features)
         assert any(c.startswith("synopsis_") for c in LgbmQuantile(target, drop=()).features)
 
 
-@pytest.mark.parametrize("group, prefix", [("track_record", "director_"), ("themes", "theme_"),
-                                           ("budget", "log_budget"), ("synopsis", "synopsis_")])
+def test_budget_track_record_is_in_revenue_but_not_score():
+    assert "company_budget" in LgbmQuantile("revenue").features
+    assert not any(c in LgbmQuantile("score").features for c in BUDGET_FEATURES)
+
+
+@pytest.mark.parametrize("group, prefix", [("track_record", "director_n_films"), ("themes", "theme_"),
+                                           ("budget", "log_budget"), ("synopsis", "synopsis_"),
+                                           ("budget_history", "company_budget")])
 def test_dropped_groups_are_absent(group, prefix):
     full, dropped = model_features("revenue", ()), model_features("revenue", (group,))
     assert any(c.startswith(prefix) for c in full)
@@ -170,10 +215,102 @@ def test_q_widens_predictions(revenue_model):
     assert np.allclose(wide["p50"], plain["p50"])
 
 
+# ---------------------------------------------------------------- the chain (budget given / estimated)
+
+
+@pytest.fixture
+def chain(revenue_model, budget_model):
+    return Chain(revenue_model, budget_model, {"given": 0.2, "estimated": 0.5})
+
+
+def chain_rows(n=100, seed=5):
+    """Feature rows both small models can read; log_budget is the creator's own (or missing)."""
+    rows = revenue_rows(n, seed)
+    b = budget_rows(n, seed)
+    rows[["director_budget", "company_budget"]] = b[["director_budget", "company_budget"]]
+    return rows
+
+
+def test_given_mode_uses_the_creators_budget(chain, revenue_model):
+    rows = chain_rows()
+    p = chain.predict_revenue(rows, budget=50_000_000)
+    expected = revenue_model.predict(with_budget(rows, math.log(50_000_000)), q=0.2)
+    pd.testing.assert_frame_equal(p, expected)
+    assert p.attrs["mode"] == "given"
+    per_row = chain.predict_revenue(rows, budget=np.exp(rows["log_budget"]))  # one budget per film
+    pd.testing.assert_frame_equal(per_row, revenue_model.predict(rows, q=0.2))
+
+
+def test_estimated_mode_feeds_the_budget_models_middle(chain, revenue_model, budget_model):
+    rows = chain_rows()
+    p = chain.predict_revenue(rows)
+    estimate = budget_model.predict(rows)["p50"].to_numpy()
+    pd.testing.assert_frame_equal(p, revenue_model.predict(with_budget(rows, estimate), q=0.5))
+    assert p.attrs["mode"] == "estimated" and np.allclose(p.attrs["log_budget"], estimate)
+    # A missing or stray log_budget in the features never leaks into estimated mode.
+    pd.testing.assert_frame_equal(chain.predict_revenue(rows.assign(log_budget=np.nan)), p)
+
+
+def test_estimated_mode_is_never_narrower_than_given(chain):
+    rows = chain_rows()
+    given = chain.predict_revenue(rows, budget=np.exp(chain.predict_revenue(rows).attrs["log_budget"]))
+    estimated = chain.predict_revenue(rows)
+    assert np.allclose(given["p50"], estimated["p50"])  # same budget in, same middle out
+    assert ((estimated["p90"] - estimated["p10"]) >= (given["p90"] - given["p10"]) - 1e-9).all()
+
+
+@pytest.mark.parametrize("dollars, text", [(12_345_678, "$12M"), (1_234_567_890, "$1.2B"), (999_999, "$1M"),
+                                           (45_600, "$46K"), (150_000_000, "$150M"), (800, "$800")])
+def test_format_money_uses_two_significant_figures(dollars, text):
+    assert format_money(dollars) == text
+
+
+def test_budget_comparison_places_the_creators_budget():
+    p = pd.DataFrame({"p10": np.log([10e6] * 3), "p50": np.log([20e6] * 3), "p90": np.log([40e6] * 3)})
+    out = compare_budget(p, [5e6, 25e6, 90e6])
+    assert out["text"].iloc[0] == "Similar films usually cost $10M–$40M"
+    assert out["position"].tolist() == ["below", "within", "above"]
+    assert out["ratio"].tolist() == pytest.approx([0.25, 1.25, 4.5])
+    assert out[["low", "middle", "high"]].iloc[0].tolist() == pytest.approx([10e6, 20e6, 40e6])
+    shown = compare_budget(p)  # no budget given: the range is still shown
+    assert "position" not in shown and shown["text"].iloc[0] == out["text"].iloc[0]
+
+
+def test_chain_budget_comparison_uses_the_budget_models_range(chain, budget_model):
+    rows = chain_rows()
+    out = chain.compare_budget(rows, budget=30e6)
+    assert np.allclose(np.log(out["middle"]), budget_model.predict(rows)["p50"])
+    assert (out["low"] <= out["middle"]).all() and (out["middle"] <= out["high"]).all()
+
+
+# ---------------------------------------------------------------- rough-estimate label
+
+
+def test_rough_label_uses_high_over_low_and_skips_score():
+    rule = {"cutoff": {"revenue": 81.0, "budget": 12.0}}
+    p10, p90 = np.log([1e6, 1e6, 1e6]), np.log([80e6, 82e6, 11e6])  # 80x, 82x, 11x
+    assert is_rough("revenue", p10, p90, rule).tolist() == [False, True, False]
+    assert is_rough("budget", p10, p90, rule).tolist() == [True, True, False]
+    assert not is_rough("score", [3.0, 1.0], [9.0, 9.5], rule).any()
+
+
+def test_rough_rule_labels_the_widest_quarter_with_a_rounded_cutoff():
+    rng = np.random.default_rng(0)
+    n = 1000
+    widths = rng.uniform(np.log(2), np.log(200), n)
+    df = pd.DataFrame({"target": rng.normal(0, 1, n) * widths / 4})  # wider ranges, bigger errors
+    p = pd.DataFrame({"p10": -widths / 2, "p50": 0.0, "p90": widths / 2})
+    rule = fit_rule({"revenue given": (df, p), "revenue estimated": (df, p), "budget": (df, p)})
+    raw = float(np.exp(np.quantile(widths, 0.75)))
+    assert rule["cutoff"]["revenue"] == pytest.approx(float(f"{raw:.2g}"))
+    v = rule["validation"]["budget"]
+    assert v["labelled_share"] == pytest.approx(0.25, abs=0.02) and v["mae_ratio"] > 1
+
+
 # ---------------------------------------------------------------- artifacts and logs
 
 
-@pytest.mark.parametrize("model_name, rows", [("revenue_model", revenue_rows), ("score_model", score_rows)])
+@pytest.mark.parametrize("model_name, rows", MODELS)
 def test_saved_models_reload_with_identical_predictions(request, tmp_path, model_name, rows):
     model = request.getfixturevalue(model_name)
     train = rows()

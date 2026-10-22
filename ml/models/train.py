@@ -1,15 +1,16 @@
-"""LightGBM models for revenue and score, with the same fit / predict interface as the baselines.
+"""LightGBM models for revenue, budget and score, with the same fit / predict interface as the baselines.
 
     LgbmQuantile(target, params, n_trees).fit(train_df)   -> learns from train rows (ml.eval.splits.load output)
     model.predict(df)                                     -> DataFrame with p10, p50, p90 in the target's units
     model_features(target, drop)                          -> the feature columns a model may use
     save_model(model, train, validation) / load_model(target)
                                                           -> ml/artifacts/{target}_p10|p50|p90.joblib + {target}_meta.json
-    uv run python -m ml.models.train                      -> fits both models on train (<=2015) with the tuned
+    uv run python -m ml.models.train                      -> fits every model on train (<=2015) with the tuned
                                                              settings and calibration, then saves them
 
 | Target  | Middle (p50)                                  | Range (p10 / p90)                                         |
 | Revenue | Huber, monotone in MONOTONE                   | middle + quantile models of the middle's residual         |
+| Budget  | quantile 0.5                                  | quantile 0.1 / 0.9 on log budget                          |
 | Score   | quantile 0.5, weighted by log(1 + votes)      | quantile 0.1 / 0.9 on the score, same weights              |
 
 LightGBM refuses monotone constraints on quantile and L1 objectives, so revenue's middle is a Huber
@@ -17,7 +18,8 @@ model. Its range comes from quantile models fitted on out-of-fold residuals (in-
 boosted model are too small) and they never see the monotone columns, so a higher budget shifts the
 whole range up and never lowers any of the three outputs. `q` is the conformal correction from
 ml.models.calibrate: the range widens by q on both sides (apply_q). By default the synopsis numbers
-are left out (DEFAULT_DROP); pass drop=() to use every allowed feature.
+are left out of every model and the budget track record out of score (DEFAULT_DROP); pass drop=() to use
+every allowed feature. The budget model never sees log_budget (feature_list.json) and has no constraints.
 """
 
 from __future__ import annotations
@@ -39,7 +41,7 @@ from ml.features.build import FEATURE_LIST_FILE
 from ml.features.synopsis import N_COMPONENTS
 from ml.models.baselines import HIGH, LOW, SCORE_RANGE
 
-TARGETS = ("revenue", "score")
+TARGETS = ("revenue", "budget", "score")
 MONOTONE = ("log_budget", "director_revenue", "franchise_revenue")  # non-decreasing, revenue only
 EXCLUDED = {"score": {"log_budget"}}  # score stays independent of the budget chain (feature_list.json allows it)
 DROP_GROUPS = {  # ablation name -> feature_list.json source
@@ -47,8 +49,11 @@ DROP_GROUPS = {  # ablation name -> feature_list.json source
     "track_record": "track record (earlier films only)",
     "themes": "themes",
     "budget": "budget (2025 dollars)",
+    "budget_history": "budget track record (earlier budgets only)",
 }
-DEFAULT_DROP = ("synopsis",)  # the Day 5 ablation found the synopsis numbers don't help either model
+# The Day 5 ablation found the synopsis numbers don't help either model. The Day 6 budget track record
+# improved revenue on validation and in the backtest, so revenue keeps it; score was never tried with it.
+DEFAULT_DROP = {"revenue": ("synopsis",), "budget": ("synopsis",), "score": ("synopsis", "budget_history")}
 DEFAULT_PARAMS = {
     "learning_rate": 0.05,
     "num_leaves": 31,
@@ -90,11 +95,12 @@ def _train(X: pd.DataFrame, y: np.ndarray, params: dict[str, Any], n_trees: int,
 
 class LgbmQuantile:
     def __init__(self, target: str, params: dict[str, Any] | None = None, n_trees: int = DEFAULT_TREES,
-                 drop: tuple[str, ...] = DEFAULT_DROP, monotone: bool = True, q: float = 0.0,
+                 drop: tuple[str, ...] | None = None, monotone: bool = True, q: float = 0.0,
                  features: list[str] | None = None, name: str | None = None,
                  synopsis_components: int = N_COMPONENTS):
         if target not in TARGETS:
             raise ValueError(f"unknown target {target!r}; expected one of {TARGETS}")
+        drop = DEFAULT_DROP[target] if drop is None else drop
         self.target = target
         self.params = {**DEFAULT_PARAMS, **(params or {})}
         self.n_trees = n_trees
@@ -118,8 +124,8 @@ class LgbmQuantile:
 
     def fit(self, train: pd.DataFrame) -> LgbmQuantile:
         X, y = train[self.features], train["target"].to_numpy()
-        if self.target == "score":
-            w = train["score_weight"].to_numpy()
+        if self.target != "revenue":  # budget and score: three plain quantile models
+            w = train["score_weight"].to_numpy() if self.target == "score" else None
             for key, alpha in (("p10", LOW), ("p50", 0.5), ("p90", HIGH)):
                 self.models[key] = _train(X, y, _lgb_params(self.params, "quantile", alpha), self.n_trees, w)
             return self
@@ -139,9 +145,10 @@ class LgbmQuantile:
             self.models[key] = _train(R, residual, _lgb_params(self.params, "quantile", alpha), self.n_trees)
         return self
 
-    def predict(self, df: pd.DataFrame) -> pd.DataFrame:
+    def predict(self, df: pd.DataFrame, q: float | None = None) -> pd.DataFrame:
+        """p10 / p50 / p90, widened by `q` (default: the model's own correction)."""
         X = df[self.features]
-        if self.target == "score":
+        if self.target != "revenue":
             raw = np.column_stack([self.models[k].predict(X) for k in ("p10", "p50", "p90")])
             p10, p50, p90 = np.sort(raw, axis=1).T  # quantile models can cross
         else:
@@ -150,7 +157,7 @@ class LgbmQuantile:
             p10 = p50 + np.minimum(self.models["p10"].predict(R), 0.0)
             p90 = p50 + np.maximum(self.models["p90"].predict(R), 0.0)
         out = pd.DataFrame({"p10": p10, "p50": p50, "p90": p90}, index=df.index)
-        return self.apply_q(out, self.q, self.target)
+        return self.apply_q(out, self.q if q is None else q, self.target)
 
     @staticmethod
     def apply_q(p: pd.DataFrame, q: float, target: str) -> pd.DataFrame:
@@ -173,7 +180,7 @@ def meta_file(target: str, out_dir: Path = ARTIFACTS_DIR) -> Path:
 
 
 def save_model(model: LgbmQuantile, train: pd.DataFrame, validation_metrics: dict[str, float] | None = None,
-               out_dir: Path = ARTIFACTS_DIR) -> dict[str, Any]:
+               out_dir: Path = ARTIFACTS_DIR, extra: dict[str, Any] | None = None) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     for key in QUANTILE_KEYS:
         joblib.dump(model.models[key], out_dir / f"{model.target}_{key}.joblib")
@@ -188,12 +195,13 @@ def save_model(model: LgbmQuantile, train: pd.DataFrame, validation_metrics: dic
         "params": model.params,
         "n_trees": model.n_trees,
         "q": model.q,
-        "trained_on": f"train split, {int(train['year'].min())}-{int(train['year'].max())}",
+        "trained_on": f"films released {int(train['year'].min())}-{int(train['year'].max())}",
         "train_films": len(train),
         "validation_metrics": validation_metrics,
         "lightgbm": lgb.__version__,
         "saved_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
+    meta.update(extra or {})
     meta_file(model.target, out_dir).write_text(json.dumps(meta, indent=1) + "\n", encoding="utf-8")
     return meta
 

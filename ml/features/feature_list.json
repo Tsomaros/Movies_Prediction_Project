@@ -1518,5 +1518,59 @@
    "budget",
    "score"
   ]
+ },
+ {
+  "name": "director_budget",
+  "source": "budget track record (earlier budgets only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_budget_max",
+  "source": "budget track record (earlier budgets only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_budget_mean",
+  "source": "budget track record (earlier budgets only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "actors_budget_min",
+  "source": "budget track record (earlier budgets only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "company_budget",
+  "source": "budget track record (earlier budgets only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
+ },
+ {
+  "name": "franchise_budget",
+  "source": "budget track record (earlier budgets only)",
+  "models": [
+   "revenue",
+   "budget",
+   "score"
+  ]
  }
 ]

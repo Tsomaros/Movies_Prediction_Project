@@ -1,15 +1,16 @@
 """Optuna tuning of the middle (p50) model on backtest folds 1-2, which both stay inside train (<=2015).
 
-    uv run python -m ml.models.tune [--minutes 15] [--target revenue|score]
+    uv run python -m ml.models.tune [--minutes 15] [--target revenue|budget|score]
         -> ml/artifacts/{target}_params.json (best settings + tree count), every trial in reports/experiments.csv
 
 Each trial trains the middle model on a fold's train years and stops adding trees when MAE on the
 fold's test years stops improving (100 rounds of patience). The trial's value is the mean MAE over
-the two folds (log MAE for revenue, plain MAE for score, the Day 4 selection metrics) and its tree
+the two folds (log MAE for revenue and budget, plain MAE for score, the Day 4 selection metrics) and its tree
 count is the mean of the two stopping points. The final model trains on all of train with that fixed
 count, and the 10th / 90th models reuse the same settings, so 2016-18 never helps fit or stop anything.
 It tunes the model's default features (DEFAULT_DROP). The saved Day 5 settings were tuned before the
-ablation dropped the synopsis numbers, with them included, and are reused as they are.
+ablation dropped the synopsis numbers, with them included, and before revenue gained the Day 6 budget
+track record; they are reused as they are. The budget model was tuned on Day 6 with its own default features.
 """
 
 from __future__ import annotations
@@ -66,7 +67,7 @@ def fold_sets(target: str) -> list[tuple[pd.DataFrame, pd.DataFrame]]:
 
 
 def middle_params(target: str, params: dict[str, Any], features: list[str]) -> dict[str, Any]:
-    if target == "score":
+    if target != "revenue":
         out = _lgb_params(params, "quantile", 0.5)
     else:
         out = _lgb_params(params, "huber")
@@ -109,7 +110,7 @@ def suggest(trial: optuna.Trial, target: str) -> dict[str, Any]:
 
 
 def tune(target: str, minutes: float) -> dict[str, Any]:
-    features = model_features(target, DEFAULT_DROP)
+    features = model_features(target, DEFAULT_DROP[target])
     folds = fold_sets(target)
 
     def record(run: str, trial: int, params: dict[str, Any], maes: list[float], n_trees: int) -> None:
@@ -158,7 +159,7 @@ def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--minutes", type=float, default=15.0, help="time limit per target")
-    parser.add_argument("--target", choices=TARGETS, action="append", help="default: revenue and score")
+    parser.add_argument("--target", choices=TARGETS, action="append", help="default: every target")
     args = parser.parse_args()
     for target in args.target or TARGETS:
         start = time.perf_counter()

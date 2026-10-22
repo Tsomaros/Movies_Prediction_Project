@@ -1,5 +1,5 @@
-"""Tests for ml/features: the form contract, leak-safe track record and franchise features,
-forbidden inputs, and the training and API paths giving identical features."""
+"""Tests for ml/features: the form contract, leak-safe track record (people, companies, franchises,
+budgets), forbidden inputs, and the training and API paths giving identical features."""
 
 import hashlib
 import json
@@ -14,7 +14,7 @@ import ml.data.build_db as build_db
 from ml.features import contract
 from ml.features.basic import Franchises, fit_vocab
 from ml.features.build import FeatureContext, FilmForms, build_features, build_table, feature_list, film_to_form
-from ml.features.history import SHRINK_FILMS, History, day_number
+from ml.features.history import SHRINK_FILMS, Companies, History, day_number
 from ml.features.synopsis import FEATURE_NAMES as SYNOPSIS_FEATURES
 from ml.features.synopsis import synopsis_features
 from ml.features.text import EMBED_DIM, model_available
@@ -72,9 +72,17 @@ def test_certification_category_merges_nr_and_missing():
 # ---------------------------------------------------------------- track record (hand-computed)
 
 
+FILM_COLUMNS = ["id", "release_date", "log_revenue", "score", "collection_id", "log_budget"]
+
+
+def film_frame(films: list[tuple]) -> pd.DataFrame:
+    """(id, date, log_revenue, score, collection_id[, log_budget]) tuples; log_budget defaults to NaN."""
+    return pd.DataFrame([t + (math.nan,) * (len(FILM_COLUMNS) - len(t)) for t in films], columns=FILM_COLUMNS)
+
+
 def history(films: list[tuple], credits: list[tuple]) -> History:
-    """films: (id, date, log_revenue, score, collection_id); credits: (person_id, movie_id, role)."""
-    f = pd.DataFrame(films, columns=["id", "release_date", "log_revenue", "score", "collection_id"])
+    """films: (id, date, log_revenue, score, collection_id[, log_budget]); credits: (person_id, movie_id, role)."""
+    f = film_frame(films)
     c = pd.DataFrame(credits, columns=["person_id", "movie_id", "role"])
     people = pd.DataFrame({"id": [1, 2], "name": ["Ann Director", "Bob Other"]})
     return History(f, c, people)
@@ -115,7 +123,7 @@ def test_films_on_or_after_the_date_never_count():
     base = history(BASE_FILMS, BASE_CREDITS)
     more = history(BASE_FILMS + [same_day, later], BASE_CREDITS + extra)
     for pid in (1, 2):
-        assert more.person(pid, "director", TARGET) == base.person(pid, "director", TARGET)
+        assert more.person(pid, "director", TARGET) == pytest.approx(base.person(pid, "director", TARGET), nan_ok=True)
     assert more.priors(TARGET) == base.priors(TARGET)
 
 
@@ -127,7 +135,7 @@ def test_unknown_people_get_neutral_values():
     typical_revenue, typical_score = h.priors(TARGET)
     new = h.person(None, "director", TARGET)
     assert new == {"n_films": 0, "years_active": 0.0, "revenue": typical_revenue, "score": typical_score,
-                   "franchise_films": 0, "is_new": 1}
+                   "budget": pytest.approx(math.nan, nan_ok=True), "franchise_films": 0, "is_new": 1}  # no budgets
     actors = h.actor_features([], TARGET)  # every slot empty -> five new actors
     assert actors["actors_is_new_min"] == 1 and actors["actors_n_films_max"] == 0
 
@@ -139,13 +147,59 @@ def test_franchise_experience_counts_only_earlier_sequels():
     assert h.person(1, "director", TARGET)["franchise_films"] == 1
 
 
+# ---------------------------------------------------------------- budget track record (hand-computed)
+
+BUDGET_FILMS = [  # log budgets 16, 17 (Ann) and 19 (Bob)
+    (1, "2000-01-01", 10.0, 5.0, None, 16.0),
+    (2, "2002-10-01", 12.0, 7.0, None, 17.0),  # 92 days before the target: its budget already counts
+    (3, "2002-01-01", 20.0, 9.0, None, 19.0),
+]
+
+
+def test_budget_shrinkage_matches_a_hand_computed_value():
+    h = history(BUDGET_FILMS, BASE_CREDITS)
+    # Typical budget at the target: median(16, 17, 19) = 17. Ann: 2 budgets, median 16.5.
+    assert h.typical_budget(TARGET) == 17.0
+    assert h.person(1, "director", TARGET)["budget"] == pytest.approx((2 * 16.5 + 4 * 17) / 6)
+    assert h.person(None, "director", TARGET)["budget"] == 17.0  # a new person gets the typical budget
+    f = h.budget_features([1], [2, None], TARGET)  # Bob has no actor credits, so all five actors are new
+    assert f["director_budget"] == pytest.approx((2 * 16.5 + 4 * 17) / 6)
+    assert f["actors_budget_max"] == f["actors_budget_min"] == 17.0
+
+
+def test_budgets_on_or_after_the_date_never_count():
+    same_day = (5, "2003-01-01", 1.0, 1.0, None, 30.0)
+    later = (6, "2004-01-01", 1.0, 1.0, None, 1.0)
+    base = history(BUDGET_FILMS, BASE_CREDITS)
+    more = history(BUDGET_FILMS + [same_day, later], BASE_CREDITS + [(1, 5, "director"), (1, 6, "director")])
+    assert more.typical_budget(TARGET) == base.typical_budget(TARGET)
+    assert more.person(1, "director", TARGET)["budget"] == base.person(1, "director", TARGET)["budget"]
+    assert more.typical_budget(TARGET + 1) == np.median([16, 17, 19, 30])  # the next day, it counts
+
+
+def test_company_budget_takes_the_biggest_earlier_spender():
+    films = film_frame(BUDGET_FILMS + [(4, "2003-01-01", 1.0, 1.0, None, 40.0)])  # same day as the target
+    credits = pd.DataFrame({"company_id": [7, 7, 8, 7], "movie_id": [1, 2, 3, 4]})
+    co = Companies(films, credits, pd.DataFrame({"id": [7, 8], "name": ["Small Films", "Big Studio"]}))
+    small, big = (2 * 16.5 + 4 * 17) / 6, (1 * 19 + 4 * 17) / 5
+    small_ref, big_by_name, unknown = {"id": 7, "name": None}, {"id": None, "name": " big STUDIO"},         {"id": None, "name": "Nobody Pictures"}
+    assert co.features([small_ref], TARGET, 17.0) == {"company_budget": pytest.approx(small)}
+    assert co.features([small_ref, big_by_name], TARGET, 17.0) == {"company_budget": pytest.approx(big)}
+    # An unknown company is ignored next to a known one; alone, or with no companies, the typical budget.
+    assert co.features([unknown, small_ref], TARGET, 17.0) == {"company_budget": pytest.approx(small)}
+    assert co.features([unknown], TARGET, 17.0) == co.features([], TARGET, 17.0) == {"company_budget": 17.0}
+
+
 def test_target_franchise_features_use_earlier_entries_only():
     films = pd.DataFrame({"collection_id": [77, 77, 77], "release_date": ["2000-01-01", "2002-01-01", "2010-01-01"],
-                          "log_revenue": [10.0, 14.0, 99.0]})
+                          "log_revenue": [10.0, 14.0, 99.0], "log_budget": [16.0, math.nan, 25.0]})
     fr = Franchises(films, pd.DataFrame({"id": [77], "name": ["Saga Collection"]}))
     assert fr.features(77, day_number("2000-01-01")) == {"is_franchise": 0, "franchise_earlier_films": 0,
                                                          "franchise_revenue": pytest.approx(math.nan, nan_ok=True)}
     assert fr.features(77, TARGET) == {"is_franchise": 1, "franchise_earlier_films": 2, "franchise_revenue": 12.0}
+    assert fr.budget(77, TARGET) == {"franchise_budget": 16.0}  # the 2010 entry's budget is not known yet
+    assert math.isnan(fr.budget(77, day_number("2000-01-01"))["franchise_budget"])
+    assert math.isnan(fr.budget(None, TARGET)["franchise_budget"])
     assert fr.resolve({"id": None, "name": "saga collection"}) == 77
     assert fr.features(fr.resolve({"id": None, "name": "A Brand New Saga"}), TARGET)["is_franchise"] == 0
 
@@ -173,9 +227,10 @@ def credits(director_id: int, director_name: str, actors: list[tuple[int, str]])
 CAST = [(100 + i, f"Actor {i}") for i in range(6)]
 SAGA = {"id": 10, "name": "Heist Saga", "poster_path": None}
 RECORDS = [
-    film(1, release_date="2015-03-01", credits=credits(1, "Ann Director", CAST), belongs_to_collection=SAGA),
+    film(1, release_date="2015-03-01", credits=credits(1, "Ann Director", CAST), belongs_to_collection=SAGA,
+         budget=20_000_000),
     film(2, release_date="2017-05-01", credits=credits(1, "Ann Director", CAST[:3]), belongs_to_collection=None,
-         revenue=400_000_000),
+         revenue=400_000_000, budget=80_000_000),
     film(3, release_date="2019-07-12", credits=credits(1, "Ann Director", CAST), belongs_to_collection=SAGA,
          title="The Target"),
     film(4, release_date="2021-01-01", credits=credits(2, "Bob Other", CAST[2:]), belongs_to_collection=SAGA),
@@ -193,8 +248,8 @@ def make_db(tmp_path, records, name="movies.db") -> sqlite3.Connection:
 
 def context(con) -> FeatureContext:
     pca = {"mean": np.zeros(EMBED_DIM, dtype=np.float32), "components": np.eye(16, EMBED_DIM, dtype=np.float32)}
-    return FeatureContext(History.from_db(con), Franchises.from_db(con), fit_vocab(con), {"heist": {5}}, pca,
-                          FakeEmbedder())
+    return FeatureContext(History.from_db(con), Franchises.from_db(con), Companies.from_db(con), fit_vocab(con),
+                          {"heist": {5}}, pca, FakeEmbedder())
 
 
 def target_row(con, tmp_path, movie_id=3) -> dict:
@@ -224,6 +279,11 @@ def test_training_and_api_paths_give_identical_features(tmp_path):
     assert same(api, train)
     # The film itself and later films never count; film 1 (2015) is matured, film 2 (2017) is matured.
     assert train["director_n_films"] == 2 and train["is_franchise"] == 1 and train["franchise_earlier_films"] == 1
+    # Budget track record: film 1 is the only earlier film with a 2025-dollar budget (the test CPI has no 2017).
+    b1, b2 = (v for (v,) in con.execute("SELECT budget_2025 FROM movies WHERE id IN (1, 2) ORDER BY id"))
+    assert b2 is None
+    assert train["franchise_budget"] == train["director_budget"] == train["company_budget"] == \
+        pytest.approx(math.log(b1))
 
 
 def test_film_to_form_is_a_valid_creator_form(tmp_path):
@@ -244,10 +304,13 @@ def test_later_films_and_the_films_own_results_do_not_change_its_features(tmp_pa
     changed = [dict(r) for r in RECORDS]
     # Film 3's own post-release numbers, and film 4 (released later) with very different results.
     changed[2].update(popularity=999.0, vote_count=50_000, vote_average=9.9, revenue=2_000_000_000)
-    changed[3].update(revenue=5_000_000_000, vote_average=1.0)
+    changed[2].update(budget=300_000_000)  # the film's own budget feeds log_budget only, not the track record
+    changed[3].update(revenue=5_000_000_000, vote_average=1.0, budget=900_000_000)
     changed.append(film(5, release_date="2024-01-01", credits=credits(1, "Ann Director", CAST),
                         belongs_to_collection=SAGA))
-    assert same(target_row(make_db(tmp_path, changed, "changed.db"), tmp_path), base)
+    changed_row = target_row(make_db(tmp_path, changed, "changed.db"), tmp_path)
+    assert changed_row.pop("log_budget") != pytest.approx(base.pop("log_budget"))
+    assert same(changed_row, base)
 
 
 def test_no_feature_uses_post_release_fields(tmp_path):

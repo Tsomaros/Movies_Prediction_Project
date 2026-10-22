@@ -1,0 +1,200 @@
+{
+ "franchise_blockbuster": {
+  "model_version": "2026-10-21.849304a7",
+  "ranges": {
+   "revenue": {
+    "low": 501213000.0,
+    "middle": 1580690000.0,
+    "high": 3580590000.0,
+    "rough": false,
+    "mode": "given"
+   },
+   "budget": {
+    "low": 180783000.0,
+    "middle": 406875000.0,
+    "high": 599003000.0,
+    "rough": false
+   },
+   "score": {
+    "low": 6.35532,
+    "middle": 7.35704,
+    "high": 8.21867,
+    "rough": false,
+    "note": "TMDB scores of new films usually start higher and settle during their first year; this range is for the settled score."
+   }
+  },
+  "comparison": "within",
+  "drivers": {
+   "revenue": [
+    "A budget of $300M strongly raises the expected revenue.",
+    "Being part of The Avengers Collection (4 earlier films) strongly raises the expected revenue.",
+    "Marvel Studios as the studio raises the expected revenue.",
+    "The cast's earlier films (led by Robert Downey Jr.) raise the expected revenue.",
+    "Anthony Russo's 9 earlier films raise the expected revenue."
+   ],
+   "budget": [
+    "Marvel Studios as the studio strongly raises the expected budget.",
+    "Being part of The Avengers Collection (4 earlier films) strongly raises the expected budget.",
+    "The cast's earlier films (led by Robert Downey Jr.) strongly raise the expected budget.",
+    "A runtime of 150 minutes raises the expected budget.",
+    "Anthony Russo's 9 earlier films raise the expected budget."
+   ],
+   "score": [
+    "A runtime of 150 minutes strongly raises the expected audience score.",
+    "The cast's earlier films (led by Robert Downey Jr.) raise the expected audience score.",
+    "Anthony Russo's 9 earlier films raise the expected audience score.",
+    "Releasing in 2027 raises the expected audience score.",
+    "The genres Action, Adventure and Science Fiction slightly lower the expected audience score."
+   ]
+  },
+  "comparables": [
+   298618,
+   447365,
+   299536,
+   99861,
+   330459
+  ],
+  "warnings": [
+   "big_budget",
+   "future_release"
+  ],
+  "warning_texts": [
+   "Your budget is $150M or more. Revenue ranges for films this big were less reliable on 2019+ films than for smaller ones, and budgets above $300M don't raise the revenue estimate any further.",
+   "Our data ends in 2025. A release in 2027 is judged on films up to 2025, so later trends are not included."
+  ]
+ },
+ "small_drama": {
+  "model_version": "2026-10-21.849304a7",
+  "ranges": {
+   "revenue": {
+    "low": 1994800.0,
+    "middle": 25719400.0,
+    "high": 168243000.0,
+    "rough": true,
+    "mode": "estimated"
+   },
+   "budget": {
+    "low": 5172260.0,
+    "middle": 26528000.0,
+    "high": 62452800.0,
+    "rough": true
+   },
+   "score": {
+    "low": 6.19851,
+    "middle": 6.83034,
+    "high": 7.57034,
+    "rough": false,
+    "note": "TMDB scores of new films usually start higher and settle during their first year; this range is for the settled score."
+   }
+  },
+  "comparison": null,
+  "drivers": {
+   "revenue": [
+    "Greta Gerwig's 4 earlier films raise the expected revenue.",
+    "The cast's earlier films (led by Saoirse Ronan) raise the expected revenue.",
+    "A24 as the studio lowers the expected revenue.",
+    "Releasing in 2026 (recent films earn less in our data) lowers the expected revenue.",
+    "The genre Drama slightly lowers the expected revenue."
+   ],
+   "budget": [
+    "The cast's earlier films (led by Saoirse Ronan) strongly raise the expected budget.",
+    "Greta Gerwig's 4 earlier films strongly raise the expected budget.",
+    "A runtime of 105 minutes slightly raises the expected budget.",
+    "A24 as the studio strongly lowers the expected budget.",
+    "The genre Drama slightly lowers the expected budget."
+   ],
+   "score": [
+    "Releasing in 2026 raises the expected audience score.",
+    "The cast's earlier films (led by Saoirse Ronan) raise the expected audience score.",
+    "Greta Gerwig's 4 earlier films raise the expected audience score.",
+    "The genre Drama slightly raises the expected audience score.",
+    "English as the original language slightly lowers the expected audience score."
+   ]
+  },
+  "comparables": [
+   1037035,
+   160588,
+   1128752,
+   728142,
+   14295
+  ],
+  "warnings": [
+   "new_actors",
+   "future_release"
+  ],
+  "warning_texts": [
+   "We don't know 2 of the 5 actors, so they count as having no earlier films.",
+   "Our data ends in 2025. A release in 2026 is judged on films up to 2025, so later trends are not included."
+  ]
+ },
+ "unknown_cast": {
+  "model_version": "2026-10-21.849304a7",
+  "ranges": {
+   "revenue": {
+    "low": 38107.9,
+    "middle": 1047660.0,
+    "high": 13608700.0,
+    "rough": true,
+    "mode": "given"
+   },
+   "budget": {
+    "low": 18320.4,
+    "middle": 360122.0,
+    "high": 7002840.0,
+    "rough": true
+   },
+   "score": {
+    "low": 4.78594,
+    "middle": 5.7003,
+    "high": 6.90018,
+    "rough": false,
+    "note": "TMDB scores of new films usually start higher and settle during their first year; this range is for the settled score."
+   }
+  },
+  "comparison": "within",
+  "drivers": {
+   "revenue": [
+    "A budget of $2M strongly lowers the expected revenue.",
+    "Having no named studio strongly lowers the expected revenue.",
+    "Having no production country given strongly lowers the expected revenue.",
+    "Releasing in 2026 (recent films earn less in our data) lowers the expected revenue.",
+    "A runtime of 92 minutes lowers the expected revenue."
+   ],
+   "budget": [
+    "A cast with no earlier films in our data strongly lowers the expected budget.",
+    "Having no named studio strongly lowers the expected budget.",
+    "The genres Horror and Thriller lower the expected budget.",
+    "Totally New Director, with no earlier films as director in our data, lowers the expected budget.",
+    "A runtime of 92 minutes slightly lowers the expected budget."
+   ],
+   "score": [
+    "Releasing in 2026 raises the expected audience score.",
+    "The genres Horror and Thriller strongly lower the expected audience score.",
+    "A runtime of 92 minutes lowers the expected audience score.",
+    "English as the original language slightly lowers the expected audience score.",
+    "Having no named studio slightly lowers the expected audience score."
+   ]
+  },
+  "comparables": [
+   49018,
+   1282980,
+   226458,
+   25751,
+   44698
+  ],
+  "warnings": [
+   "new_director",
+   "new_actors",
+   "no_country",
+   "no_studio",
+   "future_release"
+  ],
+  "warning_texts": [
+   "We don't know this director, so they count as a first-time director with no track record.",
+   "We don't know 5 of the 5 actors, so they count as having no earlier films.",
+   "No production country given. Past films with none recorded are mostly small ones, so leaving it empty lowers the ranges; fill it in if you know it.",
+   "No studio given. Past films with none recorded are mostly small ones, so leaving it empty lowers the ranges; fill it in if you know it.",
+   "Our data ends in 2025. A release in 2026 is judged on films up to 2025, so later trends are not included."
+  ]
+ }
+}

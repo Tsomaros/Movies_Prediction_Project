@@ -1,6 +1,6 @@
 # Rolling backtest
 
-_Generated 2026-10-21 15:16 UTC by `make evaluate`. Each fold is fitted on its train years and scored on the next three; the test split (2019+) is not used._
+_Generated 2026-10-21 17:54 UTC by `make evaluate`. Each fold is fitted on its train years and scored on the next three; the test split (2019+) is not used._
 
 | Fold | Train | Test |
 | --- | --- | --- |
@@ -46,11 +46,23 @@ _Range correction learned on folds 1-2, so coverage there is fitted, not tested;
 
 | Fold | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| fold 1 (2010-2012) | 943 | 1.125 | 63% | 47.2% | 0.801 | 79.1% | 32.4× |
-| fold 2 (2013-2015) | 905 | 1.151 | 63% | 45.1% | 0.804 | 81.1% | 39.1× |
-| fold 3 (2016-2018) | 886 | 1.113 | 69% | 45.6% | 0.794 | 83.2% | 36.7× |
-| mean | 911 | 1.130 | 65% | 46.0% | 0.800 | 81.1% | 36.1× |
-| spread (std) | — | 0.015 | 3% | 0.9% | 0.004 | 1.7% | 2.8× |
+| fold 1 (2010-2012) | 943 | 1.129 | 65% | 45.9% | 0.805 | 79.4% | 30.5× |
+| fold 2 (2013-2015) | 905 | 1.149 | 65% | 43.9% | 0.808 | 80.8% | 37.6× |
+| fold 3 (2016-2018) | 886 | 1.093 | 66% | 46.8% | 0.807 | 83.6% | 36.2× |
+| mean | 911 | 1.124 | 65% | 45.5% | 0.807 | 81.3% | 34.7× |
+| spread (std) | — | 0.023 | 0% | 1.2% | 0.001 | 1.8% | 3.1× |
+
+**LightGBM, budget estimated (calibrated)**
+
+_Range correction learned on folds 1-2 with estimated budgets, so coverage there is fitted, not tested; fold 3 (2016-18) is the honest check._
+
+| Fold | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| fold 1 (2010-2012) | 943 | 1.199 | 66% | 42.5% | 0.778 | 79.2% | 40.1× |
+| fold 2 (2013-2015) | 905 | 1.242 | 72% | 40.3% | 0.773 | 81.0% | 49.5× |
+| fold 3 (2016-2018) | 886 | 1.135 | 70% | 44.0% | 0.793 | 86.1% | 47.7× |
+| mean | 911 | 1.192 | 69% | 42.3% | 0.781 | 82.1% | 45.7× |
+| spread (std) | — | 0.044 | 3% | 1.5% | 0.008 | 2.9% | 4.1× |
 
 ## Budget (log 2025 $)
 
@@ -83,6 +95,18 @@ _Range correction learned on folds 1-2, so coverage there is fitted, not tested;
 | fold 3 (2016-2018) | 1,162 | 1.193 | 78% | 37.3% | 0.389 | 86.0% | 72.0× |
 | mean | 1,253 | 1.265 | 81% | 35.7% | 0.354 | 84.0% | 74.8× |
 | spread (std) | — | 0.052 | 3% | 1.1% | 0.025 | 1.4% | 2.4× |
+
+**LightGBM (tuned, calibrated)**
+
+_Range correction learned on folds 1-2, so coverage there is fitted, not tested; fold 3 (2016-18) is the honest check. Settings tuned on folds 1-2 as well._
+
+| Fold | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| fold 1 (2010-2012) | 1,354 | 0.701 | 46% | 65.0% | 0.854 | 79.9% | 8.5× |
+| fold 2 (2013-2015) | 1,245 | 0.671 | 45% | 65.9% | 0.859 | 80.2% | 9.0× |
+| fold 3 (2016-2018) | 1,162 | 0.613 | 39% | 70.9% | 0.859 | 84.3% | 8.1× |
+| mean | 1,253 | 0.662 | 44% | 67.3% | 0.857 | 81.5% | 8.5× |
+| spread (std) | — | 0.036 | 3% | 2.6% | 0.002 | 2.0% | 0.4× |
 
 ## Score (vote_average)
 

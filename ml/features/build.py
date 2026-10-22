@@ -33,7 +33,7 @@ import pandas as pd
 from ml.data.build_db import DB_FILE
 from ml.features.basic import Franchises, basic_features, load_vocab
 from ml.features.contract import certification_category
-from ml.features.history import History, day_number
+from ml.features.history import BUDGET_FEATURES, Companies, History, day_number
 from ml.features.history import feature_names as history_feature_names
 from ml.features.synopsis import FEATURE_NAMES as SYNOPSIS_FEATURES
 from ml.features.synopsis import EMBEDDINGS_FILE, embed_overviews, load_pca, synopsis_features
@@ -49,6 +49,7 @@ NOT_ALLOWED = {"log_budget": {"budget"}}  # a model never gets its own target as
 class FeatureContext:
     history: History
     franchises: Franchises
+    companies: Companies
     vocab: dict[str, Any]
     themes: dict[str, set[int]]
     pca: dict[str, np.ndarray]
@@ -56,7 +57,8 @@ class FeatureContext:
 
     @classmethod
     def load(cls, con: sqlite3.Connection, embedder: Embedder | None = None) -> FeatureContext:
-        return cls(History.from_db(con), Franchises.from_db(con), load_vocab(), load_themes(), load_pca(), embedder)
+        return cls(History.from_db(con), Franchises.from_db(con), Companies.from_db(con), load_vocab(), load_themes(),
+                   load_pca(), embedder)
 
     def embed(self, text: str) -> np.ndarray:
         if self.embedder is None:
@@ -84,6 +86,10 @@ def build_features(
         **ctx.history.director_features([director], as_of),
         **ctx.history.actor_features(actors, as_of),
         **synopsis_features(synopsis_vector, ctx.pca),
+        # the budget track record comes last, so the Day 3-5 columns keep their order
+        **ctx.history.budget_features([director], actors, as_of),
+        **ctx.companies.features(form.get("companies") or [], as_of, ctx.history.typical_budget(as_of)),
+        **ctx.franchises.budget(ctx.franchises.resolve(form.get("franchise")), as_of),
     }
 
 
@@ -170,6 +176,8 @@ def build_table(con: sqlite3.Connection, ctx: FeatureContext, cache: Path = EMBE
 
 
 def _source(name: str) -> str:
+    if name in BUDGET_FEATURES:
+        return "budget track record (earlier budgets only)"
     if name.startswith(("director_", "actors_")):
         return "track record (earlier films only)"
     if name.startswith(("synopsis_", "has_synopsis")):

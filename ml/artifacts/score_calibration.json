@@ -1,5 +1,6 @@
 {
  "target": "score",
+ "mode": null,
  "level": 0.8,
  "q": 0.1653553204988043,
  "units": "score points",
@@ -38,5 +39,5 @@
    }
   }
  },
- "calibrated_at": "2026-10-21T15:14:09+00:00"
+ "calibrated_at": "2026-10-21T17:49:14+00:00"
 }

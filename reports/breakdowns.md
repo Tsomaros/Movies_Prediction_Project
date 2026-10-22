@@ -1,6 +1,6 @@
 # Breakdowns (validation)
 
-_Generated 2026-10-21 15:16 UTC by `make evaluate`. Fitted on train (≤2015), scored on validation (2016–18); the test split (2019+) is not used._
+_Generated 2026-10-21 17:54 UTC by `make evaluate`. Fitted on train (≤2015), scored on validation (2016–18); the test split (2019+) is not used._
 
 ## Revenue (log 2025 $)
 
@@ -35,10 +35,19 @@ _Generated 2026-10-21 15:16 UTC by `make evaluate`. Fitted on train (≤2015), s
 
 | Group | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| <$10M | 296 | 1.347 | 75% | 37.5% | 0.544 | 82.1% | 76.3× |
-| $10-50M | 389 | 1.163 | 71% | 42.7% | 0.597 | 82.5% | 35.4× |
-| $50-150M | 134 | 0.752 | 58% | 61.2% | 0.538 | 85.1% | 14.7× |
-| $150M+ | 67 | 0.517 | 46% | 67.2% | 0.440 | 88.1% | 9.1× |
+| <$10M | 296 | 1.340 | 75% | 36.1% | 0.545 | 83.1% | 82.3× |
+| $10-50M | 389 | 1.136 | 73% | 45.2% | 0.631 | 81.7% | 35.0× |
+| $50-150M | 134 | 0.729 | 53% | 60.4% | 0.556 | 86.6% | 12.3× |
+| $150M+ | 67 | 0.481 | 41% | 76.1% | 0.499 | 91.0% | 6.9× |
+
+**budget size: LightGBM, budget estimated (calibrated)**
+
+| Group | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| <$10M | 296 | 1.357 | 78% | 36.8% | 0.534 | 87.5% | 108.4× |
+| $10-50M | 389 | 1.183 | 72% | 40.9% | 0.587 | 83.8% | 46.1× |
+| $50-150M | 134 | 0.797 | 54% | 56.7% | 0.491 | 85.8% | 16.3× |
+| $150M+ | 67 | 0.553 | 43% | 68.7% | 0.439 | 94.0% | 9.0× |
 
 **language: B0 global median**
 
@@ -65,8 +74,15 @@ _Generated 2026-10-21 15:16 UTC by `make evaluate`. Fitted on train (≤2015), s
 
 | Group | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| English | 639 | 1.111 | 69% | 45.7% | 0.830 | 82.3% | 33.8× |
-| other languages | 247 | 1.121 | 68% | 45.3% | 0.596 | 85.4% | 44.2× |
+| English | 639 | 1.083 | 65% | 48.0% | 0.841 | 83.7% | 33.5× |
+| other languages | 247 | 1.120 | 69% | 43.7% | 0.616 | 83.4% | 41.2× |
+
+**language: LightGBM, budget estimated (calibrated)**
+
+| Group | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| English | 639 | 1.130 | 70% | 43.7% | 0.827 | 86.4% | 44.1× |
+| other languages | 247 | 1.149 | 70% | 44.9% | 0.616 | 85.4% | 54.2× |
 
 **director: B0 global median**
 
@@ -93,8 +109,15 @@ _Generated 2026-10-21 15:16 UTC by `make evaluate`. Fitted on train (≤2015), s
 
 | Group | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| new director | 159 | 1.344 | 71% | 40.3% | 0.722 | 83.0% | 78.6× |
-| experienced director | 727 | 1.063 | 68% | 46.8% | 0.796 | 83.2% | 32.2× |
+| new director | 159 | 1.325 | 70% | 39.0% | 0.735 | 84.3% | 73.1× |
+| experienced director | 727 | 1.043 | 65% | 48.6% | 0.809 | 83.5% | 31.7× |
+
+**director: LightGBM, budget estimated (calibrated)**
+
+| Group | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| new director | 159 | 1.360 | 79% | 41.5% | 0.729 | 84.9% | 96.2× |
+| experienced director | 727 | 1.086 | 69% | 44.6% | 0.796 | 86.4% | 41.7× |
 
 **franchise: B0 global median**
 
@@ -121,8 +144,15 @@ _Generated 2026-10-21 15:16 UTC by `make evaluate`. Fitted on train (≤2015), s
 
 | Group | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| sequel | 137 | 0.808 | 54% | 60.6% | 0.891 | 81.0% | 14.0× |
-| original | 749 | 1.169 | 71% | 42.9% | 0.750 | 83.6% | 42.4× |
+| sequel | 137 | 0.773 | 51% | 62.0% | 0.897 | 83.9% | 11.6× |
+| original | 749 | 1.152 | 70% | 44.1% | 0.764 | 83.6% | 42.4× |
+
+**franchise: LightGBM, budget estimated (calibrated)**
+
+| Group | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| sequel | 137 | 0.831 | 56% | 57.7% | 0.877 | 86.9% | 15.2× |
+| original | 749 | 1.191 | 72% | 41.5% | 0.751 | 86.0% | 55.9× |
 
 ## Budget (log 2025 $)
 
@@ -153,6 +183,15 @@ _Generated 2026-10-21 15:16 UTC by `make evaluate`. Fitted on train (≤2015), s
 | $50-150M | 144 | 1.268 | 71% | 13.2% | 0.265 | 79.2% | 72.0× |
 | $150M+ | 68 | 1.910 | 86% | 0.0% | 0.293 | 25.0% | 72.0× |
 
+**budget size: LightGBM (tuned, calibrated)**
+
+| Group | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| <$10M | 477 | 0.845 | 62% | 57.0% | 0.591 | 77.4% | 11.9× |
+| $10-50M | 473 | 0.472 | 36% | 78.9% | 0.561 | 89.4% | 7.4× |
+| $50-150M | 144 | 0.441 | 29% | 81.9% | 0.472 | 88.2% | 5.3× |
+| $150M+ | 68 | 0.334 | 24% | 89.7% | 0.550 | 89.7% | 4.9× |
+
 **language: B0 global median**
 
 | Group | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
@@ -173,6 +212,13 @@ _Generated 2026-10-21 15:16 UTC by `make evaluate`. Fitted on train (≤2015), s
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | English | 802 | 1.165 | 71% | 37.7% | 0.451 | 84.5% | 72.0× |
 | other languages | 360 | 1.256 | 145% | 36.4% | 0.333 | 89.2% | 72.0× |
+
+**language: LightGBM (tuned, calibrated)**
+
+| Group | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| English | 802 | 0.572 | 38% | 72.4% | 0.889 | 84.3% | 7.7× |
+| other languages | 360 | 0.705 | 43% | 67.5% | 0.715 | 84.4% | 9.4× |
 
 **director: B0 global median**
 
@@ -195,6 +241,13 @@ _Generated 2026-10-21 15:16 UTC by `make evaluate`. Fitted on train (≤2015), s
 | new director | 270 | 1.683 | 230% | 25.2% | 0.371 | 81.1% | 72.0× |
 | experienced director | 892 | 1.045 | 70% | 40.9% | 0.391 | 87.4% | 72.0× |
 
+**director: LightGBM (tuned, calibrated)**
+
+| Group | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| new director | 270 | 0.798 | 50% | 61.1% | 0.807 | 81.5% | 12.7× |
+| experienced director | 892 | 0.557 | 38% | 73.9% | 0.850 | 85.2% | 7.2× |
+
 **franchise: B0 global median**
 
 | Group | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
@@ -215,6 +268,13 @@ _Generated 2026-10-21 15:16 UTC by `make evaluate`. Fitted on train (≤2015), s
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | sequel | 151 | 1.226 | 76% | 29.1% | 0.446 | 79.5% | 72.0× |
 | original | 1,011 | 1.188 | 78% | 38.5% | 0.318 | 86.9% | 72.0× |
+
+**franchise: LightGBM (tuned, calibrated)**
+
+| Group | Films | MAE log | Median % error | Within 2× | Spearman | Coverage 10–90 | Range width |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| sequel | 151 | 0.432 | 28% | 82.1% | 0.937 | 89.4% | 5.7× |
+| original | 1,011 | 0.640 | 40% | 69.2% | 0.835 | 83.6% | 8.6× |
 
 ## Score (vote_average)
 

@@ -245,3 +245,581 @@
 - **The budget chain will cost revenue accuracy.** Without budget, MAE log rises by about 0.1 (validation 1.219), which is roughly the floor if the predicted budget were useless.
 - **Synopsis adds nothing.** Consider removing it from the creator form's "helps the prediction" messaging, or trying other text features later.
 - **Optional retune without synopsis** (`make tune`, 30 min). Tuning gained only about 1% the first time.
+
+## Day 6: Budget model, the chain and the final test run (done 2026-10-21)
+
+- [x] 0. Update the plan document: our own CQR on folds 1–2 instead of MAPIE on 2016–18, the chain calibrated on folds 1–2, ≤2018 corrections from all three folds, all-data models reuse them, no synopsis in the budget model, no retune
+- [x] 1. Budget track-record features (`ml/features/history.py`), also tried in the revenue model: kept in revenue
+- [x] 2. Budget model (`ml/models/train.py`, tuning, calibration, harness, synopsis ablation row)
+- [x] 3. Chain: "budget given" and "budget estimated" calibrations, `predict_revenue(features, budget=None)`
+- [x] 4. Rough-estimate label
+- [x] 5. Budget comparison
+- [x] 6. Freeze (`pre-test`), retrain on ≤2018, final test run, all-data models (`final-models` tag after your review)
+- [x] 7. Tests
+- [x] 8. Wrap-up and commit
+
+### Task 1: budget track record
+
+- **6 features:** `director_budget`, `actors_budget_{max,mean,min}`, `company_budget` and `franchise_budget`, in log 2025 dollars, appended after the Day 3–5 columns. The rebuilt table matches the old one exactly on all 169 earlier columns (same values, same order), so the Day 5 models reproduce exactly. `make features` now takes about 95 s.
+- **Correlation with log budget (train):** franchise 0.78, company 0.59, actors max 0.53, director 0.38 (director's earlier revenue: 0.23).
+- **Revenue trial** (tuned settings reused): validation MAE log 1.113 → 1.093, within 2× 45.6% → 46.8%; backtest mean 1.130 → 1.124. Kept by your decision. Score stays without it (`DEFAULT_DROP` is now per target).
+- **After retraining:** revenue's correction is +0.448 log (was +0.473); validation coverage 83.6%, width 36×. Score unchanged.
+
+### Changes from the plan
+
+- **An earlier film's budget counts from its release,** with no 182-day wait like revenue and score: a budget is known before release.
+- **Company budget is the highest shrunk median among the film's companies** that have earlier budgets (the typical budget when none do). Companies get their own track record (`Companies` in `history.py`), with typed names matched against every company in the database, not only the top 30.
+- **Franchise budget is the plain median of earlier entries** (NaN when none), like `franchise_revenue`; the first entry's budget counts.
+- **The budget features are their own group** ("budget track record") rather than part of "track record", so the Day 5 ablation rows keep their meaning. `reports/ablation.md` is still the Day 5 table; the full ablation is rerun with the budget model rows in task 2.
+
+### Checks
+
+- A deliberate bug (same-day budgets counted) was caught by 3 tests. 145 tests passing.
+
+### Task 2: budget model
+
+- **Model:** three LightGBM quantile models on log 2025 dollars (`LgbmQuantile("budget")`), unweighted, no constraints; 157 features (every allowed one except `log_budget` and the synopsis numbers). `train.py`, `tune.py`, `calibrate.py`, `evaluate.py` and `ablation.py` now cover all three targets.
+- **Tuning:** 96 trials in 15 min on folds 1–2; fold MAE log 0.685 with 1,404 trees vs 0.699 for the defaults (−2.1%).
+- **Calibration:** +0.399 log from 2,599 fold films. Coverage before → after: folds 55% / 57% → 80% / 80%, 2016–18 64% → 84%.
+
+| Budget (validation 2016–18) | MAE log | Within 2× | Spearman | Coverage | Width | Backtest mean |
+| --- | --- | --- | --- | --- | --- | --- |
+| B2 | 1.193 | 37.3% | 0.389 | 86.0% | 72× | 1.265 ± 0.052 |
+| **LightGBM** | **0.613** | **70.9%** | **0.859** | 84.3% | **8.1×** | **0.662 ± 0.036** |
+
+- **Breakdowns:** better than B2 in every group. $150M+ films: 90% within 2× (B2: 0%). Under $10M: MAE log 0.85, coverage 77% (the one group below 80%). New directors 0.80, sequels 0.43.
+- **Ablation:** removing the budget track record costs +0.054 (validation) / +0.061 (backtest), the people track record +0.023 / +0.026. Synopsis: +0.000 / −0.004 without it, +0.004 / +0.008 with 32 numbers, so it stays out. Themes: −0.005 / +0.001, kept.
+- **Full ablation rerun:** every Day 5 revenue and score row reproduced exactly; the revenue row with the budget track record matches task 1.
+- **Sizes and times:** `make train` about 1 min for the three models (plus about 4 min of calibration), `make evaluate` about 3 min, the ablation about 18 min.
+
+### Checks (task 2)
+
+- The budget model's top inputs by gain are `company_budget` (13%), runtime (5%) and `director_budget` (4%), with no single dominant column; `log_budget` is not among its features (tested).
+- New tests: budget ranges ordered, three plain quantile models with per-film widths, never its own target, saved budget model reloads identically. 149 tests passing.
+
+### Task 3: the chain
+
+- **Module:** `ml/models/chain.py`. `EstimatedBudgetRevenue` fits the revenue model on real budgets and a budget model on every `v_train_budget` film up to the same last year (`splits.through`), then predicts revenue from the budget model's middle prediction. `Chain` / `predict_revenue(features, budget=None)` use the saved models: a budget means "given", none means "estimated". `LgbmQuantile.predict` takes an optional `q`.
+- **Calibration** (`make train` now writes `revenue_estimated_calibration.json` too): estimated q = +0.585 log (given: +0.448), from the same 1,848 fold films. Coverage before → after: folds 62% / 61% → 79% / 81%, 2016–18 66% → 86%.
+
+| Revenue (validation 2016–18) | MAE log | Within 2× | Spearman | Coverage | Width | Backtest mean |
+| --- | --- | --- | --- | --- | --- | --- |
+| B2 (real budget) | 1.316 | 39.8% | 0.709 | 79.7% | 53× | 1.309 ± 0.012 |
+| No budget input (ablation) | 1.219 | 39.3% | — | — | — | 1.244 ± 0.023 |
+| **LightGBM, budget estimated** | **1.135** | **44.0%** | **0.793** | 86.1% | 48× | **1.192 ± 0.044** |
+| LightGBM, budget given | 1.093 | 46.8% | 0.807 | 83.6% | 36× | 1.124 ± 0.023 |
+
+- **The estimated budget recovers about two-thirds of what the budget is worth:** no budget costs +0.126 against the given mode, an estimated one +0.042. On the 886 validation revenue films the estimate is within 2× of the real budget for 75% (MAE log 0.535), and on average 9% high.
+- **Estimated mode beats B2 with the real budget** on validation and in every fold (1.199 / 1.242 / 1.135 vs 1.292 / 1.318 / 1.316).
+- **Coverage by group (estimated):** 84–94%, every group above 80%; $150M+ films 94%, under $10M 88%.
+
+### Changes from the plan
+
+- **The estimated correction is never smaller than the given one** (`max` in `Chain.load` and the harness), which makes "estimated is never narrower" true by construction; here it didn't bind (0.585 vs 0.448).
+- **The harness reports revenue in both modes**, so the estimated mode gets the same breakdowns and backtest as every other model. `make evaluate` now takes about 4.5 min.
+
+### Checks (task 3)
+
+- `predict_revenue` on 2016–18 with the saved models reproduces the harness exactly in both modes (1.1353 / 1.0933).
+- New tests: given mode uses the creator's budget (one value or one per film), estimated mode feeds the budget model's middle and ignores any `log_budget` in the features, estimated is never narrower than given with the same budget. 152 tests passing.
+- 2016–18 coverage in estimated mode (86%) is more cautious than given (84%); the ≤2018 models take their corrections from all three folds (task 6).
+
+### Task 4: rough-estimate label
+
+- **Module:** `ml/models/rough.py` (`is_rough`, `fit_rule`; `uv run python -m ml.models.rough` writes `ml/artifacts/rough_estimate.json`). The rule is fitted with the saved ≤2015 models on 2016–18 and then frozen.
+- **Rule (your decision):** revenue and budget only; high ÷ low above the 75th percentile of 2016–18 widths, rounded to two figures: **revenue 81×** (from the budget-given ranges), **budget 12×**. Score gets no label.
+
+| Validation 2016–18 | Labelled | MAE log labelled / rest | Within 2× labelled / rest |
+| --- | --- | --- | --- |
+| Revenue, budget given | 25% | 1.537 / 0.945 (1.63×) | 34% / 51% |
+| Revenue, budget estimated | 32% | 1.547 / 0.945 (1.64×) | 31% / 50% |
+| Budget | 27% | 0.863 / 0.520 (1.66×) | 54% / 77% |
+
+### Changes from the plan
+
+- **The 4× starting point was dropped:** it labelled 98% of revenue and 93% of budget predictions (typical widths 36× and 8×).
+- **Score has no label:** its widths span only 1.3–2.0 points, width vs error Spearman is 0.09, and the widest quarter has only 1.14× the error of the rest. Revenue (0.30) and budget (0.26) widths do track error.
+- **The rule is not part of `make train`,** so retraining (task 6) can't move the frozen cut-offs.
+
+### Checks (task 4)
+
+- New tests: the cut-off compares high ÷ low (80× not labelled, 82× labelled at 81×), score is never labelled, and the fitted rule labels about a quarter with a two-figure cut-off. 154 tests passing.
+
+### Task 5: budget comparison
+
+- **Code:** `compare_budget` and `Chain.compare_budget(features, budget=None)` in `ml/models/chain.py`, plus `format_money` (two significant figures: "$12M", "$1.2B"). Columns: low, middle, high (2025 $) and the sentence "Similar films usually cost $X–Y"; with a budget also its position (below / within / above) and its ratio to the middle. "Similar films" means the budget model's calibrated 10th–90th range for the same form.
+- **On 2016–18 (1,162 films, real budgets):** 84.3% within, 10.9% below, 4.7% above; median budget ÷ middle 0.97. Examples: *Get Out* $5.9M vs $1.4M–$20M, *Avengers: Infinity War* $380M vs $180M–$580M, *La La Land* $40M vs $14M–$65M.
+
+### Surprises / inputs for later
+
+- **Misses are lopsided:** real budgets fall below the range twice as often as above it.
+- **Rounding can blur a "below":** *The Shape of Water* ($26M) is just under a low end that also shows as $26M. Day 7's wording should handle budgets within a few percent of an edge (e.g. "at the low end").
+
+### Checks (task 5)
+
+- New tests: money formatting (6 cases), positions and ratios on hand values, the range still shown without a budget, and the chain using the budget model's own range. 162 tests passing.
+
+### Task 6: freeze and final test run
+
+- **Freeze:** tasks 1–5 committed (`6b12900`) and tagged `pre-test`.
+- **Script:** `ml/eval/final.py` is the only module that passes `final=True`. `test` refuses to run again once `reports/final_test.json` exists; `all-data` needs the test run's corrections. A dry run with 2016–18 standing in for the test split (outputs in the scratchpad) reproduced every validation number exactly before the real run.
+- **≤2018 corrections** (out-of-fold on folds 1–3, 2010–18): revenue +0.399 (2,734 films), revenue estimated +0.505, budget +0.363 (3,761), score +0.159 (10,014). All smaller than the folds 1–2 corrections (0.448 / 0.585 / 0.399 / 0.165).
+- **Test run (2019+, once, 259 s):**
+
+| Test 2019+ | B2 | LightGBM | Coverage | Width | Validation (for reference) |
+| --- | --- | --- | --- | --- | --- |
+| Revenue MAE log, budget given | 1.455 | **1.230** | 77.4% | 34× | 1.093 |
+| Revenue, without 2020–21 | 1.418 | **1.189** | 78.2% | 33× | |
+| Revenue, budget estimated | 1.455 | **1.266** | 78.2% | 42× | 1.135 |
+| Budget MAE log | 1.247 | **0.682** | 79.9% | 7.6× | 0.613 |
+| Score MAE | 0.574 | **0.493** | 81.1% | 1.67 pts | 0.496 |
+
+- **Disappointments (in Limitations):** $150M+ revenue films are worse than B2 (MAE log 1.04 vs 0.99) with 64% coverage; with an estimated budget level with B2 (0.99). $50–150M revenue coverage 75%; $50M+ budget coverage 74–77%. Revenue is about 0.14 harder on 2019+ for both LightGBM and B2.
+- **Rough label on test:** revenue 18% labelled (1.45× the error), estimated 24% (1.40×), budget 24% (1.77×).
+- **All-data models** (`ml/artifacts/final/`, `.joblib` gitignored): revenue 10,421 films, budget 14,460, score 33,077 (1960–2025), with the ≤2018 corrections and frozen tree counts; the revenue meta carries `q_estimated` (+0.505), which `Chain.load(out_dir)` reads.
+
+### Changes from the plan (task 6)
+
+- **`save_model` takes `extra` metadata** and writes "films released 1960–2025" instead of "train split, …".
+- **The ≤2018 models aren't saved;** the test run fits and scores them in one go. The app uses the all-data models.
+
+### Task 7: tests
+
+- **Already covered in tasks 2–5:** budget ranges ordered, estimated mode never narrower than given, budget model never gets `log_budget`, saved budget model reloads identically, the chain, the rough label and the budget comparison.
+- **New `tests/test_final.py` (10 tests):**
+  - only `ml/eval/final.py` passes `final=True` (checked on the code's syntax tree, so docstrings don't count);
+  - the test run refuses a second run before touching any data;
+  - the all-data stage refuses to run without the test run's corrections;
+  - a saved chain reloads identically and reads its estimated correction from the metadata;
+  - the committed all-data metadata uses the frozen settings, tree counts, features and final corrections, trained on 1960–2025 (skipped without the files);
+  - the all-data models reload identically (skipped when the gitignored `.joblib` files are absent).
+- **Checks:** two deliberate bugs were caught (a `final=True` call added to `evaluate.py`, and the second-run guard removed). 172 tests passing.
+
+### Surprises / inputs for Day 7+
+
+- **Use the all-data models:** `Chain.load(Path("ml/artifacts/final"))` and `load_model(target, Path("ml/artifacts/final"))`. `ml/artifacts/` keeps the ≤2015 models from `make train` for evaluation.
+- **Big-budget revenue is the weak spot** ($150M+: worse than B2 on 2019+, 64% coverage). Day 7's explanations and Day 11's results page should not oversell blockbuster revenue predictions.
+- **Rough-estimate label:** 18–24% of test predictions; pass it through `predict()` per target (revenue, budget; never score).
+- **Budget comparison wording:** budgets within a few percent of an edge round to the same dollar figure (*The Shape of Water*); word these as "at the low/high end".
+- **Revenue explanations must handle both modes:** in estimated mode the budget driver is the predicted budget, not the creator's.
+- **`make evaluate` takes about 4.5 min** now (13 models with backtests); `make train` about 5 min.
+
+## Day 7: Explanations and packaging (done 2026-10-22)
+
+- [x] 0. Update the plan document: no rescaling (contributions add up to the middle exactly), no synopsis driver, log-based strength thresholds, the budget track record inside the groups, comparables from `score_ok` films with money first and full MiniLM vectors, one "estimated budget" driver, a $150M+ warning, "at the low/high end" wording
+- [x] 1. Drivers (`ml/explain/drivers.py`)
+- [x] 2. Feature groups (`ml/explain/groups.py`)
+- [x] 3. Plain-English sentences (`ml/explain/sentences.py`)
+- [x] 4. Comparable films (`ml/explain/comparables.py`)
+- [x] 5. `predict()` package (`ml/predict.py`, `manifest.json`)
+- [x] 6. Tests
+- [x] 7. Sanity notebook (`notebooks/07_explanations.ipynb`)
+- [x] 8. Wrap-up and commit
+
+### Task 1: drivers
+
+- **Module:** `ml/explain/drivers.py`.
+  - `contributions(model, df)` returns LightGBM's `pred_contrib` on the middle model: one column per feature plus `expected` (the typical film).
+  - `group_contributions(contribs, groups)` refuses any feature without a group.
+  - `effect`, `strength` and `top_drivers(target, row, n=5, estimated=())` complete the module. Zero contributions are dropped, and `estimated` flags revenue's budget in estimated mode.
+- **They add up:** on 2016–18 with both the ≤2015 and the all-data models, contributions plus `expected` equal the middle that is shown, to within 1e-13, in both revenue modes. The starting points (all-data models) are revenue 17.12 log ($27M), budget 16.33 log ($12M) and score 6.41.
+- **Strength on 2016–18 (all-data models, grouped by feature source for now):**
+
+| Target | Top-5 drivers strong / moderate / slight | Top driver strong | Most often the top driver |
+| --- | --- | --- | --- |
+| Revenue | 68% / 30% / 2% | 99% | budget (64%) |
+| Budget | 47% / 45% / 8% | 98% | budget track record (77%) |
+| Score | 13% / 41% / 45% | 57% | track record (50%) |
+
+- **Speed for one film:** about 9 ms for revenue, 25–40 ms for budget and 40–50 ms for score. The score model's trees are deep, and `pred_contrib` costs more than a plain prediction (about 5 ms per model). All three come to about 100 ms of the 400 ms budget.
+
+### Changes from the plan (task 1)
+
+- **A small rescale after all:** when the budget or score quantile models cross, `predict()` sorts them, and the middle shown isn't the p50 model's own value. On 2016–18 with the all-data models this affects 40 of 1,162 budget films (up to 0.21 log) and 2 of 3,600 score films. Those rows are scaled so the features add up to the middle that is shown; revenue never needs it.
+
+### Checks (task 1)
+
+- **New `tests/test_explain.py` (18 tests):**
+  - contributions add up to the middle for all three models;
+  - the correction q never moves the middle;
+  - crossed quantiles are followed;
+  - estimated-mode contributions add up to the chain's middle;
+  - groups keep the total;
+  - a feature without a group is refused;
+  - the strength cut-offs hold (−20% counts as strong, like +25%);
+  - the top drivers come out in the right order with the right flags.
+- **Mutation check:** with the rescale removed, 2 tests fail; even the small test budget model has crossings. 190 tests passing.
+
+### Inputs for later tasks
+
+- **Money cut-offs may be too low:** 68% of revenue's top-5 drivers are "strong". Check this in the notebook (task 7) before the wording is settled.
+
+### Task 2: feature groups
+
+- **Module:** `ml/explain/groups.py`. `GROUPS` (12 ids → labels), `group_of(name, source)` and `feature_groups()`.
+- **How features are grouped:**
+  - groups follow the feature sources in `feature_list.json`;
+  - the track record is split into director and cast by prefix;
+  - each budget track-record column joins the group it describes.
+- **158 features in 12 groups:** studio 34, themes 27, cast 21, genre 19, country 17, language 16, director 7, certification 6, release timing 5, franchise 4, runtime 1, budget 1.
+  - Every feature of the three app models has a group.
+  - Revenue uses all 12 groups. Budget and score use 11, without the budget group.
+- **Drivers on 2016–18 (all-data models, real groups):**
+
+| Target | Strong / moderate / slight (top 5) | Most often the top driver | Most often in the top 5 |
+| --- | --- | --- | --- |
+| Revenue | 72% / 27% / 1% | budget 62%, studio 11%, cast 8% | studio 84%, budget 83%, certification 59%, runtime 59% |
+| Budget | 59% / 37% / 4% | studio 71%, cast 15% | studio 96%, cast 81%, genre 74%, director 72% |
+| Score | 12% / 47% / 41% | cast 42%, genre 29%, runtime 20% | genre 90%, runtime 89%, cast 89%, themes 62% |
+
+### Changes from the plan (task 2)
+
+- **Studio is its own group,** separate from country and language. It holds the 33 company columns and `company_budget`, and it is a top driver for budget 71% of the time.
+- **The synopsis numbers have no group,** as decided in task 0. A model that used them would be refused by `group_contributions` rather than explained with a raw name.
+
+### Checks (task 2)
+
+- **6 new tests (24 in `tests/test_explain.py`):**
+  - every feature the app models use has a group;
+  - every group is used, and labels are plain words;
+  - the budget track record lands in the right groups;
+  - the synopsis numbers have no group, and an unmapped source raises an error.
+- **Mutation checks:** removing the country source mapping fails 6 tests, and so does removing the cast prefix. 196 tests passing.
+- **Studio driving budget needs a look in the notebook (task 7):** `company_budget` probably carries most of it.
+
+### Task 3: plain-English sentences
+
+- **Module:** `ml/explain/sentences.py`. `sentence(target, driver, form, features, names=None)` returns `{group, label, direction, strength, estimated, value, text}`; `explain(...)` splits drivers into `up` and `down`, largest first.
+- **How a sentence is built:**
+  - one template per group, filled from the clean form and the feature row;
+  - the budget is the one the model used, so in estimated mode it reads "The estimated budget of about $5.2M";
+  - `names` supplies display names when the form holds only ids (the API will look them up);
+  - `value` is the creator's value on its own, so the frontend can highlight it.
+- **Examples** (all-data models, each film judged at its release date):
+  - *Get Out*, revenue: "Jordan Peele, with no earlier films as director in our data, strongly lowers the expected revenue."
+  - *La La Land*, score: "Damien Chazelle's 3 earlier films strongly raise the expected audience score."
+  - *Avengers: Infinity War*, revenue: "Being part of The Avengers Collection (2 earlier films) strongly raises the expected revenue."
+  - *The Shape of Water*, revenue: "Releasing in December 2017 (holiday season) raises the expected revenue."
+
+### Changes from the plan (task 3)
+
+- **No bold in the text.** The sentences are plain, and the highlighted value is a separate field.
+- **Wording fixes after reading real output:**
+  - the verb agrees with the subject ("The genres … raise");
+  - lists of studios and themes stop at three ("… and 2 more");
+  - theme names are quoted, because they contain "and" ("murder and revenge");
+  - a first-time director has "no earlier films as director".
+
+### Checks (task 3)
+
+- **16 new tests (40 in `tests/test_explain.py`):**
+  - every group has a sentence, with no raw feature name in it;
+  - 12 exact sentences built from one form;
+  - the estimated-budget and per-target wording;
+  - new people, franchises (existing or new) and missing values;
+  - typed names used without a lookup;
+  - the up/down split.
+- **Mutation checks:** ignoring verb agreement fails 3 tests, and so does removing a group's template. 212 tests passing.
+
+### Inputs for later tasks
+
+- **A single feature row with missing values comes out as `object` dtype,** which LightGBM refuses. `predict()` (task 5) must turn the `build_features` dict into a float frame.
+
+### Task 4: comparable films
+
+- **Module:** `ml/explain/comparables.py`.
+  - `Index.build(con, cache)` builds the index from the database and the embedding cache, and `Index.save` / `Index.load` store it.
+  - `index.query(genres, themes, vector, year, log_budget, as_of, n=5)` returns JSON-ready dicts: id, title, year, poster path, budget, revenue (2025 $ or None), score and similarity.
+  - `uv run python -m ml.explain.comparables` writes `ml/artifacts/final/comparables.npz` (26 MB, 3 s, gitignored).
+- **Pool:** 33,077 films with a usable score. 16,750 of them have a real budget or revenue, and 33,024 have a synopsis vector.
+- **Similarity:** a weighted average of
+  - genre Jaccard 0.3;
+  - theme Jaccard 0.2;
+  - synopsis cosine 0.3, left out of the average without a synopsis;
+  - era 0.1: exp(−years apart / 10);
+  - budget level 0.1: exp(−|log difference|), and 0.5 for a film with no reported budget.
+- **Selection:** only films released strictly before the planned date. Of the 50 most similar, the ones with money come first.
+- **Speed:** loading takes 0.15 s; a query takes about 8 ms with a synopsis and 6 ms without.
+- **Examples** (each film judged at its release date, with its real budget):
+  - *Avengers: Infinity War*: Green Lantern, Avengers: Age of Ultron, Captain America: Civil War, Fantastic Four, X-Men: Days of Future Past;
+  - *Paddington 2*: Paddington first, then Diary of a Wimpy Kid: The Long Haul;
+  - *La La Land*: Letters to Juliet, Love & Other Drugs, Prime;
+  - *Get Out*: small horror films (Sinister, Goodnight Mommy), but also obscure ones scored 4.5.
+
+### Changes from the plan (task 4)
+
+- **The vectors are float16 on disk and float32 in memory.** Converting them on every query took about 40 ms.
+- **`Index.build` takes the theme names,** so the test database (one theme) can build an index.
+
+### Checks (task 4)
+
+- **6 new tests (46 in `tests/test_explain.py`):**
+  - an identical film scores 1, with or without a synopsis;
+  - a film released on the planned date or later is never returned;
+  - films with money come first, and the others only fill in;
+  - an unknown budget counts as half close (hand-computed);
+  - results are JSON-ready, and the index round-trips through the file;
+  - the index builds from the small test database.
+- **Mutation checks:**
+  - allowing same-day films (`>` instead of `>=`) fails a test;
+  - dropping "money first" fails a test.
+- **On the real index,** all 12 example queries returned only films released before their date. 218 tests passing.
+
+### Inputs for the notebook (task 7)
+
+- **Obscure films come up:** *Get Out* gets *Scorned* and *Treehouse*, both scored 4.5. A small tie-break towards well-known films (vote count) could help. Vote count is post-release, but only for past films, so it would never be a model input.
+- **There is no language term:** *Parasite* gets English-language films (*Wild Tales* is Spanish). Adding the original language as a sixth part is worth a look.
+- **Revenue equal to budget:** *Treehouse* shows $4.4M for both, which is probably one figure copied into the other on TMDB. 35 of the 10,421 films with both figures (and not suspect) have them exactly equal. The Day 2 cleaning rules don't flag this, so the films are shown as reported. This is not a model change (Day 6 froze the models); it could become a display note.
+
+### Task 5: the `predict()` package
+
+- **Module:** `ml/predict.py`.
+  - `Predictor.load(out_dir, db_path)` loads the all-data models, the feature context (from a read-only database connection), the rough rule and the comparables index, after checking every model file against `manifest.json`. It takes 11 s here, once.
+  - `predictor.predict(form)` returns a JSON-ready dict. `predict(form)` does the same with a predictor loaded once.
+  - An invalid form raises `InvalidForm`; its `.errors` field-by-field are the contract's messages.
+- **Steps:** validate, then features, budget, revenue (budget given or estimated), score, drivers (with sentences), comparables and warnings. A synopsis is embedded once and used for both the features and the comparables.
+- **Output:**
+  - `budget`, `revenue` and `score`: low / middle / high, a text range and a rough flag (score is never rough);
+  - revenue also carries `mode` and `budget_used`;
+  - budget also carries `given` and `comparison`, the sentence "Your budget of $X is below / at the low end of / within / at the high end of / above what similar films usually cost", with a 5% margin at each end;
+  - `drivers` per target (`up` / `down`), `comparables`, `warnings`, `model_version` and `as_of`.
+- **Warnings:**
+  - `big_budget`: $150M or more, given or estimated;
+  - `new_director` and `new_actors`: a name we can't match;
+  - `no_country` and `no_studio`;
+  - `future_release`: a year after the data ends.
+- **Manifest:** `uv run python -m ml.predict manifest` writes `ml/artifacts/final/manifest.json`, model version `2026-10-21.849304a7`.
+  - It records sha256 checksums of the 9 models, the 3 metadata files and the rough rule, which it copies into `ml/artifacts/final/`.
+  - It also records the training years, the corrections, the LightGBM version and the `final-models` tag.
+  - The comparables index is listed but not checksummed, because it is rebuilt from the database.
+- **Three example forms** (all-data models, 30 runs each after loading):
+
+| Form | Budget | Revenue | Score | Median / p95 time |
+| --- | --- | --- | --- | --- |
+| Franchise blockbuster (Russo brothers, Avengers cast, Marvel, $300M, May 2027) | $180M–$600M | $500M–$3.6B (given) | 6.4–8.2 | 151 / 162 ms |
+| Small drama (Gerwig, Ronan, Pugh, Chalamet + 2 unknown, A24, no budget, Oct 2026) | $5.2M–$62M, rough | $2M–$170M (estimated), rough | 6.2–7.6 | 158 / 165 ms |
+| Unknown cast (horror, new director and actors, $2M, no studio or country) | $18K–$7M, rough | $38K–$14M, rough | 4.8–6.9 | 148 / 163 ms |
+
+- **Comparables for the blockbuster:** The Flash, Guardians of the Galaxy Vol. 3, Transformers: Rise of the Beasts, Avengers: Infinity War, Captain Marvel.
+- **Comparables for the small drama:** Janet Planet, How to Make Millions Before Grandma Dies, Summer Hours, Sentimental Value, And Their Children After Them.
+
+### Changes from the plan (task 5)
+
+- **Two of your decisions after seeing the output:**
+  - **Warnings for an empty country or studio.** For the horror form, "no production country" pulled revenue down by about 38% (`country_unknown`), because past films missing it are mostly obscure.
+  - **The timing sentence names its main part.** For 2026 films the year contributes about −16% to revenue and the month far less. The sentence now reads "Releasing in 2026 (recent films earn less in our data)" or "Releasing in December (holiday season)". `drivers.main_feature` picks the part; the name never reaches the text.
+- **The rough rule is copied into `ml/artifacts/final/`,** so the folder holds everything the app reads except the database.
+- **The manifest checks the models when the predictor loads:** a changed `.joblib` or metadata file stops the app from loading.
+
+### Checks (task 5)
+
+- **New `tests/test_predict.py` (14 tests),** on the small test database with small models:
+  - the full output is JSON-ready, with ordered ranges, at most 5 drivers per target and no raw names;
+  - estimated mode uses the budget model's middle and flags the budget driver;
+  - the same budget given gives the same middle and a range that is never wider;
+  - comparables are earlier films only, for three planned dates;
+  - invalid forms are refused field by field;
+  - each warning appears exactly when it should;
+  - names come from the database;
+  - a budget near an edge is "at the low / high end" (7 cases);
+  - the manifest records and checks every file, and a swapped model file is caught.
+- **2 new tests in `tests/test_explain.py`** for the timing wording and `main_feature`.
+- **Mutation checks:**
+  - dropping the "estimated" flag fails 1 test;
+  - removing the low-end margin fails 2.
+- 234 tests passing.
+
+### Inputs for later tasks
+
+- **Golden examples on the real models (task 6):** the three forms above. Their speed is already about 150 ms against the 400 ms target.
+- **Loading takes 11 s,** most of it the feature context. The Day 8 API loads it once at startup.
+- **Day 9 (Docker):** the manifest checksums the `.joblib` files. An image built with retrained models needs a new manifest, written on purpose.
+
+### Task 6: tests
+
+- **Already covered in tasks 1–5, offline** (62 tests in `tests/test_explain.py` and `tests/test_predict.py`):
+  - drivers add up to the middle;
+  - no raw feature names appear;
+  - comparables never come from the future, including on the planned date itself;
+  - both revenue modes;
+  - invalid forms are refused;
+  - warnings, and the manifest.
+- **New `tests/test_golden.py` (15 tests)** runs `predict()` on the real all-data models for three fixed forms: franchise blockbuster, small drama and unknown cast. It is skipped when `data/movies.db`, the `.joblib` models or the comparables index are missing.
+  - **Rules that hold whatever the numbers:**
+    - the models match `manifest.json`;
+    - outputs are complete, JSON-ready and ordered;
+    - comparables come before the planned date;
+    - each form's mode, warnings and main drivers (for example, the blockbuster's revenue is pushed up by budget, franchise and studio, and *Avengers: Infinity War* is among its comparables);
+    - the same form gives the same output;
+    - the median of 10 calls is under 400 ms, and the slowest under 800 ms.
+  - **Snapshot:** `tests/golden/predictions.json` holds each form's ranges to 6 figures, mode, rough flags, budget position, driver sentences, comparable ids and warning codes. Rewrite it only on purpose, with `UPDATE_GOLDEN=1 uv run pytest tests/test_golden.py`.
+- **Suite time:** `make test` now takes about 26 s instead of 7 s, of which 11 s is loading the real predictor once. 249 tests passing.
+
+### Changes from the plan (task 6)
+
+- **A golden snapshot on top of the rules,** so any change to models, features, wording or comparables shows up in the tests.
+- **`budget_used` is the creator's exact budget in given mode.** The golden test found $299,999,999.9999998, from taking the log and back.
+
+### Checks (task 6)
+
+- **Mutation checks against the golden tests:**
+  - "slightly" reworded to "a little" fails the snapshot;
+  - dropping the score correction (`q=0`) fails it;
+  - swapping the genre and theme weights in comparables fails 2 tests.
+- **A blind spot, covered offline:** the golden forms are all set in 2026–27, after the data ends, so their comparables can't catch a future film. The offline tests (`test_comparables_never_come_from_the_future`, `test_comparables_are_earlier_films_only`) cover that.
+
+### Task 7: sanity notebook
+
+- **Notebook:** `notebooks/07_explanations.ipynb`, which runs top to bottom (executed with `jupyter nbconvert --execute`).
+  - Sections 1–4 use the ≤2015 models on 2016–18.
+  - Section 5 runs six famous films through `predict()` with the all-data models. Each film is judged at the 1st of its release month. These models saw the films in training, so the section shows the explanations, not accuracy.
+  - The test years are only shown (*Parasite*).
+- **Strength cut-offs (your decision): +50% / +20% for money,** replacing +25% / +10%. Score keeps 0.3 / 0.1 points.
+
+| 2016–18, top 5 drivers | +25% / +10% (plan) | +50% / +20% (chosen) | 2× / +25% |
+| --- | --- | --- | --- |
+| Revenue strong / moderate / slight | 72% / 27% / 2% | 30% / 53% / 17% | 11% / 60% / 28% |
+| Revenue top driver strong | 99% | 87% | 52% |
+| Budget strong / moderate / slight | 60% / 37% / 3% | 35% / 38% / 27% | 11% / 49% / 40% |
+
+- **Median driver sizes (revenue, drivers 1–5):** +104%, +48%, +35%, +26%, +20%. For score: 0.32, 0.18, 0.12, 0.08 and 0.06 points (13% strong, 44% moderate, 43% slight).
+- **What drives what:**
+  - revenue's top driver is budget for 70% of films, the studio for 9%;
+  - budget's is the studio for 73%, the cast for 14%;
+  - score's is the cast for 44%, genre for 26%, runtime for 19%.
+- **Inside studio for budget:** 90% of the group is `company_budget`, the companies' earlier budgets; `major_studio` is 6%.
+- **Comparables weights (your decision): add language 0.1 and raise budget to 0.2.** Measured on 600 films from 2016–18 with a real revenue:
+
+| Weights | Comparables' revenue MAE log | Score MAE | Same language | 200+ votes |
+| --- | --- | --- | --- | --- |
+| Plan | 1.883 | 0.602 | 60% | 73% |
+| + language 0.1 | 1.875 | 0.586 | 85% | 74% |
+| Budget 0.2 | 1.833 | 0.599 | 60% | 73% |
+| **+ language 0.1, budget 0.2 (chosen)** | **1.802** | **0.584** | **84%** | **74%** |
+| Chosen + well-known tie-break 0.1 | 1.931 | 0.572 | 83% | 83% |
+| Synopsis 0.15 | 1.903 | 0.622 | 57% | 73% |
+
+- **Famous films:**
+  - *Avengers: Infinity War*: revenue is driven up by its budget, the franchise and Marvel.
+  - *Get Out*: revenue is driven down by its small budget, small studios and a first-time director. Its real $340M is far above its range of $160K–$59M.
+  - *La La Land*: score is driven up by Damien Chazelle's earlier films.
+  - *Paddington 2*: Paddington is its first comparable.
+  - *Parasite*: gets a Korean comparable, *The Yellow Sea*.
+
+### Changes from the plan (task 7)
+
+- **Strength cut-offs and comparables weights** changed as above. Both decisions are recorded in the plan document.
+- **`Index.query` and `similarity` take the original language,** and the index stores it. The index was rebuilt.
+- **The golden snapshot was rewritten on purpose:**
+  - only strength words and comparables changed;
+  - every range and warning stayed the same, and the snapshot test failed first as it should.
+
+### Checks (task 7)
+
+- **Tests:**
+  - the strength tests use the new cut-offs (+50% counts as strong, and so does −33%);
+  - a new test checks the language weight (0.1 out of 1.2);
+  - the unknown-budget test was recomputed by hand with budget 0.2.
+- 250 tests passing.
+
+### Surprises / inputs for wrap-up and Day 8
+
+- **Breakouts stay outside the range** even for films the models saw (*Get Out*). The README should say that drivers explain the typical film like yours, not a breakout.
+- **Some comparables are still obscure** (*Get Out*: small horror films scored 4.5–6). A fix would need a measure that doesn't pull revenue away from the film's own, so it is left as a limitation.
+
+### Task 8: wrap-up
+
+- **README:** a new section, "Explanations and `predict()`", covering drivers, groups, strength cut-offs, sentences, comparable films with the weights table, the `predict()` output, warnings, the manifest and the golden examples. Also:
+  - the setup lists the comparables and manifest commands;
+  - the folder table and the budget-comparison wording are updated;
+  - four new Limitations: drivers describe the model, not causes; breakouts stay outside the range; empty optional fields count against a film; some comparables are obscure.
+- **CLAUDE.md:** the new commands, the golden snapshot rule, the gitignored files, and the architecture of `ml/explain/` and `ml/predict.py`.
+- **Plan document:** the Day 7 outcome line.
+
+### Surprises / inputs for Day 8+
+
+- **One entry point:** `ml.predict.Predictor.load()` (about 11 s) once in the FastAPI lifespan hook, then `predictor.predict(form)` per request (about 150 ms).
+  - `InvalidForm.errors` maps fields to readable messages, ready for the 422 responses.
+  - The output is already JSON-ready.
+- **Thread safety:** `predict()` opens its own read-only SQLite connection for names, so the thread pool can share one `Predictor`. MiniLM loads on the first form with a synopsis, which makes that first call slower.
+- **Comparables for movie pages (Day 8 "similar films"):** `Index.query` needs genres, themes, language, vector, year and budget. The index holds all of these for every pool film, so a movie page can query with the film's own row and its release day as `as_of`.
+- **Day 9 (Docker):** the image needs `data/movies.db`, the 9 `.joblib` files, `comparables.npz` and the MiniLM files. `manifest.json` checks the models, so new models need a new manifest and golden snapshot.
+- **Day 10 (form):** nudge creators to fill in the production country and studio, since empty fields lower the ranges (warnings `no_country` and `no_studio`). The 27 theme names come from `themes.json` (`load_themes()`); `contract.describe()` leaves the theme choices empty, so `meta/options` must add them.
+- **`make test` takes about 25 s** because the golden examples load the real predictor. Without the database or models they are skipped, and the suite takes about 7 s.
+
+## Audit after Day 7 (2026-10-22)
+
+Asked by Dimitris: review everything from Day 1 for logic and science, test that the app stays within the bounds of logic, and measure performance. Decisions (asked today):
+- the 2019+ test split stays locked, and its Day 6 numbers are quoted;
+- films of 2026 are pulled from TMDB as a fresh holdout;
+- clear code bugs are fixed, and anything touching the models becomes a proposal.
+
+Write-up: `reports/audit.md`.
+
+- [x] **Method review**, stage by stage (data, targets, leakage, track record, splits, models, calibration, metrics, drivers, domain sense), with sources checked by web search. No leak and no method error. Three data caveats became Findings 1–3.
+- [x] **`tests/test_sanity.py`: 42 rule tests** on the real app models, about 55 s, all passing. They cover:
+  - bounds, on the 3 golden forms and 60 real 2016–18 films;
+  - no range narrower than 2q;
+  - a monotone budget, over 12 budgets × 3 forms;
+  - invariance to the synopsis and to list order;
+  - estimated vs given mode;
+  - 10 edge and 7 out-of-form inputs;
+  - 5 matched-pair directions;
+  - future-free comparables;
+  - train/serve date drift.
+- [x] **`ml/eval/audit.py`** (CLI `uv run python -m ml.eval.audit [validation|holdout|all]` → `reports/audit_metrics.md` / `.json`):
+  - all 13 models are refitted, and their validation and backtest MAE match the reports exactly;
+  - new measures: pinball loss, interval score, R², bias, bootstrap 95% CIs, and coverage by year, genre, language and budget.
+- [x] **2026 holdout:** `ml.data.pull --years 2026 --out-dir data/holdout_2026` gave 1,199 films in about 1 min (gitignored). `data/movies.db` has the same checksum before and after. 609 films were 182+ days old.
+
+### Stats
+
+| | Revenue (given) | Budget | Score |
+| --- | --- | --- | --- |
+| Interval score 2016–18, B2 → LightGBM | 6.69 → 5.24 | 5.49 → 3.25 | 2.67 → 2.28 |
+| R² 2016–18, B2 → LightGBM | 0.41 → 0.58 | 0.12 → 0.70 | 0.22 → 0.46 |
+| LightGBM − B2 MAE, 95% CI | −0.27 to −0.18 | −0.64 to −0.53 | −0.12 to −0.09 |
+| 2026 holdout films | 70 | 223 | 190 (182+ days) |
+| 2026 MAE, B2 → app | 1.295 → 1.052 | 1.366 → 0.781 | 0.731 → 0.590 |
+| 2026 coverage, app | 81.4% | 81.2% | 73.7% (60.0% under 182 days) |
+
+### Changes from the plan
+
+- **Score on the holdout uses films 182+ days old,** like revenue, because young films' scores were found to be still rising. Younger films are reported in a separate row.
+- **Baselines on the holdout are fitted on ≤2018,** not 1960–2025, so that nothing reads the locked test split; the app models themselves saw 1960–2025.
+- **Mutation "unsorted crossed quantiles" survives.** The app models' crossings never put p10 above p90, and `apply_q` clamps the ends to the middle, so both versions are valid. Kept as a design note, not a gap. A new rule (no range narrower than 2q) was added anyway.
+- **The estimated-mode test was made strict** (the estimated range must be wider) after a mutation that gave estimated mode the "given" correction failed only the golden snapshot.
+- **The planned "all 19 genres" and "runtime 1 / 400" edge cases** are out-of-form inputs (at most 5 genres, runtimes 40–300), so they are tested as rejections.
+
+### Checks
+
+- `make test`: 292 passed (250 + 42).
+- Mutation checks:
+  - same-day comparables → the sanity test fails;
+  - estimated mode with the given correction → 3 sanity tests and 2 golden tests fail;
+  - unsorted quantiles → survives (see above).
+- `ml.eval.audit validation` reproduces `reports/metrics.md` with difference 0 for all 13 models, in 257 s.
+
+### Findings for Dimitris (nothing changed; each would change frozen models or app numbers)
+
+1. Young films' TMDB scores are still settling. Options:
+   - a note on the score in the app (Day 8–10);
+   - a maturity rule for the score target (needs a retrain).
+2. Revenue is learned from the 13% of films that report money. Keep it as a Limitation.
+3. Releases after 2025 stretch "years active". `predict()` could judge the track record at 2025-12-31 for later releases (about 5 lines; changes the golden snapshot).
+4. Revenue plateaus above about $300M. Add a sentence to the big-budget warning.
+5. The holdout is small. Rerun `ml.eval.audit holdout` after a 2027 pull.
+6. Coverage is uneven in some groups: budgets under $10M, animation and romance scores. A per-group conformal correction (Mondrian CQR) needs a retrain.
+
+### Inputs for Day 8
+
+- `make test` now includes `tests/test_sanity.py` (the whole suite takes about 80 s with the database and models; the sanity tests are skipped without them).
+- If Dimitris picks Finding 1's note or Finding 4's sentence, it is a text change in `ml/predict.py` warnings, plus a golden snapshot update.
+
+### Follow-up: Findings 1A and 4 applied as text (2026-10-22, asked by Dimitris)
+
+- `predict()` output: `score.note` = "TMDB scores of new films usually start higher and settle during their first year; this range is for the settled score." (`SCORE_NOTE` in `ml/predict.py`).
+- The `big_budget` warning ends with "…and budgets above $300M don't raise the revenue estimate any further." (`PLATEAU_BUDGET`).
+- `tests/test_golden.py`: the snapshot now also keeps the warning texts and the score note, so wording changes show up; two new asserts check both texts. The snapshot was rewritten with `UPDATE_GOLDEN=1`, and its diff contains only the new texts (no number, driver or comparable changed).
+- `make test`: 292 passed. README warnings paragraph and two Limitations updated; `reports/audit.md` marks 1A and 4 as applied.
+- Day 10 form: show `score.note` under the score range.
