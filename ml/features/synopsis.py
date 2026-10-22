@@ -23,7 +23,6 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from sklearn.decomposition import PCA
 
 from ml.data.build_db import DB_FILE
 from ml.features.text import MODEL_REVISION, Embedder
@@ -73,6 +72,8 @@ def embed_overviews(
 
 
 def fit_pca(vectors: np.ndarray, n_components: int = N_COMPONENTS) -> dict[str, Any]:
+    from sklearn.decomposition import PCA  # training only: scikit-learn is not in the app's image
+
     pca = PCA(n_components=n_components, random_state=0).fit(vectors)
     return {
         "mean": pca.mean_.tolist(),

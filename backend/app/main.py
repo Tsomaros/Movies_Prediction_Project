@@ -10,13 +10,16 @@ The lifespan hook runs once at startup and keeps on app.state:
 - lookups:   the autocomplete indexes (about 2-3 s, about 33 MB);
 - predictions, rate_limiter: the prediction cache (CACHE_SIZE entries) and the per-IP limit (RATE_LIMIT a minute);
 - started:   the time it finished, plus load_seconds, for /health.
+Then memory freed while loading is handed back to the system (release_free_memory, Linux only).
 The database itself is never held open: every request gets its own read-only connection (deps.get_db).
 A new endpoint is a new module in backend/app/routers/ with a `router`, added to ROUTERS below.
 """
 
 from __future__ import annotations
 
+import ctypes
 import logging
+import sys
 import time
 from contextlib import asynccontextmanager, closing
 from typing import AsyncIterator
@@ -43,6 +46,19 @@ DESCRIPTION = (
 )
 
 
+def release_free_memory() -> bool:
+    """Hand memory freed during loading back to the system (glibc's malloc_trim; Linux only, else a no-op).
+
+    In Docker this gave back about 130 MB after startup on Day 9. Returns whether it ran."""
+    if not sys.platform.startswith("linux"):
+        return False
+    try:
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except (OSError, AttributeError):  # not glibc (e.g. musl): nothing to trim
+        return False
+    return True
+
+
 def create_app(settings: Settings | None = None, predictor: Predictor | None = None,
                lookups: Lookups | None = None) -> FastAPI:
     settings = settings or Settings.from_env()
@@ -50,7 +66,8 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         start = time.perf_counter()
-        app.state.predictor = predictor or Predictor.load(settings.models_dir, settings.db_path)
+        app.state.predictor = predictor or Predictor.load(settings.models_dir, settings.db_path,
+                                                          context_file=settings.context_file)
         if lookups is None:
             with closing(connect_read_only(settings.db_path)) as con:
                 app.state.lookups = Lookups.from_db(con)
@@ -58,6 +75,7 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
             app.state.lookups = lookups
         app.state.predictions = PredictionService(app.state.predictor, settings.cache_size)
         app.state.rate_limiter = RateLimiter(settings.rate_limit)
+        release_free_memory()
         app.state.load_seconds = round(time.perf_counter() - start, 1)
         app.state.started = time.time()
         log.info("loaded the models and lookups in %.1f s (model version %s)", app.state.load_seconds,

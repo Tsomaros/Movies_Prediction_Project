@@ -20,8 +20,9 @@ from backend.app.settings import API_PREFIX, Settings
 from ml.predict import Predictor
 from tests.test_golden import FORMS, GOLDEN_FILE, NEEDED, snapshot
 
-pytestmark = pytest.mark.skipif(not all(p.exists() for p in NEEDED),
-                                reason="needs data/movies.db, the all-data models and the comparables index")
+pytestmark = [pytest.mark.real_data,
+              pytest.mark.skipif(not all(p.exists() for p in NEEDED),
+                                 reason="needs data/movies.db, the all-data models and the comparables index")]
 MAX_MS = 400
 
 

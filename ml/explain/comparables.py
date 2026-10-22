@@ -75,6 +75,8 @@ class Index:
 
     def __post_init__(self) -> None:
         self.vectors = np.asarray(self.vectors, dtype=np.float32)  # converted once, not on every query
+        # numpy stores text as fixed-width UTF-32 (titles: 127 characters each, 17 MB); plain strings take ~3 MB
+        self.titles, self.posters = (np.asarray(a, dtype=object) for a in (self.titles, self.posters))
 
     @classmethod
     def build(cls, con: sqlite3.Connection, cache: Path = EMBEDDINGS_FILE,
@@ -109,7 +111,8 @@ class Index:
     def save(self, path: Path = INDEX_FILE) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         arrays = {f.name: getattr(self, f.name) for f in fields(self)}
-        np.savez_compressed(path, **{**arrays, "vectors": self.vectors.astype(np.float16)})
+        np.savez_compressed(path, **{**arrays, "vectors": self.vectors.astype(np.float16),
+                                     "titles": self.titles.astype(str), "posters": self.posters.astype(str)})
 
     @classmethod
     def load(cls, path: Path = INDEX_FILE) -> Index:

@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import heapq
 import sqlite3
-from bisect import bisect_left, bisect_right
+from bisect import bisect_right
 from dataclasses import dataclass
 from datetime import date
 from typing import Any, Iterable
@@ -72,6 +72,61 @@ class _Values:
         """Track's values dated before `day` (side="left") or on or before it (side="right")."""
         s, e = self.offsets[track], self.offsets[track + 1]
         return self.values[s:s + int(np.searchsorted(self.days[s:e], day, side))]
+
+
+class NameMap:
+    """Exact lookups of a casefolded name -> id, packed: names in one sorted bytes blob with int64 offsets, found
+    by binary search. A dict of the 344k person names took 83 MB in Docker (Day 9); this takes about 10 MB."""
+
+    def __init__(self, keys: Iterable[str], ids: Iterable[int]) -> None:
+        encoded, ids = [k.encode("utf-8") for k in keys], list(ids)
+        order = sorted(range(len(encoded)), key=encoded.__getitem__)
+        self.blob = b"".join(encoded[i] for i in order)
+        self.offsets = np.concatenate([[0], np.cumsum([len(encoded[i]) for i in order])]).astype(np.int64)
+        self.ids = np.array([ids[i] for i in order], dtype=np.int64)
+
+    def _key(self, i: int) -> bytes:
+        return self.blob[self.offsets[i]:self.offsets[i + 1]]
+
+    def get(self, key: str) -> int | None:
+        target, lo, hi = key.encode("utf-8"), 0, len(self.ids)
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if self._key(mid) < target:
+                lo = mid + 1
+            else:
+                hi = mid
+        return int(self.ids[lo]) if lo < len(self.ids) and self._key(lo) == target else None
+
+    def __len__(self) -> int:
+        return len(self.ids)
+
+
+@dataclass
+class Groups:
+    """Rows sorted by a group id (a company, a collection), packed: group g's rows are offsets[g]:offsets[g + 1].
+    Replaces a dict of one small array per group (the 47k companies and collections took about 50 MB)."""
+
+    ids: np.ndarray  # sorted group ids, int64
+    offsets: np.ndarray  # int64, len(ids) + 1
+
+    @classmethod
+    def of(cls, group_of_row: np.ndarray) -> Groups:
+        """group_of_row must be sorted (rows ordered by group, then day)."""
+        ids, starts = np.unique(np.asarray(group_of_row, dtype=np.int64), return_index=True)
+        return cls(ids, np.r_[starts, len(group_of_row)].astype(np.int64))
+
+    def span(self, group_id: int | None) -> tuple[int, int] | None:
+        """(start, end) of the group's rows, or None if the group has none."""
+        if group_id is None:
+            return None
+        i = int(np.searchsorted(self.ids, group_id))
+        if i < len(self.ids) and self.ids[i] == group_id:
+            return int(self.offsets[i]), int(self.offsets[i + 1])
+        return None
+
+    def __contains__(self, group_id: int) -> bool:
+        return self.span(group_id) is not None
 
 
 class _ExpandingMedian:
@@ -147,7 +202,8 @@ class History:
         named = counts.merge(people, left_on="person_id", right_on="id")
         named["key"] = named["name"].str.casefold()
         named = named.sort_values(["role", "key", "n", "person_id"], ascending=[True, True, False, True])
-        self.by_name = {(r.role, r.key): int(r.person_id) for r in named.drop_duplicates(["role", "key"]).itertuples()}
+        named = named.drop_duplicates(["role", "key"])
+        self.by_name = {r: NameMap(g["key"], g["person_id"]) for r, g in named.groupby("role")}
 
     def _track(self, person_id: int | None, role: str) -> int | None:
         """Index of the person's track in that role, or None if they have no film in it."""
@@ -186,7 +242,7 @@ class History:
         if ref.get("id") is not None and self._track(int(ref["id"]), role) is not None:
             return int(ref["id"])
         if ref.get("name"):
-            return self.by_name.get((role, ref["name"].strip().casefold()))
+            return self.by_name[role].get(ref["name"].strip().casefold()) if role in self.by_name else None
         return None
 
     def person(self, person_id: int | None, role: str, as_of: int) -> dict[str, float]:
@@ -245,17 +301,16 @@ class Companies:
         rows = credits.merge(films[films["log_budget"].notna()], left_on="movie_id", right_on="id")
         rows["day"] = pd.to_datetime(rows["release_date"]).values.astype("datetime64[D]").astype(np.int64)
         rows = rows.sort_values(["company_id", "day"], kind="stable")
-        self.days: dict[int, np.ndarray] = {}
-        self.budget: dict[int, np.ndarray] = {}
-        for cid, g in rows.groupby("company_id", sort=False):
-            self.days[int(cid)] = g["day"].to_numpy(np.int64)
-            self.budget[int(cid)] = g["log_budget"].to_numpy(float)
+        self.groups = Groups.of(rows["company_id"].to_numpy())
+        self.days = rows["day"].to_numpy(np.int64)
+        self.budget = rows["log_budget"].to_numpy(float)
         # Name lookup for free-text form entries: lower-cased name -> the company with the most films.
         counts = credits.groupby("company_id").size().rename("n").reset_index()
         named = counts.merge(companies, left_on="company_id", right_on="id")
         named["key"] = named["name"].str.casefold()
         named = named.sort_values(["key", "n", "company_id"], ascending=[True, False, True])
-        self.by_name = {r.key: int(r.company_id) for r in named.drop_duplicates("key").itertuples()}
+        named = named.drop_duplicates("key")
+        self.by_name = NameMap(named["key"], named["company_id"])
 
     @classmethod
     def from_db(cls, con: sqlite3.Connection) -> Companies:
@@ -272,9 +327,12 @@ class Companies:
 
     def budget_of(self, company_id: int | None, as_of: int, typical: float) -> tuple[int, float]:
         """(number of earlier budgets, shrunk median earlier log budget) for one company."""
-        days = self.days.get(company_id) if company_id is not None else None
-        n = bisect_left(days, as_of) if days is not None else 0
-        return n, (_shrunk(self.budget[company_id][:n], typical) if n else typical)
+        span = self.groups.span(company_id)
+        if span is None:
+            return 0, typical
+        s, e = span
+        n = int(np.searchsorted(self.days[s:e], as_of, "left"))
+        return n, (_shrunk(self.budget[s:s + n], typical) if n else typical)
 
     def features(self, refs: Iterable[dict[str, Any]], as_of: int, typical: float) -> dict[str, float]:
         """The highest shrunk budget among the companies with earlier budgets; the typical budget when none has."""

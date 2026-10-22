@@ -1,0 +1,20 @@
+# The app's services. Day 9: the backend; the frontend joins on Day 10.
+#
+#   make docker-build   # slim database + image
+#   make docker-run     # docker compose up -d, then waits for the healthcheck
+#   make smoke          # scripts/smoke.py against http://localhost:8000
+#   docker compose down
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: movie-prediction-api
+    container_name: movie-prediction-api
+    ports:
+      - "8000:8000"
+    environment:
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:8080"  # the Vite dev server; the Day 10 frontend container
+      RATE_LIMIT: "30"
+      CACHE_SIZE: "1000"
+    restart: unless-stopped

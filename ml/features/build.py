@@ -1,6 +1,9 @@
 """The one feature function, shared by the training table and the API.
 
     FeatureContext.load(con)                 -> everything the features need, loaded once
+    FeatureContext.load(con, prebuilt=path)  -> the same, with the track records read from a file written by
+                                                save_prebuilt (refused unless it matches the database)
+    save_prebuilt(con, path)                 -> History, Franchises and Companies built once and saved (joblib)
     build_features(form, as_of, ctx)         -> one feature row for a contract-shaped form
     api_as_of(form)                          -> the date a creator's film is judged at (1st of its release month)
     FilmForms.from_db(con)                   -> every film's own data, for turning films into forms
@@ -12,21 +15,29 @@ Training films go through exactly the same build_features call as a creator's fo
 written as a form (film_to_form) and judged at its release date, so earlier films are the only
 history it sees. A creator's film is judged at the first day of its release month.
 
+Why prebuilt: building History with pandas leaves about 320 MB of freed-but-kept memory in the process
+(measured in Docker on Day 9), and the free host has 512 MB. Loading the finished objects skips the build.
+The file is stamped with the database's build time and film count, so a file from another build is refused.
+
 CLI: uv run python -m ml.features.build   (writes the `features` table to data/movies.db
                                             and ml/features/feature_list.json)
+     uv run python -m ml.features.build prebuilt [--db build/movies.db] [--out build/context.joblib]
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import sqlite3
 import sys
 import time
+from contextlib import closing
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import joblib
 import numpy as np
 import pandas as pd
 
@@ -37,7 +48,7 @@ from ml.features.history import BUDGET_FEATURES, Companies, History, day_number
 from ml.features.history import feature_names as history_feature_names
 from ml.features.synopsis import FEATURE_NAMES as SYNOPSIS_FEATURES
 from ml.features.synopsis import EMBEDDINGS_FILE, embed_overviews, load_pca, synopsis_features
-from ml.features.text import Embedder
+from ml.features.text import APP_MODEL, Embedder
 from ml.features.themes import load_themes
 
 FEATURE_LIST_FILE = Path("ml/features/feature_list.json")
@@ -53,17 +64,40 @@ class FeatureContext:
     vocab: dict[str, Any]
     themes: dict[str, set[int]]
     pca: dict[str, np.ndarray]
-    embedder: Embedder | None = None  # only needed for a synopsis that has no cached vector
+    embedder: Embedder | None = None  # only needed for a synopsis that has no cached vector (the app's forms)
 
     @classmethod
-    def load(cls, con: sqlite3.Connection, embedder: Embedder | None = None) -> FeatureContext:
-        return cls(History.from_db(con), Franchises.from_db(con), Companies.from_db(con), load_vocab(), load_themes(),
-                   load_pca(), embedder)
+    def load(cls, con: sqlite3.Connection, embedder: Embedder | None = None,
+             prebuilt: Path | None = None) -> FeatureContext:
+        if prebuilt is None:
+            history, franchises, companies = History.from_db(con), Franchises.from_db(con), Companies.from_db(con)
+        else:
+            parts = joblib.load(prebuilt)
+            if parts["stamp"] != database_stamp(con):
+                raise ValueError(f"{prebuilt} was built from another database ({parts['stamp']}, this one is "
+                                 f"{database_stamp(con)}); rebuild it with `python -m ml.features.build prebuilt`")
+            history, franchises, companies = parts["history"], parts["franchises"], parts["companies"]
+        return cls(history, franchises, companies, load_vocab(), load_themes(), load_pca(), embedder)
 
     def embed(self, text: str) -> np.ndarray:
-        if self.embedder is None:
-            self.embedder = Embedder()
+        if self.embedder is None:  # the app: the 8-bit model (training passes vectors from the cache)
+            self.embedder = Embedder(model_file=APP_MODEL)
         return self.embedder.embed([text])[0]
+
+
+def database_stamp(con: sqlite3.Connection) -> dict[str, Any]:
+    """What identifies a database build: its meta built_at and its film count."""
+    row = con.execute("SELECT value FROM meta WHERE key = 'built_at'").fetchone()
+    return {"built_at": json.loads(row[0]) if row else None,
+            "films": con.execute("SELECT COUNT(*) FROM movies").fetchone()[0]}
+
+
+def save_prebuilt(con: sqlite3.Connection, path: Path) -> dict[str, Any]:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    parts = {"stamp": database_stamp(con), "history": History.from_db(con), "franchises": Franchises.from_db(con),
+             "companies": Companies.from_db(con)}
+    joblib.dump(parts, path)
+    return parts["stamp"]
 
 
 def api_as_of(form: dict[str, Any]) -> int:
@@ -215,6 +249,16 @@ def write_table(con: sqlite3.Connection, table: pd.DataFrame) -> None:
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     start = time.perf_counter()
+    if sys.argv[1:2] == ["prebuilt"]:
+        parser = argparse.ArgumentParser(prog="python -m ml.features.build prebuilt")
+        parser.add_argument("--db", type=Path, default=Path("build/movies.db"))
+        parser.add_argument("--out", type=Path, default=Path("build/context.joblib"))
+        args = parser.parse_args(sys.argv[2:])
+        with closing(sqlite3.connect(f"file:{args.db.resolve().as_posix()}?mode=ro", uri=True)) as con:
+            stamp = save_prebuilt(con, args.out)
+        print(f"Wrote {args.out} ({args.out.stat().st_size / 1e6:.0f} MB) for the database built {stamp['built_at']} "
+              f"({stamp['films']:,} films) in {time.perf_counter() - start:.0f} s")
+        return
     with sqlite3.connect(DB_FILE) as con:
         ctx = FeatureContext.load(con)
         table = build_table(con, ctx)

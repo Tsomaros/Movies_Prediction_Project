@@ -38,3 +38,6 @@ data/overview_embeddings*.npz
 Thumbs.db
 .vscode/
 .idea/
+
+# Docker build inputs made by scripts/slim_db.py
+build/

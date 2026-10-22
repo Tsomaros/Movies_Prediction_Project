@@ -13,9 +13,11 @@ The work follows a day-by-day plan: `Movie Prediction App Detailed Plan, Days 1�
 Requires uv and GNU make (Windows: ezwinports make). Python 3.11 only.
 
 ```bash
-make setup        # uv sync
-make model        # download MiniLM ONNX model to ml/artifacts/minilm/ (once)
-make test         # uv run pytest (offline, no network or database needed)
+make setup        # uv sync (default groups dev + ml: everything; the image installs runtime deps only)
+make model        # download MiniLM ONNX model to ml/artifacts/minilm/ (once) + its 8-bit copy model_q8.onnx
+make test         # uv run pytest (offline, no network needed; real-data tests skip without the database/models)
+make test-fast    # -m "not slow and not real_data": ~15 s
+make coverage     # pytest --cov (ml/ and backend/, lines + branches)
 make data         # TMDB pull (needs TMDB_READ_TOKEN in .env) + build_db + features
 make db           # rebuild data/movies.db from data/raw/ (DROPS the features table; run make features after)
 make features     # features table + ml/features/feature_list.json
@@ -23,6 +25,10 @@ make tune         # Optuna, 15 min per target -> ml/artifacts/*_params.json, rep
 make train        # ml.models.calibrate then ml.models.train -> ml/artifacts/
 make evaluate     # validation + breakdowns + backtest -> reports/ (never touches test)
 make api          # uvicorn backend.app.main:app on :8000 with reload, docs at /docs (loads the real models, ~10 s)
+make docker-build # scripts/slim_db.py + ml.features.build prebuilt -> build/, then docker compose build
+make docker-run   # docker compose up -d --wait
+make smoke        # scripts/smoke.py --base-url $(URL) (default http://localhost:8000); exits 1 on any failed check
+uv run python -m ml.features.build prebuilt   # build/context.joblib: History/Companies/Franchises for the image
 uv run python -m ml.eval.final all-data   # retrain the app's models on 1960-2025 -> ml/artifacts/final/
 uv run python -m ml.explain.comparables   # comparables index -> ml/artifacts/final/comparables.npz (gitignored)
 uv run python -m ml.predict manifest      # checksums of the app's files -> ml/artifacts/final/manifest.json
@@ -34,7 +40,9 @@ uv run python -m ml.eval.audit [validation|holdout|all]   # proper scores, boots
 
 Single test: `uv run pytest tests/test_models.py::test_name`. `tests/test_golden.py` runs `predict()` on the real all-data models (skipped without the database, `.joblib` files or comparables index) and compares with `tests/golden/predictions.json`; rewrite that snapshot only on purpose with `UPDATE_GOLDEN=1 uv run pytest tests/test_golden.py`. `tests/test_sanity.py` (same skip rule) checks logic rules on the real models: bounds, a monotone budget, invariance, the two revenue modes, form edges, matched-pair directions and train/serve date drift. `tests/test_api.py` tests every endpoint offline through `TestClient` with an injected small `Predictor` on the `db` fixture (`ENDPOINTS` pins each endpoint to its test, so a new endpoint fails until it is listed); `tests/test_api_golden.py` (same skip rule as the golden tests) runs the golden forms and real lookups over HTTP. Every module with a CLI runs as `uv run python -m ml.<pkg>.<module>`.
 
-Not in git (rebuilt by the commands above): `data/raw/`, `data/holdout_2026/`, `data/movies.db`, `data/overview_embeddings.npz`, `ml/artifacts/minilm/`, `ml/artifacts/*.joblib`, `ml/artifacts/final/*.joblib`, `ml/artifacts/final/comparables.npz`. The JSON settings/calibration/metadata in `ml/artifacts/` and everything in `reports/` are committed.
+Test markers (`pyproject.toml`): `slow` (end-to-end, fuzz, real-database time travel) and `real_data` (needs `data/movies.db` and the app's models; also skipped automatically without them). `tests/test_e2e.py` runs the committed fake pull `tests/fixtures/mini_raw.jsonl` through every real step to HTTP (regenerate it with `uv run python -m tests.fixtures.mini_raw`; a test checks it is current). `tests/test_time_travel.py` cuts a database at a date and requires identical features for the deleted films. `tests/test_fuzz.py` (hypothesis, derandomized) sends random bodies to the predict endpoints: 200 or our 422, never 500. The golden forms live in `tests/golden/forms.json` (also read by `scripts/smoke.py`).
+
+Not in git (rebuilt by the commands above): `build/` (the image's slim database and prebuilt context), `data/raw/`, `data/holdout_2026/`, `data/movies.db`, `data/overview_embeddings.npz`, `ml/artifacts/minilm/`, `ml/artifacts/*.joblib`, `ml/artifacts/final/*.joblib`, `ml/artifacts/final/comparables.npz`. The JSON settings/calibration/metadata in `ml/artifacts/` and everything in `reports/` are committed.
 
 ## Hard rules
 
@@ -55,6 +63,7 @@ Pipeline: `ml/data` (pull → clean → SQLite) → `ml/features` (one feature f
 - **`ml/explain/`**: `drivers.py` (`pred_contrib` on each middle model; contributions plus `expected` add up to the shown p50, crossed budget/score quantiles rescaled; strength cut-offs +50% / +20% for money, 0.3 / 0.1 points for score), `groups.py` (12 creator-friendly groups; every model feature must have one, synopsis has none), `sentences.py` (one template per group, filled from the clean form and feature row; never a raw feature name), `comparables.py` (`Index` of `score_ok` films; only films released strictly before `as_of`; weighted similarity incl. language; money films first).
 - **`ml/predict.py`**: `Predictor.load()` checks `ml/artifacts/final/manifest.json` checksums, loads the chain, score model, `FeatureContext` (read-only DB, ~11 s) and comparables; `predict(form)` -> JSON-ready ranges, rough flags, budget comparison, drivers, comparables, warnings, `model_version`. A changed model file means a deliberate `ml.predict manifest` rerun and golden-snapshot update.
 - **`backend/app/`** (FastAPI, everything under `/api/v1`): `main.py` has `create_app(settings, predictor, lookups)`; its lifespan hook loads the `Predictor` once and builds the in-memory autocomplete (`services/lookups.py`, names packed into byte blobs, ~33 MB), the prediction cache and the rate limiter onto `app.state`. `settings.py` reads `MOVIES_DB`, `MODELS_DIR`, `CORS_ORIGINS`, `RATE_LIMIT`, `CACHE_SIZE`. `deps.py` gives each request its own read-only SQLite connection (`mode=ro`, `check_same_thread=False`, because sync endpoints run in the thread pool). One router file per resource in `routers/` (a new endpoint = a new file, added to `ROUTERS`); `schemas/` are the Pydantic request/response models (strict types; the form's rules stay in `contract.validate`, never duplicated); `repo/` has read-only SQL only (FTS input is always turned into quoted prefix tokens); `services/` has the LRU prediction cache + compare, the sliding-window rate limiter and poster URLs. `errors.py` gives every 422 one shape, `{"detail", "errors": {dotted.field: message}}`, using the contract's messages where it has one.
+- **Docker** (`backend/Dockerfile`, `docker-compose.yml`, `.dockerignore` whitelists `pyproject.toml`, `uv.lock`, `ml/`, `backend/`, `build/movies.db`, `build/context.joblib`, and drops `ml/artifacts/*.joblib` and the full `model.onnx`): runtime deps only (`uv sync --no-default-groups`); `optuna`, `matplotlib`, `scikit-learn`, `onnx` are in the `ml` group, so the serving path must never import them at module level (sklearn imports live inside the training functions; `Chain.load` imports `calibrate` only for models without `q_estimated`). The image sets `CONTEXT_FILE` (prebuilt History/Companies/Franchises, stamped with the database's `built_at` and film count, refused on mismatch) and `MALLOC_ARENA_MAX=2`; the lifespan calls `release_free_memory()` (glibc `malloc_trim`). Memory gate: under 450 MB after 100 predictions in Docker (407 MB on Day 9). The app embeds a synopsis with `text.APP_MODEL` (8-bit, per-channel uint8); training and the comparables index use the full model. History's and Companies' name lookups are `NameMap` (packed sorted bytes), Companies/Franchises use `Groups` (offsets into flat arrays): keep new per-entity data in that packed form, not dicts of small objects.
 - **`ml/eval/audit.py`** (after Day 7, `reports/audit.md` is the write-up): refits every model as `make evaluate` does and checks the numbers against `reports/metrics.json`, adds pinball loss, the interval score, R², bias and bootstrap intervals, and scores the all-data app models on the 2026 holdout (revenue and score only for films 182+ days old; baselines fitted on ≤2018). It never loads the test split.
 - **`ml/eval/final.py`** ran the one-time test (≤2018 models, corrections from all three folds) and builds the app's all-data models in `ml/artifacts/final/` with the ≤2018 corrections; `Chain.load(ml/artifacts/final)` serves them. `ml/artifacts/` itself holds the ≤2015 models from `make train`.
 

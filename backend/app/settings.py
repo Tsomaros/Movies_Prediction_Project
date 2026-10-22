@@ -8,6 +8,7 @@
 | CORS_ORIGINS  | http://localhost:5173       | comma-separated browser origins (the Vite dev server) |
 | RATE_LIMIT    | 30                          | prediction requests per minute per client IP         |
 | CACHE_SIZE    | 1000                        | predictions kept in the LRU cache                    |
+| CONTEXT_FILE  | (none: build at startup)    | prebuilt track records (ml.features.build prebuilt)  |
 """
 
 from __future__ import annotations
@@ -33,6 +34,7 @@ class Settings:
     cors_origins: tuple[str, ...] = field(default=("http://localhost:5173",))
     rate_limit: int = 30
     cache_size: int = 1000
+    context_file: Path | None = None
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -43,4 +45,5 @@ class Settings:
             cors_origins=_origins(env.get("CORS_ORIGINS", "http://localhost:5173")),
             rate_limit=int(env.get("RATE_LIMIT", "30")),
             cache_size=int(env.get("CACHE_SIZE", "1000")),
+            context_file=Path(env["CONTEXT_FILE"]) if env.get("CONTEXT_FILE") else None,
         )

@@ -482,3 +482,21 @@ def test_parallel_requests_give_the_same_answers_as_one_at_a_time(api):
     strip = lambda out: {k: v for k, v in out.items() if k != "cached"}
     assert [strip(a) for a in parallel] == [strip(b) for b in one_by_one]
     assert not any(a["cached"] for a in parallel)
+
+
+def test_the_api_refuses_to_start_on_models_that_do_not_match_their_manifest(db, tmp_path, revenue_model,
+                                                                           budget_model, score_model):
+    """No injected predictor: the lifespan loads from MODELS_DIR and must stop at the manifest check."""
+    from ml.models.rough import ROUGH_FILE
+    from ml.models.train import save_model
+    from ml.predict import write_manifest
+    for model, rows in ((revenue_model, revenue_rows), (budget_model, budget_rows), (score_model, score_rows)):
+        save_model(model, rows(), out_dir=tmp_path)
+    write_manifest(tmp_path, ROUGH_FILE)
+    meta = tmp_path / "score_meta.json"
+    meta.write_text(meta.read_text(encoding="utf-8").replace('"q"', '"q" ', 1), encoding="utf-8")  # one byte changed
+    app = create_app(Settings(db_path=db / "movies.db", models_dir=tmp_path))
+    with pytest.raises(ValueError, match="score_meta.json changed"):
+        with TestClient(app):
+            pass
+    assert not hasattr(app.state, "predictor")  # nothing was served

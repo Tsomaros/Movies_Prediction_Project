@@ -54,6 +54,14 @@ def test_validate_rejects_bad_values(field, value):
     assert field in errors
 
 
+@pytest.mark.parametrize("field", ["release_year", "release_month", "runtime", "budget"])
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+def test_validate_rejects_nan_and_infinity_without_crashing(field, value):
+    """Found by the Day 9 fuzzing: int(inf) raised OverflowError, so the API answered 500 instead of 422."""
+    _, errors = contract.validate(good_form(**{field: value}), themes=["heist"])
+    assert errors[field] == "must be a number"
+
+
 def test_validate_rejects_post_release_fields_and_missing_required_ones():
     _, errors = contract.validate({"popularity": 99, "vote_count": 5000})
     assert errors["popularity"] == errors["vote_count"] == "unknown field"
@@ -352,3 +360,19 @@ def test_minilm_batching_does_not_change_vectors():
     e = Embedder()
     texts = ["short", "a much longer sentence about a detective chasing a killer through the rain", "mid length"]
     assert np.allclose(np.vstack([e.embed([t]) for t in texts]), e.embed(texts), atol=1e-5)
+
+
+@needs_model
+def test_the_apps_8_bit_minilm_stays_close_to_the_full_model():
+    """The app embeds a creator's synopsis with model_q8.onnx; the comparables index holds full-model vectors."""
+    from ml.features.text import APP_MODEL, MODEL_DIR, Embedder
+
+    if not (MODEL_DIR / APP_MODEL).exists():
+        pytest.skip("model_q8.onnx not built; run make model")
+    texts = ["A crew of thieves plans one last job in a casino.", "Two sisters care for their ailing mother.",
+             "A haunted house terrifies a young family.", "Aliens invade Earth and a pilot fights back.",
+             "A chef opens a small restaurant in Paris.", "A boxer trains for the fight of his life."]
+    full, small = Embedder().embed(texts), Embedder(model_file=APP_MODEL).embed(texts)
+    cos = np.sum(full * small, axis=1)
+    assert cos.min() > 0.97 and cos.mean() > 0.985
+    assert ((small @ full.T).argmax(axis=1) == np.arange(len(texts))).all()  # each still finds its own text

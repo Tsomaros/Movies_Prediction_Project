@@ -54,9 +54,11 @@ Requirements: [uv](https://docs.astral.sh/uv/) and GNU make. uv installs Python 
 
 ```bash
 make setup                 # create .venv and install locked dependencies
-make model                 # download the MiniLM text model (about 90 MB, once)
+make model                 # download the MiniLM text model (about 90 MB, once) and make its 8-bit copy for the app
 cp .env.example .env       # then paste your TMDB API Read Access Token into .env
-make test                  # offline tests, no network needed (about 2 min; the golden, sanity and real-API tests need the database and models)
+make test                  # offline tests, no network needed (about 2-2.5 min; see Testing)
+make test-fast             # the quick loop: no slow or real-data tests (about 15 s)
+make coverage              # every test with line and branch coverage
 make data                  # pull films from TMDB (resumable), build data/movies.db, then the features table
 make db                    # rebuild data/movies.db from the raw pull only (about 30 s; drops the features table)
 make features              # build the features table (about 1 min; the first run also embeds every overview, about 8 min)
@@ -64,6 +66,7 @@ make tune                  # tune the LightGBM settings on backtest folds 1-2 (1
 make train                 # calibrate the ranges, then fit and save all three models to ml/artifacts/ (about 5 min)
 make evaluate              # baselines and LightGBM on validation, breakdowns and backtest -> reports/ (test split untouched)
 make api                   # the API on http://localhost:8000, docs at /docs (needs the database and the app's models)
+make docker-build          # the backend image (see Running with Docker); make docker-run, make smoke
 uv run python -m ml.models.rough           # the rough-estimate cut-offs (fitted once on Day 6, then frozen)
 uv run python -m ml.eval.final test        # the one-time test run (done on Day 6; refuses to run again)
 uv run python -m ml.eval.final all-data    # retrain the app's models on 1960-2025 -> ml/artifacts/final/ (about 1 min)
@@ -77,7 +80,8 @@ uv run python -m ml.predict manifest       # checksums of the app's model files 
 | `backend/`   | FastAPI app: `backend/app/` with one router per resource, schemas, read-only repo queries and services ([API](#api)) |
 | `frontend/`  | React (Vite) app (later)                         |
 | `data/`      | Raw pull and database (not in git), CPI table, summaries |
-| `tests/`     | Offline tests                                    |
+| `tests/`     | Offline tests, the end-to-end fixture and the golden forms ([Testing](#testing)) |
+| `scripts/`   | `slim_db.py` (the image's database copy) and `smoke.py` (checks a running API) |
 | `notebooks/` | Exploration and check notebooks                  |
 | `reports/`   | Evaluation reports from `make evaluate`, the ablation and the final test run (committed) |
 
@@ -469,11 +473,11 @@ curl -s localhost:8000/api/v1/predict -H 'Content-Type: application/json' -d '{
 | `/predict` over HTTP, uncached | median 167 ms (under the 400 ms target); about 3 ms from the cache |
 | `/predict/compare` with 3 variants, uncached | about 0.5 s |
 | Autocomplete / movie search / movie page | 2–10 ms / 5–90 ms / about 20 ms |
-| Memory after startup / after predictions with a synopsis (MiniLM loaded) | 639 MB / 746 MB |
+| Memory after startup / after predictions with a synopsis (MiniLM loaded) | 639 MB / 746 MB on Windows, before the Day 9 cuts; in Docker now 323 MB / 407 MB ([Running with Docker](#running-with-docker)) |
 
-Memory was 1,236 MB at first. The track record (`ml/features/history.py`) kept 350k small objects (about 870 MB); it now packs them into flat arrays (about 108 MB), and the rebuilt features table is bit-for-bit identical to the stored one. The 450 MB gate for the free host is Day 9's work.
+Memory was 1,236 MB at first. The track record (`ml/features/history.py`) kept 350k small objects (about 870 MB); it now packs them into flat arrays (about 108 MB), and the rebuilt features table is bit-for-bit identical to the stored one. Day 9 brought the app under the 450 MB gate for the free host.
 
-`tests/test_api.py` (54 tests, offline, on a small fake database and small models) checks:
+`tests/test_api.py` (55 tests, offline, on a small fake database and small models) checks:
 - every endpoint, pinned to a list so a new one must get a test;
 - both revenue modes, the cache, compare's differences, every kind of 422, and the 31st request;
 - FTS input that would be syntax, pages, filters and sorting;
@@ -482,6 +486,95 @@ Memory was 1,236 MB at first. The track record (`ml/features/history.py`) kept 3
 `tests/test_api_golden.py` (10 tests, skipped without the real data and models) checks:
 - the golden forms over HTTP equal `predict()` and the snapshot, in under 400 ms;
 - real autocomplete, movie pages, options and health.
+
+## Running with Docker
+
+The backend runs as one container with the database, the app's models and the 8-bit text model baked in (`backend/Dockerfile`, `docker-compose.yml`). It needs Docker and the local data and models (`data/movies.db`, `ml/artifacts/final/`, `make model`).
+
+```bash
+make docker-build   # build/movies.db (slim copy) + build/context.joblib (prebuilt track records), then the image
+make docker-run     # docker compose up -d --wait: returns once the healthcheck passes
+make smoke          # scripts/smoke.py against http://localhost:8000; make smoke URL=https://... for the live site
+docker compose down
+```
+
+**What goes in:**
+- the runtime dependencies only, 10 packages: `uv sync --no-default-groups`; `optuna`, `matplotlib`, `scikit-learn` and `onnx` are in the `ml` group, and `pytest` and `jupyter` in `dev`;
+- `ml/` and `backend/`;
+- `build/movies.db`: `data/movies.db` without the training-only `features` table, VACUUMed, 309 → 220 MB (`scripts/slim_db.py`);
+- `build/context.joblib`: History, Companies and Franchises built once (`python -m ml.features.build prebuilt`), stamped with the database's build time and film count, so a file from another build is refused;
+- the app's models and comparables index, and the 8-bit MiniLM only (23 MB).
+
+**How it runs:**
+- as a non-root user, with one uvicorn worker (the prediction cache and the rate limiter live in its memory);
+- a healthcheck on `/api/v1/health`;
+- `CORS_ORIGINS` from the environment;
+- `MALLOC_ARENA_MAX=2`, and after loading the app hands freed memory back to the system (`malloc_trim`).
+
+**The smoke script** (`scripts/smoke.py`) waits for `/health`, then checks:
+- the model version;
+- the three golden forms, each middle equal to `tests/golden/predictions.json` to 6 significant figures;
+- compare, a bad form's 422, search, a movie page, autocomplete and options.
+
+It exits with status 1 on any failure, the same against local Docker and the live URL.
+
+**Measured in Docker Desktop (Linux) on this laptop:**
+
+| | |
+| --- | --- |
+| Image | 984 MB unpacked, 370 MB compressed |
+| Startup until healthy | 8.3 s (models, prebuilt track records, comparables, lookups) |
+| Memory after startup | 323 MB (it peaks at 489 MB while loading) |
+| Memory after 100 different predictions with synopses | **407 MB** (`docker stats` 385 MiB), under the 450 MB gate |
+| Under a 512 MB limit, like Render Free | no out-of-memory kill; startup, 100 predictions and the smoke test pass |
+| `/predict`, uncached | median 175 ms, 90th percentile 192 ms |
+
+**How memory came down from 663 MB:**
+- **Prebuilt track records:** building History with pandas left about 320 MB freed but kept.
+- **Returning freed memory** to the system.
+- **Packed name lookups:** History's dict of 344k names took 83 MB.
+- **Flat arrays** for Companies and Franchises: dicts of 47k small arrays took 52 MB.
+- **Comparables titles as plain strings** instead of 127-character fixed-width text, which took 17 MB.
+
+Every prediction is unchanged: the full features table rebuilt both ways matches the stored one bit for bit, and all 344,445 person and 42,519 company names resolve as before.
+
+**How the image came down from 1.03 GB:**
+- **The app stopped loading `optuna` and `scikit-learn`.** `Chain.load` imported `optuna` through `calibrate` and `tune`, and three sklearn imports moved into the training functions that use them.
+- **An 8-bit MiniLM for the creator's synopsis** (23 MB instead of 90 MB). Its weights are quantised per output channel. On 1,000 overviews its vectors have a mean cosine of 0.993 with the full model's, and 89% find the same nearest overview; plain int8 gave 0.956 and 71%. Training and the comparables index keep the full model's vectors, and the golden comparables are unchanged.
+
+## Testing
+
+```bash
+make test        # everything: 390 tests, about 2-2.5 min with the database and models
+make test-fast   # skips the slow and real-data tests: 307 tests, about 15 s
+make coverage    # everything, with line and branch coverage of ml/ and backend/
+```
+
+Two markers (`pyproject.toml`) sort the tests:
+- `slow`: the end-to-end, fuzz and real-database time-travel tests;
+- `real_data`: the tests that need `data/movies.db` and the app's models. They are also skipped automatically when those files are missing.
+
+| What | Where | What it proves |
+| --- | --- | --- |
+| End to end | `tests/test_e2e.py`, `tests/fixtures/mini_raw.jsonl` | 213 fake TMDB records (200 films 2005–2020 plus 13 messy ones) go through every real step to answers over HTTP, in about 4 s: each messy record trips its cleaning rule exactly once, the views keep bad money out, the feature columns match `feature_list.json`, tiny models learn and stay monotone in budget |
+| Time travel | `tests/test_time_travel.py` | cutting the database at a date leaves every feature of the deleted films unchanged when judged at that date: on the fixture (cut 2017, with a film released on the cut day) and on the real database (cut 2010, 300 films); the vocab, theme keywords and synopsis PCA refitted on train films equal the committed files |
+| Fuzzing | `tests/test_fuzz.py` (hypothesis) | 300 random forms to `/predict` and 100 to `/predict/compare`, from valid edges to NaN, Infinity, huge or unicode text and non-objects: always a 200 with ordered, finite ranges or a 422 naming a field, never a 500 |
+| Logic | `tests/test_sanity.py` | bounds, a monotone budget, invariance, the revenue modes, form edges and matched-pair directions on the real models |
+| Golden examples | `tests/test_golden.py`, `tests/test_api_golden.py` | the three golden forms through `predict()` and over HTTP equal the snapshot, in under 400 ms |
+| The API | `tests/test_api.py` | every endpoint, the cache, the rate limit, errors, read-only connections, parallel requests, and that the app refuses to start on a model file that doesn't match its manifest |
+
+**Fuzzing found one real bug.** A whole-number field (year, month or runtime) sent as NaN or Infinity crashed the contract check with an `OverflowError`, and the API answered 500. JSON parsers, the server's included, accept those values. They now get the usual 422 "must be a number" (`ml/features/contract.py`, with 12 new tests).
+
+**Coverage** (`make coverage`, lines and branches):
+
+| Part | Coverage |
+| --- | --- |
+| Everything | 78.0% |
+| The code the app runs (`backend/`, `ml/predict.py`, `ml/explain/`, `ml/features/`, the models) | 92.2% |
+| Data, evaluation, baselines and calibration | 82.3% |
+| The one-off scripts (audit, ablation, tuning, the final test run) | 13.3% |
+
+The one-off scripts were each run by hand, and their results are in `reports/`.
 
 ## Audit after Day 7
 
@@ -535,6 +628,10 @@ The money models hold up on new films; the score ranges under-cover, because you
 - **Empty optional fields count against a film.** No production country or studio looks like the obscure films in the data that have none (no country: about −38% revenue for a small horror film). `predict()` warns about it.
 - **The default browse order is TMDB's popularity on the day of the pull.** It is a trending number, so the first page starts with *Clue* (1985) rather than the best-known films.
 - **The rate limit sees the proxy, not the visitor, behind a hosting proxy.** It counts per client IP from the connection; on Render (Day 14) it must read `X-Forwarded-For` instead.
+- **The Docker image is 984 MB unpacked, above the ~700 MB aim** (370 MB compressed). The Python packages take 441 MB, scipy alone 143 MB: LightGBM imports `scipy.sparse` when it loads, so scipy can't be left out. The 100 MB of precompiled bytecode stays, so startup doesn't recompile everything.
+- **Startup peaks at 489 MB.** That is under Render Free's 512 MB, but not by much: a bigger database or model would need another look.
+- **The app embeds a synopsis with an 8-bit model, the comparables index holds full-model vectors.** They agree closely (mean cosine 0.993), but for about 1 synopsis in 10 the nearest overview differs, so a comparable can differ from what the full model would pick.
+- **Memory measurements depend on the system.** On Windows the same app keeps more freed memory (639 MB after startup before the cuts); `malloc_trim` works on Linux only. The gate is measured in Docker, like the host.
 - **Some comparable films are obscure.** *Get Out*'s are small horror films scored about 4.5–6. A tie-break towards well-known films was tried and made the comparables' revenue less like the film's own, so it was dropped.
 - **Themes depend on TMDB's keywords.** Only 48% of films have a theme, and some keywords are loose: "rape" puts *The Revenant* in "sex and erotica", and "hilarious" puts some action films in "comedy and satire".
 

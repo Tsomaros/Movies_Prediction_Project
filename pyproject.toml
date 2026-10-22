@@ -4,17 +4,16 @@ version = "0.1.0"
 description = "Predict budget, revenue and audience score ranges for planned movies."
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
+# What the app (backend/ + ml/ at prediction time) needs; this is all the Docker image installs.
 dependencies = [
     "fastapi>=0.159.1",
     "httpx>=0.28.1",
+    "joblib>=1.6.0",
     "lightgbm>=4.7.0",
-    "matplotlib>=3.11.2",
     "numpy>=2.4.6",
     "onnxruntime>=1.31.0",
-    "optuna>=5.0.0",
     "pandas>=3.0.6",
     "python-dotenv>=1.2.4",
-    "scikit-learn>=1.9.1",
     "tokenizers>=0.23.3",
     "uvicorn>=0.54.0",
 ]
@@ -23,11 +22,37 @@ dependencies = [
 testpaths = ["tests"]
 pythonpath = ["."]
 asyncio_mode = "auto"
+markers = [
+    "slow: end-to-end and other long tests (skipped by make test-fast)",
+    "real_data: needs data/movies.db and the app's real models (skipped by make test-fast; skipped anyway without them)",
+]
+
+[tool.coverage.run]
+source = ["ml", "backend"]
+branch = true
+
+[tool.coverage.report]
+skip_covered = true
+show_missing = true
+precision = 1
+
+[tool.uv]
+default-groups = ["dev", "ml"]  # `uv sync` / `make setup` install everything locally
 
 [dependency-groups]
+# Training and analysis only: tuning (make tune), the notebooks' charts, PCA / KMeans / GroupKFold and
+# Spearman (scikit-learn and its scipy), and onnx for quantising MiniLM (make model)
+ml = [
+    "matplotlib>=3.11.2",
+    "onnx>=1.23.2",
+    "optuna>=5.0.0",
+    "scikit-learn>=1.9.1",
+]
 dev = [
+    "hypothesis>=6.170.5",
     "ipykernel>=7.4.0",
     "jupyter>=1.1.1",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
 ]

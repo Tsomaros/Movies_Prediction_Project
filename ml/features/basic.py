@@ -17,7 +17,6 @@ import json
 import math
 import re
 import sqlite3
-from bisect import bisect_left, bisect_right
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -26,7 +25,7 @@ import pandas as pd
 
 from ml.data.clean import COVID_YEARS
 from ml.features.contract import CERTIFICATIONS, GENRES, UNRATED
-from ml.features.history import LOG_BUDGET_SQL, MATURE_DAYS
+from ml.features.history import LOG_BUDGET_SQL, MATURE_DAYS, Groups
 
 VOCAB_FILE = Path("ml/features/vocab.json")
 N_LANGUAGES, N_COUNTRIES, N_COMPANIES = 15, 15, 30
@@ -102,20 +101,15 @@ class Franchises:
         films = films[films["collection_id"].notna()].copy()
         films["day"] = pd.to_datetime(films["release_date"]).values.astype("datetime64[D]").astype(np.int64)
         films = films.sort_values(["collection_id", "day"], kind="stable")
-        self.days: dict[int, np.ndarray] = {}
-        self.revenue_days: dict[int, np.ndarray] = {}
-        self.revenue: dict[int, np.ndarray] = {}
-        self.budget_days: dict[int, np.ndarray] = {}
-        self.budget_values: dict[int, np.ndarray] = {}
-        for cid, g in films.groupby("collection_id", sort=False):
-            rev, bud = g[g["log_revenue"].notna()], g[g["log_budget"].notna()]
-            self.days[int(cid)] = g["day"].to_numpy()
-            self.revenue_days[int(cid)] = rev["day"].to_numpy()
-            self.revenue[int(cid)] = rev["log_revenue"].to_numpy()
-            self.budget_days[int(cid)] = bud["day"].to_numpy()
-            self.budget_values[int(cid)] = bud["log_budget"].to_numpy()
+        rev, bud = films[films["log_revenue"].notna()], films[films["log_budget"].notna()]
+        # Each collection's films, and those with a usable revenue / budget, packed by collection (see Groups)
+        self.films, self.days = Groups.of(films["collection_id"].to_numpy()), films["day"].to_numpy(np.int64)
+        self.revenue_films = Groups.of(rev["collection_id"].to_numpy())
+        self.revenue_days, self.revenue = rev["day"].to_numpy(np.int64), rev["log_revenue"].to_numpy(float)
+        self.budget_films = Groups.of(bud["collection_id"].to_numpy())
+        self.budget_days, self.budget_values = bud["day"].to_numpy(np.int64), bud["log_budget"].to_numpy(float)
         named = collections.assign(key=collections["name"].str.casefold()).sort_values(["key", "id"])
-        named = named[named["id"].isin(self.days)]
+        named = named[named["id"].isin(self.films.ids)]
         self.by_name = {r.key: int(r.id) for r in named.drop_duplicates("key").itertuples()}
 
     @classmethod
@@ -136,16 +130,18 @@ class Franchises:
         """A known collection id, else a case-insensitive name match, else None (a new franchise)."""
         if not ref:
             return None
-        if ref.get("id") is not None and int(ref["id"]) in self.days:
+        if ref.get("id") is not None and int(ref["id"]) in self.films:
             return int(ref["id"])
         return self.by_name.get((ref.get("name") or "").strip().casefold())
 
     def features(self, collection_id: int | None, as_of: int) -> dict[str, float]:
-        days = self.days.get(collection_id) if collection_id is not None else None
-        earlier = bisect_left(days, as_of) if days is not None else 0
+        span = self.films.span(collection_id)
+        earlier = int(np.searchsorted(self.days[span[0]:span[1]], as_of, "left")) if span else 0
         revenue = np.array([])
-        if earlier:
-            revenue = self.revenue[collection_id][: bisect_right(self.revenue_days[collection_id], as_of - MATURE_DAYS)]
+        rev_span = self.revenue_films.span(collection_id) if earlier else None
+        if rev_span:
+            s, e = rev_span
+            revenue = self.revenue[s:s + int(np.searchsorted(self.revenue_days[s:e], as_of - MATURE_DAYS, "right"))]
         return {
             "is_franchise": int(earlier > 0),
             "franchise_earlier_films": earlier,
@@ -154,9 +150,9 @@ class Franchises:
 
     def budget(self, collection_id: int | None, as_of: int) -> dict[str, float]:
         """Median log budget of the collection's films released strictly earlier (NaN for none, like franchise_revenue)."""
-        days = self.budget_days.get(collection_id) if collection_id is not None else None
-        n = bisect_left(days, as_of) if days is not None else 0
-        return {"franchise_budget": float(np.median(self.budget_values[collection_id][:n])) if n else float("nan")}
+        span = self.budget_films.span(collection_id)
+        n = int(np.searchsorted(self.budget_days[span[0]:span[1]], as_of, "left")) if span else 0
+        return {"franchise_budget": float(np.median(self.budget_values[span[0]:span[0] + n])) if n else float("nan")}
 
 
 # ---------------------------------------------------------------- features
