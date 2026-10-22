@@ -2,6 +2,7 @@
 
     uv run python scripts/smoke.py                                   # http://localhost:8000 (make smoke)
     uv run python scripts/smoke.py --base-url https://example.onrender.com --wait 180
+    uv run python scripts/smoke.py --web-url http://localhost:8080   # also the frontend (make smoke does this)
 
 Checks, each printed as one line with its time:
 - /health answers "ok" with the expected model version (from ml/artifacts/final/manifest.json when it is
@@ -9,7 +10,9 @@ Checks, each printed as one line with its time:
 - the three golden forms (tests/golden/forms.json) through POST /predict: ordered ranges, the revenue mode,
   the warning codes and each middle equal to tests/golden/predictions.json to 6 significant figures;
 - POST /predict/compare with two variants, and a bad form that must get the readable 422;
-- search, a movie page, autocomplete and /meta/options on the real data.
+- search, a movie page, autocomplete and /meta/options on the real data;
+- with --web-url, the frontend: the home page, its script bundle (cached for a year), a deep link served
+  as the app (/predict/...), and /api/v1/health and /meta/options through the frontend's proxy.
 
 It waits up to --wait seconds for /health first (a container starting, or a free host waking up), and
 exits with status 1 if any check fails. Only the standard library and httpx are needed.
@@ -19,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -70,6 +74,50 @@ class Smoke:
             time.sleep(2)
 
 
+def web_checks(s: Smoke, web_url: str, expected_version: str | None) -> None:
+    """The frontend: nginx serves the app and its bundle, sends any route to the app, and proxies /api."""
+    web = httpx.Client(base_url=web_url.rstrip("/"), timeout=30)
+    page: dict[str, str] = {}
+
+    def home() -> str:
+        r = web.get("/")
+        r.raise_for_status()
+        assert "text/html" in r.headers["content-type"], r.headers["content-type"]
+        assert '<div id="root">' in r.text and "<title>Movie Prediction</title>" in r.text, r.text[:200]
+        page["html"] = r.text
+        return f"{len(r.content):,} bytes, cache: {r.headers.get('cache-control')}"
+
+    s.check(f"GET {web_url}/ (home page)", home)
+
+    def bundle() -> str:
+        found = re.search(r'src="(/assets/[^"]+\.js)"', page.get("html", ""))
+        assert found, "no script bundle in the home page"
+        r = web.get(found.group(1))
+        r.raise_for_status()
+        assert "javascript" in r.headers["content-type"], r.headers["content-type"]
+        assert "immutable" in r.headers.get("cache-control", ""), r.headers.get("cache-control")
+        return f"{found.group(1)}: {len(r.content):,} bytes ({r.headers.get('content-encoding', 'not compressed')})"
+
+    s.check("GET the script bundle", bundle)
+
+    def deep_link() -> str:
+        r = web.get("/predict/result")
+        r.raise_for_status()
+        assert '<div id="root">' in r.text, "a client-side route didn't get the app"
+        return "served the app"
+
+    s.check("GET /predict/result (client-side route)", deep_link)
+
+    def proxied() -> str:
+        h = web.get(API + "/health").json()
+        assert h["status"] == "ok" and (expected_version is None or h["model_version"] == expected_version), h
+        o = web.get(API + "/meta/options").json()
+        assert len(o["fields"]) == 14, len(o["fields"])
+        return f"model {h['model_version']} through the proxy"
+
+    s.check("GET /api/v1 through the frontend", proxied)
+
+
 def six(x: float) -> float:
     return float(f"{x:.6g}")
 
@@ -79,6 +127,7 @@ def main() -> None:
     parser.add_argument("--base-url", default="http://localhost:8000")
     parser.add_argument("--wait", type=float, default=120, help="seconds to wait for /health first")
     parser.add_argument("--expect-version", help="model version /health must report (default: the local manifest's)")
+    parser.add_argument("--web-url", help="also check the frontend served here (e.g. http://localhost:8080)")
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
 
@@ -157,6 +206,9 @@ def main() -> None:
         return f"{len(o['fields'])} fields, {len(o['themes'])} themes, {len(o['languages'])} languages"
 
     s.check("GET /meta/options", options)
+
+    if args.web_url:
+        web_checks(s, args.web_url, expected_version)
 
     print("All checks passed." if not s.failures else f"{s.failures} check(s) FAILED.")
     sys.exit(1 if s.failures else 0)

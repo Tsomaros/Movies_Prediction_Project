@@ -66,7 +66,9 @@ make tune                  # tune the LightGBM settings on backtest folds 1-2 (1
 make train                 # calibrate the ranges, then fit and save all three models to ml/artifacts/ (about 5 min)
 make evaluate              # baselines and LightGBM on validation, breakdowns and backtest -> reports/ (test split untouched)
 make api                   # the API on http://localhost:8000, docs at /docs (needs the database and the app's models)
-make docker-build          # the backend image (see Running with Docker); make docker-run, make smoke
+make docker-build          # the backend and frontend images (see Running with Docker); make docker-run, make smoke
+make web-setup             # the frontend's packages (needs Node 24); then make web for http://localhost:5173 (see Frontend)
+make web-test              # the frontend's types, lint and tests
 uv run python -m ml.models.rough           # the rough-estimate cut-offs (fitted once on Day 6, then frozen)
 uv run python -m ml.eval.final test        # the one-time test run (done on Day 6; refuses to run again)
 uv run python -m ml.eval.final all-data    # retrain the app's models on 1960-2025 -> ml/artifacts/final/ (about 1 min)
@@ -78,10 +80,10 @@ uv run python -m ml.predict manifest       # checksums of the app's model files 
 | ------------ | ------------------------------------------------ |
 | `ml/`        | Data pull, features, models and evaluation; `ml/artifacts/` holds the PCA and the models' settings, calibration and metadata (committed), the MiniLM files and the trained `.joblib` models (not in git; `make model`, `make train`); `ml/artifacts/final/` holds the app's all-data models, their `manifest.json` and the comparables index; `ml/explain/` and `ml/predict.py` turn them into explained predictions |
 | `backend/`   | FastAPI app: `backend/app/` with one router per resource, schemas, read-only repo queries and services ([API](#api)) |
-| `frontend/`  | React (Vite) app (later)                         |
+| `frontend/`  | React app: the creator form, the API client and types ([Frontend](#frontend)) |
 | `data/`      | Raw pull and database (not in git), CPI table, summaries |
 | `tests/`     | Offline tests, the end-to-end fixture and the golden forms ([Testing](#testing)) |
-| `scripts/`   | `slim_db.py` (the image's database copy) and `smoke.py` (checks a running API) |
+| `scripts/`   | `slim_db.py` (the image's database copy) and `smoke.py` (checks a running API and app) |
 | `notebooks/` | Exploration and check notebooks                  |
 | `reports/`   | Evaluation reports from `make evaluate`, the ablation and the final test run (committed) |
 
@@ -423,7 +425,7 @@ These three forms are the golden examples in `tests/test_golden.py`: the tests c
 
 ## API
 
-A FastAPI backend in `backend/app/`. Every endpoint lives under `/api/v1`, and the interactive docs are at `/docs`. Run it with `make api` (http://localhost:8000; about 10 s to load the models and lookups once). The React app (Days 10–13) is built against this API.
+A FastAPI backend in `backend/app/`. Every endpoint lives under `/api/v1`, and the interactive docs are at `/docs`. Run it with `make api` (http://localhost:8000; about 10 s to load the models and lookups once). The React app ([Frontend](#frontend)) is built against this API.
 
 | Method | Path | What it does |
 | --- | --- | --- |
@@ -452,6 +454,7 @@ curl -s localhost:8000/api/v1/predict -H 'Content-Type: application/json' -d '{
 - **Messages:** they come from the contract, so a wrong type reads like a wrong value: `{"runtime": "must be a number", "themes": "required", "genres": "unknown value(s): 'Cartoon'"}`.
 - **Compare:** errors name the variant, e.g. `variants.1.budget`.
 - **Other errors:** an unknown film is a 404, and a wrong method a 405.
+- **In the schema:** every 422 is documented as this shape (`FieldErrors`), and 404 and 429 as `{"detail"}`, so the frontend's generated types match what the API sends.
 
 **Limits and caching.**
 - **Rate limit:** 30 prediction requests a minute per IP, shared by `/predict` and `/compare` (our own sliding window, in memory). The 31st gets a 429, "Please try again in a minute", with `Retry-After`.
@@ -477,7 +480,7 @@ curl -s localhost:8000/api/v1/predict -H 'Content-Type: application/json' -d '{
 
 Memory was 1,236 MB at first. The track record (`ml/features/history.py`) kept 350k small objects (about 870 MB); it now packs them into flat arrays (about 108 MB), and the rebuilt features table is bit-for-bit identical to the stored one. Day 9 brought the app under the 450 MB gate for the free host.
 
-`tests/test_api.py` (55 tests, offline, on a small fake database and small models) checks:
+`tests/test_api.py` (57 tests, offline, on a small fake database and small models) checks:
 - every endpoint, pinned to a list so a new one must get a test;
 - both revenue modes, the cache, compare's differences, every kind of 422, and the 31st request;
 - FTS input that would be syntax, pages, filters and sorting;
@@ -487,18 +490,60 @@ Memory was 1,236 MB at first. The track record (`ml/features/history.py`) kept 3
 - the golden forms over HTTP equal `predict()` and the snapshot, in under 400 ms;
 - real autocomplete, movie pages, options and health.
 
-## Running with Docker
+## Frontend
 
-The backend runs as one container with the database, the app's models and the 8-bit text model baked in (`backend/Dockerfile`, `docker-compose.yml`). It needs Docker and the local data and models (`data/movies.db`, `ml/artifacts/final/`, `make model`).
+A React app in `frontend/` (Vite 8, React 19, TypeScript 6, Tailwind 4 with shadcn/ui, React Router 8, TanStack Query 5, React Hook Form + Zod 4). It needs Node 24.
 
 ```bash
-make docker-build   # build/movies.db (slim copy) + build/context.joblib (prebuilt track records), then the image
-make docker-run     # docker compose up -d --wait: returns once the healthcheck passes
-make smoke          # scripts/smoke.py against http://localhost:8000; make smoke URL=https://... for the live site
+make web-setup   # npm ci, once
+make api         # the API on :8000 (the dev server proxies /api to it)
+make web         # the app on http://localhost:5173
+make web-test    # types, lint (oxlint) and the Vitest tests
+make gen-api     # regenerate src/api/schema.d.ts from the running API's /openapi.json
+cd frontend && npm run coverage
+```
+
+| Path | What it holds |
+| --- | --- |
+| `src/app/` | routes, layout (header, navigation, footer with the TMDB notice), theme, providers |
+| `src/api/` | the typed client (`client.ts`), the hooks (`hooks.ts`), shared error handling (`errors.ts`), and `schema.d.ts` generated from the API |
+| `src/form/` | the creator form: values and Zod rules (`model.ts`), the examples, the URL and draft (`persist.ts`), and its inputs (`inputs/`) |
+| `src/pages/` | the home page, `/predict`, and placeholders for the results page (Day 11) and the film pages (Day 12) |
+
+**The form** (`/predict`) is one card, with the optional fields folded under "More details":
+- **The film:** genre and theme chips (1–5 each, counted in the label), release month and year, runtime as a box plus a slider, the original language (named by the browser, with film counts) and the US rating.
+- **People:** the director and the top-billed cast, typed straight into the box. Suggestions come 250 ms after the last keystroke, with film counts. A pick becomes a chip, numbered for the cast (5 to 10). The last option is always "Use '…' as a new person", for someone with no earlier films in our data.
+- **More details:** up to 5 studios and 5 countries, the franchise, the budget in millions of dollars ("Leave it empty and we'll estimate it") and the synopsis with a counter.
+- **Prefilled:** 110 minutes, June of next year and English, so a quick "what if" needs fewer clicks.
+- **Until Day 11** the answer is shown as raw JSON under the form.
+
+**Rules and errors.** The Zod rules mirror the API's contract and read every limit from `GET /meta/options`, so no number is copied by hand. A bad form is stopped before it is sent: each field says what to fix, and the first one gets the focus. The API's 422 messages land on the same fields; a 429 shows "Too many predictions – try again in a minute", and a network or server error offers a Retry button.
+
+**Demo helpers:**
+- **Three examples** ("Superhero sequel", "Small indie drama", "Horror, unknown cast"). They are the golden forms of `tests/golden/forms.json` with the names added, and a test checks they send exactly those forms.
+- **A shareable URL:** the form lives in `?f=` (JSON in base64url), 400 ms after the last change. "Copy link" copies it, and a link opens that form.
+- **Draft auto-save** in this browser. On load, a link wins over the draft, and the draft over a fresh form. "Clear form" empties all three.
+
+**Theme:** light and dark with a teal accent. It starts from the system preference and remembers the choice; a script in `index.html` sets it before the page draws, so it doesn't flash.
+
+**Types from the API.** `npm run gen:api` turns the API's OpenAPI schema into `src/api/schema.d.ts` (committed), so an API change fails the type check. For this, the schema now documents every 422 as our `{detail, errors}` shape (`backend/app/schemas/errors.py`) and types the form fields of `/meta/options` (`FieldSpec`). A Python test keeps `frontend/src/test/options.json`, the options the form tests run on, equal to the contract.
+
+**Bundle:** the home page loads 134 kB of JavaScript (gzipped); the form page adds 95 kB when it opens (Zod, Radix, cmdk).
+
+## Running with Docker
+
+Two containers (`docker-compose.yml`): the backend, with the database, the app's models and the 8-bit text model baked in (`backend/Dockerfile`), and the frontend (`frontend/Dockerfile`), which serves the app on http://localhost:8080 and proxies `/api` to the backend. It needs Docker and the local data and models (`data/movies.db`, `ml/artifacts/final/`, `make model`).
+
+```bash
+make docker-build   # build/movies.db (slim copy) + build/context.joblib (prebuilt track records), then both images
+make docker-run     # docker compose up -d --wait: returns once both healthchecks pass; the app is on :8080
+make smoke          # scripts/smoke.py: the API on :8000 and the app on :8080; make smoke URL=https://... WEB=https://... for the live site
 docker compose down
 ```
 
-**What goes in:**
+**The frontend image** (82.5 MB): Node 24 installs the locked packages, type-checks the app and builds it; then an unprivileged nginx serves it on 8080, as a non-root user with a healthcheck. nginx sends every other path (`/predict`, `/movies/603`) to the app, caches the hashed bundles for a year and the page not at all, gzips, and proxies `/api/` to `backend:8000`. It starts once the backend is healthy.
+
+**What goes into the backend image:**
 - the runtime dependencies only, 10 packages: `uv sync --no-default-groups`; `optuna`, `matplotlib`, `scikit-learn` and `onnx` are in the `ml` group, and `pytest` and `jupyter` in `dev`;
 - `ml/` and `backend/`;
 - `build/movies.db`: `data/movies.db` without the training-only `features` table, VACUUMed, 309 → 220 MB (`scripts/slim_db.py`);
@@ -514,7 +559,8 @@ docker compose down
 **The smoke script** (`scripts/smoke.py`) waits for `/health`, then checks:
 - the model version;
 - the three golden forms, each middle equal to `tests/golden/predictions.json` to 6 significant figures;
-- compare, a bad form's 422, search, a movie page, autocomplete and options.
+- compare, a bad form's 422, search, a movie page, autocomplete and options;
+- with `--web-url` (`make smoke` passes `WEB`, default :8080): the home page, the script bundle (gzipped, cached for a year), a client-side route served as the app, and the API through the frontend's proxy.
 
 It exits with status 1 on any failure, the same against local Docker and the live URL.
 
@@ -522,7 +568,8 @@ It exits with status 1 on any failure, the same against local Docker and the liv
 
 | | |
 | --- | --- |
-| Image | 984 MB unpacked, 370 MB compressed |
+| Backend image | 984 MB unpacked, 370 MB compressed (Docker Desktop's `docker images` shows their sum, 1.36 GB) |
+| Frontend image | 82.5 MB (nginx; the app itself is about 1 MB) |
 | Startup until healthy | 8.3 s (models, prebuilt track records, comparables, lookups) |
 | Memory after startup | 323 MB (it peaks at 489 MB while loading) |
 | Memory after 100 different predictions with synopses | **407 MB** (`docker stats` 385 MiB), under the 450 MB gate |
@@ -545,8 +592,8 @@ Every prediction is unchanged: the full features table rebuilt both ways matches
 ## Testing
 
 ```bash
-make test        # everything: 390 tests, about 2-2.5 min with the database and models
-make test-fast   # skips the slow and real-data tests: 307 tests, about 15 s
+make test        # everything: 392 tests, about 2.5 min with the database and models
+make test-fast   # skips the slow and real-data tests: 309 tests, about 15 s
 make coverage    # everything, with line and branch coverage of ml/ and backend/
 ```
 
@@ -561,7 +608,8 @@ Two markers (`pyproject.toml`) sort the tests:
 | Fuzzing | `tests/test_fuzz.py` (hypothesis) | 300 random forms to `/predict` and 100 to `/predict/compare`, from valid edges to NaN, Infinity, huge or unicode text and non-objects: always a 200 with ordered, finite ranges or a 422 naming a field, never a 500 |
 | Logic | `tests/test_sanity.py` | bounds, a monotone budget, invariance, the revenue modes, form edges and matched-pair directions on the real models |
 | Golden examples | `tests/test_golden.py`, `tests/test_api_golden.py` | the three golden forms through `predict()` and over HTTP equal the snapshot, in under 400 ms |
-| The API | `tests/test_api.py` | every endpoint, the cache, the rate limit, errors, read-only connections, parallel requests, and that the app refuses to start on a model file that doesn't match its manifest |
+| The API | `tests/test_api.py` | every endpoint, the cache, the rate limit, errors, read-only connections, parallel requests, and that the app refuses to start on a model file that doesn't match its manifest; the OpenAPI schema's error shapes and field specs |
+| The frontend | `frontend/src/**/*.test.ts(x)` (Vitest, Testing Library) | 106 tests: the rules against the API's real limits, invalid input blocked, the autocomplete (Enter waits for the suggestions), the examples sending exactly the golden forms, the URL and draft round trips, every API error kind, routes and the theme; 97% of lines and 88% of branches (`npm run coverage`) |
 
 **Fuzzing found one real bug.** A whole-number field (year, month or runtime) sent as NaN or Infinity crashed the contract check with an `OverflowError`, and the API answered 500. JSON parsers, the server's included, accept those values. They now get the usual 422 "must be a number" (`ml/features/contract.py`, with 12 new tests).
 
@@ -627,7 +675,8 @@ The money models hold up on new films; the score ranges under-cover, because you
 - **Breakouts stay outside the range.** *Get Out* earned $340M against a range of $160K–$59M, even with the all-data models that saw it in training; its drivers (small budget, new director, small studios) describe the typical film like it.
 - **Empty optional fields count against a film.** No production country or studio looks like the obscure films in the data that have none (no country: about −38% revenue for a small horror film). `predict()` warns about it.
 - **The default browse order is TMDB's popularity on the day of the pull.** It is a trending number, so the first page starts with *Clue* (1985) rather than the best-known films.
-- **The rate limit sees the proxy, not the visitor, behind a hosting proxy.** It counts per client IP from the connection; on Render (Day 14) it must read `X-Forwarded-For` instead.
+- **The rate limit sees the proxy, not the visitor, behind a proxy.** It counts per client IP from the connection. Behind the frontend's nginx in `docker compose`, every visitor shares one count of 30 a minute; on Render (Day 14) it must read `X-Forwarded-For` instead.
+- **The examples are dated October 2026 and May 2027,** like the golden forms they send. Once a date has passed, the year list (this year to four years ahead) no longer offers it, though the form still sends it.
 - **The Docker image is 984 MB unpacked, above the ~700 MB aim** (370 MB compressed). The Python packages take 441 MB, scipy alone 143 MB: LightGBM imports `scipy.sparse` when it loads, so scipy can't be left out. The 100 MB of precompiled bytecode stays, so startup doesn't recompile everything.
 - **Startup peaks at 489 MB.** That is under Render Free's 512 MB, but not by much: a bigger database or model would need another look.
 - **The app embeds a synopsis with an 8-bit model, the comparables index holds full-model vectors.** They agree closely (mean cosine 0.993), but for about 1 synopsis in 10 the nearest overview differs, so a comparable can differ from what the full model would pick.

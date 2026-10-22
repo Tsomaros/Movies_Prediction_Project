@@ -3,11 +3,12 @@
 from fastapi import APIRouter, Depends, Response
 
 from backend.app.deps import get_lookups
+from backend.app.schemas.errors import VALIDATION
 from backend.app.schemas.lookup import Match
 from backend.app.services.autocomplete import LIMIT, QUERY, respond
 from backend.app.services.lookups import Lookups
 
-router = APIRouter(tags=["form support"])
+router = APIRouter(tags=["form support"], responses=VALIDATION)
 
 
 @router.get("/companies", response_model=list[Match], summary="Studio autocomplete")

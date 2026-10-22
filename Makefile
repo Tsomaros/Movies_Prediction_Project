@@ -1,4 +1,4 @@
-.PHONY: setup model data db features tune train evaluate test test-fast coverage api docker-build docker-run smoke
+.PHONY: setup model data db features tune train evaluate test test-fast coverage api docker-build docker-run smoke web-setup web web-test gen-api
 
 # Create .venv and install the locked dependencies (then `make model` for the text model)
 setup:
@@ -51,17 +51,35 @@ coverage:
 api:
 	uv run uvicorn backend.app.main:app --reload --port 8000
 
-# The backend image: the slim database copy, the prebuilt track records (build/), then the image (needs Docker)
+# The images: the slim database copy, the prebuilt track records (build/), then the backend and frontend (needs Docker)
 docker-build:
 	uv run python scripts/slim_db.py
 	uv run python -m ml.features.build prebuilt
 	docker compose build
 
-# Start the backend container in the background and wait until its healthcheck passes (about 15 s)
+# Start both containers in the background and wait until their healthchecks pass (about 15 s); the app is on :8080
 docker-run:
 	docker compose up -d --wait
 
-# Check a running API: make smoke, or make smoke URL=https://... for the live one
+# Check the running app: the API at URL and the frontend at WEB (make smoke WEB= skips the frontend);
+# make smoke URL=https://... WEB=https://... for the live one
 URL ?= http://localhost:8000
+WEB ?= http://localhost:8080
 smoke:
-	uv run python scripts/smoke.py --base-url $(URL)
+	uv run python scripts/smoke.py --base-url $(URL) $(if $(WEB),--web-url $(WEB))
+
+# The frontend (frontend/, needs Node 24): install the locked packages once
+web-setup:
+	cd frontend && npm ci
+
+# The Vite dev server on http://localhost:5173; /api is proxied to make api on port 8000
+web:
+	cd frontend && npm run dev
+
+# Types, lint and the Vitest tests of the frontend
+web-test:
+	cd frontend && npm run check
+
+# Regenerate frontend/src/api/schema.d.ts from the running API's /openapi.json (start make api first)
+gen-api:
+	cd frontend && npm run gen:api

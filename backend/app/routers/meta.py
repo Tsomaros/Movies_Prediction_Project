@@ -39,7 +39,7 @@ def build_options(con: sqlite3.Connection, themes: list[str], today: date | None
     }
 
 
-@router.get("/meta/options", response_model=Options, summary="Every dropdown value and limit for the form")
+@router.get("/meta/options", response_model=Options, response_model_exclude_none=True, summary="Every dropdown value and limit for the form")
 def options(request: Request, response: Response, con: sqlite3.Connection = Depends(get_db)):
     state = request.app.state
     if getattr(state, "options", None) is None:

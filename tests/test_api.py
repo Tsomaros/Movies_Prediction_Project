@@ -281,6 +281,39 @@ def test_the_openapi_schema_documents_the_form_and_the_output(api):
     assert {"422", "429"} <= set(schema["paths"][PREDICT]["post"]["responses"])
 
 
+def test_the_openapi_schema_shows_the_real_error_bodies_and_field_specs(api):
+    """The frontend's types are generated from this schema: every 422 must be our {detail, errors} shape (not
+    FastAPI's default, which errors.py never sends), and the options' fields must be typed."""
+    schema = api.get("/openapi.json").json()
+    assert "HTTPValidationError" not in schema["components"]["schemas"]
+    for path, ops in schema["paths"].items():
+        for op in ops.values():
+            if "422" in op["responses"]:
+                ref = op["responses"]["422"]["content"]["application/json"]["schema"]["$ref"]
+                assert ref.endswith("/FieldErrors"), path
+    assert schema["components"]["schemas"]["Options"]["properties"]["fields"]["items"]["$ref"].endswith("/FieldSpec")
+    assert api.get(f"{API_PREFIX}/meta/options").json()["fields"][1] == {
+        "name": "release_year", "kind": "int", "required": True, "help": "Planned release year", "min": 1960, "max": 2035}
+
+
+def test_the_frontend_test_options_match_the_contract():
+    """frontend/src/test/options.json (the /meta/options answer the Vitest form tests run on) must keep the
+    contract's fields, genres, certifications and themes; refresh it from the running API when they change."""
+    import json
+    from pathlib import Path
+
+    from backend.app.routers.meta import build_options
+    from ml.features.themes import load_themes
+
+    saved = json.loads(Path("frontend/src/test/options.json").read_text(encoding="utf-8"))
+    with sqlite3.connect(":memory:") as con:  # empty tables: the language and country lists aren't compared
+        con.execute("CREATE TABLE movies (original_language TEXT)")
+        con.execute("CREATE TABLE movie_countries (country TEXT)")
+        current = build_options(con, sorted(load_themes()))
+    for key in ("fields", "genres", "certifications", "themes", "months"):
+        assert saved[key] == json.loads(json.dumps(current[key])), key
+
+
 # ---------------------------------------------------------------- public movie endpoints
 # The fixture has 300 films "Film 1".."Film 300": year 2008 + id % 15, genre Action / Drama / Comedy by id % 3,
 # all English with money and 2,500 votes, all with the same popularity (so ties fall back to the id).

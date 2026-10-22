@@ -18,13 +18,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from backend.app.deps import get_db, get_predictor
 from backend.app.errors import unprocessable
 from backend.app.repo import movies as repo
+from backend.app.schemas.errors import VALIDATION, Message
 from backend.app.schemas.form import Genre
 from backend.app.schemas.movies import MovieDetail, MovieList, Sort
 from backend.app.services.posters import poster
 from ml.features.contract import GENRES
 from ml.predict import Predictor
 
-router = APIRouter(tags=["movies"])
+router = APIRouter(tags=["movies"], responses=VALIDATION)
 CACHE = "public, max-age=3600"
 MAX_PAGE_SIZE = 48
 N_SIMILAR = 6
@@ -76,7 +77,7 @@ def _similar(predictor: Predictor, film: dict[str, Any], themes: list[str]) -> l
     return [{**f, "poster": poster(f["poster_path"])} for f in found]
 
 
-@router.get("/movies/{movie_id}", response_model=MovieDetail, responses={404: {"description": "No such film"}},
+@router.get("/movies/{movie_id}", response_model=MovieDetail, responses={404: {"model": Message, "description": "No such film"}},
             summary="One film: facts, cast and crew, money, score and similar films")
 def get_movie(movie_id: int, response: Response, con: sqlite3.Connection = Depends(get_db),
               predictor: Predictor = Depends(get_predictor)):

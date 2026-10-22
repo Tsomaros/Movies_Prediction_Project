@@ -8,11 +8,12 @@ from typing import Literal
 from fastapi import APIRouter, Depends, Query, Response
 
 from backend.app.deps import get_lookups
+from backend.app.schemas.errors import VALIDATION
 from backend.app.schemas.lookup import Match
 from backend.app.services.autocomplete import LIMIT, QUERY, respond
 from backend.app.services.lookups import Lookups
 
-router = APIRouter(tags=["form support"])
+router = APIRouter(tags=["form support"], responses=VALIDATION)
 
 
 @router.get("/people", response_model=list[Match], summary="Director and actor autocomplete")

@@ -1,8 +1,9 @@
-# The app's services. Day 9: the backend; the frontend joins on Day 10.
+# The app's services: the API (Day 9) and the frontend (Day 10), which serves the app on :8080 and proxies
+# /api to the backend, so the browser talks to one origin.
 #
-#   make docker-build   # slim database + image
-#   make docker-run     # docker compose up -d, then waits for the healthcheck
-#   make smoke          # scripts/smoke.py against http://localhost:8000
+#   make docker-build   # slim database + both images
+#   make docker-run     # docker compose up -d, then waits for both healthchecks
+#   make smoke          # scripts/smoke.py against the API on :8000 and the app on :8080
 #   docker compose down
 services:
   backend:
@@ -14,7 +15,19 @@ services:
     ports:
       - "8000:8000"
     environment:
-      CORS_ORIGINS: "http://localhost:5173,http://localhost:8080"  # the Vite dev server; the Day 10 frontend container
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:8080"  # the Vite dev server; the frontend container
       RATE_LIMIT: "30"
       CACHE_SIZE: "1000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: frontend
+    image: movie-prediction-web
+    container_name: movie-prediction-web
+    ports:
+      - "8080:8080"
+    depends_on:
+      backend:
+        condition: service_healthy  # nginx answers /api only once the models are loaded
     restart: unless-stopped

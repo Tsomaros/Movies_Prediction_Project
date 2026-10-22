@@ -10,6 +10,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from backend.app.deps import get_predictions
+from backend.app.schemas.errors import VALIDATION, Message
 from backend.app.schemas.form import CompareRequest, PredictForm
 from backend.app.schemas.prediction import CompareResponse, Prediction
 from backend.app.services.prediction import PredictionService
@@ -25,8 +26,8 @@ def rate_limited(request: Request) -> None:
         raise HTTPException(status_code=429, detail=TOO_MANY, headers={"Retry-After": str(wait)})
 
 
-ERRORS = {422: {"description": 'Some fields need fixing: {"detail": ..., "errors": {field: message}}'},
-          429: {"description": "Too many prediction requests from this address; see Retry-After"}}
+ERRORS = {**VALIDATION,
+          429: {"model": Message, "description": "Too many prediction requests from this address; see Retry-After"}}
 
 
 @router.post("/predict", response_model=Prediction, dependencies=[Depends(rate_limited)], responses=ERRORS,

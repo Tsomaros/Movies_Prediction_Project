@@ -1,13 +1,14 @@
 """Response models for the form-support endpoints.
 
     Match        -> one autocomplete result (people, companies, collections)
+    FieldSpec    -> one form field from contract.describe(): its kind, limits and choices
     Options      -> GET /meta/options: every dropdown value and limit in one call
     Health       -> GET /health
 """
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -18,13 +19,28 @@ class Match(BaseModel):
     n_films: int = Field(description="Films in our data in this role (directed, acted in, produced, in the franchise)")
 
 
+class FieldSpec(BaseModel):
+    """A creator-form field as ml.features.contract.Field describes it (limits that don't apply are left out)."""
+
+    name: str
+    kind: Literal["int", "float", "text", "choice", "choices", "code", "codes", "ref", "refs"]
+    required: bool
+    help: str
+    min: Optional[float] = Field(None, description="int / float: smallest value; text: shortest length")
+    max: Optional[float] = Field(None, description="int / float: largest value; text: longest length")
+    choices: Optional[list[str]] = Field(None, description="choice / choices: the allowed values")
+    min_items: Optional[int] = None
+    max_items: Optional[int] = None
+    pattern: Optional[str] = Field(None, description="code / codes: the regular expression a code must match")
+
+
 class CodeCount(BaseModel):
     code: str
     films: int
 
 
 class Options(BaseModel):
-    fields: list[dict[str, Any]] = Field(description="Every form field from the contract, themes filled in")
+    fields: list[FieldSpec] = Field(description="Every form field from the contract, themes filled in")
     genres: list[str]
     certifications: list[str]
     themes: list[str]
