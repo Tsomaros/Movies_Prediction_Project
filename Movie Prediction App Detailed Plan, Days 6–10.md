@@ -22,36 +22,28 @@ Day 6 ends with a calibrated budget model, revenue ranges that widen honestly wh
 
 ### Decisions
 
-| Topic               | Decision                                                                                                                                    | Why                                                                   |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Budget model        | Same recipe as Day 5: three quantile models, Optuna on backtest folds 1–2 (tree count from early stopping), our own CQR calibration on folds 1–2, same harness | Shared code and a fair comparison                                     |
-| Budget inputs       | Every allowed feature except the synopsis numbers (`DEFAULT_DROP`), with one ablation row adding them back                                 | Synopsis didn't help revenue or score on Day 5; the row confirms it for budget |
-| Budget track record | Leak-safe earlier budgets for director, actors, company and franchise; also tried in the revenue model and kept only if both validation and the backtest improve; not added to the monotone constraints | Earlier budgets predict budget better than earlier revenue; same bar as the Day 5 ablation |
-| Budget track record in the models | Kept in the revenue model (validation MAE log −0.020, backtest −0.006, same tuned settings); the score model stays without it | Decided by Dimitris after the trial; it passed the validation + backtest rule |
-| The chain           | One revenue model, two calibrations: "budget given" and "budget estimated"                                                                  | Ranges widen automatically when budget is estimated; cheap and honest |
-| Chain calibration   | "Estimated" mode is calibrated on folds 1–2: each fold trains a budget model on its own train years, and the revenue model's out-of-fold predictions use those predicted budgets | 2016–18 is never used to fit, stop or calibrate, so coverage in both modes stays an honest check |
-| ≤2018 models        | Retrained on ≤2018; their corrections come from out-of-fold predictions on all three folds (2010–18)                                         | More calibration films, and the Day 5 2016–18 revenue coverage (83%) was slightly cautious |
-| All-data models     | Retrained on ≤2025 for the app with the ≤2018 corrections and tree counts reused; stated in Limitations                                    | No later years are left to calibrate on                               |
-| Retuning            | Revenue and score are not retuned without synopsis                                                                                          | Tuning gained only about 1% on Day 5                                  |
-| Rough estimate      | Per-prediction label, starting at high ÷ low > 4×, adjusted on validation                                                                   | Flags exactly the predictions that are uncertain                      |
-| Rough-estimate rule | Revenue and budget only: high ÷ low above the 75th percentile of 2016–18 widths, rounded (revenue 81×, budget 12×), frozen in `ml/artifacts/rough_estimate.json`; score gets no label | 4× flagged 98% of revenue and 93% of budget ranges; score widths barely predict error (Spearman 0.09). Decided by Dimitris |
-| Budget comparison   | Always shown, even when the creator gives a budget                                                                                          | A useful sanity check at almost no cost                               |
-| Test set            | Opened once; no model changes after seeing it; results reviewed together                                                                    | Keeps the numbers credible                                            |
+| Topic | Decision | Why |
+| --- | --- | --- |
+| Budget model | Same recipe as Day 5: three quantile models, Optuna, MAPIE calibration, same harness | Shared code and a fair comparison |
+| Budget track record | Leak-safe earlier budgets for director, actors, company and franchise; also tried in the revenue model and kept only if validation improves | Earlier budgets predict budget better than earlier revenue |
+| The chain | One revenue model, two calibrations: "budget given" and "budget estimated" | Ranges widen automatically when budget is estimated; cheap and honest |
+| Rough estimate | Per-prediction label, starting at high ÷ low > 4×, adjusted on validation | Flags exactly the predictions that are uncertain |
+| Budget comparison | Always shown, even when the creator gives a budget | A useful sanity check at almost no cost |
+| Test set | Opened once; no model changes after seeing it; results reviewed together | Keeps the numbers credible |
 
 ### Tasks
 
-0. **Update the plan document (15 min).** Our own CQR on folds 1–2 instead of MAPIE on 2016–18, the chain calibrated on folds 1–2, ≤2018 corrections from all three folds, all-data models reuse them, no synopsis in the budget model, no retune.
-1. **Budget track-record features (45 min).** Median earlier budget (2025 $) for the director, the actors (max/mean/min), the company and the franchise; shrunk towards the average; leakage tests extended. Tried in the revenue model as an ablation row.
-2. **Budget model (1.5 h).** Three quantile models on log budget from `v_train_budget` in `ml/models/train.py`; every allowed feature except budget and synopsis; Optuna 15 min on folds 1–2; CQR correction from fold 1–2 out-of-fold predictions; evaluated against B0–B2 on validation, breakdowns and the backtest; ablation row with synopsis.
-3. **Chain (1 h).** Calibrate the revenue model twice. For "estimated" mode, folds 1–2 train a budget model on the fold's train years and feed its predicted budgets into the revenue model's out-of-fold predictions; the correction comes from those. Coverage in both modes checked on 2016–18, where the budget comes from the budget model trained on ≤2015. `predict_revenue(features, budget=None)` picks the mode.
+1. **Budget track-record features (45 min).** Median earlier budget (2025 $) for the director, the actors (max/mean/min), the company and the franchise; shrunk towards the average; leakage tests extended.
+2. **Budget model (1.5 h).** Three quantile models on log budget from `v_train_budget`; every form field except budget as input; Optuna 15 min; MAPIE on 2016–18; evaluated against B0–B2.
+3. **Chain (1 h).** Calibrate the revenue model twice. For "estimated" mode, feed 2016–18 revenue predictions with budgets from a budget model trained on ≤2015. Coverage checked in both modes; `predict_revenue(features, budget=None)` picks the mode.
 4. **Rough-estimate label (30 min).** Record the share of validation films labelled and how much larger their errors are.
 5. **Budget comparison (15 min).** "Similar films usually cost $X–Y" returned whenever a budget is given.
 6. **Freeze and final test run (1.5 h).**
    1. Freeze features, settings, calibrations and the rough rule; tag `pre-test`.
-   2. Retrain all three models on ≤2018 with the frozen settings; take every correction (both revenue modes, budget, score) from out-of-fold predictions on all three folds.
+   2. Retrain all three models on ≤2018 and calibrate on 2016–18.
    3. One `final=True` run on 2019+: revenue in both modes, with and without 2020–21; budget; score; all metrics, coverage and breakdowns against B0–B2.
    4. Write the numbers into the README immediately; disappointments go into Limitations.
-   5. Retrain on all data (≤2025) for the app, reusing the ≤2018 corrections and tree counts; tag `final-models`.
+   5. Retrain on all data (≤2025) for the app; tag `final-models`.
 7. **Tests (45 min).** Budget ranges ordered; estimated mode never narrower than given mode; `final=True` only in the final-run script; final artifacts reload identically.
 8. **Wrap-up (30 min).** Test results and limitations in the README, `PROGRESS.md`, commit.
 
@@ -59,65 +51,49 @@ Day 6 ends with a calibrated budget model, revenue ranges that widen honestly wh
 
 **Done when** the test results are in the README exactly as measured and the final all-data models are saved for the API.
 
-**Outcome (2026-10-21):** done. Test (2019+): revenue MAE log 1.230 (B2 1.455), 1.266 with an estimated budget; budget 0.682 (B2 1.247); score 0.493 (B2 0.574); coverage 77–81%. $150M+ revenue films were worse than B2 (1.04 vs 0.99). Tags `pre-test` and `final-models`; the app's models are in `ml/artifacts/final/`.
-
 ## Day 7: Explanations and packaging
 
 Day 7 ends with one `predict()` call that returns budget, revenue and score ranges, the top drivers for each in plain English, and 5 comparable films, in under 400 ms.
 
 ### Decisions
 
-| Topic                  | Decision                                                                                                               | Why                                                                     |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| How to compute drivers | LightGBM's built-in `pred_contrib` on each 50th-percentile model (revenue's monotone Huber middle, the budget and score quantile-0.5 models); no rescaling, because the contributions plus the expected value add up exactly to the middle prediction | No `shap` package in the app; the range correction `q` only moves p10/p90, so the middle is what gets explained |
-| Baseline               | Effects are relative to the model's expected value, worded as "compared with a typical film"                          | It is what the contributions add up from                                |
-| How to show them       | Rank and direction prominent; size as strong / moderate / slight, no exact amounts                                     | Honest about the approximation, still informative                       |
-| Strength thresholds    | Budget/revenue (log units, effect = e^c − 1): strong ≥ 50%, moderate 20–50%, slight < 20%, the same size up or down in log terms. Score: strong ≥ 0.3 points, moderate 0.1–0.3, slight < 0.1 (TMDB's 0–10 scale) | Decided by Dimitris in the notebook: the starting 25% / 10% made 72% of revenue's top-5 drivers on 2016–18 "strong" (99% of top drivers); 50% / 20% gives 30% |
-| Feature groups         | Raw features merged into creator-friendly groups; every model feature belongs to exactly one group (tested)           | Users never see names like `synopsis_07`                                |
-| Synopsis               | Not a driver: no model uses the synopsis numbers (`DEFAULT_DROP`, Day 5). It is used only to find comparable films   | Never show a driver the model doesn't have                              |
-| Estimated budget       | In "budget estimated" mode revenue's budget driver is one group, "Budget (estimated at about $X)"; what drove the estimate is listed under budget's own drivers | Decided by Dimitris; simple to read and to test                          |
-| Top drivers            | Top 5 per target (budget, revenue, score)                                                                              | What drives budget isn't what drives score                              |
-| Comparable films       | 5 similar past films with real budget, revenue, score. Pool: films with a usable score (`score_ok`) released before the planned date; the 50 most similar, then the 5 nearest with a real budget or revenue, "not reported" only if fewer than 5 have one | Decided by Dimitris; creators think in comparables                       |
-| Comparables similarity | Genres 0.3, themes 0.2, synopsis 0.3 (cosine on the full 384-number MiniLM vectors, skipped without a synopsis), era 0.1, budget level 0.2 (the creator's budget or the budget model's middle), same original language 0.1. The index is a gitignored file rebuilt by one command | Decided by Dimitris; the 16 PCA numbers match stories too roughly. Language and budget 0.2 chosen in the notebook on 600 films from 2016–18: comparables' revenue closer (MAE log 1.88 → 1.80), same language 60% → 84%; a well-known tie-break made revenue worse and was dropped |
-| Big-budget warning     | When the given or estimated budget is $150M or more, a warning that revenue ranges for big films were less reliable on 2019+ | Decided by Dimitris; Day 6 test: $150M+ revenue worse than B2, 64% coverage |
-| Empty optional fields  | A warning when no production country or studio is given: past films with none recorded are mostly small, so an empty field lowers the ranges (no country: about −38% revenue for a horror film) | Decided by Dimitris; the models stay frozen, and the Day 10 form can nudge creators to fill these in |
-| Release-timing wording | Worded by whichever part pushes most: "Releasing in 2026 (recent films earn less in our data)" when the year dominates, "Releasing in December (holiday season)" otherwise | Decided by Dimitris; for a 2026 film the year contributes −16% and the month much less |
-| Budget comparison wording | A budget within 5% of an edge of the "similar films" range is "at the low/high end" rather than below/above        | Rounded to two figures, both can show the same dollar amount (*The Shape of Water*) |
-| Models used            | The all-data models in `ml/artifacts/final/`, listed with their checksums in `manifest.json`                          | The Day 6 `final-models` state                                          |
-| Speed                  | Under 400 ms per prediction, after a one-time startup load (the feature context takes about 20 s)                      | The form should feel instant                                            |
+| Topic | Decision | Why |
+| --- | --- | --- |
+| How to compute drivers | LightGBM's built-in `pred_contrib` on each 50th-percentile model, rescaled to add up to the prediction | No `shap` package in the app; quantile models don't add up on their own |
+| How to show them | Rank and direction prominent; size as strong / moderate / slight, no exact amounts | Honest about the approximation, still informative |
+| Strength thresholds | Budget/revenue: strong ≥ 25%, moderate 10–25%, slight < 10%. Score: strong ≥ 0.3 stars, moderate 0.1–0.3, slight < 0.1 | Starting point, tuned in the notebook |
+| Feature groups | Raw features merged into creator-friendly groups | Users never see names like `pca_emb_7` |
+| Top drivers | Top 5 per target (budget, revenue, score) | What drives budget isn't what drives score |
+| Comparable films | 5 similar past films with real budget, revenue, score; prefer known money, fall back to "not reported" | Creators think in comparables; the biggest UX win of the week |
+| Speed | Under 400 ms per prediction | The form should feel instant |
 
 ### Feature groups
 
-| Group                       | Raw features merged                                                     |
-| --------------------------- | ----------------------------------------------------------------------- |
-| Genre                       | all genre columns                                                       |
-| Themes                      | all theme columns                                                       |
-| Director's track record     | earlier films, revenue, score, budget (`director_budget`), experience   |
-| Cast's track record         | actor max/mean/min columns, including `actors_budget_*`                  |
-| Franchise                   | `is_franchise`, earlier collection results, `franchise_budget`          |
-| Budget                      | log budget (marked "estimated" in estimated mode)                       |
-| Release timing              | month, summer/holiday flags, year, `covid_period`                       |
-| Studio                      | company columns and `company_budget`                                    |
-| Country, language           | their columns                                                           |
-| Runtime, certification      | as-is                                                                   |
-
-No "Story" group: the synopsis numbers and `has_synopsis` are in no model.
+| Group | Raw features merged |
+| --- | --- |
+| Story (synopsis) | the 16 embedding components |
+| Genre | all genre columns |
+| Themes | all theme columns |
+| Director's track record | earlier films, revenue, score, budget, experience |
+| Cast's track record | actor max/mean/min columns |
+| Franchise | `is_franchise` and earlier collection results |
+| Budget | log budget (marked "estimated" in estimated mode) |
+| Release timing | month, summer/holiday flags, year |
+| Studio / country / language | their columns |
+| Runtime, certification | as-is |
 
 ### Tasks
 
-0. **Update the plan document (15 min).** No rescaling, no synopsis driver, log-based thresholds, the budget track record inside the groups, the comparables pool and similarity, the estimated-budget driver, the $150M+ warning, "at the low/high end" wording.
-1. **Drivers (1.5 h), `ml/explain/drivers.py`.** `pred_contrib` on each middle model, grouping, strength labels; contributions plus the expected value equal the middle (tested).
-2. **Feature groups (45 min), `ml/explain/groups.py`.** The mapping above; every model feature maps to exactly one group.
-3. **Plain-English sentences (1 h), `ml/explain/sentences.py`.** One template per group, filled with the creator's values ("Releasing in **December**…", "Budget of about $40M (estimated)"); top 5 per target, split into "pushing up" and "pushing down".
-4. **Comparable films (1.5 h), `ml/explain/comparables.py`.** Index of `score_ok` films (genre and theme flags, unit MiniLM vectors as float16, log budget) in `ml/artifacts/final/comparables.npz`, gitignored and rebuilt by `uv run python -m ml.explain.comparables`. Only films released before the planned date; the 50 most similar, then the 5 nearest with money; TMDB ids and poster paths for links.
-5. **`predict()` package (1.5 h), `ml/predict.py`.** Validate → features → budget → revenue (given or estimated mode) → score → drivers → comparables. Output: three ranges, revenue mode, rough flag (revenue and budget only), budget comparison, drivers, comparables, warnings ($150M+ budget, unknown director or cast, release after 2025), model version. The all-data models in `ml/artifacts/final/` with `manifest.json` (checksums, `final-models` tag, training years, LightGBM version).
-6. **Tests (1 h).** Golden examples (franchise blockbuster, small drama, unknown cast) on the real models, skipped without the files; drivers add up and never expose raw names; comparables never from the future; both revenue modes; under 400 ms.
-7. **Sanity notebook (45 min), `07_explanations.ipynb`.** Drivers and comparables for famous films judged at their release date; comparables weights and strength cut-offs checked by eye.
-8. **Wrap-up (30 min).** README, `PROGRESS.md`, CLAUDE.md, commit.
+1. **Drivers (1.5 h), `ml/explain/drivers.py`.** `pred_contrib`, rescaling, grouping, strength labels.
+2. **Feature groups (45 min).** The mapping above.
+3. **Plain-English sentences (1 h).** One template per group, filled with the creator's values ("Releasing in **December**…"); top 5 per target, split into "pushing up" and "pushing down".
+4. **Comparable films (1.5 h), `ml/explain/comparables.py`.** Nearest past films by genre, themes, synopsis embedding, era and budget level; only films released before the hypothetical date; TMDB ids for links; precomputed index loaded at startup.
+5. **`predict()` package (1.5 h), `ml/predict.py`.** Validate → features → budget → revenue (given or estimated mode) → score → drivers → comparables. Output: three ranges, revenue mode, rough flag, budget comparison, drivers, comparables, warnings, model version. Artifacts in one folder with `manifest.json`.
+6. **Tests (1 h).** Golden examples (franchise blockbuster, small drama, unknown cast); drivers add up and never expose raw names; comparables never from the future; under 400 ms.
+7. **Sanity notebook (45 min), `07_explanations.ipynb`.** Drivers and comparables for famous films.
+8. **Wrap-up (15 min).** `PROGRESS.md` and commit.
 
 **Done when** `predict()` returns the full output for any valid input within 400 ms and the golden tests pass.
-
-**Outcome (2026-10-22):** done. `ml.predict.predict(form)` returns ranges, rough flags, the budget comparison, 5 drivers per target as sentences, 5 earlier comparable films and warnings in about 150 ms (about 11 s to load once). Strength cut-offs +50% / +20% and comparables weights with language (0.1) and budget 0.2 were chosen in `07_explanations.ipynb`; golden examples in `tests/test_golden.py`; 250 tests.
 
 ## Day 8: FastAPI backend
 
@@ -125,27 +101,27 @@ Day 8 ends with a complete, versioned API that the React app can be built agains
 
 ### Decisions
 
-| Topic            | Decision                                                                   | Why                                                                    |
-| ---------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Endpoints        | The list below, under `/api/v1`; more will be added in the future          | Covers the form and the public pages; versioning protects the frontend |
-| Compare endpoint | Built now, accepting up to 3 variants in one call                          | Cheap while predict is fresh; Day 13 becomes frontend-only             |
-| Browse           | FTS5 search, filters, sorting with popularity as default, page + page size | Matches a grid UI                                                      |
-| Similar films    | On every movie detail page, from the Day 7 index                           | Richer public side at almost no cost                                   |
-| Database access  | Plain `sqlite3`, read-only, small repository layer; no ORM                 | Fastest and simplest; a bug can't corrupt data                         |
-| Rate limit       | 30 requests/minute per IP on predict endpoints                             | Protects the free-tier server during the demo                          |
+| Topic | Decision | Why |
+| --- | --- | --- |
+| Endpoints | The list below, under `/api/v1`; more will be added in the future | Covers the form and the public pages; versioning protects the frontend |
+| Compare endpoint | Built now, accepting up to 3 variants in one call | Cheap while predict is fresh; Day 13 becomes frontend-only |
+| Browse | FTS5 search, filters, sorting with popularity as default, page + page size | Matches a grid UI |
+| Similar films | On every movie detail page, from the Day 7 index | Richer public side at almost no cost |
+| Database access | Plain `sqlite3`, read-only, small repository layer; no ORM | Fastest and simplest; a bug can't corrupt data |
+| Rate limit | 30 requests/minute per IP on predict endpoints | Protects the free-tier server during the demo |
 
 ### Endpoints
 
-| Method | Path                                        | Purpose                                                     |
-| ------ | ------------------------------------------- | ----------------------------------------------------------- |
-| POST   | `/api/v1/predict`                           | Form in → ranges, drivers, comparables, warnings out        |
-| POST   | `/api/v1/predict/compare`                   | Base input + up to 3 variants → predictions and differences |
-| GET    | `/api/v1/movies`                            | Search, filters, sorting, pagination                        |
-| GET    | `/api/v1/movies/{id}`                       | Facts, cast, crew, money, poster, similar films             |
-| GET    | `/api/v1/people?role=…&q=…`                 | Director and actor autocomplete                             |
-| GET    | `/api/v1/companies?q=…`, `/collections?q=…` | Studio and franchise autocomplete                           |
-| GET    | `/api/v1/meta/options`                      | All dropdown values in one call                             |
-| GET    | `/api/v1/health`                            | Status, model version, database build date                  |
+| Method | Path | Purpose |
+| --- | --- | --- |
+| POST | `/api/v1/predict` | Form in → ranges, drivers, comparables, warnings out |
+| POST | `/api/v1/predict/compare` | Base input + up to 3 variants → predictions and differences |
+| GET | `/api/v1/movies` | Search, filters, sorting, pagination |
+| GET | `/api/v1/movies/{id}` | Facts, cast, crew, money, poster, similar films |
+| GET | `/api/v1/people?role=…&q=…` | Director and actor autocomplete |
+| GET | `/api/v1/companies?q=…`, `/collections?q=…` | Studio and franchise autocomplete |
+| GET | `/api/v1/meta/options` | All dropdown values in one call |
+| GET | `/api/v1/health` | Status, model version, database build date |
 
 ### Tasks
 
@@ -165,16 +141,16 @@ Day 9 ends with proof that the whole pipeline works end to end and leaks nothing
 
 ### Decisions
 
-| Topic            | Decision                                                                                             | Why                                                      |
-| ---------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| End-to-end test  | Full chain on about 200 fake films                                                                   | Catches bugs that live between days                      |
+| Topic | Decision | Why |
+| --- | --- | --- |
+| End-to-end test | Full chain on about 200 fake films | Catches bugs that live between days |
 | Time-travel test | Features from the full database must equal features from a database truncated before the film's year | The strongest proof of no leakage; a key interview point |
-| Hardening        | Coverage report, fuzz testing with `hypothesis`, model version check                                 | The app never crashes and fails clearly on mismatches    |
-| Data and models  | Baked into the Docker image                                                                          | One consistent artifact; simplest deployment             |
-| Server           | `uvicorn` with one worker + thread pool                                                              | Each worker loads all models; free tiers have little RAM |
-| Smoke script     | One script for local Docker and the live URL                                                         | The same checks before and after deployment              |
-| Resources        | Memory and startup time measured and recorded                                                        | Problems found now, not on Day 14                        |
-| Cut line         | Fuzz testing moves to Day 13 if time runs short                                                      | End-to-end and time-travel tests always stay             |
+| Hardening | Coverage report, fuzz testing with `hypothesis`, model version check | The app never crashes and fails clearly on mismatches |
+| Data and models | Baked into the Docker image | One consistent artifact; simplest deployment |
+| Server | `uvicorn` with one worker + thread pool | Each worker loads all models; free tiers have little RAM |
+| Smoke script | One script for local Docker and the live URL | The same checks before and after deployment |
+| Resources | Memory and startup time measured; **memory is a gate: under about 450 MB after 100 predictions** (decided on Day 14) | The live host is Render Free (512 MB RAM); problems are found now, not on Day 14 |
+| Cut line | Fuzz testing moves to Day 13 if time runs short | End-to-end and time-travel tests always stay |
 
 ### Tasks
 
@@ -183,10 +159,10 @@ Day 9 ends with proof that the whole pipeline works end to end and leaks nothing
 3. **Test hardening (1.75 h).** `pytest-cov` aiming at about 80% (number in the README); `hypothesis` sends a few hundred random forms to predict and compare, always a valid result or a readable 422; `manifest.json` version check refuses to start on mismatch.
 4. **Docker image (2 h).** Multi-stage build (`uv` builder → `python:3.11-slim`); database and model bundle baked in; non-root user; healthcheck on `/api/v1/health`; one `uvicorn` worker; under about 700 MB; `.dockerignore` excludes raw data, notebooks and caches.
 5. **Compose, Make and smoke test (1 h).** `docker-compose.yml` (backend now, frontend on Day 10); `make docker-build`, `make docker-run`, `make smoke`; `scripts/smoke.py` checks health, golden predictions and one compare request against any base URL.
-6. **Memory and startup (20 min).** Memory after startup and after 100 predictions, plus startup time, recorded in the README.
+6. **Memory and startup gate (20 min).** Memory after startup and after 100 predictions, plus startup time, recorded in the README. **Gate:** must stay under about 450 MB to fit Render Free's 512 MB; if not, fix before moving on (int8 encoder, smaller indexes).
 7. **Wrap-up (30 min).** README "Running with Docker" and "Testing", `PROGRESS.md`, commit.
 
-**Done when** all tests pass (including end-to-end and time-travel), `make docker-build && make smoke` succeeds on a clean machine, and the resource numbers are recorded.
+**Done when** all tests pass (including end-to-end and time-travel), `make docker-build && make smoke` succeeds on a clean machine, and memory stays under the 450 MB gate.
 
 ## Day 10: Frontend setup and the creator form
 
@@ -194,17 +170,17 @@ Day 10 ends with a working React app where a creator can fill in the form (or lo
 
 ### Decisions
 
-| Topic          | Decision                                                                                          | Why                                                                    |
-| -------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Language       | TypeScript, with types generated from the FastAPI schema (`openapi-typescript`)                   | API changes fail at compile time, not in the demo                      |
-| UI library     | Tailwind CSS + shadcn/ui                                                                          | Modern, distinctive look with full control                             |
-| Core libraries | React Router, TanStack Query, React Hook Form + Zod                                               | Routing, consistent loading/error states, validation mirroring the API |
-| Form layout    | One page: required fields on top, collapsible "More details"                                      | Fast for repeated "what if" runs                                       |
-| Input details  | As proposed (autocomplete, chips, month/year, runtime slider, formatted budget, synopsis counter) | No changes requested                                                   |
-| Demo helpers   | Example buttons, shareable URL, draft auto-save                                                   | Smooth 5-minute demo, nothing lost on refresh                          |
-| Examples       | Superhero sequel, small indie drama, horror with an unknown cast                                  | Show franchise, low budget and new people                              |
-| Theme          | Light/dark toggle in the header                                                                   | Starts from system preference, remembers the choice                    |
-| Cut line       | Shareable URL and draft auto-save move to Day 13 if short                                         | Example buttons always stay                                            |
+| Topic | Decision | Why |
+| --- | --- | --- |
+| Language | TypeScript, with types generated from the FastAPI schema (`openapi-typescript`) | API changes fail at compile time, not in the demo |
+| UI library | Tailwind CSS + shadcn/ui | Modern, distinctive look with full control |
+| Core libraries | React Router, TanStack Query, React Hook Form + Zod | Routing, consistent loading/error states, validation mirroring the API |
+| Form layout | One page: required fields on top, collapsible "More details" | Fast for repeated "what if" runs |
+| Input details | As proposed (autocomplete, chips, month/year, runtime slider, formatted budget, synopsis counter) | No changes requested |
+| Demo helpers | Example buttons, shareable URL, draft auto-save | Smooth 5-minute demo, nothing lost on refresh |
+| Examples | Superhero sequel, small indie drama, horror with an unknown cast | Show franchise, low budget and new people |
+| Theme | Light/dark toggle in the header | Starts from system preference, remembers the choice |
+| Cut line | Shareable URL and draft auto-save move to Day 13 if short | Example buttons always stay |
 
 ### Tasks
 
@@ -229,11 +205,11 @@ Day 10 ends with a working React app where a creator can fill in the form (or lo
 - [ ] **Results page (Day 11).** Ranges, drivers, comparables, rough-estimate label, budget comparison, the new-person note and a limitations note.
 - [ ] **Public pages (Day 12).** Browse grid and detail page with similar films; TMDB logo and notice, logo less prominent than our branding.
 - [ ] **Compare UI (Day 13).** Up to 3 variants side by side, using the existing endpoint. Also receives Day 9's fuzz testing and Day 10's URL/auto-save if their cut lines were used.
-- [ ] **Deployment (Day 14).** Check the host's RAM against the Day 9 measurement; run `scripts/smoke.py` against the live URL.
+- [ ] **Deployment (Day 14).** Render Free (no card): 512 MB RAM, 0.1 CPU, sleeps after 15 min idle; live predictions may take up to about 3 s (400 ms stays the local target); run `scripts/smoke.py` against the live URL.
 - [ ] **README (Day 15).** Final test results from Day 6, limitations, and next steps (IMDb score, Postgres if accounts are added).
 
 ## Sources
 
 - [LightGBM issue #1969](https://github.com/microsoft/LightGBM/issues/1969): `pred_contrib` returns SHAP values plus the expected value
 - [LightGBM issue #3998](https://github.com/microsoft/LightGBM/issues/3998): contributions don't add up for quantile/L1 objectives
-- [MAPIE ConformalizedQuantileRegressor](https://mapie.readthedocs.io/en/stable/generated/mapie.regression.ConformalizedQuantileRegressor.html): the CQR method behind our own calibration function, used in both chain modes
+- [MAPIE ConformalizedQuantileRegressor](https://mapie.readthedocs.io/en/stable/generated/mapie.regression.ConformalizedQuantileRegressor.html): calibrated ranges used in both chain modes
