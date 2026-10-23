@@ -34,7 +34,7 @@ export default function Home() {
         ))}
       </ul>
       <div className="mt-12 grid gap-10">
-        {ROWS.map(row => <CuratedRow key={row.key} row={row} />)}
+        {ROWS.map((row, i) => <CuratedRow key={row.key} row={row} first={i === 0} />)}
       </div>
     </section>
   )

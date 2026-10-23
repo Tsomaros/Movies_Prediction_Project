@@ -1,11 +1,11 @@
 """ml/eval/model_card.py: the committed model card is current and copies the reports' numbers exactly.
 
-Offline: it reads only committed files (reports/*.json and ml/artifacts/final/manifest.json)."""
+Offline: it reads only committed files (reports/*.json, including metrics.json, and ml/artifacts/final/manifest.json)."""
 
 import json
 import math
 
-from ml.eval.model_card import CARD_FILE, FINAL_DIR, REPORTS, TARGETS, build
+from ml.eval.model_card import CARD_FILE, FINAL_DIR, REPORTS, TARGETS, UNCERTAINTY_FRACTION, build
 
 
 def read(path):
@@ -13,7 +13,8 @@ def read(path):
 
 
 def fresh():
-    return build(read(REPORTS / "final_test.json"), read(REPORTS / "audit_metrics.json"), read(FINAL_DIR / "manifest.json"))
+    return build(read(REPORTS / "final_test.json"), read(REPORTS / "audit_metrics.json"), read(FINAL_DIR / "manifest.json"),
+                 read(REPORTS / "metrics.json"))
 
 
 def test_the_committed_card_is_current():
@@ -40,3 +41,15 @@ def test_the_numbers_are_the_reports_numbers():
     assert card["holdout"]["targets"]["score"]["model"]["coverage"] == round(holdout["score"]["models"]["LightGBM app"]["coverage"], 4)
     assert card["holdout"]["targets"]["budget"]["films"] == holdout["budget"]["models"]["LightGBM app"]["n"]
     assert set(card["test"]["targets"]) == set(card["holdout"]["targets"]) == set(TARGETS)
+
+
+def test_the_uncertainty_thresholds_come_from_the_validation_ranges():
+    card = fresh()
+    u = card["uncertainty"]
+    validation = {t: {m["name"]: m["validation"] for m in ms} for t, ms in read(REPORTS / "metrics.json").items()}
+    revenue = validation["revenue"]["LightGBM (tuned, calibrated)"]["width"]
+    assert u["revenue"]["ratio"] == round(revenue ** UNCERTAINTY_FRACTION, 4)
+    assert u["score"]["points"] == round(UNCERTAINTY_FRACTION * validation["score"]["LightGBM (tuned, calibrated)"]["width"], 4)
+    assert set(u) == {"fraction", "years", *TARGETS}
+    assert 1.1 < u["budget"]["ratio"] < u["revenue"]["ratio"] < u["revenue_estimated"]["ratio"] < 1.6  # a tenth of a wide range
+    assert 0.1 < u["score"]["points"] < 0.3

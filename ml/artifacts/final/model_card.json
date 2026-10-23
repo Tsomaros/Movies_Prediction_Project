@@ -161,8 +161,29 @@
    }
   }
  },
+ "uncertainty": {
+  "fraction": 0.1,
+  "years": "2016-2018",
+  "revenue": {
+   "width": 36.2081,
+   "ratio": 1.4318
+  },
+  "revenue_estimated": {
+   "width": 47.6755,
+   "ratio": 1.4717
+  },
+  "budget": {
+   "width": 8.0901,
+   "ratio": 1.2325
+  },
+  "score": {
+   "width": 1.6846,
+   "points": 0.1685
+  }
+ },
  "sources": {
   "test": "reports/final_test.md",
-  "holdout": "reports/audit.md"
+  "holdout": "reports/audit.md",
+  "uncertainty": "reports/metrics.md"
  }
 }

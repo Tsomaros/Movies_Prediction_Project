@@ -7,6 +7,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 
 import { ApiError, type MovieDetail as Film } from '@/api/client'
 import { useMetaOptions, useMovie } from '@/api/hooks'
+import { SlowNotice } from '@/app/SlowNotice'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { codeName } from '@/form/format'
@@ -125,7 +126,7 @@ export default function MovieDetail() {
       </div>
     )
   }
-  if (!film.data) return <Loading />
+  if (!film.data) return <><SlowNotice pending /><Loading /></>
 
   const f = film.data
   const crew = crewByJob(f.crew, CREW_JOBS)

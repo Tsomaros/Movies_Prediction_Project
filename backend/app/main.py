@@ -29,7 +29,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app import errors
 from backend.app.deps import connect_read_only
-from backend.app.routers import collections, companies, health, meta, model_card, movies, people, predict
+from backend.app.routers import collections, companies, health, meta, model_card, movies, people, predict, sweep
 from backend.app.services.lookups import Lookups
 from backend.app.services.prediction import PredictionService
 from backend.app.services.ratelimit import RateLimiter
@@ -38,7 +38,7 @@ from ml.predict import Predictor
 
 log = logging.getLogger("uvicorn.error")
 
-ROUTERS = (predict, movies, people, companies, collections, meta, model_card, health)
+ROUTERS = (predict, sweep, movies, people, companies, collections, meta, model_card, health)
 DESCRIPTION = (
     "Budget, revenue and audience-score ranges for a planned film, with the drivers behind them and "
     "comparable past films, plus search over the 79,199 films in our TMDB data. This product uses the "

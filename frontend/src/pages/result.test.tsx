@@ -1,11 +1,11 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { ApiError, type ModelCard, type Options, type Prediction } from '@/api/client'
 import { EXAMPLES } from '@/form/examples'
-import { changedFields, toApiBody } from '@/form/model'
-import { BASE_PARAM, encodeForm } from '@/form/persist'
+import { toApiBody } from '@/form/model'
+import { encodeForm } from '@/form/persist'
 import { breakEven, factor, money, moneyAxis, points, signedPoints } from '@/result/format'
 import { mockFetch } from '@/test/fetch'
 import modelCardJson from '@/test/model_card.json'
@@ -34,12 +34,11 @@ function serve(overrides: Record<string, Parameters<typeof mockFetch>[0][string]
   })
 }
 
-const resultUrl = (key: string, base?: string) =>
-  `/predict/result?f=${encodeForm(byKey[key].form)}${base ? `&${BASE_PARAM}=${encodeForm(byKey[base].form)}` : ''}`
+const resultUrl = (key: string) => `/predict/result?f=${encodeForm(byKey[key].form)}`
 const posts = (calls: ReturnType<typeof serve>['calls']) => calls.filter(c => c.url.pathname === '/api/v1/predict').length
 
-async function openResult(key: string, base?: string) {
-  const app = renderApp(resultUrl(key, base))
+async function openResult(key: string) {
+  const app = renderApp(resultUrl(key))
   await screen.findByTestId('card-revenue')
   return app
 }
@@ -178,7 +177,7 @@ describe('getting there and moving on', () => {
     expect(document.querySelector('[aria-busy="true"]')?.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(5)
   })
 
-  test('the actions: edit, try a variation, copy the link, print', async () => {
+  test('the actions: edit, compare, best month, copy the link, print', async () => {
     serve()
     const writeText = vi.fn(async () => {})
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
@@ -190,30 +189,12 @@ describe('getting there and moving on', () => {
     expect(writeText).toHaveBeenCalledWith(window.location.href)
     await userEvent.click(within(actions).getByRole('button', { name: /Print/ }))
     expect(print).toHaveBeenCalled()
-    await userEvent.click(within(actions).getByRole('link', { name: /Try a variation/ }))
-    await screen.findByTestId('variation-hint')
-    const params = new URLSearchParams(router.state.location.search)
-    expect(params.get(BASE_PARAM)).toBe(params.get('f'))
-    expect(screen.getByRole('button', { name: 'Remove Greta Gerwig' })).toBeInTheDocument() // the form is filled in
-  })
-
-  test('a variation shows what changed and how far the expected values moved', async () => {
-    serve()
-    await openResult('franchise_blockbuster', 'small_drama')
-    const strip = await screen.findByTestId('variation')
-    const [now, before] = [PREDICTIONS.franchise_blockbuster, PREDICTIONS.small_drama]
-    await waitFor(() => expect(strip).toHaveTextContent(`Revenue: ${factor(now.revenue.middle / before.revenue.middle)}`))
-    expect(strip).toHaveTextContent(`(${money(before.revenue.middle)} → ${money(now.revenue.middle)})`)
-    expect(strip).toHaveTextContent(`Score: ${signedPoints(now.score.middle - before.score.middle)}`)
-    expect(strip).toHaveTextContent('You changed the genres, themes')
-  })
-
-  test('changedFields names only the fields that differ', () => {
-    const a = toApiBody(EXAMPLES[0].form)
-    expect(changedFields(a, a)).toEqual([])
-    expect(changedFields(a, { ...a, budget: 1e8 })).toEqual(['budget'])
-    const { budget: _, ...noBudget } = a
-    expect(changedFields(a, { ...noBudget, release_month: 12 })).toEqual(['release month', 'budget'])
+    const f = encodeForm(byKey.small_drama.form)
+    expect(within(actions).getByRole('link', { name: /Best release month/ })).toHaveAttribute('href', `/predict/compare?f=${f}#best-month`)
+    await userEvent.click(within(actions).getByRole('link', { name: /Compare variations/ }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Compare versions' })).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/predict/compare')
+    expect(new URLSearchParams(router.state.location.search).get('f')).toBe(f)
   })
 })
 
@@ -229,7 +210,7 @@ describe('when things go wrong', () => {
     serve({ '/api/v1/predict': { status: 429, body: { detail: 'Too many' }, headers: { 'Retry-After': '30' } } })
     renderApp(resultUrl('small_drama'))
     const alert = await screen.findByRole('alert')
-    expect(alert).toHaveTextContent('Too many predictions – try again in a minute.')
+    expect(alert).toHaveTextContent("You're going a bit fast. Try again in a minute.")
     expect(within(alert).getByRole('link', { name: 'Edit the inputs' })).toHaveAttribute('href', expect.stringContaining('/predict?f='))
   })
 

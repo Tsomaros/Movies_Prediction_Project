@@ -118,7 +118,7 @@ describe('errors', () => {
 
   test('a long Retry-After says how many minutes', () => {
     notifyError(new ApiError('rate_limited', 'x', { retryAfter: 150 }))
-    expect(toast.warning).toHaveBeenCalledWith('Too many predictions – try again in 3 minutes.', { id: 'rate-limited' })
+    expect(toast.warning).toHaveBeenCalledWith("You're going a bit fast. Try again in 3 minutes.", { id: 'rate-limited' })
   })
 
   test('a 422 or a plain error is left to the caller', () => {

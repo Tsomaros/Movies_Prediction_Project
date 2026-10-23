@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/predict/sweep": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Predict one film with one field (release month, runtime or budget) at 2-12 values */
+        post: operations["sweep_api_v1_predict_sweep_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/movies": {
         parameters: {
             query?: never;
@@ -653,6 +670,8 @@ export interface components {
             test: components["schemas"]["Evaluation"];
             /** @description The app's own models on films released in 2026 */
             holdout: components["schemas"]["Evaluation"];
+            /** @description When a difference between two versions of a film is too small to mean much */
+            uncertainty: components["schemas"]["Uncertainty"];
             /**
              * Sources
              * @description The reports in the repository the numbers come from
@@ -689,6 +708,19 @@ export interface components {
              * @description Released less than 182 days before the data was pulled
              */
             revenue_incomplete: boolean;
+        };
+        /** MoneyThreshold */
+        MoneyThreshold: {
+            /**
+             * Width
+             * @description Median validation range width, high / low
+             */
+            width: number;
+            /**
+             * Ratio
+             * @description A middle that moves by less than this factor (either way) is within the uncertainty
+             */
+            ratio: number;
         };
         /** MovieDetail */
         MovieDetail: {
@@ -956,6 +988,27 @@ export interface components {
              */
             cached: boolean;
         };
+        /** Range */
+        Range: {
+            /** Low */
+            low: number;
+            /** Middle */
+            middle: number;
+            /** High */
+            high: number;
+            /**
+             * Text
+             * @description The range as text, e.g. "$5.2M–$62M" or "6.2–7.6"
+             */
+            text: string;
+            /** Middle Text */
+            middle_text: string;
+            /**
+             * Rough
+             * @description A rough estimate: the range is unusually wide (never for score)
+             */
+            rough: boolean;
+        };
         /** Ref */
         Ref: {
             /** Id */
@@ -1034,6 +1087,19 @@ export interface components {
             /** Note */
             note: string;
         };
+        /** ScoreThreshold */
+        ScoreThreshold: {
+            /**
+             * Width
+             * @description Median validation range width, in points
+             */
+            width: number;
+            /**
+             * Points
+             * @description A middle that moves by less than this many points is within the uncertainty
+             */
+            points: number;
+        };
         /** Shift */
         Shift: {
             /**
@@ -1046,6 +1112,54 @@ export interface components {
              * @description Score: the variant's middle minus the base's
              */
             points?: number | null;
+        };
+        /** SweepPoint */
+        SweepPoint: {
+            /** Value */
+            value: number;
+            budget: components["schemas"]["Range"];
+            revenue: components["schemas"]["Range"];
+            score: components["schemas"]["Range"];
+            /**
+             * Revenue Mode
+             * @enum {string}
+             */
+            revenue_mode: "given" | "estimated";
+        };
+        /** SweepRequest */
+        SweepRequest: {
+            form: components["schemas"]["PredictForm"];
+            /**
+             * Field
+             * @description The field to try at each value
+             * @enum {string}
+             */
+            field: "release_month" | "runtime" | "budget";
+            /**
+             * Values
+             * @description 2 to 12 values for the field, each checked like the form's own
+             */
+            values: (number)[];
+        };
+        /** SweepResponse */
+        SweepResponse: {
+            /** Model Version */
+            model_version: string;
+            /**
+             * Field
+             * @enum {string}
+             */
+            field: "release_month" | "runtime" | "budget";
+            /**
+             * Base Value
+             * @description The form's own value for the field (None: budget left out)
+             */
+            base_value: number | null;
+            /**
+             * Points
+             * @description One per value, in the order sent
+             */
+            points: components["schemas"]["SweepPoint"][];
         };
         /** TargetAccuracy */
         TargetAccuracy: {
@@ -1081,6 +1195,23 @@ export interface components {
             films: {
                 [key: string]: number;
             };
+        };
+        /** Uncertainty */
+        Uncertainty: {
+            /**
+             * Fraction
+             * @description The share of the median validation range a change must exceed
+             */
+            fraction: number;
+            /**
+             * Years
+             * @description The validation years the ranges come from
+             */
+            years: string;
+            revenue: components["schemas"]["MoneyThreshold"];
+            revenue_estimated: components["schemas"]["MoneyThreshold"];
+            budget: components["schemas"]["MoneyThreshold"];
+            score: components["schemas"]["ScoreThreshold"];
         };
         /** Variant */
         Variant: {
@@ -1168,6 +1299,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CompareResponse"];
+                };
+            };
+            /** @description Some fields need fixing */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FieldErrors"];
+                };
+            };
+            /** @description Too many prediction requests from this address; see Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"];
+                };
+            };
+        };
+    };
+    sweep_api_v1_predict_sweep_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SweepRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SweepResponse"];
                 };
             };
             /** @description Some fields need fixing */

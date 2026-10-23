@@ -18,7 +18,7 @@ export function Pager({ page, pages, hrefFor }: { page: number; pages: number; h
       {pageNumbers(page, pages).map((p, i) => p === null ? (
         <span key={`gap-${i}`} className={cn(BOX, 'text-muted-foreground')} aria-hidden>…</span>
       ) : (
-        <Link key={p} to={hrefFor(p)} aria-current={p === page ? 'page' : undefined} aria-label={`Page ${p}`}
+        <Link key={p} to={hrefFor(p)} aria-current={p === page ? 'page' : undefined} aria-label={`Page ${p.toLocaleString('en-US')}`}
           className={cn(BOX, p === page ? 'bg-primary text-primary-foreground' : 'hover:bg-accent')}>
           {p.toLocaleString('en-US')}
         </Link>

@@ -3,7 +3,8 @@
     install(app)  -> handlers for RequestValidationError (Pydantic) and InvalidForm (ml.features.contract)
 
 Every 422 body is {"detail": "Some fields need fixing", "errors": {field: message}}, with the field as a
-dotted path: "runtime" for /predict, "base.runtime" or "variants.1.budget" for /predict/compare, and
+dotted path: "runtime" for /predict, "base.runtime" or "variants.1.budget" for /predict/compare,
+"form.runtime" or "values.3" for /predict/sweep, and
 "q" or "page" for query parameters. A shape error also lists every rule problem the contract finds in the
 same body, with the contract's message where it has one, so a wrong type reads the same as a wrong value
 ("must be a number", "unknown field", "required") and one response names everything to fix.
@@ -17,7 +18,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from backend.app.schemas.form import MAX_VARIANTS
+from backend.app.schemas.form import MAX_SWEEP, MAX_VARIANTS, MIN_SWEEP
 from backend.app.services.prediction import merge
 from ml.features.contract import FIELDS_BY_NAME, validate
 from ml.predict import InvalidForm
@@ -34,6 +35,16 @@ def _contract_errors(body: Any) -> dict[str, str]:
     """The contract's messages for every form in a request body, keyed like the API's paths."""
     if not isinstance(body, dict):
         return {}
+    if "form" in body:  # a sweep: the form, plus each value checked as the swept field
+        form = body["form"] if isinstance(body["form"], dict) else {}
+        out = {f"form.{k}": v for k, v in validate(form)[1].items()}
+        field, values = body.get("field"), body.get("values")
+        if isinstance(field, str) and field in FIELDS_BY_NAME and isinstance(values, list):
+            for i, value in enumerate(values):
+                problem = validate({field: value})[1].get(field)
+                if problem:
+                    out[f"values.{i}"] = problem
+        return out
     forms: dict[str, Any] = {}
     if "base" in body or "variants" in body:  # a compare request
         base = body.get("base") if isinstance(body.get("base"), dict) else {}
@@ -66,6 +77,8 @@ def _pydantic_message(error: dict[str, Any]) -> str:
         return PYDANTIC_WORDS[error["type"]]
     if error["type"] in ("too_short", "too_long") and tuple(error["loc"])[-1:] == ("variants",):
         return f"needs 1 to {MAX_VARIANTS} variants"
+    if error["type"] in ("too_short", "too_long") and tuple(error["loc"])[-1:] == ("values",):
+        return f"needs {MIN_SWEEP} to {MAX_SWEEP} values"
     msg = error["msg"]
     return msg[0].lower() + msg[1:]
 

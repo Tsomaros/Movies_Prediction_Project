@@ -9,7 +9,8 @@ import { browseLink, EMPTY, toQuery } from '@/movies/browse'
 import { MovieCard } from '@/movies/MovieCard'
 import { ROW_SIZE, type CuratedRow as Row } from '@/movies/rows'
 
-export function CuratedRow({ row }: { row: Row }) {
+/** `first`: the top row, whose posters load at once (the home page's largest paint). */
+export function CuratedRow({ row, first = false }: { row: Row; first?: boolean }) {
   const movies = useMovies({ ...toQuery({ ...EMPTY, ...row.filters }), page_size: ROW_SIZE })
   const headingId = `row-${row.key}-heading`
   return (
@@ -26,7 +27,7 @@ export function CuratedRow({ row }: { row: Row }) {
         <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-6 sm:overflow-visible sm:px-0">
           {(movies.data?.items ?? Array.from({ length: 6 }, () => null)).map((film, i) => (
             <li key={film?.id ?? `skeleton-${i}`} className="w-28 shrink-0 snap-start sm:w-auto [&:nth-child(n+7)]:sm:hidden">
-              {film ? <MovieCard film={film} showRevenue={row.showRevenue} /> : <Skeleton className="aspect-[2/3]" />}
+              {film ? <MovieCard film={film} showRevenue={row.showRevenue} eager={first && i < 6} /> : <Skeleton className="aspect-[2/3]" />}
             </li>
           ))}
         </ul>

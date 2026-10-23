@@ -4,6 +4,9 @@
     service.predict(form)                      -> (output, cached); InvalidForm for a bad form
     service.compare(base, variants)            -> {"base", "variants": [{"prediction", "differences"}]};
                                                   InvalidForm with keys like "base.runtime", "variants.1.budget"
+    service.sweep(form, field, values)         -> {"model_version", "field", "base_value", "points": [{"value",
+                                                  "budget", "revenue", "score", "revenue_mode"}]};
+                                                  InvalidForm with keys like "form.runtime", "values.3"
     merge(base, changes)                       -> a variant's form: base with the changes, null clearing a field
 
 The cache key is the validated form (ml.features.contract.validate) as canonical JSON, so the same film
@@ -102,6 +105,27 @@ class PredictionService:
                 },
             })
         return out
+
+    def sweep(self, form: dict[str, Any], field: str, values: list[float]) -> dict[str, Any]:
+        """The same film with `field` set to each value; every point goes through the cache."""
+        errors: dict[str, str] = {}
+        try:
+            self.clean(form)
+        except InvalidForm as e:
+            errors.update({f"form.{k}": message for k, message in e.errors.items()})
+        for i, value in enumerate(values):  # only the swept field: the rest is the form's, reported once above
+            problem = validate({field: value})[1].get(field)
+            if problem:
+                errors[f"values.{i}"] = problem
+        if errors:
+            raise InvalidForm(errors)
+
+        points, version = [], ""
+        for value in values:
+            out, _ = self._predict_clean(self.clean(merge(form, {field: value})))
+            version = out["model_version"]
+            points.append({"value": value, **{t: out[t] for t in TARGETS}, "revenue_mode": out["revenue"]["mode"]})
+        return {"model_version": version, "field": field, "base_value": form.get(field), "points": points}
 
     def __len__(self) -> int:
         return len(self._cache)

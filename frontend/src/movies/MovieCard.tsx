@@ -19,11 +19,11 @@ export function ScoreText({ score, votes: n }: { score: number | null | undefine
   )
 }
 
-export function MovieCard({ film, showRevenue = false }: { film: MovieSummary; showRevenue?: boolean }) {
+export function MovieCard({ film, showRevenue = false, eager = false }: { film: MovieSummary; showRevenue?: boolean; eager?: boolean }) {
   return (
     <Link to={`/movies/${film.id}`}
       className="group grid content-start gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-      <Poster poster={film.poster} title={film.title} />
+      <Poster poster={film.poster} title={film.title} eager={eager} />
       <span className="grid gap-0.5">
         <span className="line-clamp-2 text-sm font-medium leading-tight group-hover:underline">{film.title}</span>
         <span className="text-muted-foreground text-xs">{film.year ?? 'Year unknown'}</span>
@@ -36,11 +36,11 @@ export function MovieCard({ film, showRevenue = false }: { film: MovieSummary; s
   )
 }
 
-export function MovieListItem({ film }: { film: MovieSummary }) {
+export function MovieListItem({ film, eager = false }: { film: MovieSummary; eager?: boolean }) {
   return (
     <Link to={`/movies/${film.id}`}
       className="hover:bg-accent/50 grid grid-cols-[3.5rem_1fr] items-center gap-3 rounded-md p-2 focus-visible:outline-2 focus-visible:outline-ring">
-      <Poster poster={film.poster} title={film.title} />
+      <Poster poster={film.poster} title={film.title} eager={eager} />
       <span className="grid gap-0.5">
         <span className="font-medium">{film.title} <span className="text-muted-foreground font-normal">({film.year ?? '?'})</span></span>
         <span className="text-muted-foreground text-xs">{film.genres.join(', ') || 'No genre listed'}</span>

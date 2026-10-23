@@ -8,15 +8,17 @@
 //                                         from GET /meta/options `fields`, so no number is copied by hand
 //   toApiBody(values)                  -> the POST /predict body: empty optional fields left out, references
 //                                         as {id, name} or {name}
+//   bodyOf(values)                     -> the same for a form read from a link, or null when it isn't complete
+//   describeForm(values)               -> one line for a page heading: "Drama · October 2026 · directed by …"
 //   OPTIONAL_FIELDS                    -> the fields under "More details"
-//   changedFields(a, b)                -> the names of the fields two API bodies differ in ("Try a variation")
+//   FIELD_LABELS                       -> each API field's name in words ("release month", "cast")
 //
 // The API checks everything again (contract.validate); these rules only stop a bad form before it is sent
 // and say what to fix next to the field.
 import { z } from 'zod'
 
 import type { FieldSpec, PredictForm } from '@/api/client'
-import { shortMoney } from '@/form/format'
+import { MONTHS, shortMoney } from '@/form/format'
 
 type Genre = NonNullable<PredictForm['genres']>[number] // the 19 names come from /meta/options at run time
 
@@ -163,14 +165,25 @@ export function toApiBody(v: FormValues): PredictForm {
   return body
 }
 
-const FIELD_LABELS: Record<keyof PredictForm, string> = {
+/** The API body of a form from a link, or null when it doesn't hold a complete form (a required reference is
+ *  missing: the link was cut or edited by hand). */
+export function bodyOf(values: FormValues | null | undefined): PredictForm | null {
+  if (!values) return null
+  try {
+    return toApiBody(values)
+  } catch {
+    return null
+  }
+}
+
+export function describeForm(values: FormValues) {
+  const when = values.release_month && values.release_year ? `${MONTHS[values.release_month - 1]} ${values.release_year}` : null
+  return [values.genres.join(', '), when, values.director?.name && `directed by ${values.director.name}`]
+    .filter(Boolean).join(' · ')
+}
+
+export const FIELD_LABELS: Record<keyof PredictForm, string> = {
   genres: 'genres', themes: 'themes', release_year: 'release year', release_month: 'release month',
   runtime: 'runtime', language: 'language', certification: 'rating', director: 'director', actors: 'cast',
   companies: 'studios', countries: 'countries', franchise: 'franchise', synopsis: 'synopsis', budget: 'budget',
-}
-
-/** The fields whose sent value differs (references compare by what is sent: id and name). */
-export function changedFields(base: PredictForm, next: PredictForm): string[] {
-  const keys = Object.keys(FIELD_LABELS) as (keyof PredictForm)[]
-  return keys.filter(k => JSON.stringify(base[k] ?? null) !== JSON.stringify(next[k] ?? null)).map(k => FIELD_LABELS[k])
 }

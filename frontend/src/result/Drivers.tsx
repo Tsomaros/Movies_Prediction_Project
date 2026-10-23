@@ -34,7 +34,7 @@ function Column({ drivers, up }: { drivers: Driver[]; up: boolean }) {
   return (
     <div className="grid content-start gap-2">
       <h3 className={cn('flex items-center gap-1.5 text-sm font-semibold',
-        up ? 'text-chart-2' : 'text-orange-700 dark:text-orange-400')}>
+        up ? 'text-[color-mix(in_oklab,var(--chart-2)_75%,black)] dark:text-chart-2' : 'text-orange-700 dark:text-orange-400')}>
         <Icon className="size-4" aria-hidden /> {up ? 'Pushes it up' : 'Pulls it down'}
       </h3>
       {drivers.length === 0 ? (
@@ -70,10 +70,11 @@ export function Drivers({ drivers }: { drivers: Prediction['drivers'] }) {
       </div>
       <Tabs defaultValue="revenue">
         <TabsList className="print:hidden">
-          {TARGETS.map(t => <TabsTrigger key={t.key} value={t.key}>{t.label}</TabsTrigger>)}
+          {TARGETS.map(t => <TabsTrigger key={t.key} value={t.key} className="text-foreground/80">{t.label}</TabsTrigger>)}
         </TabsList>
         {TARGETS.map(t => (
-          <TabsContent key={t.key} value={t.key} forceMount className="data-[state=inactive]:hidden print:data-[state=inactive]:grid">
+          <TabsContent key={t.key} value={t.key} forceMount
+            className="focus-visible:outline-ring rounded-md focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-4 data-[state=inactive]:hidden print:data-[state=inactive]:grid">
             <h3 className="mb-2 hidden text-base font-semibold print:block">{t.label}</h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <Column drivers={drivers[t.key].up} up />

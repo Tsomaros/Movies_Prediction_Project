@@ -144,7 +144,7 @@ def test_empty_or_unknown_queries_find_nothing():
 # ---------------------------------------------------------------- prediction endpoints
 
 
-PREDICT, COMPARE = f"{API_PREFIX}/predict", f"{API_PREFIX}/predict/compare"
+PREDICT, COMPARE, SWEEP = f"{API_PREFIX}/predict", f"{API_PREFIX}/predict/compare", f"{API_PREFIX}/predict/sweep"
 
 
 @pytest.fixture
@@ -242,9 +242,39 @@ def test_compare_names_the_variant_and_field_and_needs_1_to_3_variants(api):
         "variants.0.nope": "unknown field"}
 
 
+def test_a_month_sweep_gives_12_points_that_agree_with_single_predictions(api):
+    form = film_form()
+    out = api.post(SWEEP, json={"form": form, "field": "release_month", "values": list(range(1, 13))}).json()
+    assert out["field"] == "release_month" and out["base_value"] == form["release_month"]
+    assert [p["value"] for p in out["points"]] == list(range(1, 13)) and out["model_version"] == "test.0"
+    june = api.post(PREDICT, json={**form, "release_month": 6}).json()
+    assert june["cached"] is True  # the sweep filled the cache
+    point = out["points"][5]
+    for t in ("budget", "revenue", "score"):
+        assert {k: point[t][k] for k in ("low", "middle", "high", "text")} == {k: june[t][k] for k in ("low", "middle", "high", "text")}
+    assert point["revenue_mode"] == "given"
+    budgets = api.post(SWEEP, json={"form": film_form(budget=None), "field": "budget", "values": [1e7, 1e8]}).json()
+    assert budgets["base_value"] is None and [p["revenue_mode"] for p in budgets["points"]] == ["given", "given"]
+    assert budgets["points"][0]["revenue"]["middle"] < budgets["points"][1]["revenue"]["middle"]
+
+
+def test_a_sweep_names_the_bad_value_and_the_bad_form_field(api):
+    assert errors_of(api.post(SWEEP, json={"form": film_form(), "field": "release_month", "values": [1, 13, 0]})) == {
+        "values.1": "must be between 1 and 12", "values.2": "must be between 1 and 12"}
+    assert errors_of(api.post(SWEEP, json={"form": film_form(runtime=5), "field": "runtime", "values": [90, 400]})) == {
+        "form.runtime": "must be between 40 and 300", "values.1": "must be between 40 and 300"}
+    assert "field" in errors_of(api.post(SWEEP, json={"form": film_form(), "field": "genres", "values": [1, 2]}))
+    for values in ([1], [*range(1, 13), 1]):
+        assert errors_of(api.post(SWEEP, json={"form": film_form(), "field": "release_month", "values": values})) == {
+            "values": "needs 2 to 12 values"}
+    assert errors_of(api.post(SWEEP, json={"form": film_form(), "field": "runtime", "values": [90, "long"]}))["values.1"]
+
+
 def test_the_31st_prediction_in_a_minute_is_refused_politely(api):
     assert api.post(COMPARE, json={"base": film_form(), "variants": [{"runtime": 100}]}).status_code == 200
-    assert all(api.post(PREDICT, json=film_form()).status_code == 200 for _ in range(29))
+    body = {"form": film_form(), "field": "release_month", "values": list(range(1, 13))}
+    assert api.post(SWEEP, json=body).status_code == 200  # a sweep counts as one request
+    assert all(api.post(PREDICT, json=film_form()).status_code == 200 for _ in range(28))
     refused = api.post(PREDICT, json=film_form())
     assert refused.status_code == 429 and "try again in a minute" in refused.json()["detail"]
     assert 1 <= int(refused.headers["retry-after"]) <= 60
@@ -280,6 +310,7 @@ def test_the_openapi_schema_documents_the_form_and_the_output(api):
     assert (runtime["minimum"], runtime["maximum"], actors["minItems"], actors["maxItems"]) == (40, 300, 5, 10)
     assert {"Prediction", "CompareResponse", "Driver", "Comparable"} <= set(schema["components"]["schemas"])
     assert {"422", "429"} <= set(schema["paths"][PREDICT]["post"]["responses"])
+    assert {"422", "429"} <= set(schema["paths"][SWEEP]["post"]["responses"])
 
 
 def test_the_openapi_schema_shows_the_real_error_bodies_and_field_specs(api):
@@ -521,6 +552,8 @@ def test_the_model_card_has_the_test_results_and_the_database(db, predictor, tmp
     assert revenue["films"] == 1485 and revenue["model"]["coverage"] == 0.7737
     assert revenue["baseline"]["name"].startswith("B2") and "mae" not in revenue["model"]  # None left out
     assert set(card["holdout"]["targets"]["score"]["model"]) == {"mae", "coverage", "width"}
+    assert card["uncertainty"]["fraction"] == 0.1 and card["uncertainty"]["revenue"]["ratio"] > 1
+    assert set(card["uncertainty"]["score"]) == {"width", "points"}
 
 
 @pytest.mark.parametrize("version", ["another.1", None])
@@ -536,6 +569,7 @@ def test_a_model_card_for_other_models_or_none_is_a_503(db, predictor, tmp_path,
 ENDPOINTS = {  # every endpoint and the test above that covers it; a new endpoint must be added here
     ("POST", "/predict"): test_predict_returns_the_full_output_in_both_revenue_modes,
     ("POST", "/predict/compare"): test_compare_differences_agree_with_separate_predictions,
+    ("POST", "/predict/sweep"): test_a_month_sweep_gives_12_points_that_agree_with_single_predictions,
     ("GET", "/movies"): test_browse_pages_through_every_film_and_is_cacheable,
     ("GET", "/movies/{movie_id}"): test_a_movie_page_has_facts_people_money_score_and_similar_films,
     ("GET", "/people"): test_people_autocomplete_by_role_most_films_first,

@@ -9,7 +9,8 @@ Checks, each printed as one line with its time:
   there, or --expect-version) and a database with films;
 - the three golden forms (tests/golden/forms.json) through POST /predict: ordered ranges, the revenue mode,
   the warning codes and each middle equal to tests/golden/predictions.json to 6 significant figures;
-- POST /predict/compare with two variants, and a bad form that must get the readable 422;
+- POST /predict/compare with two variants, the 12-month POST /predict/sweep, and a bad form that must get
+  the readable 422;
 - search, the box-office sort and the score filter, a movie page, autocomplete and /meta/options on the real data;
 - /model-card belongs to the served models and has the 2019+ test and the 2026 holdout;
 - with --web-url, the frontend: the home page, its script bundle (cached for a year), a deep link served
@@ -171,6 +172,15 @@ def main() -> None:
         return f"revenue x{out['variants'][1]['differences']['revenue']['ratio']} with Universal"
 
     s.check("POST /predict/compare", compare)
+
+    def sweep() -> str:
+        out = s.post("/predict/sweep", {"form": forms["small_drama"], "field": "release_month",
+                                        "values": list(range(1, 13))})
+        assert [p["value"] for p in out["points"]] == list(range(1, 13)), out["points"][:1]
+        best = max(out["points"], key=lambda p: p["revenue"]["middle"])
+        return f"best month {best['value']:.0f}: revenue {best['revenue']['middle_text']}"
+
+    s.check("POST /predict/sweep (12 months)", sweep)
 
     def bad_form() -> str:
         body = s.post("/predict", {**forms["small_drama"], "runtime": 5}, expect=422)

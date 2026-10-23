@@ -3,6 +3,7 @@
     PredictForm      -> POST /predict: one creator form
     FormChanges      -> one compare variant: only the fields it changes (null clears an optional field)
     CompareRequest   -> POST /predict/compare: {base, variants (1-3)}
+    SweepRequest     -> POST /predict/sweep: {form, field, values (2-12)}: one field tried at several values
 
 These models check the JSON shape (types, unknown fields) and document it in /docs and the OpenAPI
 schema the frontend types are generated from. The rules (allowed values, limits, list sizes, known
@@ -20,6 +21,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from ml.features.contract import CERTIFICATIONS, FIELDS_BY_NAME, GENRES
 
 MAX_VARIANTS = 3
+SWEEP_FIELDS = ("release_month", "runtime", "budget")
+MIN_SWEEP, MAX_SWEEP = 2, 12
 
 Genre = Literal[GENRES]  # type: ignore[valid-type]
 Certification = Literal[CERTIFICATIONS]  # type: ignore[valid-type]
@@ -92,3 +95,13 @@ class CompareRequest(BaseModel):
     base: PredictForm
     variants: list[FormChanges] = Field(..., min_length=1, max_length=MAX_VARIANTS,
                                         description=f"1 to {MAX_VARIANTS} variants of the base form")
+
+
+class SweepRequest(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    form: PredictForm
+    field: Literal[SWEEP_FIELDS] = Field(description="The field to try at each value")  # type: ignore[valid-type]
+    values: list[Union[int, float]] = Field(..., min_length=MIN_SWEEP, max_length=MAX_SWEEP,
+                                            description=f"{MIN_SWEEP} to {MAX_SWEEP} values for the field, "
+                                                        "each checked like the form's own")

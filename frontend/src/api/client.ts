@@ -1,6 +1,6 @@
 // The one typed client for the backend (/api/v1, proxied by Vite in dev and by nginx in docker compose).
 //
-//   getOptions(), searchNames(kind, q), predict(form), getModelCard(),
+//   getOptions(), searchNames(kind, q), predict(form), compare(body), sweep(body), getModelCard(),
 //   listMovies(query), getMovie(id)                     -> typed bodies from schema.d.ts (npm run gen:api)
 //   ApiError                                             -> every failure, with a `kind` the UI can act on:
 //     validation   422, `fieldErrors` keyed by the API's dotted paths ("actors.2", "budget")
@@ -16,6 +16,11 @@ export type FieldSpec = Schemas['FieldSpec']
 export type Match = Schemas['Match']
 export type PredictForm = Schemas['PredictForm']
 export type Prediction = Schemas['Prediction']
+export type FormChanges = Schemas['FormChanges']
+export type CompareRequest = Schemas['CompareRequest']
+export type CompareResponse = Schemas['CompareResponse']
+export type SweepRequest = Schemas['SweepRequest']
+export type SweepResponse = Schemas['SweepResponse']
 export type FieldErrors = Schemas['FieldErrors']
 export type Comparable = Schemas['Comparable']
 export type Driver = Schemas['Driver']
@@ -105,6 +110,10 @@ export const api = {
   },
   predict: (form: PredictForm, signal?: AbortSignal) =>
     request<Prediction>('/predict', { method: 'POST', body: form, signal }),
+  compare: (body: CompareRequest, signal?: AbortSignal) =>
+    request<CompareResponse>('/predict/compare', { method: 'POST', body, signal }),
+  sweep: (body: SweepRequest, signal?: AbortSignal) =>
+    request<SweepResponse>('/predict/sweep', { method: 'POST', body, signal }),
   getModelCard: (signal?: AbortSignal) => request<ModelCard>('/model-card', { signal }),
   listMovies: (query: MovieQuery, signal?: AbortSignal) => request<MovieList>('/movies', { query, signal }),
   getMovie: (id: number, signal?: AbortSignal) => request<MovieDetail>(`/movies/${id}`, { signal }),

@@ -8,12 +8,14 @@
 //                                             answer is also cached under predictionKey(form)
 //   usePrediction(form)                    -> the same answer as a query (the results page): from that cache when
 //                                             the form page just asked, else one request; errors are the page's
+//   useCompare(body)                       -> POST /predict/compare as a query (the compare page), kept for the session
+//   useSweep(body)                         -> POST /predict/sweep (the release-month sweep), kept for the session
 //   useModelCard()                         -> GET /model-card, cached an hour
 //   useMovies(query) / useMovie(id)        -> browse and one film, cached an hour like the API says; a new page or
 //                                             filter keeps the last results on screen until the new ones arrive
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { ApiError, api, type MovieQuery, type NameKind, type PredictForm } from '@/api/client'
+import { ApiError, api, type CompareRequest, type MovieQuery, type NameKind, type PredictForm, type SweepRequest } from '@/api/client'
 import { notifyError } from '@/api/errors'
 import { useDebounced } from '@/lib/useDebounced'
 
@@ -68,14 +70,37 @@ export function usePrediction(form: PredictForm | null) {
   })
 }
 
+export function useCompare(body: CompareRequest | null) {
+  return useQuery({
+    queryKey: ['compare', body],
+    queryFn: ({ signal }) => api.compare(body!, signal),
+    enabled: body !== null,
+    staleTime: Infinity,
+    gcTime: HOUR,
+    retry: false,
+  })
+}
+
+export function useSweep(body: SweepRequest | null) {
+  return useQuery({
+    queryKey: ['sweep', body],
+    queryFn: ({ signal }) => api.sweep(body!, signal),
+    enabled: body !== null,
+    staleTime: Infinity,
+    gcTime: HOUR,
+    retry: false,
+  })
+}
+
 export function useModelCard() {
   return useQuery({ queryKey: ['model-card'], queryFn: ({ signal }) => api.getModelCard(signal), staleTime: HOUR })
 }
 
-export function useMovies(query: MovieQuery) {
+export function useMovies(query: MovieQuery, enabled = true) {
   return useQuery({
     queryKey: ['movies', query],
     queryFn: ({ signal }) => api.listMovies(query, signal),
+    enabled,
     staleTime: HOUR,
     placeholderData: keepPreviousData,
   })

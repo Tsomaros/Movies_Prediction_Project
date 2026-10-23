@@ -3,8 +3,7 @@
 //
 // The form starts from the URL (?f=, a shared link), else this browser's draft, else fresh. While the creator
 // types, the URL and the draft follow it (SAVE_MS after the last change), so a refresh or a copied link keeps it.
-// "Try a variation" on the results page adds ?base= (the version to compare with), which is kept until the next
-// result shows the difference.
+// A link that lost fields (cut or edited by hand) still opens: the readable fields load, and a notice names the rest.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
@@ -12,10 +11,12 @@ import { toast } from 'sonner'
 import type { PredictForm } from '@/api/client'
 
 import { useMetaOptions, usePredict } from '@/api/hooks'
+import { SlowNotice } from '@/app/SlowNotice'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { CreatorForm } from '@/form/CreatorForm'
-import type { FormValues } from '@/form/model'
-import { BASE_PARAM, clearDraft, LIKE_PARAM, encodeForm, resultPath, saveDraft, startingForm, URL_PARAM } from '@/form/persist'
+import { FIELD_LABELS, type FormValues } from '@/form/model'
+import { clearDraft, LIKE_PARAM, encodeForm, resultPath, saveDraft, startingForm, URL_PARAM } from '@/form/persist'
 import PageHeading from '@/pages/PageHeading'
 
 export const SAVE_MS = 400
@@ -28,7 +29,6 @@ export default function Predict() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [start] = useState(() => startingForm(`?${searchParams}`))
-  const [base] = useState(() => searchParams.get(BASE_PARAM))
   const [like] = useState(() => (start.source === 'link' ? searchParams.get(LIKE_PARAM) : null))
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
@@ -38,17 +38,16 @@ export default function Predict() {
     clearTimeout(timer.current)
     timer.current = setTimeout(() => {
       saveDraft(values)
-      setSearchParams({ [URL_PARAM]: encodeForm(values), ...(base ? { [BASE_PARAM]: base } : {}) },
-        { replace: true, preventScrollReset: true })
+      setSearchParams({ [URL_PARAM]: encodeForm(values) }, { replace: true, preventScrollReset: true })
     }, SAVE_MS)
-  }, [setSearchParams, base])
+  }, [setSearchParams])
 
   const submit = useCallback(async (body: PredictForm, values: FormValues) => {
     await predict.mutateAsync(body) // a 422 throws back into the form; the answer is cached for the results page
     clearTimeout(timer.current)
     saveDraft(values)
-    navigate(resultPath(values, base))
-  }, [predict, navigate, base])
+    navigate(resultPath(values))
+  }, [predict, navigate])
 
   const clear = useCallback(() => {
     clearTimeout(timer.current)
@@ -72,16 +71,24 @@ export default function Predict() {
       <PageHeading title="Plan a film">
         Describe the film you have in mind. Everything is about the plan: nothing about how it did after release.
       </PageHeading>
-      {base ? (
-        <p className="text-muted-foreground -mt-4 text-sm" data-testid="variation-hint">
-          Trying a variation: change one thing and predict again to see what it does.
-        </p>
-      ) : like ? (
+      {like ? (
         <p className="text-muted-foreground -mt-4 text-sm" data-testid="like-hint">
           Started from {like}: change what makes your film different, then predict.
         </p>
       ) : STARTED_FROM[start.source] && <p className="text-muted-foreground -mt-4 text-sm">{STARTED_FROM[start.source]}</p>}
-      {options.isPending && <p className="text-muted-foreground" aria-live="polite">Loading the form…</p>}
+      {start.dropped.length > 0 && (
+        <p role="status" className="-mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm dark:bg-amber-950/30" data-testid="link-notice">
+          Part of this link couldn't be read: {start.dropped.map(k => FIELD_LABELS[k]).join(', ')}{' '}
+          {start.dropped.length === 1 ? 'starts' : 'start'} from the usual value. The rest is filled in.
+        </p>
+      )}
+      <SlowNotice pending={options.isPending || predict.isPending} />
+      {options.isPending && (
+        <div className="grid min-h-svh content-start gap-4" aria-busy="true">
+          <p className="text-muted-foreground" aria-live="polite">Loading the form…</p>
+          <Skeleton className="h-40 rounded-lg" /><Skeleton className="h-64 rounded-lg" />
+        </div>
+      )}
       {options.isError && (
         <div role="alert" className="grid justify-items-start gap-3">
           <p>The form couldn't load: {options.error.message}</p>

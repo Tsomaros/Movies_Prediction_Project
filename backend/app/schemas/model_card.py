@@ -1,6 +1,7 @@
 """Response model for GET /model-card: the app's accuracy numbers, as ml.eval.model_card writes them.
 
-    ModelCard  -> the models' version and training data, the database, the 2019+ test and the 2026 holdout
+    ModelCard  -> the models' version and training data, the database, the 2019+ test, the 2026 holdout and
+                  the thresholds below which a change between two versions is "within the uncertainty"
 
 Money metrics are on the log scale (mae_log; typical_factor = exp(mae_log)), within_2x and coverage are
 shares (0-1), a money range's width is high / low; score metrics and widths are in points.
@@ -60,6 +61,25 @@ class Data(BaseModel):
     built_at: Optional[str]
 
 
+class MoneyThreshold(BaseModel):
+    width: float = Field(description="Median validation range width, high / low")
+    ratio: float = Field(description="A middle that moves by less than this factor (either way) is within the uncertainty")
+
+
+class ScoreThreshold(BaseModel):
+    width: float = Field(description="Median validation range width, in points")
+    points: float = Field(description="A middle that moves by less than this many points is within the uncertainty")
+
+
+class Uncertainty(BaseModel):
+    fraction: float = Field(description="The share of the median validation range a change must exceed")
+    years: str = Field(description="The validation years the ranges come from")
+    revenue: MoneyThreshold
+    revenue_estimated: MoneyThreshold
+    budget: MoneyThreshold
+    score: ScoreThreshold
+
+
 class ModelCard(BaseModel):
     model_version: str = Field(description="The version of the models this API serves")
     coverage_target: float = Field(description="What share of real figures the ranges are calibrated to cover")
@@ -67,4 +87,5 @@ class ModelCard(BaseModel):
     data: Data
     test: Evaluation = Field(description="The one-time test on 2019+ films (Day 6)")
     holdout: Evaluation = Field(description="The app's own models on films released in 2026")
+    uncertainty: Uncertainty = Field(description="When a difference between two versions of a film is too small to mean much")
     sources: dict[str, str] = Field(description="The reports in the repository the numbers come from")

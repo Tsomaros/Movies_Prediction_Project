@@ -1,0 +1,1359 @@
+{
+ "request": {
+  "base": {
+   "genres": [
+    "Drama"
+   ],
+   "release_year": 2026,
+   "release_month": 10,
+   "runtime": 105,
+   "language": "en",
+   "certification": "R",
+   "director": {
+    "id": 45400,
+    "name": "Greta Gerwig"
+   },
+   "actors": [
+    {
+     "id": 36592,
+     "name": "Saoirse Ronan"
+    },
+    {
+     "id": 1373737,
+     "name": "Florence Pugh"
+    },
+    {
+     "id": 1190668,
+     "name": "Timothée Chalamet"
+    },
+    {
+     "name": "Ann Newcomer"
+    },
+    {
+     "name": "Bo Unknown"
+    }
+   ],
+   "themes": [
+    "family",
+    "coming of age and school"
+   ],
+   "companies": [
+    {
+     "id": 41077,
+     "name": "A24"
+    }
+   ],
+   "countries": [
+    "US"
+   ],
+   "synopsis": "Two sisters return to their small hometown to care for their ailing mother."
+  },
+  "variants": [
+   {
+    "release_month": 12
+   },
+   {
+    "actors": [
+     {
+      "name": "New actor 1"
+     },
+     {
+      "name": "New actor 2"
+     },
+     {
+      "name": "New actor 3"
+     },
+     {
+      "name": "New actor 4"
+     },
+     {
+      "name": "New actor 5"
+     }
+    ]
+   },
+   {
+    "certification": "PG-13"
+   }
+  ]
+ },
+ "response": {
+  "base": {
+   "model_version": "2026-10-21.849304a7",
+   "as_of": "2026-10-01",
+   "budget": {
+    "low": 5172264.749813915,
+    "middle": 26527963.016482998,
+    "high": 62452829.07958469,
+    "text": "$5.2M–$62M",
+    "middle_text": "$27M",
+    "rough": true,
+    "given": null,
+    "comparison": {
+     "low": 5172264.749813915,
+     "middle": 26527963.016482998,
+     "high": 62452829.07958469,
+     "text": "Similar films usually cost $5.2M–$62M",
+     "budget": null,
+     "position": null,
+     "ratio": null,
+     "sentence": null
+    }
+   },
+   "revenue": {
+    "low": 1994804.2183665691,
+    "middle": 25719395.830170307,
+    "high": 168243077.04653618,
+    "text": "$2M–$170M",
+    "middle_text": "$26M",
+    "rough": true,
+    "mode": "estimated",
+    "budget_used": 26527963.016482998
+   },
+   "score": {
+    "low": 6.198506181159051,
+    "middle": 6.83034138676654,
+    "high": 7.570341072760245,
+    "text": "6.2–7.6",
+    "middle_text": "6.8",
+    "rough": false,
+    "note": "TMDB scores of new films usually start higher and settle during their first year; this range is for the settled score."
+   },
+   "drivers": {
+    "budget": {
+     "up": [
+      {
+       "group": "cast",
+       "label": "Cast's track record",
+       "direction": "up",
+       "strength": "strong",
+       "estimated": false,
+       "value": "Saoirse Ronan",
+       "text": "The cast's earlier films (led by Saoirse Ronan) strongly raise the expected budget."
+      },
+      {
+       "group": "director",
+       "label": "Director's track record",
+       "direction": "up",
+       "strength": "strong",
+       "estimated": false,
+       "value": "Greta Gerwig",
+       "text": "Greta Gerwig's 4 earlier films strongly raise the expected budget."
+      },
+      {
+       "group": "runtime",
+       "label": "Runtime",
+       "direction": "up",
+       "strength": "slight",
+       "estimated": false,
+       "value": "105 minutes",
+       "text": "A runtime of 105 minutes slightly raises the expected budget."
+      }
+     ],
+     "down": [
+      {
+       "group": "studio",
+       "label": "Studio",
+       "direction": "down",
+       "strength": "strong",
+       "estimated": false,
+       "value": "A24",
+       "text": "A24 as the studio strongly lowers the expected budget."
+      },
+      {
+       "group": "genre",
+       "label": "Genre",
+       "direction": "down",
+       "strength": "slight",
+       "estimated": false,
+       "value": "Drama",
+       "text": "The genre Drama slightly lowers the expected budget."
+      }
+     ]
+    },
+    "revenue": {
+     "up": [
+      {
+       "group": "director",
+       "label": "Director's track record",
+       "direction": "up",
+       "strength": "moderate",
+       "estimated": false,
+       "value": "Greta Gerwig",
+       "text": "Greta Gerwig's 4 earlier films raise the expected revenue."
+      },
+      {
+       "group": "cast",
+       "label": "Cast's track record",
+       "direction": "up",
+       "strength": "moderate",
+       "estimated": false,
+       "value": "Saoirse Ronan",
+       "text": "The cast's earlier films (led by Saoirse Ronan) raise the expected revenue."
+      }
+     ],
+     "down": [
+      {
+       "group": "studio",
+       "label": "Studio",
+       "direction": "down",
+       "strength": "moderate",
+       "estimated": false,
+       "value": "A24",
+       "text": "A24 as the studio lowers the expected revenue."
+      },
+      {
+       "group": "timing",
+       "label": "Release timing",
+       "direction": "down",
+       "strength": "moderate",
+       "estimated": false,
+       "value": "2026",
+       "text": "Releasing in 2026 (recent films earn less in our data) lowers the expected revenue."
+      },
+      {
+       "group": "genre",
+       "label": "Genre",
+       "direction": "down",
+       "strength": "slight",
+       "estimated": false,
+       "value": "Drama",
+       "text": "The genre Drama slightly lowers the expected revenue."
+      }
+     ]
+    },
+    "score": {
+     "up": [
+      {
+       "group": "timing",
+       "label": "Release timing",
+       "direction": "up",
+       "strength": "moderate",
+       "estimated": false,
+       "value": "2026",
+       "text": "Releasing in 2026 raises the expected audience score."
+      },
+      {
+       "group": "cast",
+       "label": "Cast's track record",
+       "direction": "up",
+       "strength": "moderate",
+       "estimated": false,
+       "value": "Saoirse Ronan",
+       "text": "The cast's earlier films (led by Saoirse Ronan) raise the expected audience score."
+      },
+      {
+       "group": "director",
+       "label": "Director's track record",
+       "direction": "up",
+       "strength": "moderate",
+       "estimated": false,
+       "value": "Greta Gerwig",
+       "text": "Greta Gerwig's 4 earlier films raise the expected audience score."
+      },
+      {
+       "group": "genre",
+       "label": "Genre",
+       "direction": "up",
+       "strength": "slight",
+       "estimated": false,
+       "value": "Drama",
+       "text": "The genre Drama slightly raises the expected audience score."
+      }
+     ],
+     "down": [
+      {
+       "group": "language",
+       "label": "Language",
+       "direction": "down",
+       "strength": "slight",
+       "estimated": false,
+       "value": "English",
+       "text": "English as the original language slightly lowers the expected audience score."
+      }
+     ]
+    }
+   },
+   "comparables": [
+    {
+     "id": 1037035,
+     "title": "Janet Planet",
+     "year": 2024,
+     "poster_path": "/i4qK3vQS4MD8OKhIkqSe3UK6OuH.jpg",
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/i4qK3vQS4MD8OKhIkqSe3UK6OuH.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/i4qK3vQS4MD8OKhIkqSe3UK6OuH.jpg"
+     },
+     "budget": null,
+     "revenue": 747254.0,
+     "score": 6.164,
+     "similarity": 0.714,
+     "why": [
+      "Same genres",
+      "Same themes",
+      "Same era"
+     ]
+    },
+    {
+     "id": 160588,
+     "title": "Blue Jasmine",
+     "year": 2013,
+     "poster_path": "/nsj0RLRI10351uYMoAKPur6Derd.jpg",
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/nsj0RLRI10351uYMoAKPur6Derd.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/nsj0RLRI10351uYMoAKPur6Derd.jpg"
+     },
+     "budget": 24891950.0,
+     "revenue": 137050657.0,
+     "score": 6.981,
+     "similarity": 0.67,
+     "why": [
+      "Same genres",
+      "Similar budget",
+      "Also family"
+     ]
+    },
+    {
+     "id": 1128752,
+     "title": "Bird",
+     "year": 2024,
+     "poster_path": "/wKshd6n8EKrwbE2fLOUqC4TSG6O.jpg",
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/wKshd6n8EKrwbE2fLOUqC4TSG6O.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/wKshd6n8EKrwbE2fLOUqC4TSG6O.jpg"
+     },
+     "budget": null,
+     "revenue": 1997686.0,
+     "score": 7.2,
+     "similarity": 0.658,
+     "why": [
+      "Same genres",
+      "Also family, coming of age and school",
+      "Same era"
+     ]
+    },
+    {
+     "id": 728142,
+     "title": "Nowhere Special",
+     "year": 2020,
+     "poster_path": "/tqLI37bbDZP9um0Xu9AFWWYvXzB.jpg",
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/tqLI37bbDZP9um0Xu9AFWWYvXzB.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/tqLI37bbDZP9um0Xu9AFWWYvXzB.jpg"
+     },
+     "budget": null,
+     "revenue": 951742.0,
+     "score": 7.28,
+     "similarity": 0.65,
+     "why": [
+      "Same genres",
+      "Also family, coming of age and school"
+     ]
+    },
+    {
+     "id": 14295,
+     "title": "You Can Count on Me",
+     "year": 2000,
+     "poster_path": "/7mGFmij1FZD5eUnNwvUjmpqrDl6.jpg",
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/7mGFmij1FZD5eUnNwvUjmpqrDl6.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/7mGFmij1FZD5eUnNwvUjmpqrDl6.jpg"
+     },
+     "budget": null,
+     "revenue": 20953041.0,
+     "score": 6.874,
+     "similarity": 0.648,
+     "why": [
+      "Same genres",
+      "Similar story",
+      "Also family"
+     ]
+    }
+   ],
+   "warnings": [
+    {
+     "code": "new_actors",
+     "text": "We don't know 2 of the 5 actors, so they count as having no earlier films."
+    },
+    {
+     "code": "future_release",
+     "text": "Our data ends in 2025. A release in 2026 is judged on films up to 2025, so later trends are not included."
+    }
+   ],
+   "cached": false
+  },
+  "variants": [
+   {
+    "prediction": {
+     "model_version": "2026-10-21.849304a7",
+     "as_of": "2026-12-01",
+     "budget": {
+      "low": 5461117.613163016,
+      "middle": 29835560.834252417,
+      "high": 66404522.85699951,
+      "text": "$5.5M–$66M",
+      "middle_text": "$30M",
+      "rough": true,
+      "given": null,
+      "comparison": {
+       "low": 5461117.613163016,
+       "middle": 29835560.834252417,
+       "high": 66404522.85699951,
+       "text": "Similar films usually cost $5.5M–$66M",
+       "budget": null,
+       "position": null,
+       "ratio": null,
+       "sentence": null
+      }
+     },
+     "revenue": {
+      "low": 2606244.290784704,
+      "middle": 33605358.24692931,
+      "high": 221980727.1258969,
+      "text": "$2.6M–$220M",
+      "middle_text": "$34M",
+      "rough": true,
+      "mode": "estimated",
+      "budget_used": 29835560.834252417
+     },
+     "score": {
+      "low": 6.190062637815567,
+      "middle": 6.817543155220338,
+      "high": 7.573249419402788,
+      "text": "6.2–7.6",
+      "middle_text": "6.8",
+      "rough": false,
+      "note": "TMDB scores of new films usually start higher and settle during their first year; this range is for the settled score."
+     },
+     "drivers": {
+      "budget": {
+       "up": [
+        {
+         "group": "cast",
+         "label": "Cast's track record",
+         "direction": "up",
+         "strength": "strong",
+         "estimated": false,
+         "value": "Saoirse Ronan",
+         "text": "The cast's earlier films (led by Saoirse Ronan) strongly raise the expected budget."
+        },
+        {
+         "group": "director",
+         "label": "Director's track record",
+         "direction": "up",
+         "strength": "strong",
+         "estimated": false,
+         "value": "Greta Gerwig",
+         "text": "Greta Gerwig's 4 earlier films strongly raise the expected budget."
+        },
+        {
+         "group": "runtime",
+         "label": "Runtime",
+         "direction": "up",
+         "strength": "slight",
+         "estimated": false,
+         "value": "105 minutes",
+         "text": "A runtime of 105 minutes slightly raises the expected budget."
+        }
+       ],
+       "down": [
+        {
+         "group": "studio",
+         "label": "Studio",
+         "direction": "down",
+         "strength": "strong",
+         "estimated": false,
+         "value": "A24",
+         "text": "A24 as the studio strongly lowers the expected budget."
+        },
+        {
+         "group": "genre",
+         "label": "Genre",
+         "direction": "down",
+         "strength": "slight",
+         "estimated": false,
+         "value": "Drama",
+         "text": "The genre Drama slightly lowers the expected budget."
+        }
+       ]
+      },
+      "revenue": {
+       "up": [
+        {
+         "group": "director",
+         "label": "Director's track record",
+         "direction": "up",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "Greta Gerwig",
+         "text": "Greta Gerwig's 4 earlier films raise the expected revenue."
+        },
+        {
+         "group": "cast",
+         "label": "Cast's track record",
+         "direction": "up",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "Saoirse Ronan",
+         "text": "The cast's earlier films (led by Saoirse Ronan) raise the expected revenue."
+        },
+        {
+         "group": "budget",
+         "label": "Budget",
+         "direction": "up",
+         "strength": "moderate",
+         "estimated": true,
+         "value": "about $30M",
+         "text": "The estimated budget of about $30M raises the expected revenue."
+        }
+       ],
+       "down": [
+        {
+         "group": "studio",
+         "label": "Studio",
+         "direction": "down",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "A24",
+         "text": "A24 as the studio lowers the expected revenue."
+        },
+        {
+         "group": "genre",
+         "label": "Genre",
+         "direction": "down",
+         "strength": "slight",
+         "estimated": false,
+         "value": "Drama",
+         "text": "The genre Drama slightly lowers the expected revenue."
+        }
+       ]
+      },
+      "score": {
+       "up": [
+        {
+         "group": "timing",
+         "label": "Release timing",
+         "direction": "up",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "2026",
+         "text": "Releasing in 2026 raises the expected audience score."
+        },
+        {
+         "group": "cast",
+         "label": "Cast's track record",
+         "direction": "up",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "Saoirse Ronan",
+         "text": "The cast's earlier films (led by Saoirse Ronan) raise the expected audience score."
+        },
+        {
+         "group": "director",
+         "label": "Director's track record",
+         "direction": "up",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "Greta Gerwig",
+         "text": "Greta Gerwig's 4 earlier films raise the expected audience score."
+        },
+        {
+         "group": "genre",
+         "label": "Genre",
+         "direction": "up",
+         "strength": "slight",
+         "estimated": false,
+         "value": "Drama",
+         "text": "The genre Drama slightly raises the expected audience score."
+        }
+       ],
+       "down": [
+        {
+         "group": "language",
+         "label": "Language",
+         "direction": "down",
+         "strength": "slight",
+         "estimated": false,
+         "value": "English",
+         "text": "English as the original language slightly lowers the expected audience score."
+        }
+       ]
+      }
+     },
+     "comparables": [
+      {
+       "id": 1037035,
+       "title": "Janet Planet",
+       "year": 2024,
+       "poster_path": "/i4qK3vQS4MD8OKhIkqSe3UK6OuH.jpg",
+       "poster": {
+        "small": "https://image.tmdb.org/t/p/w342/i4qK3vQS4MD8OKhIkqSe3UK6OuH.jpg",
+        "large": "https://image.tmdb.org/t/p/w780/i4qK3vQS4MD8OKhIkqSe3UK6OuH.jpg"
+       },
+       "budget": null,
+       "revenue": 747254.0,
+       "score": 6.164,
+       "similarity": 0.714,
+       "why": [
+        "Same genres",
+        "Same themes",
+        "Same era"
+       ]
+      },
+      {
+       "id": 1128752,
+       "title": "Bird",
+       "year": 2024,
+       "poster_path": "/wKshd6n8EKrwbE2fLOUqC4TSG6O.jpg",
+       "poster": {
+        "small": "https://image.tmdb.org/t/p/w342/wKshd6n8EKrwbE2fLOUqC4TSG6O.jpg",
+        "large": "https://image.tmdb.org/t/p/w780/wKshd6n8EKrwbE2fLOUqC4TSG6O.jpg"
+       },
+       "budget": null,
+       "revenue": 1997686.0,
+       "score": 7.2,
+       "similarity": 0.658,
+       "why": [
+        "Same genres",
+        "Also family, coming of age and school",
+        "Same era"
+       ]
+      },
+      {
+       "id": 160588,
+       "title": "Blue Jasmine",
+       "year": 2013,
+       "poster_path": "/nsj0RLRI10351uYMoAKPur6Derd.jpg",
+       "poster": {
+        "small": "https://image.tmdb.org/t/p/w342/nsj0RLRI10351uYMoAKPur6Derd.jpg",
+        "large": "https://image.tmdb.org/t/p/w780/nsj0RLRI10351uYMoAKPur6Derd.jpg"
+       },
+       "budget": 24891950.0,
+       "revenue": 137050657.0,
+       "score": 6.981,
+       "similarity": 0.652,
+       "why": [
+        "Same genres",
+        "Similar budget",
+        "Also family"
+       ]
+      },
+      {
+       "id": 728142,
+       "title": "Nowhere Special",
+       "year": 2020,
+       "poster_path": "/tqLI37bbDZP9um0Xu9AFWWYvXzB.jpg",
+       "poster": {
+        "small": "https://image.tmdb.org/t/p/w342/tqLI37bbDZP9um0Xu9AFWWYvXzB.jpg",
+        "large": "https://image.tmdb.org/t/p/w780/tqLI37bbDZP9um0Xu9AFWWYvXzB.jpg"
+       },
+       "budget": null,
+       "revenue": 951742.0,
+       "score": 7.28,
+       "similarity": 0.65,
+       "why": [
+        "Same genres",
+        "Also family, coming of age and school"
+       ]
+      },
+      {
+       "id": 14295,
+       "title": "You Can Count on Me",
+       "year": 2000,
+       "poster_path": "/7mGFmij1FZD5eUnNwvUjmpqrDl6.jpg",
+       "poster": {
+        "small": "https://image.tmdb.org/t/p/w342/7mGFmij1FZD5eUnNwvUjmpqrDl6.jpg",
+        "large": "https://image.tmdb.org/t/p/w780/7mGFmij1FZD5eUnNwvUjmpqrDl6.jpg"
+       },
+       "budget": null,
+       "revenue": 20953041.0,
+       "score": 6.874,
+       "similarity": 0.648,
+       "why": [
+        "Same genres",
+        "Similar story",
+        "Also family"
+       ]
+      }
+     ],
+     "warnings": [
+      {
+       "code": "new_actors",
+       "text": "We don't know 2 of the 5 actors, so they count as having no earlier films."
+      },
+      {
+       "code": "future_release",
+       "text": "Our data ends in 2025. A release in 2026 is judged on films up to 2025, so later trends are not included."
+      }
+     ],
+     "cached": false
+    },
+    "differences": {
+     "changed_fields": [
+      "release_month"
+     ],
+     "budget": {
+      "ratio": 1.1247,
+      "points": null
+     },
+     "revenue": {
+      "ratio": 1.3066,
+      "points": null
+     },
+     "score": {
+      "ratio": null,
+      "points": -0.0128
+     },
+     "mode_changed": false
+    }
+   },
+   {
+    "prediction": {
+     "model_version": "2026-10-21.849304a7",
+     "as_of": "2026-10-01",
+     "budget": {
+      "low": 1744254.2038375486,
+      "middle": 5195197.169578075,
+      "high": 46666896.18533806,
+      "text": "$1.7M–$47M",
+      "middle_text": "$5.2M",
+      "rough": true,
+      "given": null,
+      "comparison": {
+       "low": 1744254.2038375486,
+       "middle": 5195197.169578075,
+       "high": 46666896.18533806,
+       "text": "Similar films usually cost $1.7M–$47M",
+       "budget": null,
+       "position": null,
+       "ratio": null,
+       "sentence": null
+      }
+     },
+     "revenue": {
+      "low": 406033.94750099257,
+      "middle": 7802800.167562372,
+      "high": 54883666.6752732,
+      "text": "$410K–$55M",
+      "middle_text": "$7.8M",
+      "rough": true,
+      "mode": "estimated",
+      "budget_used": 5195197.169578075
+     },
+     "score": {
+      "low": 6.0212034614714565,
+      "middle": 6.806206974760661,
+      "high": 7.808241271043784,
+      "text": "6.0–7.8",
+      "middle_text": "6.8",
+      "rough": false,
+      "note": "TMDB scores of new films usually start higher and settle during their first year; this range is for the settled score."
+     },
+     "drivers": {
+      "budget": {
+       "up": [
+        {
+         "group": "director",
+         "label": "Director's track record",
+         "direction": "up",
+         "strength": "strong",
+         "estimated": false,
+         "value": "Greta Gerwig",
+         "text": "Greta Gerwig's 4 earlier films strongly raise the expected budget."
+        },
+        {
+         "group": "runtime",
+         "label": "Runtime",
+         "direction": "up",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "105 minutes",
+         "text": "A runtime of 105 minutes raises the expected budget."
+        }
+       ],
+       "down": [
+        {
+         "group": "cast",
+         "label": "Cast's track record",
+         "direction": "down",
+         "strength": "strong",
+         "estimated": false,
+         "value": "New actor 1",
+         "text": "A cast with no earlier films in our data strongly lowers the expected budget."
+        },
+        {
+         "group": "studio",
+         "label": "Studio",
+         "direction": "down",
+         "strength": "strong",
+         "estimated": false,
+         "value": "A24",
+         "text": "A24 as the studio strongly lowers the expected budget."
+        },
+        {
+         "group": "timing",
+         "label": "Release timing",
+         "direction": "down",
+         "strength": "slight",
+         "estimated": false,
+         "value": "2026",
+         "text": "Releasing in 2026 slightly lowers the expected budget."
+        }
+       ]
+      },
+      "revenue": {
+       "up": [
+        {
+         "group": "director",
+         "label": "Director's track record",
+         "direction": "up",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "Greta Gerwig",
+         "text": "Greta Gerwig's 4 earlier films raise the expected revenue."
+        },
+        {
+         "group": "themes",
+         "label": "Themes",
+         "direction": "up",
+         "strength": "slight",
+         "estimated": false,
+         "value": "\"family\" and \"coming of age and school\"",
+         "text": "The themes \"family\" and \"coming of age and school\" slightly raise the expected revenue."
+        }
+       ],
+       "down": [
+        {
+         "group": "budget",
+         "label": "Budget",
+         "direction": "down",
+         "strength": "strong",
+         "estimated": true,
+         "value": "about $5.2M",
+         "text": "The estimated budget of about $5.2M strongly lowers the expected revenue."
+        },
+        {
+         "group": "studio",
+         "label": "Studio",
+         "direction": "down",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "A24",
+         "text": "A24 as the studio lowers the expected revenue."
+        },
+        {
+         "group": "timing",
+         "label": "Release timing",
+         "direction": "down",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "2026",
+         "text": "Releasing in 2026 (recent films earn less in our data) lowers the expected revenue."
+        }
+       ]
+      },
+      "score": {
+       "up": [
+        {
+         "group": "timing",
+         "label": "Release timing",
+         "direction": "up",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "2026",
+         "text": "Releasing in 2026 raises the expected audience score."
+        },
+        {
+         "group": "cast",
+         "label": "Cast's track record",
+         "direction": "up",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "New actor 1",
+         "text": "A cast with no earlier films in our data raises the expected audience score."
+        },
+        {
+         "group": "genre",
+         "label": "Genre",
+         "direction": "up",
+         "strength": "slight",
+         "estimated": false,
+         "value": "Drama",
+         "text": "The genre Drama slightly raises the expected audience score."
+        },
+        {
+         "group": "director",
+         "label": "Director's track record",
+         "direction": "up",
+         "strength": "slight",
+         "estimated": false,
+         "value": "Greta Gerwig",
+         "text": "Greta Gerwig's 4 earlier films slightly raise the expected audience score."
+        },
+        {
+         "group": "themes",
+         "label": "Themes",
+         "direction": "up",
+         "strength": "slight",
+         "estimated": false,
+         "value": "\"family\" and \"coming of age and school\"",
+         "text": "The themes \"family\" and \"coming of age and school\" slightly raise the expected audience score."
+        }
+       ],
+       "down": []
+      }
+     },
+     "comparables": [
+      {
+       "id": 1037035,
+       "title": "Janet Planet",
+       "year": 2024,
+       "poster_path": "/i4qK3vQS4MD8OKhIkqSe3UK6OuH.jpg",
+       "poster": {
+        "small": "https://image.tmdb.org/t/p/w342/i4qK3vQS4MD8OKhIkqSe3UK6OuH.jpg",
+        "large": "https://image.tmdb.org/t/p/w780/i4qK3vQS4MD8OKhIkqSe3UK6OuH.jpg"
+       },
+       "budget": null,
+       "revenue": 747254.0,
+       "score": 6.164,
+       "similarity": 0.714,
+       "why": [
+        "Same genres",
+        "Same themes",
+        "Same era"
+       ]
+      },
+      {
+       "id": 554230,
+       "title": "The Lost Daughter",
+       "year": 2021,
+       "poster_path": "/t1oLNRFixpFOVsyz1HCqCUW3wiW.jpg",
+       "poster": {
+        "small": "https://image.tmdb.org/t/p/w342/t1oLNRFixpFOVsyz1HCqCUW3wiW.jpg",
+        "large": "https://image.tmdb.org/t/p/w780/t1oLNRFixpFOVsyz1HCqCUW3wiW.jpg"
+       },
+       "budget": 5944440.0,
+       "revenue": 836122.0,
+       "score": 6.443,
+       "similarity": 0.713,
+       "why": [
+        "Same genres",
+        "Similar budget",
+        "Also family, coming of age and school"
+       ]
+      },
+      {
+       "id": 11023,
+       "title": "Thirteen",
+       "year": 2003,
+       "poster_path": "/uzTLlZrNF6rMPBh5mUQu6vLnTtX.jpg",
+       "poster": {
+        "small": "https://image.tmdb.org/t/p/w342/uzTLlZrNF6rMPBh5mUQu6vLnTtX.jpg",
+        "large": "https://image.tmdb.org/t/p/w780/uzTLlZrNF6rMPBh5mUQu6vLnTtX.jpg"
+       },
+       "budget": 3502463.0,
+       "revenue": 17738151.0,
+       "score": 6.693,
+       "similarity": 0.682,
+       "why": [
+        "Same genres",
+        "Same themes",
+        "Similar budget"
+       ]
+      },
+      {
+       "id": 85350,
+       "title": "Boyhood",
+       "year": 2014,
+       "poster_path": "/2BvtvDUyxiMJ4dmKfiQf4qdOHQN.jpg",
+       "poster": {
+        "small": "https://image.tmdb.org/t/p/w342/2BvtvDUyxiMJ4dmKfiQf4qdOHQN.jpg",
+        "large": "https://image.tmdb.org/t/p/w780/2BvtvDUyxiMJ4dmKfiQf4qdOHQN.jpg"
+       },
+       "budget": 5443245.0,
+       "revenue": 65506275.0,
+       "score": 7.492,
+       "similarity": 0.669,
+       "why": [
+        "Same genres",
+        "Similar budget",
+        "Also family, coming of age and school"
+       ]
+      },
+      {
+       "id": 1128752,
+       "title": "Bird",
+       "year": 2024,
+       "poster_path": "/wKshd6n8EKrwbE2fLOUqC4TSG6O.jpg",
+       "poster": {
+        "small": "https://image.tmdb.org/t/p/w342/wKshd6n8EKrwbE2fLOUqC4TSG6O.jpg",
+        "large": "https://image.tmdb.org/t/p/w780/wKshd6n8EKrwbE2fLOUqC4TSG6O.jpg"
+       },
+       "budget": null,
+       "revenue": 1997686.0,
+       "score": 7.2,
+       "similarity": 0.658,
+       "why": [
+        "Same genres",
+        "Also family, coming of age and school",
+        "Same era"
+       ]
+      }
+     ],
+     "warnings": [
+      {
+       "code": "new_actors",
+       "text": "We don't know 5 of the 5 actors, so they count as having no earlier films."
+      },
+      {
+       "code": "future_release",
+       "text": "Our data ends in 2025. A release in 2026 is judged on films up to 2025, so later trends are not included."
+      }
+     ],
+     "cached": false
+    },
+    "differences": {
+     "changed_fields": [
+      "actors"
+     ],
+     "budget": {
+      "ratio": 0.1958,
+      "points": null
+     },
+     "revenue": {
+      "ratio": 0.3034,
+      "points": null
+     },
+     "score": {
+      "ratio": null,
+      "points": -0.0241
+     },
+     "mode_changed": false
+    }
+   },
+   {
+    "prediction": {
+     "model_version": "2026-10-21.849304a7",
+     "as_of": "2026-10-01",
+     "budget": {
+      "low": 5393975.021311233,
+      "middle": 28416900.270881485,
+      "high": 68390161.03505188,
+      "text": "$5.4M–$68M",
+      "middle_text": "$28M",
+      "rough": true,
+      "given": null,
+      "comparison": {
+       "low": 5393975.021311233,
+       "middle": 28416900.270881485,
+       "high": 68390161.03505188,
+       "text": "Similar films usually cost $5.4M–$68M",
+       "budget": null,
+       "position": null,
+       "ratio": null,
+       "sentence": null
+      }
+     },
+     "revenue": {
+      "low": 3337909.9834603006,
+      "middle": 30007116.81582225,
+      "high": 188618086.7390652,
+      "text": "$3.3M–$190M",
+      "middle_text": "$30M",
+      "rough": false,
+      "mode": "estimated",
+      "budget_used": 28416900.270881485
+     },
+     "score": {
+      "low": 6.232711002962836,
+      "middle": 6.902503024649731,
+      "high": 7.6583353813091914,
+      "text": "6.2–7.7",
+      "middle_text": "6.9",
+      "rough": false,
+      "note": "TMDB scores of new films usually start higher and settle during their first year; this range is for the settled score."
+     },
+     "drivers": {
+      "budget": {
+       "up": [
+        {
+         "group": "cast",
+         "label": "Cast's track record",
+         "direction": "up",
+         "strength": "strong",
+         "estimated": false,
+         "value": "Saoirse Ronan",
+         "text": "The cast's earlier films (led by Saoirse Ronan) strongly raise the expected budget."
+        },
+        {
+         "group": "director",
+         "label": "Director's track record",
+         "direction": "up",
+         "strength": "strong",
+         "estimated": false,
+         "value": "Greta Gerwig",
+         "text": "Greta Gerwig's 4 earlier films strongly raise the expected budget."
+        },
+        {
+         "group": "runtime",
+         "label": "Runtime",
+         "direction": "up",
+         "strength": "slight",
+         "estimated": false,
+         "value": "105 minutes",
+         "text": "A runtime of 105 minutes slightly raises the expected budget."
+        }
+       ],
+       "down": [
+        {
+         "group": "studio",
+         "label": "Studio",
+         "direction": "down",
+         "strength": "strong",
+         "estimated": false,
+         "value": "A24",
+         "text": "A24 as the studio strongly lowers the expected budget."
+        },
+        {
+         "group": "genre",
+         "label": "Genre",
+         "direction": "down",
+         "strength": "slight",
+         "estimated": false,
+         "value": "Drama",
+         "text": "The genre Drama slightly lowers the expected budget."
+        }
+       ]
+      },
+      "revenue": {
+       "up": [
+        {
+         "group": "director",
+         "label": "Director's track record",
+         "direction": "up",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "Greta Gerwig",
+         "text": "Greta Gerwig's 4 earlier films raise the expected revenue."
+        },
+        {
+         "group": "certification",
+         "label": "Certification",
+         "direction": "up",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "PG-13",
+         "text": "A PG-13 rating raises the expected revenue."
+        },
+        {
+         "group": "cast",
+         "label": "Cast's track record",
+         "direction": "up",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "Saoirse Ronan",
+         "text": "The cast's earlier films (led by Saoirse Ronan) raise the expected revenue."
+        }
+       ],
+       "down": [
+        {
+         "group": "studio",
+         "label": "Studio",
+         "direction": "down",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "A24",
+         "text": "A24 as the studio lowers the expected revenue."
+        },
+        {
+         "group": "timing",
+         "label": "Release timing",
+         "direction": "down",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "2026",
+         "text": "Releasing in 2026 (recent films earn less in our data) lowers the expected revenue."
+        }
+       ]
+      },
+      "score": {
+       "up": [
+        {
+         "group": "timing",
+         "label": "Release timing",
+         "direction": "up",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "2026",
+         "text": "Releasing in 2026 raises the expected audience score."
+        },
+        {
+         "group": "cast",
+         "label": "Cast's track record",
+         "direction": "up",
+         "strength": "moderate",
+         "estimated": false,
+         "value": "Saoirse Ronan",
+         "text": "The cast's earlier films (led by Saoirse Ronan) raise the expected audience score."
+        },
+        {
+         "group": "director",
+         "label": "Director's track record",
+         "direction": "up",
+         "strength": "slight",
+         "estimated": false,
+         "value": "Greta Gerwig",
+         "text": "Greta Gerwig's 4 earlier films slightly raise the expected audience score."
+        },
+        {
+         "group": "genre",
+         "label": "Genre",
+         "direction": "up",
+         "strength": "slight",
+         "estimated": false,
+         "value": "Drama",
+         "text": "The genre Drama slightly raises the expected audience score."
+        }
+       ],
+       "down": [
+        {
+         "group": "language",
+         "label": "Language",
+         "direction": "down",
+         "strength": "slight",
+         "estimated": false,
+         "value": "English",
+         "text": "English as the original language slightly lowers the expected audience score."
+        }
+       ]
+      }
+     },
+     "comparables": [
+      {
+       "id": 1037035,
+       "title": "Janet Planet",
+       "year": 2024,
+       "poster_path": "/i4qK3vQS4MD8OKhIkqSe3UK6OuH.jpg",
+       "poster": {
+        "small": "https://image.tmdb.org/t/p/w342/i4qK3vQS4MD8OKhIkqSe3UK6OuH.jpg",
+        "large": "https://image.tmdb.org/t/p/w780/i4qK3vQS4MD8OKhIkqSe3UK6OuH.jpg"
+       },
+       "budget": null,
+       "revenue": 747254.0,
+       "score": 6.164,
+       "similarity": 0.714,
+       "why": [
+        "Same genres",
+        "Same themes",
+        "Same era"
+       ]
+      },
+      {
+       "id": 160588,
+       "title": "Blue Jasmine",
+       "year": 2013,
+       "poster_path": "/nsj0RLRI10351uYMoAKPur6Derd.jpg",
+       "poster": {
+        "small": "https://image.tmdb.org/t/p/w342/nsj0RLRI10351uYMoAKPur6Derd.jpg",
+        "large": "https://image.tmdb.org/t/p/w780/nsj0RLRI10351uYMoAKPur6Derd.jpg"
+       },
+       "budget": 24891950.0,
+       "revenue": 137050657.0,
+       "score": 6.981,
+       "similarity": 0.659,
+       "why": [
+        "Same genres",
+        "Similar budget",
+        "Also family"
+       ]
+      },
+      {
+       "id": 1128752,
+       "title": "Bird",
+       "year": 2024,
+       "poster_path": "/wKshd6n8EKrwbE2fLOUqC4TSG6O.jpg",
+       "poster": {
+        "small": "https://image.tmdb.org/t/p/w342/wKshd6n8EKrwbE2fLOUqC4TSG6O.jpg",
+        "large": "https://image.tmdb.org/t/p/w780/wKshd6n8EKrwbE2fLOUqC4TSG6O.jpg"
+       },
+       "budget": null,
+       "revenue": 1997686.0,
+       "score": 7.2,
+       "similarity": 0.658,
+       "why": [
+        "Same genres",
+        "Also family, coming of age and school",
+        "Same era"
+       ]
+      },
+      {
+       "id": 728142,
+       "title": "Nowhere Special",
+       "year": 2020,
+       "poster_path": "/tqLI37bbDZP9um0Xu9AFWWYvXzB.jpg",
+       "poster": {
+        "small": "https://image.tmdb.org/t/p/w342/tqLI37bbDZP9um0Xu9AFWWYvXzB.jpg",
+        "large": "https://image.tmdb.org/t/p/w780/tqLI37bbDZP9um0Xu9AFWWYvXzB.jpg"
+       },
+       "budget": null,
+       "revenue": 951742.0,
+       "score": 7.28,
+       "similarity": 0.65,
+       "why": [
+        "Same genres",
+        "Also family, coming of age and school"
+       ]
+      },
+      {
+       "id": 14295,
+       "title": "You Can Count on Me",
+       "year": 2000,
+       "poster_path": "/7mGFmij1FZD5eUnNwvUjmpqrDl6.jpg",
+       "poster": {
+        "small": "https://image.tmdb.org/t/p/w342/7mGFmij1FZD5eUnNwvUjmpqrDl6.jpg",
+        "large": "https://image.tmdb.org/t/p/w780/7mGFmij1FZD5eUnNwvUjmpqrDl6.jpg"
+       },
+       "budget": null,
+       "revenue": 20953041.0,
+       "score": 6.874,
+       "similarity": 0.648,
+       "why": [
+        "Same genres",
+        "Similar story",
+        "Also family"
+       ]
+      }
+     ],
+     "warnings": [
+      {
+       "code": "new_actors",
+       "text": "We don't know 2 of the 5 actors, so they count as having no earlier films."
+      },
+      {
+       "code": "future_release",
+       "text": "Our data ends in 2025. A release in 2026 is judged on films up to 2025, so later trends are not included."
+      }
+     ],
+     "cached": false
+    },
+    "differences": {
+     "changed_fields": [
+      "certification"
+     ],
+     "budget": {
+      "ratio": 1.0712,
+      "points": null
+     },
+     "revenue": {
+      "ratio": 1.1667,
+      "points": null
+     },
+     "score": {
+      "ratio": null,
+      "points": 0.0722
+     },
+     "mode_changed": false
+    }
+   }
+  ]
+ }
+}

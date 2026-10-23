@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
 import { useMetaOptions, useMovies } from '@/api/hooks'
+import { SlowNotice } from '@/app/SlowNotice'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -15,7 +16,7 @@ import { codeName } from '@/form/format'
 import { useDebounced } from '@/lib/useDebounced'
 import { cn } from '@/lib/utils'
 import {
-  activeFilters, EMPTY, loadView, readBrowse, saveView, SORTS, toQuery, type BrowseState, type View, VIEWS, writeBrowse,
+  activeFilters, browseResets, EMPTY, loadView, readBrowse, saveView, SORTS, toQuery, type BrowseState, type View, VIEWS, writeBrowse,
 } from '@/movies/browse'
 import { Filters } from '@/movies/Filters'
 import { MovieCard, MovieListItem } from '@/movies/MovieCard'
@@ -23,6 +24,7 @@ import { Pager } from '@/movies/Pager'
 import PageHeading from '@/pages/PageHeading'
 
 export const SEARCH_MS = 300
+const EAGER = 6 // the first row of posters is the page's largest paint: load it at once
 
 const GRID: Record<Exclude<View, 'list'>, string> = {
   small: 'grid-cols-3 sm:grid-cols-5 lg:grid-cols-6',
@@ -51,9 +53,12 @@ function ViewPicker({ view, onChange }: { view: View; onChange: (v: View) => voi
 
 export default function Movies() {
   const [params, setParams] = useSearchParams()
-  const state = readBrowse(params)
   const options = useMetaOptions()
-  const movies = useMovies(toQuery(state))
+  const read = readBrowse(params)
+  const resets = options.isPending ? [] : browseResets(params, options.data?.genres) // once the genres are known
+  const unknownGenre = read.genre !== null && (!options.data || !options.data.genres.includes(read.genre))
+  const state = options.data && unknownGenre ? { ...read, genre: null } : read
+  const movies = useMovies(toQuery(state), !unknownGenre || !options.isPending) // an odd genre waits for the list of genres
   const [view, setView] = useState<View>(loadView)
   const [text, setText] = useState(state.q)
   const typed = useDebounced(text, SEARCH_MS)
@@ -91,6 +96,12 @@ export default function Movies() {
         <Input type="search" aria-label="Search films" placeholder="Search titles and plots…" value={text}
           onChange={e => setText(e.target.value)} className="h-11 pl-9 text-base" />
       </div>
+
+      {resets.length > 0 && (
+        <p role="status" className="-mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm dark:bg-amber-950/30" data-testid="link-notice">
+          Part of this link couldn't be read, so the {resets.join(', ')} {resets.length === 1 ? 'was' : 'were'} left at the usual value.
+        </p>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[15rem_1fr]">
         <aside className="hidden lg:block" aria-label="Filter films">
@@ -137,6 +148,7 @@ export default function Movies() {
             </ul>
           )}
 
+          <SlowNotice pending={movies.isPending} />
           {movies.isPending && (
             <div className={cn('grid gap-4', view === 'list' ? '' : GRID[view])} aria-busy="true">
               <span className="sr-only">Loading films…</span>
@@ -176,9 +188,10 @@ export default function Movies() {
               </p>
               <ul className={cn('grid gap-4 transition-opacity', view === 'list' ? 'gap-1' : GRID[view],
                 movies.isPlaceholderData && 'opacity-60')} aria-label="Films">
-                {data.items.map(film => (
+                {data.items.map((film, i) => (
                   <li key={film.id}>
-                    {view === 'list' ? <MovieListItem film={film} /> : <MovieCard film={film} showRevenue={state.sort === 'revenue'} />}
+                    {view === 'list' ? <MovieListItem film={film} eager={i < EAGER} />
+                      : <MovieCard film={film} showRevenue={state.sort === 'revenue'} eager={i < EAGER} />}
                   </li>
                 ))}
               </ul>

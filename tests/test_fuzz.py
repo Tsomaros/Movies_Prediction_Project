@@ -1,7 +1,7 @@
 """Fuzzing the prediction endpoints with hypothesis: whatever a client sends, the API answers 200 or a readable 422.
 
-About 300 forms go to POST /predict and 100 requests to POST /predict/compare, on the small app (the db
-fixture and small models). Each form starts from a valid one and has some fields replaced by:
+About 300 forms go to POST /predict, 100 requests to POST /predict/compare and 60 to POST /predict/sweep,
+on the small app (the db fixture and small models). Each form starts from a valid one and has some fields replaced by:
 - valid alternatives, including the edges of every limit (40 and 300 minutes, $1,000 and $1B, 5 and 10 actors);
 - values just past the limits, or of the wrong type (strings for numbers, true for an id, lists for text);
 - junk: huge or unicode strings, NaN and infinity, nested objects, unknown fields, nothing at all.
@@ -29,7 +29,7 @@ from tests.test_models import (budget_model, budget_rows, revenue_model, revenue
 from tests.test_predict import form as film_form
 from tests.test_predict import predictor  # noqa: F401 (fixture: a small Predictor on the db fixture)
 
-PREDICT, COMPARE = f"{API_PREFIX}/predict", f"{API_PREFIX}/predict/compare"
+PREDICT, COMPARE, SWEEP = f"{API_PREFIX}/predict", f"{API_PREFIX}/predict/compare", f"{API_PREFIX}/predict/sweep"
 FUZZ = settings(max_examples=300, deadline=None, derandomize=True,
                 suppress_health_check=[HealthCheck.too_slow, HealthCheck.function_scoped_fixture])
 
@@ -130,6 +130,17 @@ def compares(draw):
     return draw(st.one_of(st.just({"base": base, "variants": variants}), junk))
 
 
+@st.composite
+def sweeps(draw):
+    if draw(st.booleans()):  # a valid sweep: a valid form, 2-12 values of a sweepable field
+        field = draw(st.sampled_from(["release_month", "runtime", "budget"]))
+        values = draw(st.lists(VALID[field], min_size=2, max_size=12))
+        return {"form": draw(valid_forms()), "field": field, "values": values}
+    body = {"form": draw(forms()), "field": draw(st.sampled_from(["release_month", "runtime", "budget", "genres"]) | junk),
+            "values": draw(st.lists(junk, max_size=14) | junk)}
+    return draw(st.one_of(st.just(body), junk))
+
+
 # ---------------------------------------------------------------- checks
 
 
@@ -178,6 +189,17 @@ def test_compare_answers_200_or_a_readable_422(api, body):
             check_prediction(variant["prediction"])
             assert all(f in body["base"] or f in variant["differences"]["changed_fields"]
                        for f in variant["differences"]["changed_fields"])
+
+
+@pytest.mark.slow
+@settings(FUZZ, max_examples=60)
+@given(body=sweeps())
+def test_sweep_answers_200_or_a_readable_422(api, body):
+    out = check(post(api, SWEEP, body))
+    if out is not None:
+        assert len(out["points"]) == len(body["values"])
+        for point in out["points"]:
+            check_prediction(point)
 
 
 def test_the_fuzzing_reaches_both_outcomes(api):

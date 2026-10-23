@@ -3,7 +3,9 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import type { Options, PredictForm } from '@/api/client'
 import { EXAMPLES } from '@/form/examples'
 import { emptyForm, makeSchema, toApiBody } from '@/form/model'
-import { clearDraft, decodeForm, DRAFT_KEY, encodeForm, loadDraft, parseForm, saveDraft, startingForm } from '@/form/persist'
+import {
+  clearDraft, decodeForm, DRAFT_KEY, encodeForm, loadDraft, parseForm, readForm, saveDraft, startingForm, toBase64Url,
+} from '@/form/persist'
 import { VALID } from '@/test/forms'
 import optionsJson from '@/test/options.json'
 import golden from '../../../tests/golden/forms.json'
@@ -83,12 +85,24 @@ describe('the draft', () => {
   })
 })
 
+describe('a link edited by hand', () => {
+  test('keeps the readable fields and names the ones it reset', () => {
+    const edited = { ...EXAMPLES[0].form, runtime: 'long', director: { id: 'x' }, unknown: 1 }
+    const read = readForm(toBase64Url(JSON.stringify(edited)))
+    expect(read?.dropped).toEqual(['runtime', 'director'])
+    expect(read?.form.runtime).toBe(emptyForm().runtime)
+    expect(read?.form.genres).toEqual(EXAMPLES[0].form.genres)
+    expect(startingForm(`?f=${toBase64Url(JSON.stringify(edited))}`).dropped).toEqual(['runtime', 'director'])
+    expect(readForm(encodeForm(EXAMPLES[0].form))?.dropped).toEqual([])
+  })
+})
+
 describe('where a page load starts', () => {
   test('the URL wins over the draft, the draft over a fresh form', () => {
     saveDraft(EXAMPLES[1].form)
-    expect(startingForm(`?f=${encodeForm(EXAMPLES[0].form)}`)).toEqual({ form: EXAMPLES[0].form, source: 'link' })
-    expect(startingForm('')).toEqual({ form: EXAMPLES[1].form, source: 'draft' })
-    expect(startingForm('?f=garbage')).toEqual({ form: EXAMPLES[1].form, source: 'draft' })
+    expect(startingForm(`?f=${encodeForm(EXAMPLES[0].form)}`)).toEqual({ form: EXAMPLES[0].form, dropped: [], source: 'link' })
+    expect(startingForm('')).toEqual({ form: EXAMPLES[1].form, dropped: [], source: 'draft' })
+    expect(startingForm('?f=garbage')).toEqual({ form: EXAMPLES[1].form, dropped: [], source: 'draft' })
     clearDraft()
     expect(startingForm('').source).toBe('new')
   })

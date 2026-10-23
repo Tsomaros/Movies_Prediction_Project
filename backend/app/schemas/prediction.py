@@ -2,6 +2,7 @@
 
     Prediction       -> POST /predict
     CompareResponse  -> POST /predict/compare: the base, each variant and their differences
+    SweepResponse    -> POST /predict/sweep: the three ranges at each value of one field
 
 Money is in 2025 US dollars, scores on TMDB's 0-10 scale. Field names are the ones predict() returns, so
 the API passes its output through unchanged and adds only `cached` and the comparables' poster URLs.
@@ -9,7 +10,7 @@ the API passes its output through unchanged and adds only `cached` and the compa
 
 from __future__ import annotations
 
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -127,3 +128,18 @@ class Variant(BaseModel):
 class CompareResponse(BaseModel):
     base: Prediction
     variants: list[Variant]
+
+
+class SweepPoint(BaseModel):
+    value: Union[int, float]
+    budget: Range
+    revenue: Range
+    score: Range
+    revenue_mode: Literal["given", "estimated"]
+
+
+class SweepResponse(BaseModel):
+    model_version: str
+    field: Literal["release_month", "runtime", "budget"]
+    base_value: Optional[Union[int, float]] = Field(description="The form's own value for the field (None: budget left out)")
+    points: list[SweepPoint] = Field(description="One per value, in the order sent")

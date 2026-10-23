@@ -3,6 +3,8 @@
 //   readBrowse(params)        -> the search, filters, sort and page from ?q=&genre=&from=&to=&lang=&score=&sort=&page=;
 //                                anything malformed falls back to its default (never an error)
 //   writeBrowse(state)        -> the same as URL parameters, defaults left out (a clean URL for the plain list)
+//   browseResets(params, genres) -> what a link asked for that couldn't be used, in words ("genre", "page"), for
+//                                a notice; an unknown genre (not in /meta/options) counts too
 //   toQuery(state)            -> GET /movies's query for that state, PAGE_SIZE films a page
 //   browseLink(partial)       -> a /movies link with some filters set (the home page's "See all")
 //   activeFilters(state)      -> the filters in use, for "clear" chips and the no-results state
@@ -66,6 +68,23 @@ export function writeBrowse(state: BrowseState): URLSearchParams {
     if (value !== null && value !== '' && value !== EMPTY[key]) params.set(KEYS[key], String(value))
   }
   return params
+}
+
+const KEY_WORDS: Record<string, string> = {
+  q: 'search', genre: 'genre', from: 'from year', to: 'to year', lang: 'language', score: 'score', sort: 'sort', page: 'page',
+}
+
+export function browseResets(params: URLSearchParams, genres: readonly string[] | undefined): string[] {
+  const state = readBrowse(params)
+  const used = writeBrowse(state)
+  const out: string[] = []
+  for (const [field, key] of Object.entries(KEYS) as [keyof BrowseState, string][]) {
+    const raw = params.get(key)
+    if (raw === null || raw === '' || field === 'q') continue
+    const ok = used.get(key) === raw || String(EMPTY[field]) === raw || (field === 'scoreMin' && state.scoreMin === Number(raw))
+    if (!ok || (field === 'genre' && genres && !genres.includes(raw))) out.push(KEY_WORDS[key])
+  }
+  return out
 }
 
 export function toQuery(state: BrowseState): MovieQuery {

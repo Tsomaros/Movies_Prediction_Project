@@ -70,7 +70,9 @@ export default function Layout() {
         <Outlet />
       </main>
       <Footer />
-      <ScrollRestoration /> {/* a new page starts at the top; back and forward return to where you were */}
+      {/* A new page starts at the top; back and forward return to where you were. Keyed by the address, because a
+          full reload gives every page the same "default" key and would restore another page's position. */}
+      <ScrollRestoration getKey={location => location.pathname + location.search} />
     </div>
   )
 }

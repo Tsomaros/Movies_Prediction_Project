@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 
 type Range = { low: number; middle: number; high: number }
 
-function Bar({ range, at, label, className }: { range: Range; at: (v: number) => number; label: string; className: string }) {
+export function Bar({ range, at, label, className }: { range: Range; at: (v: number) => number; label: string; className: string }) {
   const [left, right, mid] = [at(range.low), at(range.high), at(range.middle)]
   return (
     <>
@@ -19,7 +19,7 @@ function Bar({ range, at, label, className }: { range: Range; at: (v: number) =>
   )
 }
 
-function Row({ label, sub, children }: { label: string; sub: string; children: React.ReactNode }) {
+export function Row({ label, sub, children }: { label: string; sub: string; children: React.ReactNode }) {
   return (
     <div className="grid gap-1 sm:grid-cols-[7rem_1fr] sm:items-center sm:gap-3">
       <div className="flex items-baseline justify-between gap-2 sm:block">
@@ -31,7 +31,7 @@ function Row({ label, sub, children }: { label: string; sub: string; children: R
   )
 }
 
-function Ticks({ ticks, at, format }: { ticks: number[]; at: (v: number) => number; format: (v: number) => string }) {
+export function Ticks({ ticks, at, format }: { ticks: number[]; at: (v: number) => number; format: (v: number) => string }) {
   return (
     <div className="grid sm:grid-cols-[7rem_1fr] sm:gap-3">
       <div />
@@ -44,7 +44,7 @@ function Ticks({ ticks, at, format }: { ticks: number[]; at: (v: number) => numb
   )
 }
 
-function Grid({ ticks, at }: { ticks: number[]; at: (v: number) => number }) {
+export function Grid({ ticks, at }: { ticks: number[]; at: (v: number) => number }) {
   return ticks.map(t => <div key={t} className="bg-border absolute inset-y-0 w-px" style={{ left: `${at(t)}%` }} />)
 }
 

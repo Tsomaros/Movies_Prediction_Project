@@ -1,45 +1,28 @@
 // /predict/result: the results page. The form travels in the URL (?f=, as on the form page), so a result can be
-// shared, refreshed or printed; `?base=` adds the previous version for "Try a variation".
+// shared, refreshed or printed. "Compare variations" and "Best release month" open /predict/compare with this form.
 //
 // Order: the answer (summary cards) -> the ranges to scale with the break-even band -> why (drivers) -> films like
 // it -> notes, limitations and accuracy -> actions. The prediction comes from the query cache when the form page
 // just asked for it, else from one request; while it loads, skeletons keep the layout still.
-import { LinkIcon, PencilIcon, PrinterIcon, ShuffleIcon } from 'lucide-react'
+import { CalendarIcon, LinkIcon, PencilIcon, PrinterIcon, ShuffleIcon } from 'lucide-react'
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 
-import { ApiError, type PredictForm } from '@/api/client'
+import { ApiError } from '@/api/client'
 import { RATE_LIMITED } from '@/api/errors'
 import { usePrediction } from '@/api/hooks'
+import { SlowNotice } from '@/app/SlowNotice'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { MONTHS } from '@/form/format'
-import { toApiBody, type FormValues } from '@/form/model'
-import { BASE_PARAM, decodeForm, URL_PARAM } from '@/form/persist'
+import { bodyOf, describeForm, FIELD_LABELS } from '@/form/model'
+import { comparePath, readForm, URL_PARAM } from '@/form/persist'
 import PageHeading from '@/pages/PageHeading'
 import { Comparables } from '@/result/Comparables'
 import { Drivers } from '@/result/Drivers'
 import { Accuracy, Limitations, Warnings } from '@/result/Notes'
 import { RangeChart } from '@/result/RangeChart'
 import { Summary } from '@/result/Summary'
-import { VariationStrip } from '@/result/Variation'
-
-/** The API body of a form from the URL, or null when the link doesn't hold a complete form. */
-function bodyOf(values: FormValues | null): PredictForm | null {
-  if (!values) return null
-  try {
-    return toApiBody(values)
-  } catch { // a required reference is missing: the link was cut or edited by hand
-    return null
-  }
-}
-
-function describe(values: FormValues) {
-  const when = values.release_month && values.release_year ? `${MONTHS[values.release_month - 1]} ${values.release_year}` : null
-  return [values.genres.join(', '), when, values.director?.name && `directed by ${values.director.name}`]
-    .filter(Boolean).join(' · ')
-}
 
 function Loading() {
   return (
@@ -73,16 +56,13 @@ function Failed({ error, retry, editTo }: { error: unknown; retry: () => void; e
 export default function PredictResult() {
   const [params] = useSearchParams()
   const encoded = params.get(URL_PARAM) ?? ''
-  const encodedBase = params.get(BASE_PARAM)
-  const values = useMemo(() => decodeForm(encoded), [encoded])
+  const read = useMemo(() => readForm(encoded), [encoded])
+  const values = read?.form ?? null
   const body = useMemo(() => bodyOf(values), [values])
-  const base = useMemo(() => bodyOf(decodeForm(encodedBase)), [encodedBase])
   const prediction = usePrediction(body)
-  const basePrediction = usePrediction(base && prediction.data ? base : null) // after the main one: one request at a time
 
   const editTo = `/predict?${new URLSearchParams({ [URL_PARAM]: encoded })}`
-  const variationTo = `/predict?${new URLSearchParams({ [URL_PARAM]: encoded, [BASE_PARAM]: encoded })}`
-  const withoutBase = `/predict/result?${new URLSearchParams({ [URL_PARAM]: encoded })}`
+  const compareTo = values ? comparePath(values) : '/predict'
 
   const copyLink = async () => {
     try {
@@ -105,9 +85,16 @@ export default function PredictResult() {
   return (
     <div className="grid gap-6">
       <div className="flex flex-wrap items-start justify-between gap-x-4">
-        <PageHeading title="Your prediction">{describe(values)}</PageHeading>
+        <PageHeading title="Your prediction">{describeForm(values)}</PageHeading>
         <Button asChild variant="outline" size="sm" className="print:hidden"><Link to={editTo}><PencilIcon /> Edit inputs</Link></Button>
       </div>
+      {read && read.dropped.length > 0 && (
+        <p role="status" className="-mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm dark:bg-amber-950/30" data-testid="link-notice">
+          Part of this link couldn't be read: {read.dropped.map(k => FIELD_LABELS[k]).join(', ')}{' '}
+          {read.dropped.length === 1 ? 'was' : 'were'} reset to the usual value. <Link to={editTo} className="underline">Check the inputs</Link>
+        </p>
+      )}
+      <SlowNotice pending={prediction.isPending} />
       {prediction.isPending && <Loading />}
       {prediction.isError && <Failed error={prediction.error} retry={() => prediction.refetch()} editTo={editTo} />}
       {prediction.data && (
@@ -116,10 +103,6 @@ export default function PredictResult() {
             Money in 2025 US dollars; revenue is worldwide box office. "Likely" ranges run from the 10th to the 90th
             percentile: about 8 in 10 real films land inside.
           </p>
-          {base && (
-            <VariationStrip base={base} next={body} basePrediction={basePrediction.data} prediction={prediction.data}
-              withoutBase={withoutBase} />
-          )}
           <Summary prediction={prediction.data} />
           <RangeChart prediction={prediction.data} />
           <Drivers drivers={prediction.data.drivers} />
@@ -129,7 +112,8 @@ export default function PredictResult() {
           <Accuracy mode={prediction.data.revenue.mode} />
           <div className="flex flex-wrap gap-2 border-t pt-4 print:hidden" role="toolbar" aria-label="Result actions">
             <Button asChild variant="outline"><Link to={editTo}><PencilIcon /> Edit inputs</Link></Button>
-            <Button asChild variant="outline"><Link to={variationTo}><ShuffleIcon /> Try a variation</Link></Button>
+            <Button asChild variant="outline"><Link to={compareTo}><ShuffleIcon /> Compare variations</Link></Button>
+            <Button asChild variant="outline"><Link to={`${compareTo}#best-month`}><CalendarIcon /> Best release month</Link></Button>
             <Button variant="outline" onClick={copyLink}><LinkIcon /> Copy link</Button>
             <Button variant="outline" onClick={() => window.print()}><PrinterIcon /> Print or save as PDF</Button>
           </div>

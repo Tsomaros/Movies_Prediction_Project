@@ -1,16 +1,24 @@
 """The model card behind GET /api/v1/model-card: the app's honest accuracy numbers, in one small JSON file.
 
-    build(final_test, audit, manifest)  -> the card: the one-time 2019+ test (Day 6, <=2018 models) and the
+    build(final_test, audit, manifest, metrics)
+                                        -> the card: the one-time 2019+ test (Day 6, <=2018 models) and the
                                            2026 holdout (audit, the app's own models), each with LightGBM next
-                                           to the strongest baseline (B2), plus the models' version and data
+                                           to the strongest baseline (B2), the models' version and data, and
+                                           the "within the uncertainty" thresholds for comparing versions
+    uncertainty(metrics)                -> those thresholds from the 2016-18 validation ranges
     write(out_dir)                      -> ml/artifacts/final/model_card.json from reports/final_test.json,
-                                           reports/audit_metrics.json and ml/artifacts/final/manifest.json
+                                           reports/audit_metrics.json, reports/metrics.json and
+                                           ml/artifacts/final/manifest.json
     CARD_FILE                           -> the file's name inside the models folder
 
 The card is committed next to the models, because the Docker image has no reports/ folder. Nothing here is
 recomputed: every number is copied from the two reports, so the card can't disagree with them
 (tests/test_model_card.py checks the committed file is current). Money metrics are on the log scale, with
 "typical_factor" = exp(MAE log): the middle is typically off by this factor. Score metrics are in points.
+
+Thresholds (Day 13): a change between two versions of a film counts as "within the uncertainty" when it moves
+the middle by less than UNCERTAINTY_FRACTION of the median 10-90 range on validation (2016-18): for money a
+factor of width ** 0.1 (the range is high / low, so a tenth of it on the log scale), for score 0.1 * width points.
 
 CLI: uv run python -m ml.eval.model_card   (rerun after the reports or the models change)
 """
@@ -39,6 +47,14 @@ TARGETS = {
     "score": ("LightGBM (tuned, calibrated)", "LightGBM app", POINTS),
 }
 REPORT_KEY = {"revenue_estimated": "revenue"}  # both revenue modes are in the revenue section
+UNCERTAINTY_FRACTION = 0.1
+# target -> the LightGBM entry in metrics.json (validation, <=2015 models)
+VALIDATION = {
+    "revenue": "LightGBM (tuned, calibrated)",
+    "revenue_estimated": "LightGBM, budget estimated (calibrated)",
+    "budget": "LightGBM (tuned, calibrated)",
+    "score": "LightGBM (tuned, calibrated)",
+}
 
 
 def _metrics(m: dict[str, Any], keys: tuple[str, ...]) -> dict[str, float]:
@@ -55,7 +71,20 @@ def _entry(models: dict[str, dict[str, Any]], model: str, keys: tuple[str, ...])
             "baseline": {"name": b2, **_metrics(models[b2], keys)}}
 
 
-def build(final_test: dict[str, Any], audit: dict[str, Any], manifest: dict[str, Any]) -> dict[str, Any]:
+def uncertainty(metrics: dict[str, Any]) -> dict[str, Any]:
+    out: dict[str, Any] = {"fraction": UNCERTAINTY_FRACTION, "years": "2016-2018"}
+    for target, model in VALIDATION.items():
+        entry = next(m for m in metrics[REPORT_KEY.get(target, target)] if m["name"] == model)
+        width = float(entry["validation"]["width"])
+        if target == "score":
+            out[target] = {"width": round(width, 4), "points": round(UNCERTAINTY_FRACTION * width, 4)}
+        else:
+            out[target] = {"width": round(width, 4), "ratio": round(width ** UNCERTAINTY_FRACTION, 4)}
+    return out
+
+
+def build(final_test: dict[str, Any], audit: dict[str, Any], manifest: dict[str, Any],
+          metrics: dict[str, Any]) -> dict[str, Any]:
     holdout = audit["holdout"]
     test = {t: {m["name"]: {**m["test"]} for m in final_test["results"][REPORT_KEY.get(t, t)]} for t in TARGETS}
     years = {m["trained_on"].removeprefix("films released ") for m in manifest["models"].values()}
@@ -79,7 +108,8 @@ def build(final_test: dict[str, Any], audit: dict[str, Any], manifest: dict[str,
             "targets": {t: _entry(holdout[REPORT_KEY.get(t, t)]["models"], model, keys)
                         for t, (_, model, keys) in TARGETS.items()},
         },
-        "sources": {"test": "reports/final_test.md", "holdout": "reports/audit.md"},
+        "uncertainty": uncertainty(metrics),
+        "sources": {"test": "reports/final_test.md", "holdout": "reports/audit.md", "uncertainty": "reports/metrics.md"},
     }
 
 
@@ -89,7 +119,7 @@ def _read(path: Path) -> dict[str, Any]:
 
 def write(out_dir: Path = FINAL_DIR, reports: Path = REPORTS) -> dict[str, Any]:
     card = build(_read(reports / "final_test.json"), _read(reports / "audit_metrics.json"),
-                 _read(out_dir / "manifest.json"))
+                 _read(out_dir / "manifest.json"), _read(reports / "metrics.json"))
     (out_dir / CARD_FILE).write_text(json.dumps(card, indent=1, allow_nan=False) + "\n", encoding="utf-8")
     return card
 

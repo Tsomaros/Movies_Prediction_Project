@@ -1,0 +1,343 @@
+{
+ "model_version": "2026-10-21.849304a7",
+ "field": "release_month",
+ "base_value": 10,
+ "points": [
+  {
+   "value": 1,
+   "budget": {
+    "low": 4555771.81051078,
+    "middle": 25056195.619391408,
+    "high": 62239791.884158395,
+    "text": "$4.6M–$62M",
+    "middle_text": "$25M",
+    "rough": true
+   },
+   "revenue": {
+    "low": 1848996.7588597604,
+    "middle": 26407474.63958984,
+    "high": 158560705.7682549,
+    "text": "$1.8M–$160M",
+    "middle_text": "$26M",
+    "rough": true
+   },
+   "score": {
+    "low": 6.157925571272141,
+    "middle": 6.7954809917250785,
+    "high": 7.542764073234795,
+    "text": "6.2–7.5",
+    "middle_text": "6.8",
+    "rough": false
+   },
+   "revenue_mode": "estimated"
+  },
+  {
+   "value": 2,
+   "budget": {
+    "low": 4864540.128982164,
+    "middle": 25345384.453008678,
+    "high": 62364337.13699627,
+    "text": "$4.9M–$62M",
+    "middle_text": "$25M",
+    "rough": true
+   },
+   "revenue": {
+    "low": 1846620.0277263995,
+    "middle": 26440198.863802962,
+    "high": 161633651.68212187,
+    "text": "$1.8M–$160M",
+    "middle_text": "$26M",
+    "rough": true
+   },
+   "score": {
+    "low": 6.163353054432665,
+    "middle": 6.8307063352802615,
+    "high": 7.551272375145788,
+    "text": "6.2–7.6",
+    "middle_text": "6.8",
+    "rough": false
+   },
+   "revenue_mode": "estimated"
+  },
+  {
+   "value": 3,
+   "budget": {
+    "low": 5070820.617867653,
+    "middle": 25643752.77594662,
+    "high": 62209338.15595767,
+    "text": "$5.1M–$62M",
+    "middle_text": "$26M",
+    "rough": true
+   },
+   "revenue": {
+    "low": 2171366.7753754,
+    "middle": 26191578.27940674,
+    "high": 167467265.40392834,
+    "text": "$2.2M–$170M",
+    "middle_text": "$26M",
+    "rough": false
+   },
+   "score": {
+    "low": 6.202340509591849,
+    "middle": 6.834497594409563,
+    "high": 7.553018628768952,
+    "text": "6.2–7.6",
+    "middle_text": "6.8",
+    "rough": false
+   },
+   "revenue_mode": "estimated"
+  },
+  {
+   "value": 4,
+   "budget": {
+    "low": 5080238.309034362,
+    "middle": 25764940.07679633,
+    "high": 62412610.93119726,
+    "text": "$5.1M–$62M",
+    "middle_text": "$26M",
+    "rough": true
+   },
+   "revenue": {
+    "low": 2182996.74712861,
+    "middle": 26328477.75707979,
+    "high": 163064586.6082158,
+    "text": "$2.2M–$160M",
+    "middle_text": "$26M",
+    "rough": false
+   },
+   "score": {
+    "low": 6.204858219238328,
+    "middle": 6.847043718841095,
+    "high": 7.556955335599182,
+    "text": "6.2–7.6",
+    "middle_text": "6.8",
+    "rough": false
+   },
+   "revenue_mode": "estimated"
+  },
+  {
+   "value": 5,
+   "budget": {
+    "low": 5036727.881478966,
+    "middle": 26203371.86580174,
+    "high": 62841753.64576243,
+    "text": "$5M–$63M",
+    "middle_text": "$26M",
+    "rough": true
+   },
+   "revenue": {
+    "low": 2656762.278058323,
+    "middle": 26947475.630510807,
+    "high": 173440905.0898451,
+    "text": "$2.7M–$170M",
+    "middle_text": "$27M",
+    "rough": false
+   },
+   "score": {
+    "low": 6.2187553305702075,
+    "middle": 6.84168817666895,
+    "high": 7.562981167683783,
+    "text": "6.2–7.6",
+    "middle_text": "6.8",
+    "rough": false
+   },
+   "revenue_mode": "estimated"
+  },
+  {
+   "value": 6,
+   "budget": {
+    "low": 5040990.040189986,
+    "middle": 27439259.920946483,
+    "high": 62825896.200114734,
+    "text": "$5M–$63M",
+    "middle_text": "$27M",
+    "rough": true
+   },
+   "revenue": {
+    "low": 2775722.3559320034,
+    "middle": 28081806.724288862,
+    "high": 181669036.13168344,
+    "text": "$2.8M–$180M",
+    "middle_text": "$28M",
+    "rough": false
+   },
+   "score": {
+    "low": 6.204721776193027,
+    "middle": 6.855243884851207,
+    "high": 7.572906245573794,
+    "text": "6.2–7.6",
+    "middle_text": "6.9",
+    "rough": false
+   },
+   "revenue_mode": "estimated"
+  },
+  {
+   "value": 7,
+   "budget": {
+    "low": 5044514.040330871,
+    "middle": 26214088.438103843,
+    "high": 62337687.79405635,
+    "text": "$5M–$62M",
+    "middle_text": "$26M",
+    "rough": true
+   },
+   "revenue": {
+    "low": 2875770.710988439,
+    "middle": 30390157.778186396,
+    "high": 206162800.1759644,
+    "text": "$2.9M–$210M",
+    "middle_text": "$30M",
+    "rough": false
+   },
+   "score": {
+    "low": 6.223648613489591,
+    "middle": 6.839990230383095,
+    "high": 7.5821008657611895,
+    "text": "6.2–7.6",
+    "middle_text": "6.8",
+    "rough": false
+   },
+   "revenue_mode": "estimated"
+  },
+  {
+   "value": 8,
+   "budget": {
+    "low": 5043589.611046432,
+    "middle": 26251233.45725253,
+    "high": 62551933.92062901,
+    "text": "$5M–$63M",
+    "middle_text": "$26M",
+    "rough": true
+   },
+   "revenue": {
+    "low": 2471669.1214943593,
+    "middle": 29065127.75758316,
+    "high": 192476791.4508725,
+    "text": "$2.5M–$190M",
+    "middle_text": "$29M",
+    "rough": false
+   },
+   "score": {
+    "low": 6.217485986619187,
+    "middle": 6.838930145673675,
+    "high": 7.586665289020584,
+    "text": "6.2–7.6",
+    "middle_text": "6.8",
+    "rough": false
+   },
+   "revenue_mode": "estimated"
+  },
+  {
+   "value": 9,
+   "budget": {
+    "low": 5157784.624699831,
+    "middle": 26530659.572226968,
+    "high": 62317629.10814378,
+    "text": "$5.2M–$62M",
+    "middle_text": "$27M",
+    "rough": true
+   },
+   "revenue": {
+    "low": 2142216.728497462,
+    "middle": 25825870.158215348,
+    "high": 168424791.03052467,
+    "text": "$2.1M–$170M",
+    "middle_text": "$26M",
+    "rough": false
+   },
+   "score": {
+    "low": 6.200000864207644,
+    "middle": 6.836811236700657,
+    "high": 7.570952083251752,
+    "text": "6.2–7.6",
+    "middle_text": "6.8",
+    "rough": false
+   },
+   "revenue_mode": "estimated"
+  },
+  {
+   "value": 10,
+   "budget": {
+    "low": 5172264.749813915,
+    "middle": 26527963.016482998,
+    "high": 62452829.07958469,
+    "text": "$5.2M–$62M",
+    "middle_text": "$27M",
+    "rough": true
+   },
+   "revenue": {
+    "low": 1994804.2183665691,
+    "middle": 25719395.830170307,
+    "high": 168243077.04653618,
+    "text": "$2M–$170M",
+    "middle_text": "$26M",
+    "rough": true
+   },
+   "score": {
+    "low": 6.198506181159051,
+    "middle": 6.83034138676654,
+    "high": 7.570341072760245,
+    "text": "6.2–7.6",
+    "middle_text": "6.8",
+    "rough": false
+   },
+   "revenue_mode": "estimated"
+  },
+  {
+   "value": 11,
+   "budget": {
+    "low": 5118118.890308918,
+    "middle": 27100832.179602128,
+    "high": 62231168.67108793,
+    "text": "$5.1M–$62M",
+    "middle_text": "$27M",
+    "rough": true
+   },
+   "revenue": {
+    "low": 2179444.8561516763,
+    "middle": 28167186.55366498,
+    "high": 184397462.5651528,
+    "text": "$2.2M–$180M",
+    "middle_text": "$28M",
+    "rough": true
+   },
+   "score": {
+    "low": 6.186509169901131,
+    "middle": 6.820207409062779,
+    "high": 7.564779163463003,
+    "text": "6.2–7.6",
+    "middle_text": "6.8",
+    "rough": false
+   },
+   "revenue_mode": "estimated"
+  },
+  {
+   "value": 12,
+   "budget": {
+    "low": 5461117.613163016,
+    "middle": 29835560.834252417,
+    "high": 66404522.85699951,
+    "text": "$5.5M–$66M",
+    "middle_text": "$30M",
+    "rough": true
+   },
+   "revenue": {
+    "low": 2606244.290784704,
+    "middle": 33605358.24692931,
+    "high": 221980727.1258969,
+    "text": "$2.6M–$220M",
+    "middle_text": "$34M",
+    "rough": true
+   },
+   "score": {
+    "low": 6.190062637815567,
+    "middle": 6.817543155220338,
+    "high": 7.573249419402788,
+    "text": "6.2–7.6",
+    "middle_text": "6.8",
+    "rough": false
+   },
+   "revenue_mode": "estimated"
+  }
+ ]
+}

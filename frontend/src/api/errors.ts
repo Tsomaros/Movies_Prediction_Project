@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 
 import { ApiError } from '@/api/client'
 
-export const RATE_LIMITED = 'Too many predictions – try again in a minute.'
+export const RATE_LIMITED = "You're going a bit fast. Try again in a minute."
 
 export function notifyError(error: unknown, retry?: () => void): boolean {
   if (!(error instanceof ApiError) || error.kind === 'validation') return false
