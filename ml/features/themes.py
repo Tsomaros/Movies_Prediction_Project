@@ -25,7 +25,6 @@ from typing import Iterable
 
 import numpy as np
 import pandas as pd
-from sklearn.cluster import KMeans
 
 from ml.data.build_db import DB_FILE
 from ml.features.text import Embedder
@@ -55,6 +54,8 @@ def top_keywords(con: sqlite3.Connection, n: int = N_KEYWORDS) -> pd.DataFrame:
 
 def cluster_keywords(vectors: np.ndarray, k: int = N_CLUSTERS, seed: int = SEED) -> np.ndarray:
     """KMeans on L2-normalised vectors, so distance follows cosine similarity."""
+    from sklearn.cluster import KMeans  # training only: scikit-learn is not in the app's image
+
     return KMeans(n_clusters=k, n_init=20, random_state=seed).fit_predict(vectors)
 
 

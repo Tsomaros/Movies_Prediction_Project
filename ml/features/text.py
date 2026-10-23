@@ -1,13 +1,22 @@
 """Sentence embeddings with MiniLM (all-MiniLM-L6-v2) on ONNX Runtime. No PyTorch.
 
     download_model()         -> fetch the pinned ONNX model and tokenizer into ml/artifacts/minilm/
+    quantize_model()         -> model_q8.onnx: the same model with 8-bit weights (about 4x smaller)
     model_available()        -> True when both files are present
     Embedder().embed(texts)  -> (n, 384) float32 array, one L2-normalised vector per text
+    Embedder(model_file=APP_MODEL)
+                             -> the 8-bit model, which the app uses for a creator's synopsis
+
+Training embeds every overview with the full model (model.onnx; the cached vectors, the synopsis PCA
+and the comparables index all come from it). The app embeds only the creator's synopsis, with the 8-bit
+model: 23 MB instead of 90 MB on disk. Its weights are quantised per output channel (uint8): on 1,000
+overviews its vectors have a mean cosine of 0.993 with the full model's, and 89% find the same nearest
+overview (plain per-tensor int8 gave 0.956 and 71%). The synopsis is used only to find comparables.
 
 The pooling matches sentence-transformers: mean of the token vectors over the attention mask,
 then L2 normalisation, so the dot product of two vectors is their cosine similarity.
 
-CLI: uv run python -m ml.features.text   (download if needed, then a quick sanity check)
+CLI: uv run python -m ml.features.text   (download if needed, quantise, then a quick sanity check of both)
 """
 
 from __future__ import annotations
@@ -31,6 +40,7 @@ MODEL_FILES = {  # repo path -> (local name, sha256)
     "onnx/model.onnx": ("model.onnx", "6fd5d72fe4589f189f8ebc006442dbb529bb7ce38f8082112682524616046452"),
     "tokenizer.json": ("tokenizer.json", "be50c3628f2bf5bb5e3a7f17b1f74611b2561a3a27eeab05e5aa30f411572037"),
 }
+FULL_MODEL, APP_MODEL = "model.onnx", "model_q8.onnx"
 EMBED_DIM = 384
 MAX_TOKENS = 256  # the model was trained on inputs up to 256 word pieces; longer text is cut
 BATCH_SIZE = 64
@@ -76,17 +86,29 @@ def download_model(model_dir: Path = MODEL_DIR) -> None:
         print(f"  saved {target} ({target.stat().st_size / 1e6:.1f} MB, sha256 {_sha256(target)})")
 
 
+def quantize_model(model_dir: Path = MODEL_DIR) -> Path:
+    """Write model_q8.onnx next to model.onnx: dynamic 8-bit quantisation of the weights, per output channel
+    (needs `onnx`, ml group)."""
+    from onnxruntime.quantization import QuantType, quantize_dynamic  # training-side tool, not in the app image
+
+    target = model_dir / APP_MODEL
+    if not target.exists():
+        quantize_dynamic(str(model_dir / FULL_MODEL), str(target), weight_type=QuantType.QUInt8, per_channel=True)
+        print(f"  saved {target} ({target.stat().st_size / 1e6:.1f} MB)")
+    return target
+
+
 # ---------------------------------------------------------------- embedding
 
 
 class Embedder:
-    def __init__(self, model_dir: Path = MODEL_DIR) -> None:
-        if not model_available(model_dir):
-            raise FileNotFoundError(f"MiniLM not found in {model_dir}; run `make model` first")
+    def __init__(self, model_dir: Path = MODEL_DIR, model_file: str = FULL_MODEL) -> None:
+        if not (model_dir / model_file).exists() or not (model_dir / "tokenizer.json").exists():
+            raise FileNotFoundError(f"MiniLM ({model_file}) not found in {model_dir}; run `make model` first")
         self.tokenizer = Tokenizer.from_file(str(model_dir / "tokenizer.json"))
         self.tokenizer.enable_truncation(MAX_TOKENS)
         self.tokenizer.enable_padding()  # pad each batch to its longest text
-        self.session = ort.InferenceSession(str(model_dir / "model.onnx"), providers=["CPUExecutionProvider"])
+        self.session = ort.InferenceSession(str(model_dir / model_file), providers=["CPUExecutionProvider"])
         self.input_names = {i.name for i in self.session.get_inputs()}
 
     def _batch(self, texts: list[str]) -> np.ndarray:
@@ -112,11 +134,12 @@ class Embedder:
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     download_model()
-    embedder = Embedder()
-    a, b, c = embedder.embed(["a bank heist", "robbers steal money", "a love story in Paris"])
-    print(f"heist vs robbers: {a @ b:.3f}   heist vs love story: {a @ c:.3f}")
-    if not a @ b > a @ c:
-        raise SystemExit("Sanity check failed: the heist sentences should be the closest pair")
+    quantize_model()
+    for model_file in (FULL_MODEL, APP_MODEL):
+        a, b, c = Embedder(model_file=model_file).embed(["a bank heist", "robbers steal money", "a love story in Paris"])
+        print(f"{model_file}: heist vs robbers {a @ b:.3f}, heist vs love story {a @ c:.3f}")
+        if not a @ b > a @ c:
+            raise SystemExit(f"Sanity check failed for {model_file}: the heist sentences should be the closest pair")
     print("Sanity check passed.")
 
 

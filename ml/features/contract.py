@@ -14,6 +14,7 @@ A name that matches nothing in the database later counts as "new" (no track reco
 
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import asdict, dataclass
 from typing import Any, Collection
@@ -86,8 +87,8 @@ def _empty(value: Any) -> bool:
 
 
 def _number(f: Field, value: Any, cast: type) -> tuple[Any, str | None]:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        return None, "must be a number"
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        return None, "must be a number"  # NaN and infinity too: JSON parsers let them through
     if cast is int and value != int(value):
         return None, "must be a whole number"
     value = cast(value)

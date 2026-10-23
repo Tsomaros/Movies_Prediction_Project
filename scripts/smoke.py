@@ -1,0 +1,228 @@
+"""Smoke test for a running API: the same checks against local Docker and the live URL (Day 14).
+
+    uv run python scripts/smoke.py                                   # http://localhost:8000 (make smoke)
+    uv run python scripts/smoke.py --base-url https://example.onrender.com --wait 180
+    uv run python scripts/smoke.py --web-url http://localhost:8080   # also the frontend (make smoke does this)
+
+Checks, each printed as one line with its time:
+- /health answers "ok" with the expected model version (from ml/artifacts/final/manifest.json when it is
+  there, or --expect-version) and a database with films;
+- the three golden forms (tests/golden/forms.json) through POST /predict: ordered ranges, the revenue mode,
+  the warning codes and each middle equal to tests/golden/predictions.json to 6 significant figures;
+- POST /predict/compare with two variants, and a bad form that must get the readable 422;
+- search, a movie page, autocomplete and /meta/options on the real data;
+- /model-card belongs to the served models and has the 2019+ test and the 2026 holdout;
+- with --web-url, the frontend: the home page, its script bundle (cached for a year), a deep link served
+  as the app (/predict/...), and /api/v1/health and /meta/options through the frontend's proxy.
+
+It waits up to --wait seconds for /health first (a container starting, or a free host waking up), and
+exits with status 1 if any check fails. Only the standard library and httpx are needed.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+import time
+from pathlib import Path
+from typing import Any, Callable
+
+import httpx
+
+GOLDEN = Path("tests/golden")
+MANIFEST = Path("ml/artifacts/final/manifest.json")
+API = "/api/v1"
+TARGETS = ("budget", "revenue", "score")
+
+
+class Smoke:
+    def __init__(self, base_url: str, timeout: float = 60.0):
+        self.client = httpx.Client(base_url=base_url.rstrip("/"), timeout=timeout)
+        self.failures = 0
+
+    def check(self, name: str, run: Callable[[], str | None]) -> None:
+        start = time.perf_counter()
+        try:
+            note = run() or ""
+            mark = "ok  "
+        except Exception as e:  # noqa: BLE001 (any problem is a failed check, reported and counted)
+            note, mark = f"{type(e).__name__}: {e}", "FAIL"
+            self.failures += 1
+        print(f"{mark} {name:42s} {(time.perf_counter() - start) * 1000:7.0f} ms  {note}", flush=True)
+
+    def get(self, path: str, **params: Any) -> Any:
+        r = self.client.get(API + path, params=params)
+        r.raise_for_status()
+        return r.json()
+
+    def post(self, path: str, body: Any, expect: int = 200) -> Any:
+        r = self.client.post(API + path, json=body)
+        assert r.status_code == expect, f"status {r.status_code}, expected {expect}: {r.text[:200]}"
+        return r.json()
+
+    def wait(self, seconds: float) -> None:
+        deadline = time.monotonic() + seconds
+        while True:
+            try:
+                if self.client.get(API + "/health").status_code == 200:
+                    return
+            except httpx.HTTPError:
+                pass
+            if time.monotonic() > deadline:
+                raise SystemExit(f"no healthy API at {self.client.base_url} after {seconds:.0f} s")
+            time.sleep(2)
+
+
+def web_checks(s: Smoke, web_url: str, expected_version: str | None) -> None:
+    """The frontend: nginx serves the app and its bundle, sends any route to the app, and proxies /api."""
+    web = httpx.Client(base_url=web_url.rstrip("/"), timeout=30)
+    page: dict[str, str] = {}
+
+    def home() -> str:
+        r = web.get("/")
+        r.raise_for_status()
+        assert "text/html" in r.headers["content-type"], r.headers["content-type"]
+        assert '<div id="root">' in r.text and "<title>Movie Prediction</title>" in r.text, r.text[:200]
+        page["html"] = r.text
+        return f"{len(r.content):,} bytes, cache: {r.headers.get('cache-control')}"
+
+    s.check(f"GET {web_url}/ (home page)", home)
+
+    def bundle() -> str:
+        found = re.search(r'src="(/assets/[^"]+\.js)"', page.get("html", ""))
+        assert found, "no script bundle in the home page"
+        r = web.get(found.group(1))
+        r.raise_for_status()
+        assert "javascript" in r.headers["content-type"], r.headers["content-type"]
+        assert "immutable" in r.headers.get("cache-control", ""), r.headers.get("cache-control")
+        return f"{found.group(1)}: {len(r.content):,} bytes ({r.headers.get('content-encoding', 'not compressed')})"
+
+    s.check("GET the script bundle", bundle)
+
+    def deep_link() -> str:
+        r = web.get("/predict/result")
+        r.raise_for_status()
+        assert '<div id="root">' in r.text, "a client-side route didn't get the app"
+        return "served the app"
+
+    s.check("GET /predict/result (client-side route)", deep_link)
+
+    def proxied() -> str:
+        h = web.get(API + "/health").json()
+        assert h["status"] == "ok" and (expected_version is None or h["model_version"] == expected_version), h
+        o = web.get(API + "/meta/options").json()
+        assert len(o["fields"]) == 14, len(o["fields"])
+        return f"model {h['model_version']} through the proxy"
+
+    s.check("GET /api/v1 through the frontend", proxied)
+
+
+def six(x: float) -> float:
+    return float(f"{x:.6g}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Smoke-test a running movie prediction API.")
+    parser.add_argument("--base-url", default="http://localhost:8000")
+    parser.add_argument("--wait", type=float, default=120, help="seconds to wait for /health first")
+    parser.add_argument("--expect-version", help="model version /health must report (default: the local manifest's)")
+    parser.add_argument("--web-url", help="also check the frontend served here (e.g. http://localhost:8080)")
+    args = parser.parse_args()
+    sys.stdout.reconfigure(encoding="utf-8")
+
+    expected_version = args.expect_version or (json.loads(MANIFEST.read_text(encoding="utf-8"))["version"]
+                                               if MANIFEST.exists() else None)
+    forms = json.loads((GOLDEN / "forms.json").read_text(encoding="utf-8"))["forms"]
+    golden = json.loads((GOLDEN / "predictions.json").read_text(encoding="utf-8"))
+    s = Smoke(args.base_url)
+    print(f"Smoke test of {args.base_url}")
+    s.wait(args.wait)
+
+    def health() -> str:
+        h = s.get("/health")
+        assert h["status"] == "ok", h
+        assert expected_version is None or h["model_version"] == expected_version, \
+            f"model {h['model_version']}, expected {expected_version}"
+        assert h["database"]["films"] > 0
+        return f"model {h['model_version']}, {h['database']['films']:,} films, loaded in {h['load_seconds']} s"
+
+    s.check("GET /health", health)
+
+    for name, form in forms.items():
+        def predict(name=name, form=form) -> str:
+            out, want = s.post("/predict", form), golden[name]
+            for t in TARGETS:
+                assert out[t]["low"] <= out[t]["middle"] <= out[t]["high"], f"{t} range not ordered"
+                assert six(out[t]["middle"]) == want["ranges"][t]["middle"], \
+                    f"{t} middle {six(out[t]['middle'])}, golden {want['ranges'][t]['middle']}"
+            assert out["revenue"]["mode"] == want["ranges"]["revenue"]["mode"]
+            assert [w["code"] for w in out["warnings"]] == want["warnings"]
+            return f"revenue {out['revenue']['text']}, score {out['score']['text']}"
+
+        s.check(f"POST /predict ({name})", predict)
+
+    def compare() -> str:
+        out = s.post("/predict/compare", {"base": forms["small_drama"],
+                                          "variants": [{"budget": 20_000_000}, {"companies": [33]}]})
+        changed = [v["differences"]["changed_fields"] for v in out["variants"]]
+        assert changed == [["budget"], ["companies"]], changed
+        return f"revenue x{out['variants'][1]['differences']['revenue']['ratio']} with Universal"
+
+    s.check("POST /predict/compare", compare)
+
+    def bad_form() -> str:
+        body = s.post("/predict", {**forms["small_drama"], "runtime": 5}, expect=422)
+        assert body["errors"] == {"runtime": "must be between 40 and 300"}, body
+        return "runtime: must be between 40 and 300"
+
+    s.check("POST /predict (bad form -> 422)", bad_form)
+
+    def search() -> str:
+        found = s.get("/movies", q="avengers infinity")
+        assert found["total"] > 0 and found["items"][0]["id"] == 299536, found["items"][:1]
+        return f"{found['total']} found, first: {found['items'][0]['title']}"
+
+    s.check("GET /movies?q=avengers infinity", search)
+
+    def movie() -> str:
+        m = s.get("/movies/299536")
+        assert m["title"] == "Avengers: Infinity War" and len(m["similar"]) == 6
+        assert 299536 not in [f["id"] for f in m["similar"]]
+        return f"similar: {', '.join(f['title'] for f in m['similar'][:3])}..."
+
+    s.check("GET /movies/299536", movie)
+
+    def people() -> str:
+        found = s.get("/people", role="actor", q="tom ha")
+        assert found[0]["name"] == "Tom Hanks", found[:1]
+        return ", ".join(f"{p['name']} ({p['n_films']})" for p in found[:3])
+
+    s.check("GET /people?role=actor&q=tom ha", people)
+
+    def options() -> str:
+        o = s.get("/meta/options")
+        assert len(o["themes"]) == 27 and len(o["fields"]) == 14
+        return f"{len(o['fields'])} fields, {len(o['themes'])} themes, {len(o['languages'])} languages"
+
+    s.check("GET /meta/options", options)
+
+    def model_card() -> str:
+        c = s.get("/model-card")
+        assert expected_version is None or c["model_version"] == expected_version, c["model_version"]
+        revenue = c["test"]["targets"]["revenue"]
+        assert revenue["films"] > 0 and 0 < revenue["model"]["coverage"] < 1 and c["holdout"]["targets"]["score"]["films"] > 0
+        return f"2019+ revenue in range {revenue['model']['coverage']:.1%} of {revenue['films']:,} films"
+
+    s.check("GET /model-card", model_card)
+
+    if args.web_url:
+        web_checks(s, args.web_url, expected_version)
+
+    print("All checks passed." if not s.failures else f"{s.failures} check(s) FAILED.")
+    sys.exit(1 if s.failures else 0)
+
+
+if __name__ == "__main__":
+    main()

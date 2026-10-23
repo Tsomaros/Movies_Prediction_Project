@@ -35,7 +35,6 @@ import joblib
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import GroupKFold
 
 from ml.features.build import FEATURE_LIST_FILE
 from ml.features.synopsis import N_COMPONENTS
@@ -134,6 +133,8 @@ class LgbmQuantile:
         if self.monotone:
             middle["monotone_constraints"] = [1 if c in MONOTONE else 0 for c in self.features]
         self.models["p50"] = _train(X, y, middle, self.n_trees)
+
+        from sklearn.model_selection import GroupKFold  # training only: scikit-learn is not in the app's image
 
         # out-of-fold residuals, folds grouped by release year
         residual = np.empty(len(train))

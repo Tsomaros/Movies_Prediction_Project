@@ -1,0 +1,11 @@
+{
+  // The tests: the app's settings plus the test files, which may import fixtures from outside frontend/
+  // (tests/golden/forms.json). Checked by `npm run typecheck` (tsc -b); the image's build checks the app only.
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
+    "types": ["vite/client", "vitest/globals"]
+  },
+  "include": ["src"],
+  "exclude": []
+}

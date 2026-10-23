@@ -113,13 +113,17 @@ class Chain:
     def load(cls, out_dir: Path = ARTIFACTS_DIR) -> Chain:
         """The saved models in out_dir: ml/artifacts (<=2015, `make train`) or ml/artifacts/final (all data).
 
-        The all-data revenue model carries its estimated-mode correction in its metadata (q_estimated)."""
-        from ml.models.calibrate import load_q  # calibrate imports this module
-
+        The all-data revenue model carries its estimated-mode correction in its metadata (q_estimated), so the
+        app never imports calibrate (and through it tune and optuna, which the Docker image leaves out)."""
         revenue, budget = load_model("revenue", out_dir), load_model("budget", out_dir)
         meta = json.loads(meta_file("revenue", out_dir).read_text(encoding="utf-8"))
         given = revenue.q
-        estimated = meta["q_estimated"] if "q_estimated" in meta else load_q("revenue", estimated=True)
+        if "q_estimated" in meta:
+            estimated = meta["q_estimated"]
+        else:  # the <=2015 models: their correction is in ml/artifacts/revenue_estimated_calibration.json
+            from ml.models.calibrate import load_q  # calibrate imports this module
+
+            estimated = load_q("revenue", estimated=True)
         return cls(revenue, budget, {"given": given, "estimated": max(estimated, given)})
 
     def predict_revenue(self, features: pd.DataFrame, budget=None) -> pd.DataFrame:

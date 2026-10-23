@@ -1,0 +1,731 @@
+{
+ "fields": [
+  {
+   "name": "genres",
+   "kind": "choices",
+   "required": true,
+   "help": "One or more TMDB genres",
+   "choices": [
+    "Action",
+    "Adventure",
+    "Animation",
+    "Comedy",
+    "Crime",
+    "Documentary",
+    "Drama",
+    "Family",
+    "Fantasy",
+    "History",
+    "Horror",
+    "Music",
+    "Mystery",
+    "Romance",
+    "Science Fiction",
+    "TV Movie",
+    "Thriller",
+    "War",
+    "Western"
+   ],
+   "min_items": 1,
+   "max_items": 5
+  },
+  {
+   "name": "release_year",
+   "kind": "int",
+   "required": true,
+   "help": "Planned release year",
+   "min": 1960.0,
+   "max": 2035.0
+  },
+  {
+   "name": "release_month",
+   "kind": "int",
+   "required": true,
+   "help": "Planned release month (1-12)",
+   "min": 1.0,
+   "max": 12.0
+  },
+  {
+   "name": "runtime",
+   "kind": "int",
+   "required": true,
+   "help": "Runtime in minutes",
+   "min": 40.0,
+   "max": 300.0
+  },
+  {
+   "name": "language",
+   "kind": "code",
+   "required": true,
+   "help": "Original language, two-letter code (en, fr, hi...)",
+   "pattern": "^[a-z]{2}$"
+  },
+  {
+   "name": "certification",
+   "kind": "choice",
+   "required": true,
+   "help": "US certification",
+   "choices": [
+    "G",
+    "PG",
+    "PG-13",
+    "R",
+    "NC-17",
+    "unrated/unknown"
+   ]
+  },
+  {
+   "name": "director",
+   "kind": "ref",
+   "required": true,
+   "help": "Director: an id from autocomplete or a name"
+  },
+  {
+   "name": "actors",
+   "kind": "refs",
+   "required": true,
+   "help": "Top-billed actors, in billing order",
+   "min_items": 5,
+   "max_items": 10
+  },
+  {
+   "name": "themes",
+   "kind": "choices",
+   "required": true,
+   "help": "Story themes",
+   "choices": [
+    "LGBTQ+",
+    "action and martial arts",
+    "based on a book",
+    "christmas and holidays",
+    "comedy and satire",
+    "coming of age and school",
+    "crime and police",
+    "family",
+    "fantasy and magic",
+    "friendship",
+    "grief, addiction and mental health",
+    "heist",
+    "history and war",
+    "love and marriage",
+    "monsters and gore",
+    "murder and revenge",
+    "music",
+    "politics and religion",
+    "science fiction",
+    "sequel or remake",
+    "sex and erotica",
+    "sports",
+    "spy and conspiracy",
+    "superhero",
+    "supernatural",
+    "survival and adventure",
+    "true story"
+   ],
+   "min_items": 1,
+   "max_items": 5
+  },
+  {
+   "name": "companies",
+   "kind": "refs",
+   "required": false,
+   "help": "Production companies",
+   "min_items": 0,
+   "max_items": 5
+  },
+  {
+   "name": "countries",
+   "kind": "codes",
+   "required": false,
+   "help": "Production countries, two-letter codes (US, GB...)",
+   "min_items": 0,
+   "max_items": 5,
+   "pattern": "^[A-Z]{2}$"
+  },
+  {
+   "name": "franchise",
+   "kind": "ref",
+   "required": false,
+   "help": "Franchise (TMDB collection) the film belongs to; a new name starts one"
+  },
+  {
+   "name": "synopsis",
+   "kind": "text",
+   "required": false,
+   "help": "Short plot summary",
+   "min": 1.0,
+   "max": 2000.0
+  },
+  {
+   "name": "budget",
+   "kind": "float",
+   "required": false,
+   "help": "Planned budget in 2025 US dollars",
+   "min": 1000.0,
+   "max": 1000000000.0
+  }
+ ],
+ "genres": [
+  "Action",
+  "Adventure",
+  "Animation",
+  "Comedy",
+  "Crime",
+  "Documentary",
+  "Drama",
+  "Family",
+  "Fantasy",
+  "History",
+  "Horror",
+  "Music",
+  "Mystery",
+  "Romance",
+  "Science Fiction",
+  "TV Movie",
+  "Thriller",
+  "War",
+  "Western"
+ ],
+ "certifications": [
+  "G",
+  "PG",
+  "PG-13",
+  "R",
+  "NC-17",
+  "unrated/unknown"
+ ],
+ "themes": [
+  "LGBTQ+",
+  "action and martial arts",
+  "based on a book",
+  "christmas and holidays",
+  "comedy and satire",
+  "coming of age and school",
+  "crime and police",
+  "family",
+  "fantasy and magic",
+  "friendship",
+  "grief, addiction and mental health",
+  "heist",
+  "history and war",
+  "love and marriage",
+  "monsters and gore",
+  "murder and revenge",
+  "music",
+  "politics and religion",
+  "science fiction",
+  "sequel or remake",
+  "sex and erotica",
+  "sports",
+  "spy and conspiracy",
+  "superhero",
+  "supernatural",
+  "survival and adventure",
+  "true story"
+ ],
+ "languages": [
+  {
+   "code": "en",
+   "films": 38845
+  },
+  {
+   "code": "fr",
+   "films": 6325
+  },
+  {
+   "code": "es",
+   "films": 5328
+  },
+  {
+   "code": "it",
+   "films": 4529
+  },
+  {
+   "code": "ja",
+   "films": 3833
+  },
+  {
+   "code": "de",
+   "films": 2458
+  },
+  {
+   "code": "ru",
+   "films": 2141
+  },
+  {
+   "code": "hi",
+   "films": 1410
+  },
+  {
+   "code": "zh",
+   "films": 1310
+  },
+  {
+   "code": "cn",
+   "films": 1197
+  },
+  {
+   "code": "pt",
+   "films": 1138
+  },
+  {
+   "code": "ko",
+   "films": 965
+  },
+  {
+   "code": "tr",
+   "films": 828
+  },
+  {
+   "code": "el",
+   "films": 795
+  },
+  {
+   "code": "pl",
+   "films": 732
+  },
+  {
+   "code": "sv",
+   "films": 653
+  },
+  {
+   "code": "cs",
+   "films": 614
+  },
+  {
+   "code": "da",
+   "films": 580
+  },
+  {
+   "code": "ar",
+   "films": 444
+  },
+  {
+   "code": "sh",
+   "films": 441
+  },
+  {
+   "code": "nl",
+   "films": 437
+  },
+  {
+   "code": "ro",
+   "films": 403
+  },
+  {
+   "code": "fi",
+   "films": 385
+  },
+  {
+   "code": "ta",
+   "films": 332
+  },
+  {
+   "code": "no",
+   "films": 298
+  },
+  {
+   "code": "hu",
+   "films": 287
+  },
+  {
+   "code": "ml",
+   "films": 285
+  },
+  {
+   "code": "fa",
+   "films": 208
+  },
+  {
+   "code": "te",
+   "films": 174
+  },
+  {
+   "code": "th",
+   "films": 142
+  },
+  {
+   "code": "he",
+   "films": 136
+  },
+  {
+   "code": "tl",
+   "films": 126
+  },
+  {
+   "code": "ka",
+   "films": 124
+  },
+  {
+   "code": "xx",
+   "films": 90
+  },
+  {
+   "code": "bg",
+   "films": 87
+  },
+  {
+   "code": "sr",
+   "films": 81
+  },
+  {
+   "code": "bn",
+   "films": 80
+  },
+  {
+   "code": "hr",
+   "films": 76
+  },
+  {
+   "code": "sk",
+   "films": 74
+  },
+  {
+   "code": "uk",
+   "films": 73
+  },
+  {
+   "code": "et",
+   "films": 70
+  },
+  {
+   "code": "id",
+   "films": 70
+  },
+  {
+   "code": "is",
+   "films": 69
+  },
+  {
+   "code": "ca",
+   "films": 49
+  },
+  {
+   "code": "sl",
+   "films": 49
+  },
+  {
+   "code": "lv",
+   "films": 41
+  },
+  {
+   "code": "lt",
+   "films": 34
+  },
+  {
+   "code": "hy",
+   "films": 33
+  },
+  {
+   "code": "az",
+   "films": 32
+  },
+  {
+   "code": "mk",
+   "films": 30
+  },
+  {
+   "code": "kn",
+   "films": 26
+  },
+  {
+   "code": "vi",
+   "films": 17
+  },
+  {
+   "code": "ur",
+   "films": 13
+  },
+  {
+   "code": "wo",
+   "films": 13
+  },
+  {
+   "code": "ms",
+   "films": 12
+  },
+  {
+   "code": "sq",
+   "films": 12
+  },
+  {
+   "code": "eu",
+   "films": 11
+  },
+  {
+   "code": "kk",
+   "films": 10
+  },
+  {
+   "code": "mr",
+   "films": 9
+  },
+  {
+   "code": "af",
+   "films": 7
+  }
+ ],
+ "countries": [
+  {
+   "code": "US",
+   "films": 30454
+  },
+  {
+   "code": "FR",
+   "films": 8864
+  },
+  {
+   "code": "GB",
+   "films": 7149
+  },
+  {
+   "code": "IT",
+   "films": 6105
+  },
+  {
+   "code": "DE",
+   "films": 4367
+  },
+  {
+   "code": "JP",
+   "films": 4303
+  },
+  {
+   "code": "CA",
+   "films": 3561
+  },
+  {
+   "code": "ES",
+   "films": 3195
+  },
+  {
+   "code": "MX",
+   "films": 2372
+  },
+  {
+   "code": "IN",
+   "films": 2351
+  },
+  {
+   "code": "HK",
+   "films": 2088
+  },
+  {
+   "code": "SU",
+   "films": 1979
+  },
+  {
+   "code": "BE",
+   "films": 1287
+  },
+  {
+   "code": "BR",
+   "films": 1090
+  },
+  {
+   "code": "KR",
+   "films": 1068
+  },
+  {
+   "code": "SE",
+   "films": 1031
+  },
+  {
+   "code": "AU",
+   "films": 969
+  },
+  {
+   "code": "DK",
+   "films": 896
+  },
+  {
+   "code": "PL",
+   "films": 885
+  },
+  {
+   "code": "CN",
+   "films": 865
+  },
+  {
+   "code": "TR",
+   "films": 817
+  },
+  {
+   "code": "GR",
+   "films": 805
+  },
+  {
+   "code": "AR",
+   "films": 776
+  },
+  {
+   "code": "YU",
+   "films": 759
+  },
+  {
+   "code": "NL",
+   "films": 705
+  },
+  {
+   "code": "RU",
+   "films": 630
+  },
+  {
+   "code": "XC",
+   "films": 628
+  },
+  {
+   "code": "CH",
+   "films": 600
+  },
+  {
+   "code": "RO",
+   "films": 552
+  },
+  {
+   "code": "FI",
+   "films": 516
+  },
+  {
+   "code": "NO",
+   "films": 483
+  },
+  {
+   "code": "IE",
+   "films": 442
+  },
+  {
+   "code": "AT",
+   "films": 439
+  },
+  {
+   "code": "TW",
+   "films": 433
+  },
+  {
+   "code": "HU",
+   "films": 406
+  },
+  {
+   "code": "EG",
+   "films": 355
+  },
+  {
+   "code": "PT",
+   "films": 282
+  },
+  {
+   "code": "ZA",
+   "films": 264
+  },
+  {
+   "code": "PH",
+   "films": 256
+  },
+  {
+   "code": "TH",
+   "films": 233
+  },
+  {
+   "code": "CZ",
+   "films": 232
+  },
+  {
+   "code": "IR",
+   "films": 222
+  },
+  {
+   "code": "IL",
+   "films": 221
+  },
+  {
+   "code": "XG",
+   "films": 214
+  },
+  {
+   "code": "BG",
+   "films": 204
+  },
+  {
+   "code": "NZ",
+   "films": 202
+  },
+  {
+   "code": "LU",
+   "films": 198
+  },
+  {
+   "code": "CL",
+   "films": 156
+  },
+  {
+   "code": "CO",
+   "films": 131
+  },
+  {
+   "code": "IS",
+   "films": 120
+  },
+  {
+   "code": "CU",
+   "films": 118
+  },
+  {
+   "code": "ID",
+   "films": 100
+  },
+  {
+   "code": "VE",
+   "films": 87
+  },
+  {
+   "code": "UA",
+   "films": 83
+  },
+  {
+   "code": "SG",
+   "films": 74
+  },
+  {
+   "code": "PE",
+   "films": 71
+  },
+  {
+   "code": "MA",
+   "films": 68
+  },
+  {
+   "code": "PR",
+   "films": 59
+  },
+  {
+   "code": "RS",
+   "films": 52
+  },
+  {
+   "code": "AE",
+   "films": 49
+  }
+ ],
+ "release_years": [
+  2026,
+  2027,
+  2028,
+  2029,
+  2030
+ ],
+ "months": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12
+ ]
+}

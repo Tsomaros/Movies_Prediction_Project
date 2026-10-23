@@ -1,0 +1,155 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-heading: var(--font-sans);
+    --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* The palette: a teal accent on a lightly tinted page, with forms and panels on white cards (light), and the
+   same roles in dark. --accent is the soft teal of hovers, chips and the active option. */
+:root {
+    --background: #f7f7f5;
+    --foreground: #1d1d1f;
+    --card: #ffffff;
+    --card-foreground: #1d1d1f;
+    --popover: #ffffff;
+    --popover-foreground: #1d1d1f;
+    --primary: #0d6e6e;
+    --primary-foreground: #ffffff;
+    --secondary: #e3f1f1;
+    --secondary-foreground: #0b4f4f;
+    --muted: #efefec;
+    --muted-foreground: #5f6368;
+    --accent: #e3f1f1;
+    --accent-foreground: #0b4f4f;
+    --destructive: #b3261e;
+    --border: #d9d9d4;
+    --input: #d9d9d4;
+    --ring: #0d6e6e;
+    --chart-1: #0d6e6e;
+    --chart-2: #2a78d6;
+    --chart-3: #b7d3f6;
+    --chart-4: #184f95;
+    --chart-5: #d03b3b;
+    --radius: 0.5rem;
+    --sidebar: #ffffff;
+    --sidebar-foreground: #1d1d1f;
+    --sidebar-primary: #0d6e6e;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #e3f1f1;
+    --sidebar-accent-foreground: #0b4f4f;
+    --sidebar-border: #d9d9d4;
+    --sidebar-ring: #0d6e6e;
+}
+
+.dark {
+    --background: #161718;
+    --foreground: #e8e8e6;
+    --card: #1f2123;
+    --card-foreground: #e8e8e6;
+    --popover: #1f2123;
+    --popover-foreground: #e8e8e6;
+    --primary: #4fb3b3;
+    --primary-foreground: #0b1a1a;
+    --secondary: #1c3434;
+    --secondary-foreground: #cfeaea;
+    --muted: #2a2c2f;
+    --muted-foreground: #a0a4a8;
+    --accent: #1c3434;
+    --accent-foreground: #cfeaea;
+    --destructive: #f2948c;
+    --border: #3a3d40;
+    --input: #3a3d40;
+    --ring: #4fb3b3;
+    --chart-1: #4fb3b3;
+    --chart-2: #3987e5;
+    --chart-3: #1c5cab;
+    --chart-4: #cde2fb;
+    --chart-5: #e05a5a;
+    --sidebar: #1f2123;
+    --sidebar-foreground: #e8e8e6;
+    --sidebar-primary: #4fb3b3;
+    --sidebar-primary-foreground: #0b1a1a;
+    --sidebar-accent: #1c3434;
+    --sidebar-accent-foreground: #cfeaea;
+    --sidebar-border: #3a3d40;
+    --sidebar-ring: #4fb3b3;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+    }
+  html {
+    @apply font-sans;
+    }
+}
+/* Printing a result (or saving it as PDF): always the light palette, cards kept whole, no shadows. */
+@media print {
+    :root, .dark {
+        --background: #ffffff;
+        --foreground: #1d1d1f;
+        --card: #ffffff;
+        --card-foreground: #1d1d1f;
+        --muted: #f2f2f0;
+        --muted-foreground: #5f6368;
+        --secondary: #e3f1f1;
+        --secondary-foreground: #0b4f4f;
+        --accent: #e3f1f1;
+        --border: #d9d9d4;
+        --primary: #0d6e6e;
+        --chart-2: #2a78d6;
+        --chart-4: #184f95;
+        color-scheme: light;
+    }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    section, article, aside { break-inside: avoid; box-shadow: none !important; }
+}

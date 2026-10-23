@@ -29,8 +29,9 @@ from ml.models.train import ARTIFACTS_DIR, QUANTILE_KEYS, TARGETS, load_model
 from ml.predict import InvalidForm, Predictor
 from tests.test_golden import FORMS, NEEDED
 
-pytestmark = pytest.mark.skipif(not all(p.exists() for p in NEEDED),
-                                reason="needs data/movies.db, the all-data models and the comparables index")
+pytestmark = [pytest.mark.real_data,
+              pytest.mark.skipif(not all(p.exists() for p in NEEDED),
+                                 reason="needs data/movies.db, the all-data models and the comparables index")]
 BUDGETS = np.geomspace(100_000, 500_000_000, 12)
 N_FILMS = 60  # real 2016-18 films run through predict() for the bounds check
 

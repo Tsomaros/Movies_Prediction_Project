@@ -1,0 +1,17 @@
+# Build context for backend/Dockerfile: nothing goes in unless listed here.
+*
+!pyproject.toml
+!uv.lock
+!backend/
+!ml/
+!build/movies.db
+!build/context.joblib
+
+# Inside the allowed folders, still out:
+ml/artifacts/*.joblib
+ml/artifacts/minilm/model.onnx
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.ipynb_checkpoints/
+backend/Dockerfile

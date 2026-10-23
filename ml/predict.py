@@ -162,10 +162,13 @@ class Predictor:
     groups: dict[str, str] = field(default_factory=feature_groups)
 
     @classmethod
-    def load(cls, out_dir: Path = FINAL_DIR, db_path: Path = DB_FILE, comparables: bool = True) -> Predictor:
+    def load(cls, out_dir: Path = FINAL_DIR, db_path: Path = DB_FILE, comparables: bool = True,
+             context_file: Path | None = None) -> Predictor:
+        """context_file: the track records prebuilt by `python -m ml.features.build prebuilt` (the Docker image's
+        way to skip the memory-hungry build); None builds them from the database."""
         manifest = check_manifest(out_dir)
         with closing(_read_only(db_path)) as con:
-            ctx = FeatureContext.load(con)
+            ctx = FeatureContext.load(con, prebuilt=context_file)
         index = Index.load(out_dir / INDEX_FILE.name) if comparables else None
         return cls(Chain.load(out_dir), load_model("score", out_dir), ctx, load_rule(out_dir / ROUGH_FILE.name),
                    index, manifest, db_path)

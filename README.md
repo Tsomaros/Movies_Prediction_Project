@@ -54,15 +54,21 @@ Requirements: [uv](https://docs.astral.sh/uv/) and GNU make. uv installs Python 
 
 ```bash
 make setup                 # create .venv and install locked dependencies
-make model                 # download the MiniLM text model (about 90 MB, once)
+make model                 # download the MiniLM text model (about 90 MB, once) and make its 8-bit copy for the app
 cp .env.example .env       # then paste your TMDB API Read Access Token into .env
-make test                  # offline tests, no network needed (about 80 s; the golden and sanity tests need the database and models, about 7 s without)
+make test                  # offline tests, no network needed (about 2-2.5 min; see Testing)
+make test-fast             # the quick loop: no slow or real-data tests (about 15 s)
+make coverage              # every test with line and branch coverage
 make data                  # pull films from TMDB (resumable), build data/movies.db, then the features table
 make db                    # rebuild data/movies.db from the raw pull only (about 30 s; drops the features table)
 make features              # build the features table (about 1 min; the first run also embeds every overview, about 8 min)
 make tune                  # tune the LightGBM settings on backtest folds 1-2 (15 min per target, 45 min in all)
 make train                 # calibrate the ranges, then fit and save all three models to ml/artifacts/ (about 5 min)
 make evaluate              # baselines and LightGBM on validation, breakdowns and backtest -> reports/ (test split untouched)
+make api                   # the API on http://localhost:8000, docs at /docs (needs the database and the app's models)
+make docker-build          # the backend and frontend images (see Running with Docker); make docker-run, make smoke
+make web-setup             # the frontend's packages (needs Node 24); then make web for http://localhost:5173 (see Frontend)
+make web-test              # the frontend's types, lint and tests
 uv run python -m ml.models.rough           # the rough-estimate cut-offs (fitted once on Day 6, then frozen)
 uv run python -m ml.eval.final test        # the one-time test run (done on Day 6; refuses to run again)
 uv run python -m ml.eval.final all-data    # retrain the app's models on 1960-2025 -> ml/artifacts/final/ (about 1 min)
@@ -73,10 +79,11 @@ uv run python -m ml.predict manifest       # checksums of the app's model files 
 | Folder       | Contents                                         |
 | ------------ | ------------------------------------------------ |
 | `ml/`        | Data pull, features, models and evaluation; `ml/artifacts/` holds the PCA and the models' settings, calibration and metadata (committed), the MiniLM files and the trained `.joblib` models (not in git; `make model`, `make train`); `ml/artifacts/final/` holds the app's all-data models, their `manifest.json` and the comparables index; `ml/explain/` and `ml/predict.py` turn them into explained predictions |
-| `backend/`   | FastAPI app (later)                              |
-| `frontend/`  | React (Vite) app (later)                         |
+| `backend/`   | FastAPI app: `backend/app/` with one router per resource, schemas, read-only repo queries and services ([API](#api)) |
+| `frontend/`  | React app: the creator form, the API client and types ([Frontend](#frontend)) |
 | `data/`      | Raw pull and database (not in git), CPI table, summaries |
-| `tests/`     | Offline tests                                    |
+| `tests/`     | Offline tests, the end-to-end fixture and the golden forms ([Testing](#testing)) |
+| `scripts/`   | `slim_db.py` (the image's database copy) and `smoke.py` (checks a running API and app) |
 | `notebooks/` | Exploration and check notebooks                  |
 | `reports/`   | Evaluation reports from `make evaluate`, the ablation and the final test run (committed) |
 
@@ -384,7 +391,7 @@ Day 7 turns the app's models into one call: `ml.predict.predict(form)` returns b
 
 ### Comparable films
 
-`ml/explain/comparables.py` returns 5 earlier films like the planned one, with their real budget, revenue (2025 $) and score. The pool is the 33,077 films with a usable score; only films released before the planned date can be returned, and of the 50 most similar, those with a reported budget or revenue come first. Similarity is a weighted average of genres (0.3), themes (0.2), synopsis (0.3, cosine on the MiniLM vectors, skipped without a synopsis), era (0.1), budget level (0.2, the creator's budget or the budget model's estimate) and the same original language (0.1). The index (`ml/artifacts/final/comparables.npz`, 26 MB, not in git) is built by `uv run python -m ml.explain.comparables`; a query takes about 8 ms.
+`ml/explain/comparables.py` returns 5 earlier films like the planned one, with their real budget, revenue (2025 $) and score, and up to 3 short reasons why each is similar, strongest first: the shared genres or themes by name ("Same genres", "Also superhero, science fiction"), "Similar story" (synopsis cosine 0.5+), "Similar budget" (within 2×), "Same era" (about 5 years) or, for films not in English, "Same language". The pool is the 33,077 films with a usable score; only films released before the planned date can be returned, and of the 50 most similar, those with a reported budget or revenue come first. Similarity is a weighted average of genres (0.3), themes (0.2), synopsis (0.3, cosine on the MiniLM vectors, skipped without a synopsis), era (0.1), budget level (0.2, the creator's budget or the budget model's estimate) and the same original language (0.1). The index (`ml/artifacts/final/comparables.npz`, 26 MB, not in git) is built by `uv run python -m ml.explain.comparables`; a query takes about 8 ms.
 
 The language weight and the doubled budget weight were chosen on 600 films from 2016–18, each judged at its release:
 
@@ -415,6 +422,227 @@ Warnings appear for a budget of $150M or more (revenue for these films was the w
 | Unknown cast (horror, new director and actors, $2M, no studio or country) | $18K–$7M, rough | $38K–$14M, rough | 4.8–6.9 |
 
 These three forms are the golden examples in `tests/test_golden.py`: the tests check rules (ordered ranges, mode, warnings, earlier comparables, speed) and a snapshot of the output in `tests/golden/predictions.json`, which is rewritten only on purpose (`UPDATE_GOLDEN=1 uv run pytest tests/test_golden.py`).
+
+## API
+
+A FastAPI backend in `backend/app/`. Every endpoint lives under `/api/v1`, and the interactive docs are at `/docs`. Run it with `make api` (http://localhost:8000; about 10 s to load the models and lookups once). The React app ([Frontend](#frontend)) is built against this API.
+
+| Method | Path | What it does |
+| --- | --- | --- |
+| POST | `/api/v1/predict` | A creator form in; ranges, drivers, comparable films and warnings out |
+| POST | `/api/v1/predict/compare` | A base form and 1–3 variants; every prediction plus the differences |
+| GET | `/api/v1/movies` | Search (`q`), filters (`genre`, `year_from`, `year_to`, `language`, `has_money`), `sort` (popularity, newest, title, score), `page`, `page_size` (at most 48) |
+| GET | `/api/v1/movies/{id}` | Facts, themes, cast and crew, money (as reported and in 2025 $), score, posters and 6 similar films |
+| GET | `/api/v1/people?role=director\|actor&q=` | Director and actor autocomplete |
+| GET | `/api/v1/companies?q=`, `/api/v1/collections?q=` | Studio and franchise autocomplete |
+| GET | `/api/v1/meta/options` | Every form field and limit from the contract, the 27 themes, common languages and countries, suggested years |
+| GET | `/api/v1/model-card` | The served models' accuracy: the 2019+ test and the 2026 holdout next to the best baseline, training films, the database's size and years |
+| GET | `/api/v1/health` | Status, model version, database build, uptime and the prediction cache |
+
+**Predictions.**
+- **The form:** `/predict` takes the creator form from `ml/features/contract.py`. People, companies and the franchise can be an id from autocomplete, a typed name or `{id, name}`. Leave `budget` out and it is estimated.
+- **The output:** exactly what `predict()` returns, plus `cached` and full TMDB poster URLs for the comparables. The OpenAPI schema documents every field, for the Day 10 TypeScript types.
+- **The model card:** `uv run python -m ml.eval.model_card` copies the numbers from `reports/final_test.json` and `reports/audit_metrics.json` into `ml/artifacts/final/model_card.json` (committed, because the image has no `reports/`). Per target it has the films, the share inside the range, the typical miss of the middle (money as a factor, exp(MAE log); score in points), within 2× and the median range width, for LightGBM and for B2. `/model-card` adds the database's films and years, and answers 503 if the card was written for other models than those being served. `tests/test_model_card.py` fails when the committed card no longer matches the reports.
+- **Compare:** each variant lists only the fields it changes, and `null` clears an optional one. For each variant, `differences` gives the changed fields, the money middles as a ratio of the base's (×1.8), the score as a point difference (+0.3), and whether the revenue mode changed.
+
+```bash
+curl -s localhost:8000/api/v1/predict -H 'Content-Type: application/json' -d '{
+  "genres": ["Drama"], "release_year": 2026, "release_month": 10, "runtime": 105, "language": "en",
+  "certification": "R", "director": 45400, "actors": [36592, 1373737, 1190668, "Ann Newcomer", "Bo Unknown"],
+  "themes": ["family", "coming of age and school"], "companies": [41077], "countries": ["US"]}'
+```
+
+**Errors.** Every 422 has one shape, `{"detail": "Some fields need fixing", "errors": {field: message}}`, and one response lists every problem:
+- **Messages:** they come from the contract, so a wrong type reads like a wrong value: `{"runtime": "must be a number", "themes": "required", "genres": "unknown value(s): 'Cartoon'"}`.
+- **Compare:** errors name the variant, e.g. `variants.1.budget`.
+- **Other errors:** an unknown film is a 404, and a wrong method a 405.
+- **In the schema:** every 422 is documented as this shape (`FieldErrors`), and 404 and 429 as `{"detail"}`, so the frontend's generated types match what the API sends.
+
+**Limits and caching.**
+- **Rate limit:** 30 prediction requests a minute per IP, shared by `/predict` and `/compare` (our own sliding window, in memory). The 31st gets a 429, "Please try again in a minute", with `Retry-After`.
+- **Prediction cache:** the 1,000 most recently used predictions are kept (LRU), keyed by the validated form, so the same film written two ways is one entry.
+- **HTTP caching:** movie, autocomplete, options and model-card responses are cacheable for an hour (`Cache-Control: public, max-age=3600`); health is `no-store`.
+- **Settings:** `MOVIES_DB`, `MODELS_DIR`, `CORS_ORIGINS` (default the Vite dev server), `RATE_LIMIT` and `CACHE_SIZE` come from environment variables.
+
+**Search and lookups.**
+- **Search:** every word of `q` is a quoted prefix in SQLite FTS5, over titles, original titles and overviews, with accents ignored. Typed text can never be FTS syntax.
+- **Similar films:** they come from the Day 7 index with no date rule, any year but never the film itself.
+- **Autocomplete:** in memory. Any word of a name can start the match ("hanks", "tom ha"), and the names with the most films come first. The 398k names and their word keys are packed into byte blobs, about 33 MB; plain Python lists took about 207 MB.
+- **The database:** opened read-only (`mode=ro`), with one connection per request, so the API cannot write to it.
+
+**Measured** on this Windows laptop with the real models:
+
+| | |
+| --- | --- |
+| Startup (models, feature context, comparables, lookups) | about 10 s |
+| `/predict` over HTTP, uncached | median 167 ms (under the 400 ms target); about 3 ms from the cache |
+| `/predict/compare` with 3 variants, uncached | about 0.5 s |
+| Autocomplete / movie search / movie page | 2–10 ms / 5–90 ms / about 20 ms |
+| Memory after startup / after predictions with a synopsis (MiniLM loaded) | 639 MB / 746 MB on Windows, before the Day 9 cuts; in Docker now 323 MB / 407 MB ([Running with Docker](#running-with-docker)) |
+
+Memory was 1,236 MB at first. The track record (`ml/features/history.py`) kept 350k small objects (about 870 MB); it now packs them into flat arrays (about 108 MB), and the rebuilt features table is bit-for-bit identical to the stored one. Day 9 brought the app under the 450 MB gate for the free host.
+
+`tests/test_api.py` (60 tests, offline, on a small fake database and small models) checks:
+- every endpoint, pinned to a list so a new one must get a test;
+- both revenue modes, the cache, compare's differences, every kind of 422, and the 31st request;
+- FTS input that would be syntax, pages, filters and sorting;
+- similar films that never include the film itself, read-only connections, and parallel requests.
+
+`tests/test_api_golden.py` (10 tests, skipped without the real data and models) checks:
+- the golden forms over HTTP equal `predict()` and the snapshot, in under 400 ms;
+- real autocomplete, movie pages, options and health.
+
+## Frontend
+
+A React app in `frontend/` (Vite 8, React 19, TypeScript 6, Tailwind 4 with shadcn/ui, React Router 8, TanStack Query 5, React Hook Form + Zod 4). It needs Node 24.
+
+```bash
+make web-setup   # npm ci, once
+make api         # the API on :8000 (the dev server proxies /api to it)
+make web         # the app on http://localhost:5173
+make web-test    # types, lint (oxlint) and the Vitest tests
+make gen-api     # regenerate src/api/schema.d.ts from the running API's /openapi.json
+cd frontend && npm run coverage
+```
+
+| Path | What it holds |
+| --- | --- |
+| `src/app/` | routes, layout (header, navigation, footer with the TMDB notice), theme, providers |
+| `src/api/` | the typed client (`client.ts`), the hooks (`hooks.ts`), shared error handling (`errors.ts`), and `schema.d.ts` generated from the API |
+| `src/form/` | the creator form: values and Zod rules (`model.ts`), the examples, the URL and draft (`persist.ts`), and its inputs (`inputs/`) |
+| `src/pages/` | the home page, `/predict`, the results page `/predict/result`, and placeholders for the film pages (Day 12) |
+| `src/result/` | the results page's parts: summary cards, the range chart, drivers, comparable films, notes and accuracy, the variation strip, and number formatting (`format.ts`) |
+
+**The form** (`/predict`) is one card, with the optional fields folded under "More details":
+- **The film:** genre and theme chips (1–5 each, counted in the label), release month and year, runtime as a box plus a slider, the original language (named by the browser, with film counts) and the US rating.
+- **People:** the director and the top-billed cast, typed straight into the box. Suggestions come 250 ms after the last keystroke, with film counts. A pick becomes a chip, numbered for the cast (5 to 10). The last option is always "Use '…' as a new person", for someone with no earlier films in our data.
+- **More details:** up to 5 studios and 5 countries, the franchise, the budget in millions of dollars ("Leave it empty and we'll estimate it") and the synopsis with a counter.
+- **Prefilled:** 110 minutes, June of next year and English, so a quick "what if" needs fewer clicks.
+- **Predict** opens the results page; the answer is already in the query cache, so it isn't asked for twice.
+
+**The results page** (`/predict/result?f=…`) reads the form from the URL, so a result can be shared, refreshed or printed.
+
+![The results page for the Superhero sequel example](docs/images/results-page.png)
+
+In order:
+- **Summary:** three cards (box office, budget, audience score) with the expected value and the likely range, money to 2 significant figures and the score to one decimal. Badges show "Rough estimate" (an unusually wide range), "Budget estimated" (no budget in the form: revenue uses the estimate) and where a given budget sits against similar films.
+- **The ranges side by side:** budget and revenue on one log money axis, with the break-even zone (2–2.5× the budget) shaded behind revenue, labelled as a rule of thumb, and a sentence saying whether the expected revenue is below, inside or above it; the score on its own 0–10 axis. Screen readers get the same numbers as a list.
+- **What drives these estimates:** tabs per target (Revenue first), "Pushes it up" and "Pulls it down" columns with arrows, and 1–3 strength bars plus the word, so nothing depends on colour (blue and orange).
+- **Films like yours:** the 5 comparables with posters (lazy), real figures or "not reported", the "why similar" tags and links to their film pages.
+- **Notes:** the warnings for this form (new director or actors, a big budget, empty studio or country, a release after 2025), the score note, an always-visible limitations note, and **How accurate is this?**, built from `GET /model-card`: the share of real figures inside the range and the typical miss next to the best simple rule, on the 2019+ test and on 2026 films, for the revenue mode in use.
+- **Actions:** edit the inputs, try a variation, copy the link, print or save as PDF (a print stylesheet: light colours, all three driver tabs, no buttons).
+
+**Try a variation** (until Day 13's compare page) opens the form with `?base=` set to the current version. After the next prediction, the results page shows which fields changed and how far each expected value moved (revenue ×0.33, score +0.2), noting that a change smaller than the ranges' width may not mean much.
+
+While a prediction loads, skeletons keep the layout still. A link without a complete form, a 429, a network failure (with Try again) and a model card that can't load each get their own message; the rest of the page keeps working.
+
+**Rules and errors.** The Zod rules mirror the API's contract and read every limit from `GET /meta/options`, so no number is copied by hand. A bad form is stopped before it is sent: each field says what to fix, and the first one gets the focus. The API's 422 messages land on the same fields; a 429 shows "Too many predictions – try again in a minute", and a network or server error offers a Retry button.
+
+**Demo helpers:**
+- **Three examples** ("Superhero sequel", "Small indie drama", "Horror, unknown cast"). They are the golden forms of `tests/golden/forms.json` with the names added, and a test checks they send exactly those forms.
+- **A shareable URL:** the form lives in `?f=` (JSON in base64url), 400 ms after the last change. "Copy link" copies it, and a link opens that form.
+- **Draft auto-save** in this browser. On load, a link wins over the draft, and the draft over a fresh form. "Clear form" empties all three.
+
+**Theme:** light and dark with a teal accent. It starts from the system preference and remembers the choice; a script in `index.html` sets it before the page draws, so it doesn't flash.
+
+**Types from the API.** `npm run gen:api` turns the API's OpenAPI schema into `src/api/schema.d.ts` (committed), so an API change fails the type check. For this, the schema now documents every 422 as our `{detail, errors}` shape (`backend/app/schemas/errors.py`) and types the form fields of `/meta/options` (`FieldSpec`). A Python test keeps `frontend/src/test/options.json`, the options the form tests run on, equal to the contract.
+
+**Bundle:** the home page loads 134 kB of JavaScript (gzipped); the form page adds 95 kB when it opens (Zod, Radix, cmdk).
+
+## Running with Docker
+
+Two containers (`docker-compose.yml`): the backend, with the database, the app's models and the 8-bit text model baked in (`backend/Dockerfile`), and the frontend (`frontend/Dockerfile`), which serves the app on http://localhost:8080 and proxies `/api` to the backend. It needs Docker and the local data and models (`data/movies.db`, `ml/artifacts/final/`, `make model`).
+
+```bash
+make docker-build   # build/movies.db (slim copy) + build/context.joblib (prebuilt track records), then both images
+make docker-run     # docker compose up -d --wait: returns once both healthchecks pass; the app is on :8080
+make smoke          # scripts/smoke.py: the API on :8000 and the app on :8080; make smoke URL=https://... WEB=https://... for the live site
+docker compose down
+```
+
+**The frontend image** (82.5 MB): Node 24 installs the locked packages, type-checks the app and builds it; then an unprivileged nginx serves it on 8080, as a non-root user with a healthcheck. nginx sends every other path (`/predict`, `/movies/603`) to the app, caches the hashed bundles for a year and the page not at all, gzips, and proxies `/api/` to `backend:8000`. It starts once the backend is healthy.
+
+**What goes into the backend image:**
+- the runtime dependencies only, 10 packages: `uv sync --no-default-groups`; `optuna`, `matplotlib`, `scikit-learn` and `onnx` are in the `ml` group, and `pytest` and `jupyter` in `dev`;
+- `ml/` and `backend/`;
+- `build/movies.db`: `data/movies.db` without the training-only `features` table, VACUUMed, 309 → 220 MB (`scripts/slim_db.py`);
+- `build/context.joblib`: History, Companies and Franchises built once (`python -m ml.features.build prebuilt`), stamped with the database's build time and film count, so a file from another build is refused;
+- the app's models and comparables index, and the 8-bit MiniLM only (23 MB).
+
+**How it runs:**
+- as a non-root user, with one uvicorn worker (the prediction cache and the rate limiter live in its memory);
+- a healthcheck on `/api/v1/health`;
+- `CORS_ORIGINS` from the environment;
+- `MALLOC_ARENA_MAX=2`, and after loading the app hands freed memory back to the system (`malloc_trim`).
+
+**The smoke script** (`scripts/smoke.py`) waits for `/health`, then checks:
+- the model version;
+- the three golden forms, each middle equal to `tests/golden/predictions.json` to 6 significant figures;
+- compare, a bad form's 422, search, a movie page, autocomplete, options and the model card;
+- with `--web-url` (`make smoke` passes `WEB`, default :8080): the home page, the script bundle (gzipped, cached for a year), a client-side route served as the app, and the API through the frontend's proxy.
+
+It exits with status 1 on any failure, the same against local Docker and the live URL.
+
+**Measured in Docker Desktop (Linux) on this laptop:**
+
+| | |
+| --- | --- |
+| Backend image | 984 MB unpacked, 370 MB compressed (Docker Desktop's `docker images` shows their sum, 1.36 GB) |
+| Frontend image | 82.5 MB (nginx; the app itself is about 1 MB) |
+| Startup until healthy | 8.3 s (models, prebuilt track records, comparables, lookups) |
+| Memory after startup | 323 MB (it peaks at 489 MB while loading) |
+| Memory after 100 different predictions with synopses | **407 MB** (`docker stats` 385 MiB), under the 450 MB gate |
+| Under a 512 MB limit, like Render Free | no out-of-memory kill; startup, 100 predictions and the smoke test pass |
+| `/predict`, uncached | median 175 ms, 90th percentile 192 ms |
+
+**How memory came down from 663 MB:**
+- **Prebuilt track records:** building History with pandas left about 320 MB freed but kept.
+- **Returning freed memory** to the system.
+- **Packed name lookups:** History's dict of 344k names took 83 MB.
+- **Flat arrays** for Companies and Franchises: dicts of 47k small arrays took 52 MB.
+- **Comparables titles as plain strings** instead of 127-character fixed-width text, which took 17 MB.
+
+Every prediction is unchanged: the full features table rebuilt both ways matches the stored one bit for bit, and all 344,445 person and 42,519 company names resolve as before.
+
+**How the image came down from 1.03 GB:**
+- **The app stopped loading `optuna` and `scikit-learn`.** `Chain.load` imported `optuna` through `calibrate` and `tune`, and three sklearn imports moved into the training functions that use them.
+- **An 8-bit MiniLM for the creator's synopsis** (23 MB instead of 90 MB). Its weights are quantised per output channel. On 1,000 overviews its vectors have a mean cosine of 0.993 with the full model's, and 89% find the same nearest overview; plain int8 gave 0.956 and 71%. Training and the comparables index keep the full model's vectors, and the golden comparables are unchanged.
+
+## Testing
+
+```bash
+make test        # everything: 399 tests, about 2.5 min with the database and models
+make test-fast   # skips the slow and real-data tests: 316 tests, about 15 s
+make coverage    # everything, with line and branch coverage of ml/ and backend/
+```
+
+Two markers (`pyproject.toml`) sort the tests:
+- `slow`: the end-to-end, fuzz and real-database time-travel tests;
+- `real_data`: the tests that need `data/movies.db` and the app's models. They are also skipped automatically when those files are missing.
+
+| What | Where | What it proves |
+| --- | --- | --- |
+| End to end | `tests/test_e2e.py`, `tests/fixtures/mini_raw.jsonl` | 213 fake TMDB records (200 films 2005–2020 plus 13 messy ones) go through every real step to answers over HTTP, in about 4 s: each messy record trips its cleaning rule exactly once, the views keep bad money out, the feature columns match `feature_list.json`, tiny models learn and stay monotone in budget |
+| Time travel | `tests/test_time_travel.py` | cutting the database at a date leaves every feature of the deleted films unchanged when judged at that date: on the fixture (cut 2017, with a film released on the cut day) and on the real database (cut 2010, 300 films); the vocab, theme keywords and synopsis PCA refitted on train films equal the committed files |
+| Fuzzing | `tests/test_fuzz.py` (hypothesis) | 300 random forms to `/predict` and 100 to `/predict/compare`, from valid edges to NaN, Infinity, huge or unicode text and non-objects: always a 200 with ordered, finite ranges or a 422 naming a field, never a 500 |
+| Logic | `tests/test_sanity.py` | bounds, a monotone budget, invariance, the revenue modes, form edges and matched-pair directions on the real models |
+| Golden examples | `tests/test_golden.py`, `tests/test_api_golden.py` | the three golden forms through `predict()` and over HTTP equal the snapshot, in under 400 ms |
+| The API | `tests/test_api.py` | every endpoint, the cache, the rate limit, errors, read-only connections, parallel requests, and that the app refuses to start on a model file that doesn't match its manifest; the OpenAPI schema's error shapes and field specs |
+| The model card | `tests/test_model_card.py` | the committed `model_card.json` equals one built from the reports now, belongs to the served models, and copies the reports' numbers exactly |
+| The frontend | `frontend/src/**/*.test.ts(x)` (Vitest, Testing Library) | 126 tests: the rules against the API's real limits, invalid input blocked, the autocomplete (Enter waits for the suggestions), the examples sending exactly the golden forms, the URL and draft round trips, every API error kind, routes and the theme; the results page on the three golden answers saved from the real API (cards, badges, break-even, notes, comparables, drivers, the accuracy numbers equal to the model card), form → results with one request, the actions, the variation strip, and each failure state; 97% of lines and 89% of branches (`npm run coverage`) |
+
+**Fuzzing found one real bug.** A whole-number field (year, month or runtime) sent as NaN or Infinity crashed the contract check with an `OverflowError`, and the API answered 500. JSON parsers, the server's included, accept those values. They now get the usual 422 "must be a number" (`ml/features/contract.py`, with 12 new tests).
+
+**Coverage** (`make coverage`, lines and branches):
+
+| Part | Coverage |
+| --- | --- |
+| Everything | 78.0% |
+| The code the app runs (`backend/`, `ml/predict.py`, `ml/explain/`, `ml/features/`, the models) | 92.2% |
+| Data, evaluation, baselines and calibration | 82.3% |
+| The one-off scripts (audit, ablation, tuning, the final test run) | 13.3% |
+
+The one-off scripts were each run by hand, and their results are in `reports/`.
 
 ## Audit after Day 7
 
@@ -466,7 +694,17 @@ The money models hold up on new films; the score ranges under-cover, because you
 - **Drivers describe the model, not causes.** "A budget of $40M strongly raises the expected revenue" says what the model leans on for films like this one; spending more would not by itself earn more. The drivers explain the middle prediction only, not the width of the range.
 - **Breakouts stay outside the range.** *Get Out* earned $340M against a range of $160K–$59M, even with the all-data models that saw it in training; its drivers (small budget, new director, small studios) describe the typical film like it.
 - **Empty optional fields count against a film.** No production country or studio looks like the obscure films in the data that have none (no country: about −38% revenue for a small horror film). `predict()` warns about it.
+- **The default browse order is TMDB's popularity on the day of the pull.** It is a trending number, so the first page starts with *Clue* (1985) rather than the best-known films.
+- **The rate limit sees the proxy, not the visitor, behind a proxy.** It counts per client IP from the connection. Behind the frontend's nginx in `docker compose`, every visitor shares one count of 30 a minute; on Render (Day 14) it must read `X-Forwarded-For` instead.
+- **The examples are dated October 2026 and May 2027,** like the golden forms they send. Once a date has passed, the year list (this year to four years ahead) no longer offers it, though the form still sends it.
+- **The Docker image is 984 MB unpacked, above the ~700 MB aim** (370 MB compressed). The Python packages take 441 MB, scipy alone 143 MB: LightGBM imports `scipy.sparse` when it loads, so scipy can't be left out. The 100 MB of precompiled bytecode stays, so startup doesn't recompile everything.
+- **Startup peaks at 489 MB.** That is under Render Free's 512 MB, but not by much: a bigger database or model would need another look.
+- **The app embeds a synopsis with an 8-bit model, the comparables index holds full-model vectors.** They agree closely (mean cosine 0.993), but for about 1 synopsis in 10 the nearest overview differs, so a comparable can differ from what the full model would pick.
+- **Memory measurements depend on the system.** On Windows the same app keeps more freed memory (639 MB after startup before the cuts); `malloc_trim` works on Linux only. The gate is measured in Docker, like the host.
 - **Some comparable films are obscure.** *Get Out*'s are small horror films scored about 4.5–6. A tie-break towards well-known films was tried and made the comparables' revenue less like the film's own, so it was dropped.
+- **The break-even zone is a rule of thumb.** 2–2.5× the budget assumes cinemas keep about half the box office and marketing costs a large share of the budget on top. It ignores streaming, TV and home sales and each film's own deals, so the results page shows it as a shaded band, not a probability of making money.
+- **"Try a variation" compares the expected values only.** Until Day 13 marks changes that are small against the ranges' width as "within the uncertainty", the strip only says that such a change may not mean much.
+- **"Why similar" tags use hand-set cut-offs** (synopsis cosine 0.5, within 2× the budget, about 5 years); they name the parts of the similarity that matched, not a measured reason.
 - **Themes depend on TMDB's keywords.** Only 48% of films have a theme, and some keywords are loose: "rape" puts *The Revenant* in "sex and erotica", and "hilarious" puts some action films in "comedy and satire".
 
 ## Next steps

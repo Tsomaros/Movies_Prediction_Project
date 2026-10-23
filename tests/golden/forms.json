@@ -1,0 +1,95 @@
+{
+ "about": "The three golden creator forms, run through predict() on the app's real models by tests/test_golden.py and over HTTP by tests/test_api_golden.py and scripts/smoke.py; their expected outputs are in predictions.json.",
+ "descriptions": {
+  "franchise_blockbuster": "The Russo brothers, the Avengers cast, Marvel, the Avengers Collection, $300M, May 2027",
+  "small_drama": "Greta Gerwig, Saoirse Ronan, Florence Pugh, Timothee Chalamet and two newcomers, A24, no budget",
+  "unknown_cast": "Nobody we know, no studio or country, a $2M budget"
+ },
+ "forms": {
+  "franchise_blockbuster": {
+   "genres": [
+    "Action",
+    "Adventure",
+    "Science Fiction"
+   ],
+   "release_year": 2027,
+   "release_month": 5,
+   "runtime": 150,
+   "language": "en",
+   "certification": "PG-13",
+   "director": 19271,
+   "actors": [
+    3223,
+    16828,
+    1245,
+    74568,
+    103
+   ],
+   "themes": [
+    "superhero",
+    "science fiction"
+   ],
+   "companies": [
+    420
+   ],
+   "countries": [
+    "US"
+   ],
+   "franchise": 86311,
+   "budget": 300000000,
+   "synopsis": "The surviving heroes reunite to stop a cosmic threat that could erase every world they know."
+  },
+  "small_drama": {
+   "genres": [
+    "Drama"
+   ],
+   "release_year": 2026,
+   "release_month": 10,
+   "runtime": 105,
+   "language": "en",
+   "certification": "R",
+   "director": 45400,
+   "actors": [
+    36592,
+    1373737,
+    1190668,
+    "Ann Newcomer",
+    "Bo Unknown"
+   ],
+   "themes": [
+    "family",
+    "coming of age and school"
+   ],
+   "companies": [
+    41077
+   ],
+   "countries": [
+    "US"
+   ],
+   "synopsis": "Two sisters return to their small hometown to care for their ailing mother."
+  },
+  "unknown_cast": {
+   "genres": [
+    "Horror",
+    "Thriller"
+   ],
+   "release_year": 2026,
+   "release_month": 10,
+   "runtime": 92,
+   "language": "en",
+   "certification": "R",
+   "director": "Totally New Director",
+   "actors": [
+    "New Actor One",
+    "New Actor Two",
+    "New Actor Three",
+    "New Actor Four",
+    "New Actor Five"
+   ],
+   "themes": [
+    "supernatural"
+   ],
+   "budget": 2000000
+  }
+ }
+}

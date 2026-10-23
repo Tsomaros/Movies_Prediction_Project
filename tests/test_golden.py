@@ -26,31 +26,13 @@ from ml.predict import FINAL_DIR, Predictor, check_manifest
 
 GOLDEN_FILE = Path("tests/golden/predictions.json")
 NEEDED = [DB_FILE, INDEX_FILE] + [FINAL_DIR / f"{t}_{k}.joblib" for t in TARGETS for k in QUANTILE_KEYS]
-pytestmark = pytest.mark.skipif(not all(p.exists() for p in NEEDED),
-                                reason="needs data/movies.db, the all-data models and the comparables index")
+pytestmark = [pytest.mark.real_data,
+              pytest.mark.skipif(not all(p.exists() for p in NEEDED),
+                                 reason="needs data/movies.db, the all-data models and the comparables index")]
 MAX_MS = 400
 
-FORMS = {
-    "franchise_blockbuster": {  # the Russo brothers, the Avengers cast, Marvel, the Avengers Collection
-        "genres": ["Action", "Adventure", "Science Fiction"], "release_year": 2027, "release_month": 5,
-        "runtime": 150, "language": "en", "certification": "PG-13", "director": 19271,
-        "actors": [3223, 16828, 1245, 74568, 103], "themes": ["superhero", "science fiction"],
-        "companies": [420], "countries": ["US"], "franchise": 86311, "budget": 300_000_000,
-        "synopsis": "The surviving heroes reunite to stop a cosmic threat that could erase every world they know.",
-    },
-    "small_drama": {  # Greta Gerwig, Saoirse Ronan, Florence Pugh, Timothee Chalamet and two newcomers, A24
-        "genres": ["Drama"], "release_year": 2026, "release_month": 10, "runtime": 105, "language": "en",
-        "certification": "R", "director": 45400, "actors": [36592, 1373737, 1190668, "Ann Newcomer", "Bo Unknown"],
-        "themes": ["family", "coming of age and school"], "companies": [41077], "countries": ["US"],
-        "synopsis": "Two sisters return to their small hometown to care for their ailing mother.",
-    },
-    "unknown_cast": {  # nobody we know, no studio or country, a small budget
-        "genres": ["Horror", "Thriller"], "release_year": 2026, "release_month": 10, "runtime": 92, "language": "en",
-        "certification": "R", "director": "Totally New Director",
-        "actors": ["New Actor One", "New Actor Two", "New Actor Three", "New Actor Four", "New Actor Five"],
-        "themes": ["supernatural"], "budget": 2_000_000,
-    },
-}
+FORMS_FILE = Path("tests/golden/forms.json")  # also read by scripts/smoke.py
+FORMS = json.loads(FORMS_FILE.read_text(encoding="utf-8"))["forms"]
 
 
 @pytest.fixture(scope="module")

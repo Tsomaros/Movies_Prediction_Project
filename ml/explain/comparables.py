@@ -2,9 +2,12 @@
 
     Index.build(con, cache, theme_names=None)    -> the pool, from data/movies.db and the embedding cache
     index.save(path) / Index.load(path)          -> ml/artifacts/final/comparables.npz (not in git)
-    index.query(genres, themes, language, vector, year, log_budget, as_of, n=5)
-                                                 -> up to n films as JSON-ready dicts, most similar first
+    index.query(genres, themes, language, vector, year, log_budget, as_of, n=5, exclude=None)
+                                                 -> up to n films as JSON-ready dicts, most similar first;
+                                                    as_of=None (movie pages) allows any year, exclude skips one id
+    index.row(movie_id)                          -> the film's position in the pool, or None
     similarity(index, ...)                       -> the similarity of every film in the pool (0-1)
+    similarity_parts(index, ...)                 -> the same, per part (genres, themes, ...), before weighting
 
 The pool is every released film with a usable audience score (`score_ok`, about 33,000). Only films
 released strictly before `as_of` (days since 1970-01-01) can be returned, so a film planned for 2005
@@ -24,6 +27,9 @@ The weights were set in notebooks/07_explanations.ipynb on 600 films from 2016-1
 release): adding language and doubling budget brought the comparables' median revenue closer to the
 film's own (MAE log 1.88 -> 1.80) and raised same-language comparables from 60% to 84%. A tie-break
 towards well-known films was tried and dropped: their revenue was further off.
+
+Each film also says why it is similar ("why"): up to MAX_REASONS short tags from its strongest parts, e.g.
+"Also Action, Drama", "Also heist", "Similar budget", "Similar story" (WHY_CLOSE sets when a part counts).
 
 CLI: uv run python -m ml.explain.comparables   (writes ml/artifacts/final/comparables.npz)
 """
@@ -53,6 +59,8 @@ ERA_YEARS = 10.0
 UNKNOWN_BUDGET = 0.5  # budget closeness of a film with no reported budget
 TOP_POOL = 50
 N_COMPARABLES = 5
+MAX_REASONS = 3
+WHY_CLOSE = {"synopsis": 0.5, "budget": 0.5, "era": 0.6}  # budget 0.5 = within 2x; era 0.6 = about 5 years
 
 
 @dataclass
@@ -73,6 +81,8 @@ class Index:
 
     def __post_init__(self) -> None:
         self.vectors = np.asarray(self.vectors, dtype=np.float32)  # converted once, not on every query
+        # numpy stores text as fixed-width UTF-32 (titles: 127 characters each, 17 MB); plain strings take ~3 MB
+        self.titles, self.posters = (np.asarray(a, dtype=object) for a in (self.titles, self.posters))
 
     @classmethod
     def build(cls, con: sqlite3.Connection, cache: Path = EMBEDDINGS_FILE,
@@ -107,7 +117,8 @@ class Index:
     def save(self, path: Path = INDEX_FILE) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         arrays = {f.name: getattr(self, f.name) for f in fields(self)}
-        np.savez_compressed(path, **{**arrays, "vectors": self.vectors.astype(np.float16)})
+        np.savez_compressed(path, **{**arrays, "vectors": self.vectors.astype(np.float16),
+                                     "titles": self.titles.astype(str), "posters": self.posters.astype(str)})
 
     @classmethod
     def load(cls, path: Path = INDEX_FILE) -> Index:
@@ -117,10 +128,21 @@ class Index:
     def __len__(self) -> int:
         return len(self.ids)
 
+    def row(self, movie_id: int) -> int | None:
+        i = int(np.searchsorted(self.ids, movie_id))  # ids are sorted (ORDER BY m.id)
+        return i if i < len(self.ids) and self.ids[i] == movie_id else None
+
     def query(self, genres: Sequence[str], themes: Sequence[str], language: str | None, vector: np.ndarray | None,
-              year: int, log_budget: float | None, as_of: int, n: int = N_COMPARABLES) -> list[dict[str, Any]]:
-        sim = similarity(self, genres, themes, language, vector, year, log_budget)
-        sim[self.days >= as_of] = -np.inf  # only films released before the planned date
+              year: int, log_budget: float | None, as_of: int | None, n: int = N_COMPARABLES,
+              exclude: int | None = None) -> list[dict[str, Any]]:
+        """as_of=None drops the date rule (a movie page's similar films, any year); `exclude` is a TMDB id
+        that is never returned (the film itself)."""
+        parts = similarity_parts(self, genres, themes, language, vector, year, log_budget)
+        sim = _weighted(parts)
+        if as_of is not None:
+            sim[self.days >= as_of] = -np.inf  # only films released before the planned date
+        if exclude is not None:
+            sim[self.ids == exclude] = -np.inf
         k = min(TOP_POOL, int(np.isfinite(sim).sum()))
         if k == 0:
             return []
@@ -128,13 +150,32 @@ class Index:
         top = top[np.argsort(-sim[top], kind="stable")]
         money = ~np.isnan(self.budget[top]) | ~np.isnan(self.revenue[top])
         chosen = [*top[money][:n], *top[~money][:max(0, n - int(money.sum()))]]
-        return [self._film(i, sim[i]) for i in chosen]
+        return [self._film(i, sim[i], self._why(i, parts, genres, themes, language)) for i in chosen]
 
-    def _film(self, i: int, sim: float) -> dict[str, Any]:
+    def _why(self, i: int, parts: dict[str, np.ndarray], genres: Sequence[str], themes: Sequence[str],
+             language: str | None) -> list[str]:
+        """Short reasons, strongest part first: shared genres and themes by name, then close story, budget or era;
+        the language only when it isn't English (most films share English, so it says little)."""
+        shared = {"genres": [g for g in genres if self.genres[i, GENRES.index(g)]],
+                  "themes": [t for t in themes if t in self.theme_names
+                             and self.themes[i, int(np.flatnonzero(self.theme_names == t)[0])]]}
+        reasons = []
+        for part in sorted(parts, key=lambda p: -WEIGHTS[p] * parts[p][i]):
+            value = parts[part][i]
+            if part in shared and shared[part]:
+                reasons.append(f"Same {part}" if value == 1 else f"Also {', '.join(shared[part][:2])}")
+            elif part in WHY_CLOSE and value >= WHY_CLOSE[part] and not (part == "budget" and np.isnan(self.budget[i])):
+                reasons.append({"synopsis": "Similar story", "budget": "Similar budget", "era": "Same era"}[part])
+            elif part == "language" and value == 1 and language != "en":
+                reasons.append("Same language")
+        return reasons[:MAX_REASONS]
+
+    def _film(self, i: int, sim: float, why: list[str]) -> dict[str, Any]:
         money = lambda x: None if np.isnan(x) else float(x)
         return {"id": int(self.ids[i]), "title": str(self.titles[i]), "year": int(self.years[i]),
                 "poster_path": str(self.posters[i]) or None, "budget": money(self.budget[i]),
-                "revenue": money(self.revenue[i]), "score": float(self.score[i]), "similarity": round(float(sim), 3)}
+                "revenue": money(self.revenue[i]), "score": float(self.score[i]), "similarity": round(float(sim), 3),
+                "why": why}
 
 
 def _jaccard(flags: np.ndarray, wanted: np.ndarray) -> np.ndarray:
@@ -145,8 +186,8 @@ def _jaccard(flags: np.ndarray, wanted: np.ndarray) -> np.ndarray:
     return both / either  # either >= 1 because wanted has at least one flag
 
 
-def similarity(index: Index, genres: Sequence[str], themes: Sequence[str], language: str | None,
-               vector: np.ndarray | None, year: int, log_budget: float | None) -> np.ndarray:
+def similarity_parts(index: Index, genres: Sequence[str], themes: Sequence[str], language: str | None,
+                     vector: np.ndarray | None, year: int, log_budget: float | None) -> dict[str, np.ndarray]:
     parts = {
         "genres": _jaccard(index.genres, np.isin(np.array(GENRES), list(genres))),
         "themes": _jaccard(index.themes, np.isin(index.theme_names, list(themes))),
@@ -162,8 +203,17 @@ def similarity(index: Index, genres: Sequence[str], themes: Sequence[str], langu
         v = np.asarray(vector, dtype=np.float32)
         v = v / max(float(np.linalg.norm(v)), 1e-12)
         parts["synopsis"] = np.clip(index.vectors @ v, 0.0, 1.0)
+    return parts
+
+
+def _weighted(parts: dict[str, np.ndarray]) -> np.ndarray:
     total = sum(WEIGHTS[p] for p in parts)
     return sum(WEIGHTS[p] * s for p, s in parts.items()) / total
+
+
+def similarity(index: Index, genres: Sequence[str], themes: Sequence[str], language: str | None,
+               vector: np.ndarray | None, year: int, log_budget: float | None) -> np.ndarray:
+    return _weighted(similarity_parts(index, genres, themes, language, vector, year, log_budget))
 
 
 def main() -> None:
