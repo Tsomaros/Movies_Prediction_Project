@@ -391,7 +391,7 @@ Day 7 turns the app's models into one call: `ml.predict.predict(form)` returns b
 
 ### Comparable films
 
-`ml/explain/comparables.py` returns 5 earlier films like the planned one, with their real budget, revenue (2025 $) and score. The pool is the 33,077 films with a usable score; only films released before the planned date can be returned, and of the 50 most similar, those with a reported budget or revenue come first. Similarity is a weighted average of genres (0.3), themes (0.2), synopsis (0.3, cosine on the MiniLM vectors, skipped without a synopsis), era (0.1), budget level (0.2, the creator's budget or the budget model's estimate) and the same original language (0.1). The index (`ml/artifacts/final/comparables.npz`, 26 MB, not in git) is built by `uv run python -m ml.explain.comparables`; a query takes about 8 ms.
+`ml/explain/comparables.py` returns 5 earlier films like the planned one, with their real budget, revenue (2025 $) and score, and up to 3 short reasons why each is similar, strongest first: the shared genres or themes by name ("Same genres", "Also superhero, science fiction"), "Similar story" (synopsis cosine 0.5+), "Similar budget" (within 2×), "Same era" (about 5 years) or, for films not in English, "Same language". The pool is the 33,077 films with a usable score; only films released before the planned date can be returned, and of the 50 most similar, those with a reported budget or revenue come first. Similarity is a weighted average of genres (0.3), themes (0.2), synopsis (0.3, cosine on the MiniLM vectors, skipped without a synopsis), era (0.1), budget level (0.2, the creator's budget or the budget model's estimate) and the same original language (0.1). The index (`ml/artifacts/final/comparables.npz`, 26 MB, not in git) is built by `uv run python -m ml.explain.comparables`; a query takes about 8 ms.
 
 The language weight and the doubled budget weight were chosen on 600 films from 2016–18, each judged at its release:
 
@@ -436,11 +436,13 @@ A FastAPI backend in `backend/app/`. Every endpoint lives under `/api/v1`, and t
 | GET | `/api/v1/people?role=director\|actor&q=` | Director and actor autocomplete |
 | GET | `/api/v1/companies?q=`, `/api/v1/collections?q=` | Studio and franchise autocomplete |
 | GET | `/api/v1/meta/options` | Every form field and limit from the contract, the 27 themes, common languages and countries, suggested years |
+| GET | `/api/v1/model-card` | The served models' accuracy: the 2019+ test and the 2026 holdout next to the best baseline, training films, the database's size and years |
 | GET | `/api/v1/health` | Status, model version, database build, uptime and the prediction cache |
 
 **Predictions.**
 - **The form:** `/predict` takes the creator form from `ml/features/contract.py`. People, companies and the franchise can be an id from autocomplete, a typed name or `{id, name}`. Leave `budget` out and it is estimated.
 - **The output:** exactly what `predict()` returns, plus `cached` and full TMDB poster URLs for the comparables. The OpenAPI schema documents every field, for the Day 10 TypeScript types.
+- **The model card:** `uv run python -m ml.eval.model_card` copies the numbers from `reports/final_test.json` and `reports/audit_metrics.json` into `ml/artifacts/final/model_card.json` (committed, because the image has no `reports/`). Per target it has the films, the share inside the range, the typical miss of the middle (money as a factor, exp(MAE log); score in points), within 2× and the median range width, for LightGBM and for B2. `/model-card` adds the database's films and years, and answers 503 if the card was written for other models than those being served. `tests/test_model_card.py` fails when the committed card no longer matches the reports.
 - **Compare:** each variant lists only the fields it changes, and `null` clears an optional one. For each variant, `differences` gives the changed fields, the money middles as a ratio of the base's (×1.8), the score as a point difference (+0.3), and whether the revenue mode changed.
 
 ```bash
@@ -459,7 +461,7 @@ curl -s localhost:8000/api/v1/predict -H 'Content-Type: application/json' -d '{
 **Limits and caching.**
 - **Rate limit:** 30 prediction requests a minute per IP, shared by `/predict` and `/compare` (our own sliding window, in memory). The 31st gets a 429, "Please try again in a minute", with `Retry-After`.
 - **Prediction cache:** the 1,000 most recently used predictions are kept (LRU), keyed by the validated form, so the same film written two ways is one entry.
-- **HTTP caching:** movie, autocomplete and options responses are cacheable for an hour (`Cache-Control: public, max-age=3600`); health is `no-store`.
+- **HTTP caching:** movie, autocomplete, options and model-card responses are cacheable for an hour (`Cache-Control: public, max-age=3600`); health is `no-store`.
 - **Settings:** `MOVIES_DB`, `MODELS_DIR`, `CORS_ORIGINS` (default the Vite dev server), `RATE_LIMIT` and `CACHE_SIZE` come from environment variables.
 
 **Search and lookups.**
@@ -480,7 +482,7 @@ curl -s localhost:8000/api/v1/predict -H 'Content-Type: application/json' -d '{
 
 Memory was 1,236 MB at first. The track record (`ml/features/history.py`) kept 350k small objects (about 870 MB); it now packs them into flat arrays (about 108 MB), and the rebuilt features table is bit-for-bit identical to the stored one. Day 9 brought the app under the 450 MB gate for the free host.
 
-`tests/test_api.py` (57 tests, offline, on a small fake database and small models) checks:
+`tests/test_api.py` (60 tests, offline, on a small fake database and small models) checks:
 - every endpoint, pinned to a list so a new one must get a test;
 - both revenue modes, the cache, compare's differences, every kind of 422, and the 31st request;
 - FTS input that would be syntax, pages, filters and sorting;
@@ -508,14 +510,31 @@ cd frontend && npm run coverage
 | `src/app/` | routes, layout (header, navigation, footer with the TMDB notice), theme, providers |
 | `src/api/` | the typed client (`client.ts`), the hooks (`hooks.ts`), shared error handling (`errors.ts`), and `schema.d.ts` generated from the API |
 | `src/form/` | the creator form: values and Zod rules (`model.ts`), the examples, the URL and draft (`persist.ts`), and its inputs (`inputs/`) |
-| `src/pages/` | the home page, `/predict`, and placeholders for the results page (Day 11) and the film pages (Day 12) |
+| `src/pages/` | the home page, `/predict`, the results page `/predict/result`, and placeholders for the film pages (Day 12) |
+| `src/result/` | the results page's parts: summary cards, the range chart, drivers, comparable films, notes and accuracy, the variation strip, and number formatting (`format.ts`) |
 
 **The form** (`/predict`) is one card, with the optional fields folded under "More details":
 - **The film:** genre and theme chips (1–5 each, counted in the label), release month and year, runtime as a box plus a slider, the original language (named by the browser, with film counts) and the US rating.
 - **People:** the director and the top-billed cast, typed straight into the box. Suggestions come 250 ms after the last keystroke, with film counts. A pick becomes a chip, numbered for the cast (5 to 10). The last option is always "Use '…' as a new person", for someone with no earlier films in our data.
 - **More details:** up to 5 studios and 5 countries, the franchise, the budget in millions of dollars ("Leave it empty and we'll estimate it") and the synopsis with a counter.
 - **Prefilled:** 110 minutes, June of next year and English, so a quick "what if" needs fewer clicks.
-- **Until Day 11** the answer is shown as raw JSON under the form.
+- **Predict** opens the results page; the answer is already in the query cache, so it isn't asked for twice.
+
+**The results page** (`/predict/result?f=…`) reads the form from the URL, so a result can be shared, refreshed or printed.
+
+![The results page for the Superhero sequel example](docs/images/results-page.png)
+
+In order:
+- **Summary:** three cards (box office, budget, audience score) with the expected value and the likely range, money to 2 significant figures and the score to one decimal. Badges show "Rough estimate" (an unusually wide range), "Budget estimated" (no budget in the form: revenue uses the estimate) and where a given budget sits against similar films.
+- **The ranges side by side:** budget and revenue on one log money axis, with the break-even zone (2–2.5× the budget) shaded behind revenue, labelled as a rule of thumb, and a sentence saying whether the expected revenue is below, inside or above it; the score on its own 0–10 axis. Screen readers get the same numbers as a list.
+- **What drives these estimates:** tabs per target (Revenue first), "Pushes it up" and "Pulls it down" columns with arrows, and 1–3 strength bars plus the word, so nothing depends on colour (blue and orange).
+- **Films like yours:** the 5 comparables with posters (lazy), real figures or "not reported", the "why similar" tags and links to their film pages.
+- **Notes:** the warnings for this form (new director or actors, a big budget, empty studio or country, a release after 2025), the score note, an always-visible limitations note, and **How accurate is this?**, built from `GET /model-card`: the share of real figures inside the range and the typical miss next to the best simple rule, on the 2019+ test and on 2026 films, for the revenue mode in use.
+- **Actions:** edit the inputs, try a variation, copy the link, print or save as PDF (a print stylesheet: light colours, all three driver tabs, no buttons).
+
+**Try a variation** (until Day 13's compare page) opens the form with `?base=` set to the current version. After the next prediction, the results page shows which fields changed and how far each expected value moved (revenue ×0.33, score +0.2), noting that a change smaller than the ranges' width may not mean much.
+
+While a prediction loads, skeletons keep the layout still. A link without a complete form, a 429, a network failure (with Try again) and a model card that can't load each get their own message; the rest of the page keeps working.
 
 **Rules and errors.** The Zod rules mirror the API's contract and read every limit from `GET /meta/options`, so no number is copied by hand. A bad form is stopped before it is sent: each field says what to fix, and the first one gets the focus. The API's 422 messages land on the same fields; a 429 shows "Too many predictions – try again in a minute", and a network or server error offers a Retry button.
 
@@ -559,7 +578,7 @@ docker compose down
 **The smoke script** (`scripts/smoke.py`) waits for `/health`, then checks:
 - the model version;
 - the three golden forms, each middle equal to `tests/golden/predictions.json` to 6 significant figures;
-- compare, a bad form's 422, search, a movie page, autocomplete and options;
+- compare, a bad form's 422, search, a movie page, autocomplete, options and the model card;
 - with `--web-url` (`make smoke` passes `WEB`, default :8080): the home page, the script bundle (gzipped, cached for a year), a client-side route served as the app, and the API through the frontend's proxy.
 
 It exits with status 1 on any failure, the same against local Docker and the live URL.
@@ -592,8 +611,8 @@ Every prediction is unchanged: the full features table rebuilt both ways matches
 ## Testing
 
 ```bash
-make test        # everything: 392 tests, about 2.5 min with the database and models
-make test-fast   # skips the slow and real-data tests: 309 tests, about 15 s
+make test        # everything: 399 tests, about 2.5 min with the database and models
+make test-fast   # skips the slow and real-data tests: 316 tests, about 15 s
 make coverage    # everything, with line and branch coverage of ml/ and backend/
 ```
 
@@ -609,7 +628,8 @@ Two markers (`pyproject.toml`) sort the tests:
 | Logic | `tests/test_sanity.py` | bounds, a monotone budget, invariance, the revenue modes, form edges and matched-pair directions on the real models |
 | Golden examples | `tests/test_golden.py`, `tests/test_api_golden.py` | the three golden forms through `predict()` and over HTTP equal the snapshot, in under 400 ms |
 | The API | `tests/test_api.py` | every endpoint, the cache, the rate limit, errors, read-only connections, parallel requests, and that the app refuses to start on a model file that doesn't match its manifest; the OpenAPI schema's error shapes and field specs |
-| The frontend | `frontend/src/**/*.test.ts(x)` (Vitest, Testing Library) | 106 tests: the rules against the API's real limits, invalid input blocked, the autocomplete (Enter waits for the suggestions), the examples sending exactly the golden forms, the URL and draft round trips, every API error kind, routes and the theme; 97% of lines and 88% of branches (`npm run coverage`) |
+| The model card | `tests/test_model_card.py` | the committed `model_card.json` equals one built from the reports now, belongs to the served models, and copies the reports' numbers exactly |
+| The frontend | `frontend/src/**/*.test.ts(x)` (Vitest, Testing Library) | 126 tests: the rules against the API's real limits, invalid input blocked, the autocomplete (Enter waits for the suggestions), the examples sending exactly the golden forms, the URL and draft round trips, every API error kind, routes and the theme; the results page on the three golden answers saved from the real API (cards, badges, break-even, notes, comparables, drivers, the accuracy numbers equal to the model card), form → results with one request, the actions, the variation strip, and each failure state; 97% of lines and 89% of branches (`npm run coverage`) |
 
 **Fuzzing found one real bug.** A whole-number field (year, month or runtime) sent as NaN or Infinity crashed the contract check with an `OverflowError`, and the API answered 500. JSON parsers, the server's included, accept those values. They now get the usual 422 "must be a number" (`ml/features/contract.py`, with 12 new tests).
 
@@ -682,6 +702,9 @@ The money models hold up on new films; the score ranges under-cover, because you
 - **The app embeds a synopsis with an 8-bit model, the comparables index holds full-model vectors.** They agree closely (mean cosine 0.993), but for about 1 synopsis in 10 the nearest overview differs, so a comparable can differ from what the full model would pick.
 - **Memory measurements depend on the system.** On Windows the same app keeps more freed memory (639 MB after startup before the cuts); `malloc_trim` works on Linux only. The gate is measured in Docker, like the host.
 - **Some comparable films are obscure.** *Get Out*'s are small horror films scored about 4.5–6. A tie-break towards well-known films was tried and made the comparables' revenue less like the film's own, so it was dropped.
+- **The break-even zone is a rule of thumb.** 2–2.5× the budget assumes cinemas keep about half the box office and marketing costs a large share of the budget on top. It ignores streaming, TV and home sales and each film's own deals, so the results page shows it as a shaded band, not a probability of making money.
+- **"Try a variation" compares the expected values only.** Until Day 13 marks changes that are small against the ranges' width as "within the uncertainty", the strip only says that such a change may not mean much.
+- **"Why similar" tags use hand-set cut-offs** (synopsis cosine 0.5, within 2× the budget, about 5 years); they name the parts of the similarity that matched, not a measured reason.
 - **Themes depend on TMDB's keywords.** Only 48% of films have a theme, and some keywords are loose: "rape" puts *The Revenant* in "sex and erotica", and "hilarious" puts some action films in "comedy and satire".
 
 ## Next steps

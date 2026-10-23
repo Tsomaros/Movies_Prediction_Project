@@ -1,0 +1,923 @@
+{
+ "franchise_blockbuster": {
+  "model_version": "2026-10-21.849304a7",
+  "as_of": "2027-05-01",
+  "budget": {
+   "low": 180783434.92346907,
+   "middle": 406875181.8239144,
+   "high": 599002952.9828304,
+   "text": "$180M–$600M",
+   "middle_text": "$410M",
+   "rough": false,
+   "given": 300000000.0,
+   "comparison": {
+    "low": 180783434.92346907,
+    "middle": 406875181.8239144,
+    "high": 599002952.9828304,
+    "text": "Similar films usually cost $180M–$600M",
+    "budget": 300000000.0,
+    "position": "within",
+    "ratio": 0.737326859444164,
+    "sentence": "Your budget of $300M is within what similar films usually cost"
+   }
+  },
+  "revenue": {
+   "low": 501213343.6771866,
+   "middle": 1580693165.918076,
+   "high": 3580591153.317174,
+   "text": "$500M–$3.6B",
+   "middle_text": "$1.6B",
+   "rough": false,
+   "mode": "given",
+   "budget_used": 300000000.0
+  },
+  "score": {
+   "low": 6.355323773927448,
+   "middle": 7.357040773081517,
+   "high": 8.218669200863685,
+   "text": "6.4–8.2",
+   "middle_text": "7.4",
+   "rough": false,
+   "note": "TMDB scores of new films usually start higher and settle during their first year; this range is for the settled score."
+  },
+  "drivers": {
+   "budget": {
+    "up": [
+     {
+      "group": "studio",
+      "label": "Studio",
+      "direction": "up",
+      "strength": "strong",
+      "estimated": false,
+      "value": "Marvel Studios",
+      "text": "Marvel Studios as the studio strongly raises the expected budget."
+     },
+     {
+      "group": "franchise",
+      "label": "Franchise",
+      "direction": "up",
+      "strength": "strong",
+      "estimated": false,
+      "value": "The Avengers Collection",
+      "text": "Being part of The Avengers Collection (4 earlier films) strongly raises the expected budget."
+     },
+     {
+      "group": "cast",
+      "label": "Cast's track record",
+      "direction": "up",
+      "strength": "strong",
+      "estimated": false,
+      "value": "Robert Downey Jr.",
+      "text": "The cast's earlier films (led by Robert Downey Jr.) strongly raise the expected budget."
+     },
+     {
+      "group": "runtime",
+      "label": "Runtime",
+      "direction": "up",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "150 minutes",
+      "text": "A runtime of 150 minutes raises the expected budget."
+     },
+     {
+      "group": "director",
+      "label": "Director's track record",
+      "direction": "up",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "Anthony Russo",
+      "text": "Anthony Russo's 9 earlier films raise the expected budget."
+     }
+    ],
+    "down": []
+   },
+   "revenue": {
+    "up": [
+     {
+      "group": "budget",
+      "label": "Budget",
+      "direction": "up",
+      "strength": "strong",
+      "estimated": false,
+      "value": "$300M",
+      "text": "A budget of $300M strongly raises the expected revenue."
+     },
+     {
+      "group": "franchise",
+      "label": "Franchise",
+      "direction": "up",
+      "strength": "strong",
+      "estimated": false,
+      "value": "The Avengers Collection",
+      "text": "Being part of The Avengers Collection (4 earlier films) strongly raises the expected revenue."
+     },
+     {
+      "group": "studio",
+      "label": "Studio",
+      "direction": "up",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "Marvel Studios",
+      "text": "Marvel Studios as the studio raises the expected revenue."
+     },
+     {
+      "group": "cast",
+      "label": "Cast's track record",
+      "direction": "up",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "Robert Downey Jr.",
+      "text": "The cast's earlier films (led by Robert Downey Jr.) raise the expected revenue."
+     },
+     {
+      "group": "director",
+      "label": "Director's track record",
+      "direction": "up",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "Anthony Russo",
+      "text": "Anthony Russo's 9 earlier films raise the expected revenue."
+     }
+    ],
+    "down": []
+   },
+   "score": {
+    "up": [
+     {
+      "group": "runtime",
+      "label": "Runtime",
+      "direction": "up",
+      "strength": "strong",
+      "estimated": false,
+      "value": "150 minutes",
+      "text": "A runtime of 150 minutes strongly raises the expected audience score."
+     },
+     {
+      "group": "cast",
+      "label": "Cast's track record",
+      "direction": "up",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "Robert Downey Jr.",
+      "text": "The cast's earlier films (led by Robert Downey Jr.) raise the expected audience score."
+     },
+     {
+      "group": "director",
+      "label": "Director's track record",
+      "direction": "up",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "Anthony Russo",
+      "text": "Anthony Russo's 9 earlier films raise the expected audience score."
+     },
+     {
+      "group": "timing",
+      "label": "Release timing",
+      "direction": "up",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "2027",
+      "text": "Releasing in 2027 raises the expected audience score."
+     }
+    ],
+    "down": [
+     {
+      "group": "genre",
+      "label": "Genre",
+      "direction": "down",
+      "strength": "slight",
+      "estimated": false,
+      "value": "Action, Adventure and Science Fiction",
+      "text": "The genres Action, Adventure and Science Fiction slightly lower the expected audience score."
+     }
+    ]
+   }
+  },
+  "comparables": [
+   {
+    "id": 298618,
+    "title": "The Flash",
+    "year": 2023,
+    "poster_path": "/rktDFPbfHfUbArZ6OOOKsXcv0Bm.jpg",
+    "poster": {
+     "small": "https://image.tmdb.org/t/p/w342/rktDFPbfHfUbArZ6OOOKsXcv0Bm.jpg",
+     "large": "https://image.tmdb.org/t/p/w780/rktDFPbfHfUbArZ6OOOKsXcv0Bm.jpg"
+    },
+    "budget": 232599917.0,
+    "revenue": 286873210.0,
+    "score": 6.597,
+    "similarity": 0.733,
+    "why": [
+     "Same genres",
+     "Similar budget",
+     "Also superhero, science fiction"
+    ]
+   },
+   {
+    "id": 447365,
+    "title": "Guardians of the Galaxy Vol. 3",
+    "year": 2023,
+    "poster_path": "/r2J02Z2OpNTctfOSN1Ydgii51I3.jpg",
+    "poster": {
+     "small": "https://image.tmdb.org/t/p/w342/r2J02Z2OpNTctfOSN1Ydgii51I3.jpg",
+     "large": "https://image.tmdb.org/t/p/w780/r2J02Z2OpNTctfOSN1Ydgii51I3.jpg"
+    },
+    "budget": 264318088.0,
+    "revenue": 893976637.0,
+    "score": 7.931,
+    "similarity": 0.732,
+    "why": [
+     "Same genres",
+     "Similar budget",
+     "Also superhero, science fiction"
+    ]
+   },
+   {
+    "id": 299536,
+    "title": "Avengers: Infinity War",
+    "year": 2018,
+    "poster_path": "/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg",
+    "poster": {
+     "small": "https://image.tmdb.org/t/p/w342/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg",
+     "large": "https://image.tmdb.org/t/p/w780/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg"
+    },
+    "budget": 384879354.0,
+    "revenue": 2633107249.0,
+    "score": 8.245,
+    "similarity": 0.71,
+    "why": [
+     "Same genres",
+     "Similar budget",
+     "Similar story"
+    ]
+   },
+   {
+    "id": 99861,
+    "title": "Avengers: Age of Ultron",
+    "year": 2015,
+    "poster_path": "/4ssDuvEDkSArWEdyBl2X5EHvYKU.jpg",
+    "poster": {
+     "small": "https://image.tmdb.org/t/p/w342/4ssDuvEDkSArWEdyBl2X5EHvYKU.jpg",
+     "large": "https://image.tmdb.org/t/p/w780/4ssDuvEDkSArWEdyBl2X5EHvYKU.jpg"
+    },
+    "budget": 319411498.0,
+    "revenue": 1910221698.0,
+    "score": 7.278,
+    "similarity": 0.71,
+    "why": [
+     "Same genres",
+     "Similar budget",
+     "Similar story"
+    ]
+   },
+   {
+    "id": 330459,
+    "title": "Rogue One: A Star Wars Story",
+    "year": 2016,
+    "poster_path": "/i0yw1mFbB7sNGHCs7EXZPzFkdA1.jpg",
+    "poster": {
+     "small": "https://image.tmdb.org/t/p/w342/i0yw1mFbB7sNGHCs7EXZPzFkdA1.jpg",
+     "large": "https://image.tmdb.org/t/p/w780/i0yw1mFbB7sNGHCs7EXZPzFkdA1.jpg"
+    },
+    "budget": 268453003.0,
+    "revenue": 1417508734.0,
+    "score": 7.512,
+    "similarity": 0.708,
+    "why": [
+     "Same genres",
+     "Similar budget",
+     "Also science fiction"
+    ]
+   }
+  ],
+  "warnings": [
+   {
+    "code": "big_budget",
+    "text": "Your budget is $150M or more. Revenue ranges for films this big were less reliable on 2019+ films than for smaller ones, and budgets above $300M don't raise the revenue estimate any further."
+   },
+   {
+    "code": "future_release",
+    "text": "Our data ends in 2025. A release in 2027 is judged on films up to 2025, so later trends are not included."
+   }
+  ],
+  "cached": false
+ },
+ "small_drama": {
+  "model_version": "2026-10-21.849304a7",
+  "as_of": "2026-10-01",
+  "budget": {
+   "low": 5172264.749813915,
+   "middle": 26527963.016482998,
+   "high": 62452829.07958469,
+   "text": "$5.2M–$62M",
+   "middle_text": "$27M",
+   "rough": true,
+   "given": null,
+   "comparison": {
+    "low": 5172264.749813915,
+    "middle": 26527963.016482998,
+    "high": 62452829.07958469,
+    "text": "Similar films usually cost $5.2M–$62M",
+    "budget": null,
+    "position": null,
+    "ratio": null,
+    "sentence": null
+   }
+  },
+  "revenue": {
+   "low": 1994804.2183665691,
+   "middle": 25719395.830170307,
+   "high": 168243077.04653618,
+   "text": "$2M–$170M",
+   "middle_text": "$26M",
+   "rough": true,
+   "mode": "estimated",
+   "budget_used": 26527963.016482998
+  },
+  "score": {
+   "low": 6.198506181159051,
+   "middle": 6.83034138676654,
+   "high": 7.570341072760245,
+   "text": "6.2–7.6",
+   "middle_text": "6.8",
+   "rough": false,
+   "note": "TMDB scores of new films usually start higher and settle during their first year; this range is for the settled score."
+  },
+  "drivers": {
+   "budget": {
+    "up": [
+     {
+      "group": "cast",
+      "label": "Cast's track record",
+      "direction": "up",
+      "strength": "strong",
+      "estimated": false,
+      "value": "Saoirse Ronan",
+      "text": "The cast's earlier films (led by Saoirse Ronan) strongly raise the expected budget."
+     },
+     {
+      "group": "director",
+      "label": "Director's track record",
+      "direction": "up",
+      "strength": "strong",
+      "estimated": false,
+      "value": "Greta Gerwig",
+      "text": "Greta Gerwig's 4 earlier films strongly raise the expected budget."
+     },
+     {
+      "group": "runtime",
+      "label": "Runtime",
+      "direction": "up",
+      "strength": "slight",
+      "estimated": false,
+      "value": "105 minutes",
+      "text": "A runtime of 105 minutes slightly raises the expected budget."
+     }
+    ],
+    "down": [
+     {
+      "group": "studio",
+      "label": "Studio",
+      "direction": "down",
+      "strength": "strong",
+      "estimated": false,
+      "value": "A24",
+      "text": "A24 as the studio strongly lowers the expected budget."
+     },
+     {
+      "group": "genre",
+      "label": "Genre",
+      "direction": "down",
+      "strength": "slight",
+      "estimated": false,
+      "value": "Drama",
+      "text": "The genre Drama slightly lowers the expected budget."
+     }
+    ]
+   },
+   "revenue": {
+    "up": [
+     {
+      "group": "director",
+      "label": "Director's track record",
+      "direction": "up",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "Greta Gerwig",
+      "text": "Greta Gerwig's 4 earlier films raise the expected revenue."
+     },
+     {
+      "group": "cast",
+      "label": "Cast's track record",
+      "direction": "up",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "Saoirse Ronan",
+      "text": "The cast's earlier films (led by Saoirse Ronan) raise the expected revenue."
+     }
+    ],
+    "down": [
+     {
+      "group": "studio",
+      "label": "Studio",
+      "direction": "down",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "A24",
+      "text": "A24 as the studio lowers the expected revenue."
+     },
+     {
+      "group": "timing",
+      "label": "Release timing",
+      "direction": "down",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "2026",
+      "text": "Releasing in 2026 (recent films earn less in our data) lowers the expected revenue."
+     },
+     {
+      "group": "genre",
+      "label": "Genre",
+      "direction": "down",
+      "strength": "slight",
+      "estimated": false,
+      "value": "Drama",
+      "text": "The genre Drama slightly lowers the expected revenue."
+     }
+    ]
+   },
+   "score": {
+    "up": [
+     {
+      "group": "timing",
+      "label": "Release timing",
+      "direction": "up",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "2026",
+      "text": "Releasing in 2026 raises the expected audience score."
+     },
+     {
+      "group": "cast",
+      "label": "Cast's track record",
+      "direction": "up",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "Saoirse Ronan",
+      "text": "The cast's earlier films (led by Saoirse Ronan) raise the expected audience score."
+     },
+     {
+      "group": "director",
+      "label": "Director's track record",
+      "direction": "up",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "Greta Gerwig",
+      "text": "Greta Gerwig's 4 earlier films raise the expected audience score."
+     },
+     {
+      "group": "genre",
+      "label": "Genre",
+      "direction": "up",
+      "strength": "slight",
+      "estimated": false,
+      "value": "Drama",
+      "text": "The genre Drama slightly raises the expected audience score."
+     }
+    ],
+    "down": [
+     {
+      "group": "language",
+      "label": "Language",
+      "direction": "down",
+      "strength": "slight",
+      "estimated": false,
+      "value": "English",
+      "text": "English as the original language slightly lowers the expected audience score."
+     }
+    ]
+   }
+  },
+  "comparables": [
+   {
+    "id": 1037035,
+    "title": "Janet Planet",
+    "year": 2024,
+    "poster_path": "/i4qK3vQS4MD8OKhIkqSe3UK6OuH.jpg",
+    "poster": {
+     "small": "https://image.tmdb.org/t/p/w342/i4qK3vQS4MD8OKhIkqSe3UK6OuH.jpg",
+     "large": "https://image.tmdb.org/t/p/w780/i4qK3vQS4MD8OKhIkqSe3UK6OuH.jpg"
+    },
+    "budget": null,
+    "revenue": 747254.0,
+    "score": 6.164,
+    "similarity": 0.714,
+    "why": [
+     "Same genres",
+     "Same themes",
+     "Same era"
+    ]
+   },
+   {
+    "id": 160588,
+    "title": "Blue Jasmine",
+    "year": 2013,
+    "poster_path": "/nsj0RLRI10351uYMoAKPur6Derd.jpg",
+    "poster": {
+     "small": "https://image.tmdb.org/t/p/w342/nsj0RLRI10351uYMoAKPur6Derd.jpg",
+     "large": "https://image.tmdb.org/t/p/w780/nsj0RLRI10351uYMoAKPur6Derd.jpg"
+    },
+    "budget": 24891950.0,
+    "revenue": 137050657.0,
+    "score": 6.981,
+    "similarity": 0.67,
+    "why": [
+     "Same genres",
+     "Similar budget",
+     "Also family"
+    ]
+   },
+   {
+    "id": 1128752,
+    "title": "Bird",
+    "year": 2024,
+    "poster_path": "/wKshd6n8EKrwbE2fLOUqC4TSG6O.jpg",
+    "poster": {
+     "small": "https://image.tmdb.org/t/p/w342/wKshd6n8EKrwbE2fLOUqC4TSG6O.jpg",
+     "large": "https://image.tmdb.org/t/p/w780/wKshd6n8EKrwbE2fLOUqC4TSG6O.jpg"
+    },
+    "budget": null,
+    "revenue": 1997686.0,
+    "score": 7.2,
+    "similarity": 0.658,
+    "why": [
+     "Same genres",
+     "Also family, coming of age and school",
+     "Same era"
+    ]
+   },
+   {
+    "id": 728142,
+    "title": "Nowhere Special",
+    "year": 2020,
+    "poster_path": "/tqLI37bbDZP9um0Xu9AFWWYvXzB.jpg",
+    "poster": {
+     "small": "https://image.tmdb.org/t/p/w342/tqLI37bbDZP9um0Xu9AFWWYvXzB.jpg",
+     "large": "https://image.tmdb.org/t/p/w780/tqLI37bbDZP9um0Xu9AFWWYvXzB.jpg"
+    },
+    "budget": null,
+    "revenue": 951742.0,
+    "score": 7.28,
+    "similarity": 0.65,
+    "why": [
+     "Same genres",
+     "Also family, coming of age and school"
+    ]
+   },
+   {
+    "id": 14295,
+    "title": "You Can Count on Me",
+    "year": 2000,
+    "poster_path": "/7mGFmij1FZD5eUnNwvUjmpqrDl6.jpg",
+    "poster": {
+     "small": "https://image.tmdb.org/t/p/w342/7mGFmij1FZD5eUnNwvUjmpqrDl6.jpg",
+     "large": "https://image.tmdb.org/t/p/w780/7mGFmij1FZD5eUnNwvUjmpqrDl6.jpg"
+    },
+    "budget": null,
+    "revenue": 20953041.0,
+    "score": 6.874,
+    "similarity": 0.648,
+    "why": [
+     "Same genres",
+     "Similar story",
+     "Also family"
+    ]
+   }
+  ],
+  "warnings": [
+   {
+    "code": "new_actors",
+    "text": "We don't know 2 of the 5 actors, so they count as having no earlier films."
+   },
+   {
+    "code": "future_release",
+    "text": "Our data ends in 2025. A release in 2026 is judged on films up to 2025, so later trends are not included."
+   }
+  ],
+  "cached": false
+ },
+ "unknown_cast": {
+  "model_version": "2026-10-21.849304a7",
+  "as_of": "2026-10-01",
+  "budget": {
+   "low": 18320.42629368445,
+   "middle": 360121.5843394181,
+   "high": 7002835.177808814,
+   "text": "$18K–$7M",
+   "middle_text": "$360K",
+   "rough": true,
+   "given": 2000000.0,
+   "comparison": {
+    "low": 18320.42629368445,
+    "middle": 360121.5843394181,
+    "high": 7002835.177808814,
+    "text": "Similar films usually cost $18K–$7M",
+    "budget": 2000000.0,
+    "position": "within",
+    "ratio": 5.553679887498719,
+    "sentence": "Your budget of $2M is within what similar films usually cost"
+   }
+  },
+  "revenue": {
+   "low": 38107.932587927455,
+   "middle": 1047657.404046721,
+   "high": 13608701.640151886,
+   "text": "$38K–$14M",
+   "middle_text": "$1M",
+   "rough": true,
+   "mode": "given",
+   "budget_used": 2000000.0
+  },
+  "score": {
+   "low": 4.7859418767051,
+   "middle": 5.700303750105686,
+   "high": 6.900184230766447,
+   "text": "4.8–6.9",
+   "middle_text": "5.7",
+   "rough": false,
+   "note": "TMDB scores of new films usually start higher and settle during their first year; this range is for the settled score."
+  },
+  "drivers": {
+   "budget": {
+    "up": [],
+    "down": [
+     {
+      "group": "cast",
+      "label": "Cast's track record",
+      "direction": "down",
+      "strength": "strong",
+      "estimated": false,
+      "value": "New Actor One",
+      "text": "A cast with no earlier films in our data strongly lowers the expected budget."
+     },
+     {
+      "group": "studio",
+      "label": "Studio",
+      "direction": "down",
+      "strength": "strong",
+      "estimated": false,
+      "value": "no studio",
+      "text": "Having no named studio strongly lowers the expected budget."
+     },
+     {
+      "group": "genre",
+      "label": "Genre",
+      "direction": "down",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "Horror and Thriller",
+      "text": "The genres Horror and Thriller lower the expected budget."
+     },
+     {
+      "group": "director",
+      "label": "Director's track record",
+      "direction": "down",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "Totally New Director",
+      "text": "Totally New Director, with no earlier films as director in our data, lowers the expected budget."
+     },
+     {
+      "group": "runtime",
+      "label": "Runtime",
+      "direction": "down",
+      "strength": "slight",
+      "estimated": false,
+      "value": "92 minutes",
+      "text": "A runtime of 92 minutes slightly lowers the expected budget."
+     }
+    ]
+   },
+   "revenue": {
+    "up": [],
+    "down": [
+     {
+      "group": "budget",
+      "label": "Budget",
+      "direction": "down",
+      "strength": "strong",
+      "estimated": false,
+      "value": "$2M",
+      "text": "A budget of $2M strongly lowers the expected revenue."
+     },
+     {
+      "group": "studio",
+      "label": "Studio",
+      "direction": "down",
+      "strength": "strong",
+      "estimated": false,
+      "value": "no studio",
+      "text": "Having no named studio strongly lowers the expected revenue."
+     },
+     {
+      "group": "country",
+      "label": "Country",
+      "direction": "down",
+      "strength": "strong",
+      "estimated": false,
+      "value": "no country",
+      "text": "Having no production country given strongly lowers the expected revenue."
+     },
+     {
+      "group": "timing",
+      "label": "Release timing",
+      "direction": "down",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "2026",
+      "text": "Releasing in 2026 (recent films earn less in our data) lowers the expected revenue."
+     },
+     {
+      "group": "runtime",
+      "label": "Runtime",
+      "direction": "down",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "92 minutes",
+      "text": "A runtime of 92 minutes lowers the expected revenue."
+     }
+    ]
+   },
+   "score": {
+    "up": [
+     {
+      "group": "timing",
+      "label": "Release timing",
+      "direction": "up",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "2026",
+      "text": "Releasing in 2026 raises the expected audience score."
+     }
+    ],
+    "down": [
+     {
+      "group": "genre",
+      "label": "Genre",
+      "direction": "down",
+      "strength": "strong",
+      "estimated": false,
+      "value": "Horror and Thriller",
+      "text": "The genres Horror and Thriller strongly lower the expected audience score."
+     },
+     {
+      "group": "runtime",
+      "label": "Runtime",
+      "direction": "down",
+      "strength": "moderate",
+      "estimated": false,
+      "value": "92 minutes",
+      "text": "A runtime of 92 minutes lowers the expected audience score."
+     },
+     {
+      "group": "language",
+      "label": "Language",
+      "direction": "down",
+      "strength": "slight",
+      "estimated": false,
+      "value": "English",
+      "text": "English as the original language slightly lowers the expected audience score."
+     },
+     {
+      "group": "studio",
+      "label": "Studio",
+      "direction": "down",
+      "strength": "slight",
+      "estimated": false,
+      "value": "no studio",
+      "text": "Having no named studio slightly lowers the expected audience score."
+     }
+    ]
+   }
+  },
+  "comparables": [
+   {
+    "id": 49018,
+    "title": "Insidious",
+    "year": 2011,
+    "poster_path": "/tmlDFIUpGRKiuWm9Ixc6CYDk4y0.jpg",
+    "poster": {
+     "small": "https://image.tmdb.org/t/p/w342/tmlDFIUpGRKiuWm9Ixc6CYDk4y0.jpg",
+     "large": "https://image.tmdb.org/t/p/w780/tmlDFIUpGRKiuWm9Ixc6CYDk4y0.jpg"
+    },
+    "budget": 2148269.0,
+    "revenue": 143370400.0,
+    "score": 6.961,
+    "similarity": 0.898,
+    "why": [
+     "Same genres",
+     "Same themes",
+     "Similar budget"
+    ]
+   },
+   {
+    "id": 1282980,
+    "title": "825 Forest Road",
+    "year": 2025,
+    "poster_path": "/mxvRZxq6ACTeJYJZKsHQAhz76yF.jpg",
+    "poster": {
+     "small": "https://image.tmdb.org/t/p/w342/mxvRZxq6ACTeJYJZKsHQAhz76yF.jpg",
+     "large": "https://image.tmdb.org/t/p/w780/mxvRZxq6ACTeJYJZKsHQAhz76yF.jpg"
+    },
+    "budget": null,
+    "revenue": 8181.0,
+    "score": 5.91,
+    "similarity": 0.878,
+    "why": [
+     "Same genres",
+     "Same themes",
+     "Same era"
+    ]
+   },
+   {
+    "id": 226458,
+    "title": "Exeter",
+    "year": 2015,
+    "poster_path": "/AwhFI88HW2BE62E6kEsTGPliZKB.jpg",
+    "poster": {
+     "small": "https://image.tmdb.org/t/p/w342/AwhFI88HW2BE62E6kEsTGPliZKB.jpg",
+     "large": "https://image.tmdb.org/t/p/w780/AwhFI88HW2BE62E6kEsTGPliZKB.jpg"
+    },
+    "budget": null,
+    "revenue": 665724.0,
+    "score": 4.7,
+    "similarity": 0.815,
+    "why": [
+     "Same genres",
+     "Same themes"
+    ]
+   },
+   {
+    "id": 25751,
+    "title": "Children of the Corn V: Fields of Terror",
+    "year": 1998,
+    "poster_path": "/uC6wip2EXdCYQwDDs9FnoakUZQL.jpg",
+    "poster": {
+     "small": "https://image.tmdb.org/t/p/w342/uC6wip2EXdCYQwDDs9FnoakUZQL.jpg",
+     "large": "https://image.tmdb.org/t/p/w780/uC6wip2EXdCYQwDDs9FnoakUZQL.jpg"
+    },
+    "budget": 3260898.0,
+    "revenue": null,
+    "score": 4.1,
+    "similarity": 0.81,
+    "why": [
+     "Same genres",
+     "Same themes",
+     "Similar budget"
+    ]
+   },
+   {
+    "id": 44698,
+    "title": "The Evil",
+    "year": 1978,
+    "poster_path": "/LmdVqM8DrCZmcghCyPZDHLI1Xm.jpg",
+    "poster": {
+     "small": "https://image.tmdb.org/t/p/w342/LmdVqM8DrCZmcghCyPZDHLI1Xm.jpg",
+     "large": "https://image.tmdb.org/t/p/w780/LmdVqM8DrCZmcghCyPZDHLI1Xm.jpg"
+    },
+    "budget": 3456948.0,
+    "revenue": null,
+    "score": 5.8,
+    "similarity": 0.796,
+    "why": [
+     "Same genres",
+     "Same themes",
+     "Similar budget"
+    ]
+   }
+  ],
+  "warnings": [
+   {
+    "code": "new_director",
+    "text": "We don't know this director, so they count as a first-time director with no track record."
+   },
+   {
+    "code": "new_actors",
+    "text": "We don't know 5 of the 5 actors, so they count as having no earlier films."
+   },
+   {
+    "code": "no_country",
+    "text": "No production country given. Past films with none recorded are mostly small ones, so leaving it empty lowers the ranges; fill it in if you know it."
+   },
+   {
+    "code": "no_studio",
+    "text": "No studio given. Past films with none recorded are mostly small ones, so leaving it empty lowers the ranges; fill it in if you know it."
+   },
+   {
+    "code": "future_release",
+    "text": "Our data ends in 2025. A release in 2026 is judged on films up to 2025, so later trends are not included."
+   }
+  ],
+  "cached": false
+ }
+}

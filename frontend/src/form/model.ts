@@ -9,6 +9,7 @@
 //   toApiBody(values)                  -> the POST /predict body: empty optional fields left out, references
 //                                         as {id, name} or {name}
 //   OPTIONAL_FIELDS                    -> the fields under "More details"
+//   changedFields(a, b)                -> the names of the fields two API bodies differ in ("Try a variation")
 //
 // The API checks everything again (contract.validate); these rules only stop a bad form before it is sent
 // and say what to fix next to the field.
@@ -160,4 +161,16 @@ export function toApiBody(v: FormValues): PredictForm {
   if (v.synopsis.trim()) body.synopsis = v.synopsis.trim()
   if (v.budget !== null) body.budget = v.budget
   return body
+}
+
+const FIELD_LABELS: Record<keyof PredictForm, string> = {
+  genres: 'genres', themes: 'themes', release_year: 'release year', release_month: 'release month',
+  runtime: 'runtime', language: 'language', certification: 'rating', director: 'director', actors: 'cast',
+  companies: 'studios', countries: 'countries', franchise: 'franchise', synopsis: 'synopsis', budget: 'budget',
+}
+
+/** The fields whose sent value differs (references compare by what is sent: id and name). */
+export function changedFields(base: PredictForm, next: PredictForm): string[] {
+  const keys = Object.keys(FIELD_LABELS) as (keyof PredictForm)[]
+  return keys.filter(k => JSON.stringify(base[k] ?? null) !== JSON.stringify(next[k] ?? null)).map(k => FIELD_LABELS[k])
 }

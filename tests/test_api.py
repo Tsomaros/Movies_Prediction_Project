@@ -1,6 +1,7 @@
 """The FastAPI backend (backend/app), through TestClient. Offline: the app gets an injected Predictor, so the
 real models are never loaded."""
 
+import json
 import sqlite3
 
 import pytest
@@ -482,6 +483,37 @@ def test_health_reports_the_models_the_database_and_the_cache(api):
 # ---------------------------------------------------------------- the API as a whole
 
 
+def card_app(db, predictor, tmp_path, version="test.0"):
+    """The app with a copy of the committed model card, written for `version`, in its MODELS_DIR."""
+    from ml.eval.model_card import CARD_FILE, FINAL_DIR
+    card = json.loads((FINAL_DIR / CARD_FILE).read_text(encoding="utf-8"))
+    (tmp_path / CARD_FILE).write_text(json.dumps({**card, "model_version": version}), encoding="utf-8")
+    return TestClient(create_app(Settings(db_path=db / "movies.db", models_dir=tmp_path), predictor=predictor))
+
+
+def test_the_model_card_has_the_test_results_and_the_database(db, predictor, tmp_path):
+    with card_app(db, predictor, tmp_path) as api:
+        r = api.get(f"{API_PREFIX}/model-card")
+    card = r.json()
+    assert r.status_code == 200 and r.headers["cache-control"] == "public, max-age=3600"
+    assert card["model_version"] == "test.0" and card["coverage_target"] == 0.8
+    assert card["data"]["films"] == 300 and card["data"]["first_year"] == 2008 and card["data"]["last_year"] == 2022
+    revenue = card["test"]["targets"]["revenue"]
+    assert revenue["films"] == 1485 and revenue["model"]["coverage"] == 0.7737
+    assert revenue["baseline"]["name"].startswith("B2") and "mae" not in revenue["model"]  # None left out
+    assert set(card["holdout"]["targets"]["score"]["model"]) == {"mae", "coverage", "width"}
+
+
+@pytest.mark.parametrize("version", ["another.1", None])
+def test_a_model_card_for_other_models_or_none_is_a_503(db, predictor, tmp_path, version):
+    from ml.eval.model_card import CARD_FILE
+    with card_app(db, predictor, tmp_path, version or "x") as api:
+        if version is None:
+            (tmp_path / CARD_FILE).unlink()
+        r = api.get(f"{API_PREFIX}/model-card")
+    assert r.status_code == 503 and "ml.eval.model_card" in r.json()["detail"]
+
+
 ENDPOINTS = {  # every endpoint and the test above that covers it; a new endpoint must be added here
     ("POST", "/predict"): test_predict_returns_the_full_output_in_both_revenue_modes,
     ("POST", "/predict/compare"): test_compare_differences_agree_with_separate_predictions,
@@ -491,6 +523,7 @@ ENDPOINTS = {  # every endpoint and the test above that covers it; a new endpoin
     ("GET", "/companies"): test_company_and_franchise_autocomplete,
     ("GET", "/collections"): test_company_and_franchise_autocomplete,
     ("GET", "/meta/options"): test_meta_options_match_the_contract_with_themes_filled_in,
+    ("GET", "/model-card"): test_the_model_card_has_the_test_results_and_the_database,
     ("GET", "/health"): test_health_reports_the_models_the_database_and_the_cache,
 }
 

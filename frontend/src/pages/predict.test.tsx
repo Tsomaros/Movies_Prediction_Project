@@ -9,15 +9,16 @@ import { decodeForm, DRAFT_KEY, encodeForm, loadDraft, saveDraft } from '@/form/
 import { SAVE_MS } from '@/pages/Predict'
 import { mockFetch } from '@/test/fetch'
 import optionsJson from '@/test/options.json'
+import predictionsJson from '@/test/predictions.json'
 import { renderApp } from '@/test/render'
 
 const options = optionsJson as Options
-const PREDICTION = { revenue: { text: '$480M–$2.1B' }, cached: false }
 
 afterEach(() => vi.unstubAllGlobals())
 
 function serve() {
-  return mockFetch({ '/api/v1/meta/options': { body: options }, '/api/v1/predict': { body: PREDICTION } })
+  return mockFetch({ '/api/v1/meta/options': { body: options }, '/api/v1/predict': { body: predictionsJson.small_drama },
+    '/api/v1/model-card': { status: 503, body: {} } })
 }
 
 async function openForm(path = '/predict') {
@@ -31,14 +32,14 @@ const posted = (calls: ReturnType<typeof serve>['calls']) =>
 const settle = () => new Promise(r => setTimeout(r, SAVE_MS + 100))
 
 describe('examples', () => {
-  test.each(EXAMPLES.map(e => [e.label, e] as const))('"%s" fills the form, and submitting sends its body', async (label, example) => {
+  test.each(EXAMPLES.map(e => [e.label, e] as const))('"%s" fills the form, and submitting sends its body and opens the result', async (label, example) => {
     const { calls } = serve()
     await openForm()
     await userEvent.click(screen.getByRole('button', { name: label }))
     expect(screen.getByRole('button', { name: `Remove ${example.form.director!.name}` })).toBeInTheDocument()
     expect(screen.getByText('Top-billed cast').parentElement).toHaveTextContent('(5/5–10)')
     await userEvent.click(screen.getByRole('button', { name: 'Predict' }))
-    expect(await screen.findByTestId('raw-prediction')).toHaveTextContent('$480M–$2.1B')
+    expect(await screen.findByTestId('card-revenue')).toHaveTextContent('$26M')
     expect(posted(calls)).toEqual([toApiBody(example.form)])
   })
 

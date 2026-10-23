@@ -313,12 +313,25 @@ def test_results_are_json_ready_and_the_index_round_trips(tmp_path):
     got = index.query(**QUERY, as_of=DAY, n=2)
     assert json.loads(json.dumps(got)) == got
     assert got[0] == {"id": 1, "title": "Film 0", "year": 2015, "poster_path": "/p.jpg", "budget": 1e7,
-                      "revenue": 3e7, "score": pytest.approx(index.score[0]), "similarity": 1.0}
+                      "revenue": 3e7, "score": pytest.approx(index.score[0]), "similarity": 1.0,
+                      "why": ["Similar story", "Same genres", "Same themes"]}
     assert got[1]["poster_path"] is None
     index.save(tmp_path / "c.npz")
     back = Index.load(tmp_path / "c.npz")
     assert back.vectors.dtype == np.float32 and np.allclose(back.vectors, index.vectors, atol=1e-3)
     assert back.query(**QUERY, as_of=DAY) == index.query(**QUERY, as_of=DAY)
+
+
+def test_why_names_the_shared_genres_and_themes_and_the_close_parts():
+    index = small_index()
+    first = index.query(**{**QUERY, "genres": ["Drama", "Comedy"], "themes": ["family", "heist"]}, as_of=DAY, n=1)[0]
+    assert first["why"] == ["Similar story", "Similar budget", "Also Drama"]  # half the genres: 0.3 x 0.5 < 0.2
+    # no synopsis, another era, a French film, an unknown budget: nothing close but the language
+    nan_budget = small_index(budget=np.full(8, np.nan))
+    got = nan_budget.query(genres=["Western"], themes=[], language="fr", vector=None, year=1960,
+                           log_budget=math.log(1e7), as_of=DAY)
+    assert {tuple(f["why"]) for f in got} <= {(), ("Same language",)} and ("Same language",) in {tuple(f["why"]) for f in got}
+    assert all(len(f["why"]) <= 3 for f in index.query(**QUERY, as_of=DAY))
 
 
 def test_index_builds_from_the_database(db):

@@ -2,6 +2,7 @@
 
     common_codes(con, column, n)   -> [{code, films}]: the n most common original languages or production countries
     build_info(con)                -> {built_at, films}: when data/movies.db was built and how many films it has
+    year_range(con)                -> (first, last) release year in the database
 """
 
 from __future__ import annotations
@@ -25,3 +26,8 @@ def build_info(con: sqlite3.Connection) -> dict[str, Any]:
     row = con.execute("SELECT value FROM meta WHERE key = 'built_at'").fetchone()
     return {"built_at": json.loads(row[0]) if row else None,
             "films": con.execute("SELECT COUNT(*) FROM movies").fetchone()[0]}
+
+
+def year_range(con: sqlite3.Connection) -> tuple[int, int]:
+    first, last = con.execute("SELECT MIN(year), MAX(year) FROM movies").fetchone()
+    return int(first), int(last)

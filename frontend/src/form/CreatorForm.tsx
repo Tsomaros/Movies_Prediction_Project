@@ -45,11 +45,12 @@ const hasOptional = (values: FormValues) => OPTIONAL_FIELDS.some(f => {
   return Array.isArray(v) ? v.length > 0 : v !== null && v !== ''
 })
 
-/** `onSubmit` returns the request; when it fails with a 422 the API's messages land on the fields. */
+/** `onSubmit` gets the API body and the values it came from, and returns the request; when it fails with a 422
+ *  the API's messages land on the fields. */
 export function CreatorForm({ options, initial, onSubmit, pending, onValuesChange, onClear, onCopyLink }: {
   options: Options
   initial?: FormValues
-  onSubmit: (body: PredictForm) => Promise<unknown>
+  onSubmit: (body: PredictForm, values: FormValues) => Promise<unknown>
   pending: boolean
   onValuesChange?: (values: FormValues) => void
   onClear?: () => void
@@ -80,7 +81,7 @@ export function CreatorForm({ options, initial, onSubmit, pending, onValuesChang
   const submit = async (values: FormValues) => {
     setLeftover([])
     try {
-      await onSubmit(toApiBody(values))
+      await onSubmit(toApiBody(values), values)
     } catch (error) {
       const fields = new Set<string>()
       setLeftover(applyFieldErrors(error, setError as never, path => {

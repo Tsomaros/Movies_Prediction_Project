@@ -1,7 +1,7 @@
 // The frame around every page: header (brand, navigation, theme toggle), the page, and the footer.
 // Mobile first: on a phone the navigation is a second row under the brand; from `sm` it sits in the header.
 import { ClapperboardIcon } from 'lucide-react'
-import { Link, NavLink, Outlet } from 'react-router'
+import { Link, NavLink, Outlet, ScrollRestoration } from 'react-router'
 
 import { ThemeToggle } from '@/app/theme'
 import { cn } from '@/lib/utils'
@@ -28,7 +28,7 @@ function Nav({ className }: { className?: string }) {
 
 export function Header() {
   return (
-    <header className="bg-card/95 supports-backdrop-filter:bg-card/80 sticky top-0 z-40 border-b backdrop-blur">
+    <header className="print:hidden bg-card/95 supports-backdrop-filter:bg-card/80 sticky top-0 z-40 border-b backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-2">
         <Link to="/" className="flex items-center gap-2 font-semibold">
           <ClapperboardIcon className="size-5 text-primary" aria-hidden />
@@ -46,7 +46,7 @@ export function Header() {
 
 export function Footer() {
   return (
-    <footer className="border-t text-muted-foreground mt-12">
+    <footer className="border-t text-muted-foreground mt-12 print:mt-4">
       <div className="mx-auto flex max-w-5xl flex-col gap-1 px-4 py-6 text-xs sm:flex-row sm:justify-between">
         <p>Ranges are estimates from past films, not guarantees.</p>
         {/* Day 12 adds the TMDB logo next to this notice (less prominent than our own branding) */}
@@ -64,6 +64,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <Footer />
+      <ScrollRestoration /> {/* a new page starts at the top; back and forward return to where you were */}
     </div>
   )
 }

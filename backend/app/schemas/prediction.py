@@ -86,6 +86,7 @@ class Comparable(BaseModel):
     revenue: Optional[float]
     score: float
     similarity: float
+    why: list[str] = Field(description='Up to 3 short reasons, strongest first, e.g. "Also Action, Drama", "Similar budget"')
 
 
 class Warning(BaseModel):

@@ -19,6 +19,7 @@ mockSystemTheme(false)
 class ResizeObserverStub { observe() {} unobserve() {} disconnect() {} }
 globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver // not stubGlobal: tests unstub theirs
 Element.prototype.scrollIntoView ??= function () {}
+window.scrollTo = () => {} // jsdom only logs "not implemented" (React Router's ScrollRestoration calls it)
 Element.prototype.hasPointerCapture ??= () => false
 Element.prototype.releasePointerCapture ??= () => {}
 

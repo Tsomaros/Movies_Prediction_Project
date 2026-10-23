@@ -1,0 +1,174 @@
+{
+ "model_version": "2026-10-21.849304a7",
+ "coverage_target": 0.8,
+ "training": {
+  "years": "1960-2025",
+  "films": {
+   "revenue": 10421,
+   "budget": 14460,
+   "score": 33077
+  }
+ },
+ "data": {
+  "films": 79199,
+  "first_year": 1960,
+  "last_year": 2025,
+  "built_at": "2026-10-21T13:08:12+00:00"
+ },
+ "test": {
+  "about": "Films released 2019 onwards, locked away until the models were final and scored once, by models trained on films up to 2018.",
+  "years": "2019+",
+  "run_at": "2026-10-21",
+  "trained_on": "<=2018",
+  "targets": {
+   "revenue": {
+    "films": 1485,
+    "model": {
+     "mae_log": 1.2297,
+     "typical_factor": 3.42,
+     "within_2x": 0.4114,
+     "coverage": 0.7737,
+     "width": 33.8127
+    },
+    "baseline": {
+     "mae_log": 1.455,
+     "typical_factor": 4.28,
+     "within_2x": 0.3616,
+     "coverage": 0.7758,
+     "width": 53.8885,
+     "name": "B2 budget x genre multiple"
+    }
+   },
+   "revenue_estimated": {
+    "films": 1485,
+    "model": {
+     "mae_log": 1.2658,
+     "typical_factor": 3.55,
+     "within_2x": 0.3865,
+     "coverage": 0.7825,
+     "width": 41.7498
+    },
+    "baseline": {
+     "mae_log": 1.455,
+     "typical_factor": 4.28,
+     "within_2x": 0.3616,
+     "coverage": 0.7758,
+     "width": 53.8885,
+     "name": "B2 budget x genre multiple"
+    }
+   },
+   "budget": {
+    "films": 1964,
+    "model": {
+     "mae_log": 0.6815,
+     "typical_factor": 1.98,
+     "within_2x": 0.667,
+     "coverage": 0.7989,
+     "width": 7.63
+    },
+    "baseline": {
+     "mae_log": 1.2466,
+     "typical_factor": 3.48,
+     "within_2x": 0.3432,
+     "coverage": 0.8366,
+     "width": 66.6934,
+     "name": "B2 genre median x sequel factor"
+    }
+   },
+   "score": {
+    "films": 7461,
+    "model": {
+     "mae": 0.4931,
+     "coverage": 0.8109,
+     "width": 1.6701
+    },
+    "baseline": {
+     "mae": 0.5741,
+     "coverage": 0.8078,
+     "width": 1.9437,
+     "name": "B2 genre median + director"
+    }
+   }
+  }
+ },
+ "holdout": {
+  "about": "Films released in 2026, after the app's training data ends, scored by the app's own models. Revenue and score only for films 6+ months old.",
+  "years": "2026",
+  "run_at": "2026-10-22",
+  "released_by": "2026-04-23",
+  "targets": {
+   "revenue": {
+    "films": 70,
+    "model": {
+     "mae_log": 1.0523,
+     "typical_factor": 2.86,
+     "within_2x": 0.4286,
+     "coverage": 0.8143,
+     "width": 43.6043
+    },
+    "baseline": {
+     "mae_log": 1.2949,
+     "typical_factor": 3.65,
+     "within_2x": 0.3571,
+     "coverage": 0.8,
+     "width": 53.8885,
+     "name": "B2 budget x genre multiple"
+    }
+   },
+   "revenue_estimated": {
+    "films": 70,
+    "model": {
+     "mae_log": 1.0954,
+     "typical_factor": 2.99,
+     "within_2x": 0.3714,
+     "coverage": 0.8857,
+     "width": 53.8399
+    },
+    "baseline": {
+     "mae_log": 1.2949,
+     "typical_factor": 3.65,
+     "within_2x": 0.3571,
+     "coverage": 0.8,
+     "width": 53.8885,
+     "name": "B2 budget x genre multiple"
+    }
+   },
+   "budget": {
+    "films": 223,
+    "model": {
+     "mae_log": 0.781,
+     "typical_factor": 2.18,
+     "within_2x": 0.6188,
+     "coverage": 0.8117,
+     "width": 8.8935
+    },
+    "baseline": {
+     "mae_log": 1.3661,
+     "typical_factor": 3.92,
+     "within_2x": 0.3498,
+     "coverage": 0.7578,
+     "width": 66.6934,
+     "name": "B2 genre median x sequel factor"
+    }
+   },
+   "score": {
+    "films": 190,
+    "model": {
+     "mae": 0.59,
+     "coverage": 0.7368,
+     "width": 1.6592
+    },
+    "baseline": {
+     "mae": 0.7309,
+     "coverage": 0.7,
+     "width": 1.9437,
+     "name": "B2 genre median + director"
+    }
+   }
+  }
+ },
+ "sources": {
+  "test": "reports/final_test.md",
+  "holdout": "reports/audit.md"
+ }
+}

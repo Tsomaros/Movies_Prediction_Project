@@ -1,16 +1,21 @@
-// /predict: the creator form. Until the Day 11 results page, the API's answer is shown raw under the form.
+// /predict: the creator form. A successful prediction opens the results page (/predict/result?f=…), which finds
+// the answer already in the query cache.
 //
 // The form starts from the URL (?f=, a shared link), else this browser's draft, else fresh. While the creator
 // types, the URL and the draft follow it (SAVE_MS after the last change), so a refresh or a copied link keeps it.
+// "Try a variation" on the results page adds ?base= (the version to compare with), which is kept until the next
+// result shows the difference.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
+
+import type { PredictForm } from '@/api/client'
 
 import { useMetaOptions, usePredict } from '@/api/hooks'
 import { Button } from '@/components/ui/button'
 import { CreatorForm } from '@/form/CreatorForm'
 import type { FormValues } from '@/form/model'
-import { clearDraft, encodeForm, saveDraft, startingForm, URL_PARAM } from '@/form/persist'
+import { BASE_PARAM, clearDraft, encodeForm, resultPath, saveDraft, startingForm, URL_PARAM } from '@/form/persist'
 import PageHeading from '@/pages/PageHeading'
 
 export const SAVE_MS = 400
@@ -20,23 +25,29 @@ const STARTED_FROM = { link: 'Loaded from a shared link.', draft: 'Your draft fr
 export default function Predict() {
   const options = useMetaOptions()
   const predict = usePredict()
-  const result = useRef<HTMLElement>(null)
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [start] = useState(() => startingForm(`?${searchParams}`))
+  const [base] = useState(() => searchParams.get(BASE_PARAM))
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
-  useEffect(() => {
-    if (predict.data) result.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
-  }, [predict.data])
   useEffect(() => () => clearTimeout(timer.current), [])
 
   const keep = useCallback((values: FormValues) => {
     clearTimeout(timer.current)
     timer.current = setTimeout(() => {
       saveDraft(values)
-      setSearchParams({ [URL_PARAM]: encodeForm(values) }, { replace: true, preventScrollReset: true })
+      setSearchParams({ [URL_PARAM]: encodeForm(values), ...(base ? { [BASE_PARAM]: base } : {}) },
+        { replace: true, preventScrollReset: true })
     }, SAVE_MS)
-  }, [setSearchParams])
+  }, [setSearchParams, base])
+
+  const submit = useCallback(async (body: PredictForm, values: FormValues) => {
+    await predict.mutateAsync(body) // a 422 throws back into the form; the answer is cached for the results page
+    clearTimeout(timer.current)
+    saveDraft(values)
+    navigate(resultPath(values, base))
+  }, [predict, navigate, base])
 
   const clear = useCallback(() => {
     clearTimeout(timer.current)
@@ -60,7 +71,11 @@ export default function Predict() {
       <PageHeading title="Plan a film">
         Describe the film you have in mind. Everything is about the plan: nothing about how it did after release.
       </PageHeading>
-      {STARTED_FROM[start.source] && <p className="text-muted-foreground -mt-4 text-sm">{STARTED_FROM[start.source]}</p>}
+      {base ? (
+        <p className="text-muted-foreground -mt-4 text-sm" data-testid="variation-hint">
+          Trying a variation: change one thing and predict again to see what it does.
+        </p>
+      ) : STARTED_FROM[start.source] && <p className="text-muted-foreground -mt-4 text-sm">{STARTED_FROM[start.source]}</p>}
       {options.isPending && <p className="text-muted-foreground" aria-live="polite">Loading the form…</p>}
       {options.isError && (
         <div role="alert" className="grid justify-items-start gap-3">
@@ -70,16 +85,7 @@ export default function Predict() {
       )}
       {options.data && (
         <CreatorForm options={options.data} initial={start.form} pending={predict.isPending}
-          onSubmit={body => predict.mutateAsync(body)} onValuesChange={keep} onClear={clear} onCopyLink={copyLink} />
-      )}
-      {predict.data && (
-        <section ref={result} aria-labelledby="raw-heading" className="grid scroll-mt-20 gap-2">
-          <h2 id="raw-heading" className="text-lg font-semibold">Prediction (raw)</h2>
-          <p className="text-muted-foreground text-sm">The results page arrives on Day 11; this is the API's answer as is.</p>
-          <pre data-testid="raw-prediction" className="bg-muted max-h-[32rem] overflow-auto rounded-md p-4 text-xs">
-            {JSON.stringify(predict.data, null, 2)}
-          </pre>
-        </section>
+          onSubmit={submit} onValuesChange={keep} onClear={clear} onCopyLink={copyLink} />
       )}
     </div>
   )

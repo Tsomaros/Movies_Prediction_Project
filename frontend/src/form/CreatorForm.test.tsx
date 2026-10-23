@@ -57,7 +57,7 @@ describe('validation blocks a bad form', () => {
   test('a valid form is sent as the API body', async () => {
     const onSubmit = renderForm(VALID)
     await submit()
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(toApiBody(VALID)))
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(toApiBody(VALID), VALID))
   })
 
   test('fixing a field clears its message as you go', async () => {

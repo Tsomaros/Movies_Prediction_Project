@@ -1,6 +1,6 @@
 // The one typed client for the backend (/api/v1, proxied by Vite in dev and by nginx in docker compose).
 //
-//   getOptions(), searchNames(kind, q), predict(form)   -> typed bodies from schema.d.ts (npm run gen:api)
+//   getOptions(), searchNames(kind, q), predict(form), getModelCard()   -> typed bodies from schema.d.ts (npm run gen:api)
 //   ApiError                                             -> every failure, with a `kind` the UI can act on:
 //     validation   422, `fieldErrors` keyed by the API's dotted paths ("actors.2", "budget")
 //     rate_limited 429, `retryAfter` seconds from the Retry-After header
@@ -16,6 +16,9 @@ export type Match = Schemas['Match']
 export type PredictForm = Schemas['PredictForm']
 export type Prediction = Schemas['Prediction']
 export type FieldErrors = Schemas['FieldErrors']
+export type Comparable = Schemas['Comparable']
+export type Driver = Schemas['Driver']
+export type ModelCard = Schemas['ModelCard']
 
 export const API_BASE = '/api/v1'
 
@@ -93,4 +96,5 @@ export const api = {
   },
   predict: (form: PredictForm, signal?: AbortSignal) =>
     request<Prediction>('/predict', { method: 'POST', body: form, signal }),
+  getModelCard: (signal?: AbortSignal) => request<ModelCard>('/model-card', { signal }),
 }

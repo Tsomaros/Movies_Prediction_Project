@@ -3,11 +3,13 @@
 //   encodeForm(values) / decodeForm(text)   -> the ?f= value: the form as JSON in base64url (UTF-8 safe);
 //                                              decodeForm returns null for anything that isn't a form
 //   loadDraft() / saveDraft(values) / clearDraft()   -> localStorage, wrapped so a blocked storage is just "none"
+//   resultPath(values, base)               -> the results page's address for a form (and the version to compare with)
 //   startingForm(search)                    -> the form a page load starts with: the URL's, else the draft,
 //                                              else a fresh one (and where it came from)
 import { emptyForm, type FormValues, type NameRef } from '@/form/model'
 
 export const URL_PARAM = 'f'
+export const BASE_PARAM = 'base' // the results page's previous version ("Try a variation")
 export const DRAFT_KEY = 'movie-prediction:draft'
 
 function toBase64Url(text: string): string {
@@ -94,4 +96,11 @@ export function startingForm(search: string): { form: FormValues; source: Source
   const draft = loadDraft()
   if (draft) return { form: draft, source: 'draft' }
   return { form: emptyForm(), source: 'new' }
+}
+
+/** The results page's address for these values, keeping the version to compare with. */
+export function resultPath(values: FormValues, base: string | null) {
+  const params = new URLSearchParams({ [URL_PARAM]: encodeForm(values) })
+  if (base) params.set(BASE_PARAM, base)
+  return `/predict/result?${params}`
 }

@@ -11,6 +11,7 @@ Checks, each printed as one line with its time:
   the warning codes and each middle equal to tests/golden/predictions.json to 6 significant figures;
 - POST /predict/compare with two variants, and a bad form that must get the readable 422;
 - search, a movie page, autocomplete and /meta/options on the real data;
+- /model-card belongs to the served models and has the 2019+ test and the 2026 holdout;
 - with --web-url, the frontend: the home page, its script bundle (cached for a year), a deep link served
   as the app (/predict/...), and /api/v1/health and /meta/options through the frontend's proxy.
 
@@ -206,6 +207,15 @@ def main() -> None:
         return f"{len(o['fields'])} fields, {len(o['themes'])} themes, {len(o['languages'])} languages"
 
     s.check("GET /meta/options", options)
+
+    def model_card() -> str:
+        c = s.get("/model-card")
+        assert expected_version is None or c["model_version"] == expected_version, c["model_version"]
+        revenue = c["test"]["targets"]["revenue"]
+        assert revenue["films"] > 0 and 0 < revenue["model"]["coverage"] < 1 and c["holdout"]["targets"]["score"]["films"] > 0
+        return f"2019+ revenue in range {revenue['model']['coverage']:.1%} of {revenue['films']:,} films"
+
+    s.check("GET /model-card", model_card)
 
     if args.web_url:
         web_checks(s, args.web_url, expected_version)

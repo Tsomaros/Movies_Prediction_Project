@@ -4,8 +4,12 @@
 //   useNameSearch(kind, q)                 -> autocomplete, 250 ms after the last keystroke, from 1 character
 //   usePeopleSearch(role, q), useCompanySearch(q), useCollectionSearch(q)   -> the same, per field
 //   usePredict()                           -> POST /predict; 429, network and server errors toast by themselves,
-//                                             a 422 is left to the form (applyFieldErrors in errors.ts)
-import { useMutation, useQuery } from '@tanstack/react-query'
+//                                             a 422 is left to the form (applyFieldErrors in errors.ts); the
+//                                             answer is also cached under predictionKey(form)
+//   usePrediction(form)                    -> the same answer as a query (the results page): from that cache when
+//                                             the form page just asked, else one request; errors are the page's
+//   useModelCard()                         -> GET /model-card, cached an hour
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api, type NameKind, type PredictForm } from '@/api/client'
 import { notifyError } from '@/api/errors'
@@ -37,10 +41,31 @@ export const usePeopleSearch = (role: 'director' | 'actor', q: string) => useNam
 export const useCompanySearch = (q: string) => useNameSearch('company', q)
 export const useCollectionSearch = (q: string) => useNameSearch('franchise', q)
 
+export const predictionKey = (form: PredictForm | null) => ['predict', form] as const
+
 export function usePredict() {
+  const client = useQueryClient()
   const mutation = useMutation({
     mutationFn: (form: PredictForm) => api.predict(form),
+    onSuccess: (data, form) => client.setQueryData(predictionKey(form), data),
     onError: (error, form) => notifyError(error, () => mutation.mutate(form)),
   })
   return mutation
+}
+
+/** A prediction never changes for the same form and model, so it is kept for the session (and never retried:
+ *  a 422 or 429 won't go away by asking again at once). */
+export function usePrediction(form: PredictForm | null) {
+  return useQuery({
+    queryKey: predictionKey(form),
+    queryFn: ({ signal }) => api.predict(form!, signal),
+    enabled: form !== null,
+    staleTime: Infinity,
+    gcTime: HOUR,
+    retry: false,
+  })
+}
+
+export function useModelCard() {
+  return useQuery({ queryKey: ['model-card'], queryFn: ({ signal }) => api.getModelCard(signal), staleTime: HOUR })
 }
