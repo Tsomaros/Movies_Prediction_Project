@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils'
 import {
   activeFilters, browseResets, EMPTY, loadView, readBrowse, saveView, SORTS, toQuery, type BrowseState, type View, VIEWS, writeBrowse,
 } from '@/movies/browse'
-import { Filters } from '@/movies/Filters'
+import { Filters, FilterSelect } from '@/movies/Filters'
 import { MovieCard, MovieListItem } from '@/movies/MovieCard'
 import { Pager } from '@/movies/Pager'
 import PageHeading from '@/pages/PageHeading'
@@ -124,13 +124,11 @@ export default function Browse() {
                 <Filters state={state} options={options.data} onChange={change} onClear={clear} idPrefix="drawer" />
               </SheetContent>
             </Sheet>
-            <label className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Sort</span>
-              <select aria-label="Sort by" value={state.sort} onChange={e => change({ sort: e.target.value as BrowseState['sort'] })}
-                className="border-input bg-background h-8 rounded-md border px-2 text-sm">
-                {SORTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
-            </label>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground" aria-hidden>Sort</span>
+              <FilterSelect label="Sort by" value={state.sort} className="bg-card h-8 w-40"
+                onChange={sort => change({ sort: (sort ?? 'popularity') as BrowseState['sort'] })} choices={SORTS} />
+            </div>
             <div className="ml-auto"><ViewPicker view={view} onChange={chooseView} /></div>
           </div>
 

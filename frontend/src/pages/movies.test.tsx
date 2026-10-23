@@ -30,6 +30,11 @@ function serve(list: (url: URL) => MovieList = () => LIST, film: MovieDetail | n
     [`/api/v1/movies/${FILM.id}`]: film ? { body: film } : { status: 404, body: { detail: 'No film' } },
   })
 }
+/** Open a menu (the form's Radix Select) and pick the option with this text. */
+async function choose(trigger: HTMLElement, option: string) {
+  await userEvent.click(trigger)
+  await userEvent.click(await screen.findByRole('option', { name: option }))
+}
 const movieCalls = (calls: ReturnType<typeof serve>['calls']) => calls.filter(c => c.url.pathname === '/api/v1/movies')
 const lastQuery = (calls: ReturnType<typeof serve>['calls']) => Object.fromEntries(movieCalls(calls).at(-1)!.url.searchParams)
 
@@ -123,11 +128,11 @@ describe('the browse page', () => {
     const { router } = renderApp('/browse?page=2')
     await screen.findByRole('list', { name: 'Films' })
     const side = screen.getByRole('complementary', { name: 'Filter films' })
-    await userEvent.selectOptions(within(side).getByLabelText('Genre'), 'Horror')
-    await userEvent.selectOptions(within(side).getByLabelText('Audience score'), '7')
+    await choose(within(side).getByLabelText('Genre'), 'Horror')
+    await choose(within(side).getByLabelText('Audience score'), '7+ (any number of votes)')
     const from = within(side).getByLabelText('From year')
     await userEvent.type(from, '1980{Enter}')
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Sort by' }), 'newest')
+    await choose(screen.getByRole('combobox', { name: 'Sort by' }), 'Newest')
     expect(readBrowse(new URLSearchParams(router.state.location.search)))
       .toEqual({ ...EMPTY, genre: 'Horror', scoreMin: 7, yearFrom: 1980, sort: 'newest', page: 1 })
     await waitFor(() => expect(lastQuery(calls)).toMatchObject({ genre: 'Horror', score_min: '7', year_from: '1980', sort: 'newest' }))

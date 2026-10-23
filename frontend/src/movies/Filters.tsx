@@ -1,14 +1,35 @@
-// The browse filters: genre, years, original language and lowest score. Native selects and number boxes, so
-// they work the same with a keyboard, a screen reader and a phone's own pickers. Every change goes to the URL
-// through `onChange` (and back to page 1); a year is applied when the box loses focus or on Enter.
+// The browse filters: genre, years, original language and lowest score. The menus are the same shadcn/Radix
+// Select as the creator form's (FilterSelect, also the sort menu); the years are number boxes. Every change goes
+// to the URL through `onChange` (and back to page 1); a year is applied when the box loses focus or on Enter.
 import { useState, type ReactNode } from 'react'
 
 import type { Options } from '@/api/client'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { codeName } from '@/form/format'
 import { SCORE_STEPS, type BrowseState } from '@/movies/browse'
 
 const CONTROL = 'border-input bg-card dark:bg-input/30 h-9 w-full rounded-md border px-2 text-sm focus-visible:outline-2 focus-visible:outline-ring'
+
+const ANY = 'any' // Radix Select can't hold an empty value: "Any genre" and the like use this one
+
+/** A menu like the form's. `any` adds a first choice for "no filter", sent back as null. */
+export function FilterSelect({ id, label, value, onChange, choices, any, className }: {
+  id?: string; label?: string; value: string | null; onChange: (value: string | null) => void
+  choices: readonly { value: string; label: string }[]; any?: string; className?: string
+}) {
+  return (
+    <Select value={value ?? ANY} onValueChange={v => onChange(v === ANY ? null : v)}>
+      <SelectTrigger id={id} aria-label={label} className={className ?? 'bg-card h-9 w-full'}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {any && <SelectItem value={ANY}>{any}</SelectItem>}
+        {choices.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+      </SelectContent>
+    </Select>
+  )
+}
 
 function Field({ id, label, children }: { id: string; label: string; children: ReactNode }) {
   return (
@@ -49,11 +70,8 @@ export function Filters({ state, options, onChange, onClear, idPrefix = 'f' }: {
   return (
     <div className="grid gap-4" role="group" aria-label="Filters">
       <Field id={id('genre')} label="Genre">
-        <select id={id('genre')} className={CONTROL} value={state.genre ?? ''}
-          onChange={e => onChange({ genre: e.target.value || null })}>
-          <option value="">Any genre</option>
-          {(options?.genres ?? []).map(g => <option key={g} value={g}>{g}</option>)}
-        </select>
+        <FilterSelect id={id('genre')} value={state.genre} any="Any genre" onChange={genre => onChange({ genre })}
+          choices={(options?.genres ?? []).map(g => ({ value: g, label: g }))} />
       </Field>
       <div className="grid grid-cols-2 gap-2">
         <Field id={id('from')} label="From year">
@@ -64,18 +82,13 @@ export function Filters({ state, options, onChange, onClear, idPrefix = 'f' }: {
         </Field>
       </div>
       <Field id={id('lang')} label="Original language">
-        <select id={id('lang')} className={CONTROL} value={state.language ?? ''}
-          onChange={e => onChange({ language: e.target.value || null })}>
-          <option value="">Any language</option>
-          {(options?.languages ?? []).map(l => <option key={l.code} value={l.code}>{codeName('language', l.code)}</option>)}
-        </select>
+        <FilterSelect id={id('lang')} value={state.language} any="Any language" onChange={language => onChange({ language })}
+          choices={(options?.languages ?? []).map(l => ({ value: l.code, label: codeName('language', l.code) }))} />
       </Field>
       <Field id={id('score')} label="Audience score">
-        <select id={id('score')} className={CONTROL} value={state.scoreMin ?? ''}
-          onChange={e => onChange({ scoreMin: e.target.value ? Number(e.target.value) : null })}>
-          <option value="">Any score</option>
-          {SCORE_STEPS.map(s => <option key={s} value={s}>{s}+ (any number of votes)</option>)}
-        </select>
+        <FilterSelect id={id('score')} value={state.scoreMin === null ? null : String(state.scoreMin)} any="Any score"
+          onChange={s => onChange({ scoreMin: s === null ? null : Number(s) })}
+          choices={SCORE_STEPS.map(s => ({ value: String(s), label: `${s}+ (any number of votes)` }))} />
       </Field>
       <Button variant="outline" size="sm" onClick={onClear}>Clear filters</Button>
     </div>
