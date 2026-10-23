@@ -1459,3 +1459,101 @@ Write-up: `reports/audit.md`.
 - **After a model or report change,** rerun `uv run python -m ml.eval.model_card`: the API answers 503 to a stale card, and a test fails.
 - **The results page loads the form's Zod chunk** (37 kB gzipped), because it imports `toApiBody` from `src/form/model.ts`.
 - **The quick loops:** `make test-fast` (316 tests, about 15 s) and `make web-test` (126 tests, about 15 s).
+
+## Day 12: Public browse, detail page and attribution (done 2026-10-23)
+
+- [x] 0. Plan document: left untouched, as on Days 8–11. Before the build:
+  - `day6` was merged into `main` (`e56cd07`) and deleted at Dimitris's request; Day 12 is on `main`;
+  - Dimitris's choices: the "Top rated" row and the score sort need 50+ votes, while the score filter keeps low-vote films; Claude fetches TMDB's official logo and shows its source and size.
+- [x] 1. Backend additions (score filter, box-office sort, money filter dropped)
+- [x] 2. Browse page (`/movies`)
+- [x] 3. Posters
+- [x] 4. Movie detail page (`/movies/:id`)
+- [x] 5. "Predict a film like this"
+- [x] 6. Curated rows
+- [x] 7. Attribution and About
+- [x] 8. Quality and tests (152 Vitest tests; phone and desktop, both themes)
+- [x] 9. Wrap-up: README with two screenshots, CLAUDE.md, commit
+
+### Task 1: backend additions
+
+- **`GET /movies`:** `score_min` (0–10, films with any number of votes), and `sort=revenue` (2025 dollars, trusted figures only, for the box-office row). `has_money` is gone. `sort=score` still needs 50+ votes (`score_ok`).
+- **Every summary** now carries `revenue_2025` (None when unknown or doubted).
+- **A slow query fixed:** the score filter took 0.63 s because SQLite walked the `vote_count` index (nearly every film has votes). `+m.vote_count` keeps it off the index: 0.11 s.
+- **Tests:** the filters test now covers `score_min` and its 422; a new test puts a 10.0 from 2 votes into a copy of the fixture database and checks the filter finds it and the score sort doesn't; the sort test covers `revenue`. 61 API tests. `scripts/smoke.py` checks the box-office sort and the score filter (16 checks).
+
+### Task 2: browse page
+
+- **`src/movies/browse.ts`:** the search, filters, sort and page live only in the URL (`?q=&genre=&from=&to=&lang=&score=&sort=&page=`); malformed values fall back to their defaults, and defaults are left out of the URL.
+- **Search as you type,** 300 ms after the last keystroke, written to the URL once (not per keystroke) and back to page 1.
+- **Filters** (`src/movies/Filters.tsx`): genre, from/to year (applied on Enter or leaving the box), original language (the 60 from `/meta/options`, named by the browser) and lowest score. Native selects, so keyboard, screen readers and phones work the same. A sidebar from `lg`, a drawer (shadcn sheet) below it.
+- **Five sorts,** numbered pages with "…" gaps, active filters as removable chips, and a no-results state with a button per filter and "Clear all".
+- **Small, medium or large posters, or a list,** remembered in localStorage (try/catch).
+- **While loading:** skeletons first, then the old page stays dimmed until the new one arrives (`keepPreviousData`).
+
+### Task 3: posters
+
+- `src/movies/Poster.tsx`: fixed 2:3, lazy, w342 in grids and w780 on the film page; without a poster, a placeholder with the title. The results page's comparables use it too.
+
+### Task 4: movie detail page
+
+- Facts line (rating, runtime, date, language), tagline, overview, genres and our themes, the score with its votes (and "fewer than 50 votes, so our models don't use this score").
+- **Money:** "As reported" or "In 2025 dollars" (the default), "not reported", the cleaning rules' doubt with its reason, and a note for films under six months old.
+- **Made by:** directors, writers, producers (up to 4 each), music, cinematography, editors, studios, countries, franchise.
+- **Cast:** initials avatars ("Robert Downey Jr." → "RD") in a colour derived from the name, so a person looks the same everywhere.
+- **Similar films** with their first "why" tag, and "This film on TMDB".
+- The tab title is the film's ("Avengers: Infinity War (2018) · Movie Prediction"). An unknown or malformed id gets "We don't have this film" with search and home links.
+
+### Task 5: "Predict a film like this"
+
+- **`src/movies/predictLike.ts` (`filmToForm`)** is the one place that decides what carries over: genres, themes, runtime, language, US rating, the first credited director and the top 5 cast. The release date is a new film's default, and everything else stays empty.
+- Limits come from `/meta/options`: unknown genres are dropped, an out-of-range runtime becomes 110, "NR" becomes "unrated/unknown", and a missing rating is left for the creator (the model reads "unrated" as an obscure film).
+- The form says "Started from Avengers: Infinity War: change what makes your film different, then predict." (`?like=`).
+
+### Task 6: curated rows
+
+- `src/movies/rows.ts`, one entry per row: Most popular, Top rated (50+ votes), From the 1990s, Biggest box office (2025 $, with each film's figure). Each row is a browse query, so "See all" opens the same films. On a phone a row scrolls sideways; wider, it shows 6.
+
+### Task 7: attribution and About
+
+- **TMDB's logo:** TMDB's site refused a plain download (403), so the "Primary short (blue)" SVG was read from their logos page in the browser: 2,065 bytes, a gradient and paths, no scripts. A retyping slip changed four numbers ("17.670" for "17.67"); they were fixed, and the file's SHA-256 now equals the checksum in TMDB's own file name (`8e7b30f7…cd95f6c`), also as served by nginx and as committed.
+- **Footer on every page:** the logo (12 px high, smaller than our brand, unaltered, linking to TMDB), the required notice and an About link.
+- **About** (`/about`): the data, how a prediction is made, the accuracy panel from `/model-card`, what the app can't do, and links to GitHub and the README. "About" is in the navigation.
+
+### Changes from the plan
+
+- **The "Top rated" row and the score sort need 50+ votes** (Dimitris's choice above); the plan had low-vote films in the row.
+- **A box-office sort was added to the API** (`sort=revenue`): the "Biggest box office" row couldn't be built from the existing filters, as the plan assumed.
+- **The form names the film it started from** (`?like=`), instead of "Loaded from a shared link".
+- **The search covers plots too** (the API's FTS already did), and the score filter's index fix was not planned.
+
+### Task 8: checks
+
+| | |
+| --- | --- |
+| Python tests | 400 (`make test`), 317 quick, API 61 |
+| Frontend tests | 152 (26 new), on real answers saved in `src/test/movies.json` and `movie.json` |
+| Frontend coverage | 97.1% of lines, 87.7% of branches |
+| Bundle (gzipped) | home page 145 kB; browse +15 kB, a film page +30 kB, the form about +90 kB |
+| Docker | both images rebuilt; all 16 smoke checks pass; the logo served by nginx has TMDB's checksum |
+
+- **New frontend tests:** the URL round trip and malformed values, the pager, initials, colours, runtime and crew text, `filmToForm` (normal and odd films), the button opening the form, the browse page (pages, search writing `?q=` once, filters and sort in the URL and the request, chips, no results, the remembered view, a failed load), the film page (facts, cast, crew, similar, TMDB link, money toggle, few votes, no poster, no money, 404), the home rows from their config, TMDB's logo and notice on 7 routes, and About.
+- **By hand** (Vite against the real API): home, browse, a film page and About at 1280 px and 375 px (no sideways scrolling), in light and dark; the filter drawer; "Predict a film like this" from *Avengers: Infinity War*.
+- **Fixed after looking:** the money card stretched to the crew list's height, the year boxes looked disabled, and the browse heading gave the filtered count as if it were every film.
+- **A tool hiccup, not an app bug:** the long-running Vite dev server stopped resolving `@/` imports and showed a blank page; a restart fixed it (`tsc`, the tests and the build were fine throughout).
+
+### Task 9: wrap-up
+
+- **README:** the TMDB terms with the logo's source and checksum, the `/movies` row in the API table, `src/movies/` in the folder table, a "public side" section with screenshots of browse and a film page (`docs/images/`), bundle sizes, test counts, the smoke checks, and two new Limitations (the pre-fill carries only part of a film; no photos of people).
+- **CLAUDE.md:** the public side's structure and rules (state only in the URL, rows as config, one mapping in `filmToForm`, never edit the logo, what each sort and filter keeps).
+- **Commit:** `d8f38c9` on `main` (37 files).
+
+### Surprises / inputs for Day 13+
+
+- **Day 13 (edge cases):**
+  - the film page already has its 404 ("We don't have this film"), and browse and the film page show their own load errors with Try again;
+  - "Broken shared URL" can follow `readBrowse`: malformed browse values already fall back to defaults, but nothing tells the visitor yet;
+  - opening a page with a full reload can restore an old scroll position (React Router's `ScrollRestoration` keys a fresh load as "default"); in-app navigation is fine.
+- **Day 13 (Lighthouse):** the home page now loads 145 kB gzipped, including the TanStack Query chunk for the rows; a film page loads the form's Zod chunk (26 kB) because "Predict a film like this" encodes a form.
+- **Day 14:** the logo is in `frontend/public/`, so the single production container must copy `dist/` with it.
+- **The quick loops:** `make test-fast` (317 tests, about 18 s) and `make web-test` (152 tests, about 20 s).
