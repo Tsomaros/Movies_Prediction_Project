@@ -13,7 +13,7 @@ Checks, each printed as one line with its time:
   the readable 422;
 - search, the box-office sort and the score filter, a movie page, autocomplete and /meta/options on the real data;
 - /model-card belongs to the served models and has the 2019+ test and the 2026 holdout;
-- with --web-url, the frontend: the home page, its script bundle (cached for a year), a deep link served
+- with --web-url, the frontend: the start page, its two poster collages, its script bundle (cached for a year), a deep link served
   as the app (/predict/...), and /api/v1/health and /meta/options through the frontend's proxy.
 
 It waits up to --wait seconds for /health first (a container starting, or a free host waking up), and
@@ -81,7 +81,7 @@ def web_checks(s: Smoke, web_url: str, expected_version: str | None) -> None:
     web = httpx.Client(base_url=web_url.rstrip("/"), timeout=30)
     page: dict[str, str] = {}
 
-    def home() -> str:
+    def start() -> str:
         r = web.get("/")
         r.raise_for_status()
         assert "text/html" in r.headers["content-type"], r.headers["content-type"]
@@ -89,11 +89,21 @@ def web_checks(s: Smoke, web_url: str, expected_version: str | None) -> None:
         page["html"] = r.text
         return f"{len(r.content):,} bytes, cache: {r.headers.get('cache-control')}"
 
-    s.check(f"GET {web_url}/ (home page)", home)
+    s.check(f"GET {web_url}/ (start page)", start)
+
+    for name in ("movies", "series"):
+        def collage(name: str = name) -> str:
+            r = web.get(f"/collages/{name}.webp")
+            r.raise_for_status()
+            assert r.headers["content-type"] == "image/webp", r.headers["content-type"]
+            assert 10_000 < len(r.content) < 300_000, len(r.content)
+            return f"{len(r.content):,} bytes"
+
+        s.check(f"GET /collages/{name}.webp (start page)", collage)
 
     def bundle() -> str:
         found = re.search(r'src="(/assets/[^"]+\.js)"', page.get("html", ""))
-        assert found, "no script bundle in the home page"
+        assert found, "no script bundle in the start page"
         r = web.get(found.group(1))
         r.raise_for_status()
         assert "javascript" in r.headers["content-type"], r.headers["content-type"]

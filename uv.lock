@@ -1236,6 +1236,7 @@ ml = [
     { name = "matplotlib" },
     { name = "onnx" },
     { name = "optuna" },
+    { name = "pillow" },
     { name = "scikit-learn" },
 ]
 
@@ -1266,6 +1267,7 @@ ml = [
     { name = "matplotlib", specifier = ">=3.11.2" },
     { name = "onnx", specifier = ">=1.23.2" },
     { name = "optuna", specifier = ">=5.0.0" },
+    { name = "pillow", specifier = ">=13.0.0" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
 ]
 

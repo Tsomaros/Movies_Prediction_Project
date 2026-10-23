@@ -90,7 +90,7 @@ describe('links cut or edited by hand', () => {
     expect(browseResets(new URLSearchParams('genre=Cartoon&from=abc&score=11&sort=best&page=0'), options.genres))
       .toEqual(['genre', 'from year', 'score', 'sort', 'page'])
     const { calls } = mockFetch({ '/api/v1/meta/options': { body: options }, '/api/v1/movies': { body: moviesJson as MovieList } })
-    renderApp('/movies?genre=Cartoon&page=x')
+    renderApp('/browse?genre=Cartoon&page=x')
     expect(await screen.findByTestId('link-notice')).toHaveTextContent("Part of this link couldn't be read, so the genre, page were left at the usual value.")
     await waitFor(() => expect(calls.some(c => c.url.pathname === '/api/v1/movies')).toBe(true))
     expect(calls.filter(c => c.url.pathname === '/api/v1/movies').every(c => !c.url.searchParams.has('genre'))).toBe(true)

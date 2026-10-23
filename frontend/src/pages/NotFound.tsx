@@ -8,7 +8,7 @@ export default function NotFound() {
   return (
     <section>
       <PageHeading title="Page not found">There is no page at this address.</PageHeading>
-      <Button asChild variant="outline"><Link to="/">Go to the home page</Link></Button>
+      <Button asChild variant="outline"><Link to="/">Go to the start page</Link></Button>
     </section>
   )
 }

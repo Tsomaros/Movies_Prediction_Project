@@ -8,7 +8,7 @@ import { browseLink, EMPTY, pageNumbers, readBrowse, VIEW_KEY, writeBrowse } fro
 import { crewByJob, initials, nameHue, runtimeText } from '@/movies/people'
 import { filmToForm } from '@/movies/predictLike'
 import { ROWS } from '@/movies/rows'
-import { SEARCH_MS } from '@/pages/Movies'
+import { SEARCH_MS } from '@/pages/Browse'
 import { mockFetch } from '@/test/fetch'
 import modelCardJson from '@/test/model_card.json'
 import movieJson from '@/test/movie.json'
@@ -39,7 +39,7 @@ describe('the browse state in the URL', () => {
     expect(readBrowse(writeBrowse(state))).toEqual(state)
     expect(writeBrowse(EMPTY).toString()).toBe('')
     expect(readBrowse(new URLSearchParams('from=abc&to=99999&lang=ENG&score=11&sort=evil&page=-2'))).toEqual(EMPTY)
-    expect(browseLink({ sort: 'revenue' })).toBe('/movies?sort=revenue')
+    expect(browseLink({ sort: 'revenue' })).toBe('/browse?sort=revenue')
   })
 
   test('the pager shows the ends, the neighbours and gaps', () => {
@@ -97,7 +97,7 @@ describe('"Predict a film like this"', () => {
 describe('the browse page', () => {
   test('shows a page of films with score and votes, and the pager', async () => {
     serve()
-    renderApp('/movies')
+    renderApp('/browse')
     const grid = await screen.findByRole('list', { name: 'Films' })
     expect(within(grid).getAllByRole('link')).toHaveLength(24)
     expect(within(grid).getAllByRole('link')[0]).toHaveAttribute('href', `/movies/${LIST.items[0].id}`)
@@ -105,12 +105,12 @@ describe('the browse page', () => {
     expect(screen.getByText(/79,199 films · page 1 of 3,300/)).toBeInTheDocument()
     const pager = screen.getByRole('navigation', { name: 'Pages' })
     expect(within(pager).getByRole('link', { name: 'Page 1' })).toHaveAttribute('aria-current', 'page')
-    expect(within(pager).getByRole('link', { name: 'Next page' })).toHaveAttribute('href', '/movies?page=2')
+    expect(within(pager).getByRole('link', { name: 'Next page' })).toHaveAttribute('href', '/browse?page=2')
   })
 
   test('the search box writes ?q= 300 ms after typing stops and starts from page 1', async () => {
     const { calls } = serve()
-    const { router } = renderApp('/movies?page=4')
+    const { router } = renderApp('/browse?page=4')
     await screen.findByRole('list', { name: 'Films' })
     await userEvent.type(screen.getByRole('searchbox', { name: 'Search films' }), 'alien')
     await waitFor(() => expect(router.state.location.search).toBe('?q=alien'), { timeout: SEARCH_MS + 1000 })
@@ -120,7 +120,7 @@ describe('the browse page', () => {
 
   test('filters and sort go to the URL and the request; chips remove them', async () => {
     const { calls } = serve()
-    const { router } = renderApp('/movies?page=2')
+    const { router } = renderApp('/browse?page=2')
     await screen.findByRole('list', { name: 'Films' })
     const side = screen.getByRole('complementary', { name: 'Filter films' })
     await userEvent.selectOptions(within(side).getByLabelText('Genre'), 'Horror')
@@ -137,7 +137,7 @@ describe('the browse page', () => {
 
   test('no results: a button per filter and "Clear all"', async () => {
     serve(() => ({ items: [], total: 0, page: 1, page_size: 24, pages: 0 }))
-    const { router } = renderApp('/movies?genre=Western&lang=ja&q=zzz')
+    const { router } = renderApp('/browse?genre=Western&lang=ja&q=zzz')
     const none = await screen.findByTestId('no-results')
     expect(within(none).getAllByRole('button')).toHaveLength(4)
     await userEvent.click(within(none).getByRole('button', { name: 'Remove Western' }))
@@ -148,7 +148,7 @@ describe('the browse page', () => {
 
   test('the poster size or list view is remembered', async () => {
     serve()
-    renderApp('/movies')
+    renderApp('/browse')
     await screen.findByRole('list', { name: 'Films' })
     await userEvent.click(screen.getByRole('radio', { name: 'List' }))
     expect(localStorage.getItem(VIEW_KEY)).toBe('list')
@@ -158,7 +158,7 @@ describe('the browse page', () => {
 
   test('a failed load offers a retry', async () => {
     mockFetch({ '/api/v1/meta/options': { body: options }, '/api/v1/movies': new TypeError('offline') })
-    renderApp('/movies')
+    renderApp('/browse')
     expect(await screen.findByRole('alert')).toHaveTextContent("The films couldn't load")
   })
 })
@@ -199,20 +199,20 @@ describe('the film page', () => {
     expect(within(screen.getByRole('region', { name: 'Money' })).getAllByText('not reported')).toHaveLength(2)
   })
 
-  test('an unknown film is a 404 page with search and home links', async () => {
+  test('an unknown film is a 404 page with search and start page links', async () => {
     serve(undefined, null)
     renderApp(`/movies/${FILM.id}`)
     expect(await screen.findByRole('heading', { name: "We don't have this film" })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Search films' })).toHaveAttribute('href', '/movies')
+    expect(screen.getByRole('link', { name: 'Search films' })).toHaveAttribute('href', '/browse')
     renderApp('/movies/not-a-number')
     await waitFor(() => expect(screen.getAllByRole('heading', { name: "We don't have this film" })).toHaveLength(2))
   })
 })
 
-describe('the home page and attribution', () => {
+describe('the curated rows and attribution', () => {
   test('the curated rows come from the config, each with "See all" on the same query', async () => {
     serve()
-    renderApp('/')
+    renderApp('/movies')
     for (const row of ROWS) {
       const section = await screen.findByTestId(`row-${row.key}`)
       expect(within(section).getByRole('heading', { name: row.title })).toBeInTheDocument()
@@ -221,7 +221,25 @@ describe('the home page and attribution', () => {
     await waitFor(() => expect(within(screen.getByTestId('row-popular')).getAllByRole('link').length).toBeGreaterThan(6))
   })
 
-  test.each(['/', '/predict', '/predict/result', '/movies', `/movies/${FILM.id}`, '/about', '/no/such/page'])(
+  test('/movies has the rows and no search; Browse has the search and no rows', async () => {
+    serve()
+    renderApp('/movies')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Movies' })).toBeInTheDocument()
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
+    renderApp('/browse')
+    expect(await screen.findByRole('searchbox', { name: 'Search films' })).toBeInTheDocument()
+    expect(screen.getAllByTestId('row-popular')).toHaveLength(1)
+  })
+
+  test.each(['?q=alien', '?genre=Horror&page=2', '?sort=newest'])('an old link /movies%s opens /browse with the same search', async query => {
+    serve()
+    const { router } = renderApp(`/movies${query}`)
+    await waitFor(() => expect(router.state.location.pathname).toBe('/browse'))
+    expect(router.state.location.search).toBe(query)
+    expect(await screen.findByRole('list', { name: 'Films' })).toBeInTheDocument()
+  })
+
+  test.each(['/', '/series', '/predict', '/predict/result', '/movies', '/browse', `/movies/${FILM.id}`, '/about', '/no/such/page'])(
     '%s carries the TMDB logo and notice', async path => {
       serve()
       renderApp(path)

@@ -43,7 +43,7 @@ A value of `0` in TMDB's `budget` or `revenue` means "unknown", not zero. See [C
 ### TMDB terms
 
 - Free for non-commercial use with attribution. Every page's footer carries TMDB's "Primary short" logo (`frontend/public/tmdb-logo.svg`, byte for byte their file: its SHA-256 equals the checksum in TMDB's own file name), smaller than our own brand, with the notice below and a link to TMDB. Film pages also link to the film on TMDB.
-- Data is not cached for more than six months.
+- Data is not cached for more than six months. That includes the start page's two poster collages (`make collages`): rebuild them at least every six months.
 - The client stays at about 20 requests/second, well under TMDB's per-IP limit.
 
 > This product uses the TMDB API but is not endorsed or certified by TMDB.
@@ -507,6 +507,7 @@ make api         # the API on :8000 (the dev server proxies /api to it)
 make web         # the app on http://localhost:5173
 make web-test    # types, lint (oxlint) and the Vitest tests
 make gen-api     # regenerate src/api/schema.d.ts from the running API's /openapi.json
+make collages    # the start page's poster collages (needs data/movies.db and TMDB_READ_TOKEN; commit the two images)
 cd frontend && npm run coverage
 ```
 
@@ -515,12 +516,20 @@ cd frontend && npm run coverage
 | `src/app/` | routes, layout (header, navigation, footer with the TMDB notice), theme, providers |
 | `src/api/` | the typed client (`client.ts`), the hooks (`hooks.ts`), shared error handling (`errors.ts`), and `schema.d.ts` generated from the API |
 | `src/form/` | the creator form: values and Zod rules (`model.ts`), the examples, the URL and draft (`persist.ts`), and its inputs (`inputs/`) |
-| `src/pages/` | the home page, `/predict`, the results page `/predict/result`, the compare page `/predict/compare`, `/movies`, `/movies/:id` and `/about` |
-| `src/movies/` | the public side's parts: the browse state in the URL (`browse.ts`), filters, poster, cards, pager, the home page's rows (`rows.ts`, one config entry per row) and "Predict a film like this" (`predictLike.ts`) |
+| `src/pages/` | the start page `/`, `/series` (coming soon), `/movies` (curated rows), `/browse` (search), `/predict`, the results page `/predict/result`, the compare page `/predict/compare`, `/movies`, `/movies/:id` and `/about` |
+| `src/movies/` | the public side's parts: the browse state in the URL (`browse.ts`), filters, poster, cards, pager, the curated rows of `/movies` (`rows.ts`, one config entry per row) and "Predict a film like this" (`predictLike.ts`) |
 | `src/result/` | the results page's parts: summary cards, the range chart, drivers, comparable films, notes and accuracy, and number formatting (`format.ts`) |
 | `src/compare/` | the compare page's parts: the variants in the URL, the presets and "within the uncertainty" (`variants.ts`), the picker, the side-by-side view, and the month sweep (`sweep.ts`, `MonthSweep.tsx`) |
 
-**The form** (`/predict`) is one card, with the optional fields folded under "More details":
+**The start page** (`/`) has two panels over poster collages: **Movies** opens `/movies`, **Series** opens `/series` ("coming soon", over the same collage blurred). The header (Movies · Browse · Predict · About) is the same on every page, so the form is one click away.
+
+![The start page: Movies and Series panels](docs/images/start-page.png)
+
+- **Panels:** side by side on wide screens, stacked on a phone. Hovering or focusing one widens it to 58%, lightens its overlay and lifts its title. Each panel is one link with a visible focus ring.
+- **The collages** pan slowly with a CSS transform; the pan is off when the system asks for reduced motion.
+- **The images** are two static WebP files (about 155 kB each, 1200 × 1000) in `frontend/public/collages/`, made by `scripts/build_collages.py` (`make collages`): 24 w185 posters each, tiled in turned rows with Pillow. Movies are the 24 most popular films with a poster in our database; series come from TMDB's popular TV list (two pages of 20). They are committed, so building the app never calls TMDB.
+
+**The form** (`/predict`) starts with what a prediction gives back (ranges, why, films like yours) and is one card, with the optional fields folded under "More details":
 - **The film:** genre and theme chips (1–5 each, counted in the label), release month and year, runtime as a box plus a slider, the original language (named by the browser, with film counts) and the US rating.
 - **People:** the director and the top-billed cast, typed straight into the box. Suggestions come 250 ms after the last keystroke, with film counts. A pick becomes a chip, numbered for the cast (5 to 10). The last option is always "Use '…' as a new person", for someone with no earlier films in our data.
 - **More details:** up to 5 studios and 5 countries, the franchise, the budget in millions of dollars ("Leave it empty and we'll estimate it") and the synopsis with a counter.
@@ -565,7 +574,7 @@ While a prediction loads, skeletons keep the layout still. A link without a comp
 | Too many requests (429) | "You're going a bit fast. Try again in a minute" (or "in 3 minutes", from `Retry-After`) |
 | An unknown director or actor | the "new person" option in the form and a note on the results |
 | A link cut or edited by hand | the readable fields load and a notice names the rest ("runtime, synopsis start from the usual value"), on the form, results, compare and browse pages; an unknown genre in a browse link too |
-| An unknown film | "We don't have this film" with search and home links |
+| An unknown film | "We don't have this film" with search and start page links |
 | A page that crashes | "Something went wrong" with Reload, inside the page frame: the header, navigation and footer keep working |
 | A slow connection | skeletons with the final layout's size: no layout shift above 0.06 in Lighthouse |
 
@@ -586,23 +595,25 @@ A full reload also returns to the top of the page now: scroll positions are kept
 | --- | --- |
 | ![Browse: science fiction, 1980–1999, score 7+](docs/images/browse-page.png) | ![The film page of Avengers: Infinity War](docs/images/film-page.png) |
 
-- **Home:** four curated rows from `src/movies/rows.ts`: Most popular, Top rated (50+ votes), From the 1990s and Biggest box office (2025 $). Each is a browse query, so "See all" opens the same films on `/movies`. On a phone a row scrolls sideways.
-- **Browse** (`/movies`): search as you type (300 ms after the last keystroke, over titles, original titles and plots), genre, years, original language and lowest score, five sorts, and numbered pages. Everything is in the URL, so a link or the back button shows the same films. Filters sit in a sidebar on wide screens and in a drawer on phones, active ones show as removable chips, and "no results" offers a button per filter. Small, medium or large posters, or a list, remembered in this browser.
+- **Movies** (`/movies`): four curated rows from `src/movies/rows.ts`: Most popular, Top rated (50+ votes), From the 1990s and Biggest box office (2025 $). Each is a browse query, so "See all" opens the same films on `/browse`. On a phone a row scrolls sideways.
+- **Browse** (`/browse`, its own page and header link): search as you type (300 ms after the last keystroke, over titles, original titles and plots), genre, years, original language and lowest score, five sorts, and numbered pages. Everything is in the URL, so a link or the back button shows the same films. Filters sit in a sidebar on wide screens and in a drawer on phones, active ones show as removable chips, and "no results" offers a button per filter. Small, medium or large posters, or a list, remembered in this browser. A link from before the split (`/movies?q=alien&genre=Horror`) opens `/browse` with the same search.
 - **Scores always come with their votes,** e.g. "9.4 (12 votes)". The score filter includes films with few votes; the score sort and the "Top rated" row need 50+, our usable-score rule, so a 10.0 from two votes never tops them.
 - **Posters** keep a fixed 2:3 shape while they load (lazily, w342 in grids, w780 on the film page); a film without one gets a placeholder with its title.
-- **Film page** (`/movies/:id`): facts, overview, genres and our themes, the score with its votes (and a note under 50), money as reported or in 2025 dollars, key crew, studios, countries and franchise, the cast with initials avatars in a colour derived from the name (our data has no photos), similar films with their "why" tag, and a link to the film on TMDB. The browser tab shows the film's title. An unknown id gets a "We don't have this film" page with search and home links.
+- **Film page** (`/movies/:id`): facts, overview, genres and our themes, the score with its votes (and a note under 50), money as reported or in 2025 dollars, key crew, studios, countries and franchise, the cast with initials avatars in a colour derived from the name (our data has no photos), similar films with their "why" tag, and a link to the film on TMDB. The browser tab shows the film's title. An unknown id gets a "We don't have this film" page with search and start page links.
 - **"Predict a film like this"** opens the form with the film's genres, themes, runtime, language, US rating, first director and top 5 cast (`filmToForm`, the one place that decides this). The date stays next year's, and the form says which film it started from. Values the form would refuse are dropped; TMDB's "NR" becomes "unrated", and a missing rating is left for the creator to pick.
 - **About** (`/about`): the data, how a prediction is made, the accuracy panel from `/model-card`, what the app can't do, and links to the code.
 
-**Bundle:** every page but the home page loads on demand. The home page loads 145 kB of JavaScript (gzipped), browse adds 15 kB and a film page 30 kB; the form page adds about 90 kB (Zod, Radix, cmdk), and the compare page about 40 kB (8 kB of its own, the rest shared with the form and results pages).
+**Bundle:** every page but the start page loads on demand. The start page downloads 159 kB of JavaScript (gzipped, as Lighthouse measures the transfer), `/movies` 173 kB and `/browse` 194 kB in all, and a film page adds 30 kB; the form page adds about 90 kB (Zod, Radix, cmdk), and the compare page about 40 kB (8 kB of its own, the rest shared with the form and results pages).
 
 **Quality pass** (Day 13), on the Docker app (the production build):
 
 | Lighthouse 12 (mobile / desktop) | Performance | Accessibility | Best practices | SEO |
 | --- | --- | --- | --- | --- |
-| Home | 98 / 98 | 100 / 100 | 100 / 100 | 100 / 100 |
-| Browse | 88 / 98 | 100 / 100 | 100 / 100 | 100 / 100 |
-| Form | 90 / 100 | 100 / 100 | 100 / 100 | 100 / 100 |
+| Start page | 89 / 100 | 100 / 100 | 100 / 100 | 100 / 100 |
+| Series | 93 / 100 | 100 / 100 | 100 / 100 | 100 / 100 |
+| Movies (rows) | 88 / 97 | 100 / 100 | 100 / 100 | 100 / 100 |
+| Browse | 86 / 97 | 100 / 100 | 100 / 100 | 100 / 100 |
+| Form | 91 / 100 | 100 / 100 | 100 / 100 | 100 / 100 |
 | Results | 94 / 100 | 100 / 100 | 100 / 100 | 100 / 100 |
 | Compare | 93 / 100 | 100 / 100 | 100 / 100 | 100 / 100 |
 
@@ -611,7 +622,8 @@ A full reload also returns to the top of the page now: scroll positions are kept
   - Layout shift on the form went from 0.13 to 0 and on compare from 0.29 to 0.06: the loading states now take the final layout's room.
   - Accessibility on the form and results went from 95–97 to 100: the runtime slider's handle gets its name, "More details" became an `h2`, and the inactive tabs and the drivers' blue heading got enough contrast.
   - Also fixed: a pager label that didn't match its text ("Page 3300" vs "3,300"), the first row of posters now loads at once (it is the page's largest paint), and a preconnect to TMDB's image host.
-- **Left as is:** mobile browse scores 88–92 between runs. Its largest paint is a TMDB poster on Lighthouse's slow-4G profile, and the API serves w342 posters where a phone grid would need w185.
+- **The start page, Series, Movies and Browse rows and the form** were measured again after the start page was added; results and compare are from Day 13. On a phone the start page's largest paint is a 1200 px collage (about 155 kB) on Lighthouse's slow-4G profile; a smaller phone copy would save about 150 kB.
+- **Left as is:** mobile browse scores 86–92 between runs. Its largest paint is a TMDB poster on Lighthouse's slow-4G profile, and the API serves w342 posters where a phone grid would need w185.
 - **Keyboard only:** a Playwright script in Edge runs the whole creator flow with Tab, Enter, Space and the arrow keys: an example, Predict, the drivers' tabs, Compare, a preset, a variant made by hand, removing one, then the sweep. Every element it lands on shows a focus mark; the drivers' tab panel had none, and now does.
 - **Browsers:**
   - WebKit (Playwright 1.64, Safari's engine) on desktop and as an iPhone 13: all 6 main pages and the whole creator flow pass, with no console errors.
@@ -649,9 +661,9 @@ docker compose down
 - the model version;
 - the three golden forms, each middle equal to `tests/golden/predictions.json` to 6 significant figures;
 - compare, the 12-month sweep, a bad form's 422, search, the box-office sort and the score filter, a movie page, autocomplete, options and the model card;
-- with `--web-url` (`make smoke` passes `WEB`, default :8080): the home page, the script bundle (gzipped, cached for a year), a client-side route served as the app, and the API through the frontend's proxy.
+- with `--web-url` (`make smoke` passes `WEB`, default :8080): the start page and its two collages (WebP, under 300 kB), the script bundle (gzipped, cached for a year), a client-side route served as the app, and the API through the frontend's proxy.
 
-That is 17 checks. It exits with status 1 on any failure, the same against local Docker and the live URL.
+That is 19 checks. It exits with status 1 on any failure, the same against local Docker and the live URL.
 
 **Measured in Docker Desktop (Linux) on this laptop:**
 
@@ -699,7 +711,7 @@ Two markers (`pyproject.toml`) sort the tests:
 | Golden examples | `tests/test_golden.py`, `tests/test_api_golden.py` | the three golden forms through `predict()` and over HTTP equal the snapshot, in under 400 ms |
 | The API | `tests/test_api.py` | every endpoint, the cache, the rate limit, errors, read-only connections, parallel requests, and that the app refuses to start on a model file that doesn't match its manifest; the OpenAPI schema's error shapes and field specs |
 | The model card | `tests/test_model_card.py` | the committed `model_card.json` equals one built from the reports now, belongs to the served models, and copies the reports' numbers exactly, the uncertainty thresholds included |
-| The frontend | `frontend/src/**/*.test.ts(x)` (Vitest, Testing Library) | the rules against the API's real limits, invalid input blocked, the autocomplete (Enter waits for the suggestions), the examples sending exactly the golden forms, the URL and draft round trips, every API error kind, routes and the theme; the results page on the three golden answers saved from the real API (cards, badges, break-even, notes, comparables, drivers, the accuracy numbers equal to the model card), form → results with one request, the actions, and each failure state; compare and the sweep on real answers saved from the API (every preset changes one field or says why not, the `?v=` round trip and broken variants, "within the uncertainty" on both sides of each threshold, the drivers that moved, a variant the API refuses, 12 months with the best and "about as good"); the edge cases (the waking-up notice after 3 s, the API down, 429, links edited by hand on four pages, a crashing page keeping the navigation); the browse state in the URL, search writing `?q=` once after typing, filters, chips, the no-results buttons, the remembered view, the film page (money toggle, few votes, no poster, 404), "Predict a film like this", the home rows from their config, and TMDB's logo and notice on every route; 178 tests, 97% of lines and 86% of branches (`npm run coverage`) |
+| The frontend | `frontend/src/**/*.test.ts(x)` (Vitest, Testing Library) | the rules against the API's real limits, invalid input blocked, the autocomplete (Enter waits for the suggestions), the examples sending exactly the golden forms, the URL and draft round trips, every API error kind, routes and the theme; the results page on the three golden answers saved from the real API (cards, badges, break-even, notes, comparables, drivers, the accuracy numbers equal to the model card), form → results with one request, the actions, and each failure state; compare and the sweep on real answers saved from the API (every preset changes one field or says why not, the `?v=` round trip and broken variants, "within the uncertainty" on both sides of each threshold, the drivers that moved, a variant the API refuses, 12 months with the best and "about as good"); the edge cases (the waking-up notice after 3 s, the API down, 429, links edited by hand on four pages, a crashing page keeping the navigation); the browse state in the URL, search writing `?q=` once after typing, filters, chips, the no-results buttons, the remembered view, the film page (money toggle, few votes, no poster, 404), "Predict a film like this", the curated rows from their config, and TMDB's logo and notice on every route; the start page's panels and their reduced-motion switch, `/series`, the header's links, `/movies` against `/browse` and old `/movies?…` links reaching `/browse`; 190 tests, 97% of lines and 86% of branches (`npm run coverage`) |
 
 **Fuzzing found one real bug.** A whole-number field (year, month or runtime) sent as NaN or Infinity crashed the contract check with an `OverflowError`, and the API answered 500. JSON parsers, the server's included, accept those values. They now get the usual 422 "must be a number" (`ml/features/contract.py`, with 12 new tests).
 

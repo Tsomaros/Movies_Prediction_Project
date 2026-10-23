@@ -17,7 +17,7 @@ test('a crash inside a page keeps the navigation working', async () => {
   const { router } = renderApp('/about')
   expect(await screen.findByRole('heading', { name: 'Something went wrong' })).toBeInTheDocument()
   expect(screen.getByTestId('tmdb-attribution')).toBeInTheDocument()
-  await userEvent.click(screen.getAllByRole('link', { name: 'Browse films' })[0])
-  await waitFor(() => expect(router.state.location.pathname).toBe('/movies')) // the page loads on demand
+  await userEvent.click(screen.getAllByRole('link', { name: 'Browse' })[0])
+  await waitFor(() => expect(router.state.location.pathname).toBe('/browse')) // the page loads on demand
   expect(await screen.findByRole('heading', { level: 1, name: 'Browse films' })).toBeInTheDocument()
 })

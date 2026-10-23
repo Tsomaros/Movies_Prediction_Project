@@ -6,7 +6,8 @@
 //   browseResets(params, genres) -> what a link asked for that couldn't be used, in words ("genre", "page"), for
 //                                a notice; an unknown genre (not in /meta/options) counts too
 //   toQuery(state)            -> GET /movies's query for that state, PAGE_SIZE films a page
-//   browseLink(partial)       -> a /movies link with some filters set (the home page's "See all")
+//   browseLink(partial)       -> a /browse link with some filters set (a curated row's "See all")
+//   BROWSE_PARAMS             -> the parameter names above
 //   activeFilters(state)      -> the filters in use, for "clear" chips and the no-results state
 //   pageNumbers(page, pages)  -> the pager's numbers, null for a gap: (7, 20) -> [1, null, 6, 7, 8, null, 20]
 //   loadView() / saveView(v)  -> the grid size or list view, remembered in this browser (try/catch: storage can fail)
@@ -38,6 +39,8 @@ export const EMPTY: BrowseState = {
 }
 
 const KEYS = { q: 'q', genre: 'genre', yearFrom: 'from', yearTo: 'to', language: 'lang', scoreMin: 'score', sort: 'sort', page: 'page' } as const
+/** The URL parameters of the browse page (an old /movies?… link carrying one is sent on to /browse). */
+export const BROWSE_PARAMS: string[] = Object.values(KEYS)
 
 function int(text: string | null, min: number, max: number): number | null {
   if (text === null || !/^\d+$/.test(text)) return null
@@ -103,7 +106,7 @@ export function toQuery(state: BrowseState): MovieQuery {
 
 export function browseLink(partial: Partial<BrowseState>) {
   const params = writeBrowse({ ...EMPTY, ...partial })
-  return params.size ? `/movies?${params}` : '/movies'
+  return params.size ? `/browse?${params}` : '/browse'
 }
 
 export type ActiveFilter = { key: keyof BrowseState; label: string }

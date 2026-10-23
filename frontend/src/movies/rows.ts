@@ -1,5 +1,5 @@
-// The home page's curated rows: one entry per row, in order. Each row is a browse query (src/movies/browse.ts),
-// so "See all" opens the same films on /movies, and changing a row is a one-line edit here.
+// The curated rows of /movies: one entry per row, in order. Each row is a browse query (src/movies/browse.ts),
+// so "See all" opens the same films on /browse, and changing a row is a one-line edit here.
 //
 //   key        -> React key and test id (row-<key>)
 //   title      -> the row's heading

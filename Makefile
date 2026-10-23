@@ -1,4 +1,4 @@
-.PHONY: setup model data db features tune train evaluate test test-fast coverage api docker-build docker-run smoke web-setup web web-test gen-api
+.PHONY: setup model data db features tune train evaluate test test-fast coverage api docker-build docker-run smoke web-setup web web-test gen-api collages
 
 # Create .venv and install the locked dependencies (then `make model` for the text model)
 setup:
@@ -67,6 +67,11 @@ URL ?= http://localhost:8000
 WEB ?= http://localhost:8080
 smoke:
 	uv run python scripts/smoke.py --base-url $(URL) $(if $(WEB),--web-url $(WEB))
+
+# The start page's poster collages -> frontend/public/collages/ (needs data/movies.db and TMDB_READ_TOKEN;
+# commit the images, rerun at least every 6 months for TMDB's caching rule)
+collages:
+	uv run python scripts/build_collages.py
 
 # The frontend (frontend/, needs Node 24): install the locked packages once
 web-setup:

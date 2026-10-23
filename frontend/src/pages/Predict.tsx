@@ -21,6 +21,13 @@ import PageHeading from '@/pages/PageHeading'
 
 export const SAVE_MS = 400
 
+// What a prediction gives back, shown above the form
+const POINTS = [
+  { title: 'Budget, revenue and audience score', text: 'Each as a range: low, middle and high, right about 8 times in 10.' },
+  { title: 'Why', text: 'The main reasons behind each estimate, in plain words.' },
+  { title: 'Films like yours', text: 'Five past films with their real budget, revenue and score.' },
+]
+
 const STARTED_FROM = { link: 'Loaded from a shared link.', draft: 'Your draft from last time is back.', new: null }
 
 export default function Predict() {
@@ -69,7 +76,8 @@ export default function Predict() {
   return (
     <div className="grid gap-8">
       <PageHeading title="Plan a film">
-        Describe the film you have in mind. Everything is about the plan: nothing about how it did after release.
+        How might your film do? Describe the film you have in mind and see what 79,000 films from 1960 to 2025 suggest
+        about its budget, box office and audience score. Everything is about the plan: nothing about how it did after release.
       </PageHeading>
       {like ? (
         <p className="text-muted-foreground -mt-4 text-sm" data-testid="like-hint">
@@ -82,6 +90,14 @@ export default function Predict() {
           {start.dropped.length === 1 ? 'starts' : 'start'} from the usual value. The rest is filled in.
         </p>
       )}
+      <ul className="-mt-2 grid gap-3 sm:grid-cols-3 print:hidden" aria-label="What you get" data-testid="predict-intro">
+        {POINTS.map(p => (
+          <li key={p.title} className="rounded-lg border p-3">
+            <h2 className="text-sm font-medium">{p.title}</h2>
+            <p className="text-muted-foreground mt-1 text-sm">{p.text}</p>
+          </li>
+        ))}
+      </ul>
       <SlowNotice pending={options.isPending || predict.isPending} />
       {options.isPending && (
         <div className="grid min-h-svh content-start gap-4" aria-busy="true">

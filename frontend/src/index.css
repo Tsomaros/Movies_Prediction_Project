@@ -132,6 +132,15 @@
     @apply font-sans;
     }
 }
+/* The start page's slow pan across a poster collage (turned off for reduced motion, src/pages/Start.tsx) */
+@theme {
+    --animate-pan: pan 45s ease-in-out infinite alternate;
+    @keyframes pan {
+        from { transform: translate(-4%, -3%); }
+        to { transform: translate(4%, 3%); }
+    }
+}
+
 /* Printing a result (or saving it as PDF): always the light palette, cards kept whole, no shadows. */
 @media print {
     :root, .dark {

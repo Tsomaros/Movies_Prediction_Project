@@ -46,6 +46,7 @@ ml = [
     "matplotlib>=3.11.2",
     "onnx>=1.23.2",
     "optuna>=5.0.0",
+    "pillow>=13.0.0",
     "scikit-learn>=1.9.1",
 ]
 dev = [

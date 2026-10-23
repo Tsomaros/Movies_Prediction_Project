@@ -66,7 +66,7 @@ export default function About() {
           <a href={REPO_URL} target="_blank" rel="noreferrer" className="text-primary underline">GitHub</a> (
           <a href={README_URL} target="_blank" rel="noreferrer" className="text-primary underline">README</a>).
         </p>
-        <p><Link to="/predict" className="text-primary underline">Plan a film</Link> or <Link to="/movies" className="text-primary underline">browse films</Link>.</p>
+        <p><Link to="/predict" className="text-primary underline">Plan a film</Link> or <Link to="/browse" className="text-primary underline">browse films</Link>.</p>
       </Section>
     </div>
   )

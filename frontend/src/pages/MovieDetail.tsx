@@ -103,8 +103,8 @@ export function NotFoundFilm() {
       <h1 className="text-2xl font-semibold">We don't have this film</h1>
       <p className="text-muted-foreground">The link may be wrong, or the film isn't in our TMDB data.</p>
       <div className="flex gap-2">
-        <Button asChild><Link to="/movies">Search films</Link></Button>
-        <Button asChild variant="outline"><Link to="/">Home</Link></Button>
+        <Button asChild><Link to="/browse">Search films</Link></Button>
+        <Button asChild variant="outline"><Link to="/">Start page</Link></Button>
       </div>
     </div>
   )
@@ -142,7 +142,7 @@ export default function MovieDetail() {
   return (
     <article className="grid gap-8">
       <title>{`${f.title}${f.year ? ` (${f.year})` : ''} · Movie Prediction`}</title>
-      <Link to="/movies" className="text-muted-foreground inline-flex w-fit items-center gap-1 text-sm hover:underline">
+      <Link to="/browse" className="text-muted-foreground inline-flex w-fit items-center gap-1 text-sm hover:underline">
         <ArrowLeftIcon className="size-4" aria-hidden /> Browse films
       </Link>
 

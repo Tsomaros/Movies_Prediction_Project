@@ -10,10 +10,12 @@ import { renderApp } from '@/test/render'
 
 describe('routes', () => {
   test.each([
-    ['/', 'How might your film do?'],
+    ['/', 'Movie Prediction'],
     ['/predict', 'Plan a film'],
     ['/predict/result', 'Your prediction'],
-    ['/movies', 'Browse films'],
+    ['/movies', 'Movies'],
+    ['/browse', 'Browse films'],
+    ['/series', 'Series: coming soon'],
     ['/about', 'About'],
     ['/no/such/page', 'Page not found'],
   ])('%s shows "%s"', async (path, heading) => {
@@ -22,7 +24,7 @@ describe('routes', () => {
   })
 
   test('every page has the header, the navigation and the TMDB notice', async () => {
-    renderApp('/movies')
+    renderApp('/browse')
     await screen.findByRole('heading', { level: 1, name: 'Browse films' })
     expect(screen.getByRole('link', { name: /Movie Prediction/ })).toHaveAttribute('href', '/')
     expect(screen.getAllByRole('navigation', { name: 'Main' }).length).toBeGreaterThan(0)
@@ -32,9 +34,9 @@ describe('routes', () => {
   test('the navigation moves between pages and marks the current one', async () => {
     const { router } = renderApp('/')
     const nav = screen.getAllByRole('navigation', { name: 'Main' })[0]
-    await userEvent.click(within(nav).getByRole('link', { name: 'Plan a film' }))
+    await userEvent.click(within(nav).getByRole('link', { name: 'Predict' }))
     expect(router.state.location.pathname).toBe('/predict')
-    expect(within(nav).getByRole('link', { name: 'Plan a film' })).toHaveAttribute('aria-current', 'page')
+    expect(within(nav).getByRole('link', { name: 'Predict' })).toHaveAttribute('aria-current', 'page')
     expect(await screen.findByRole('heading', { level: 1, name: 'Plan a film' })).toBeInTheDocument()
   })
 })

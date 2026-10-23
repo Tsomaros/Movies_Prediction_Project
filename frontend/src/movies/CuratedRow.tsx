@@ -1,4 +1,4 @@
-// One curated row on the home page: a heading, "See all" (the same query on /movies) and up to ROW_SIZE posters
+// One curated row on /movies: a heading, "See all" (the same query on /browse) and up to ROW_SIZE posters
 // that scroll sideways on a phone and wrap into a grid on wider screens.
 import { ChevronRightIcon } from 'lucide-react'
 import { Link } from 'react-router'
@@ -9,7 +9,7 @@ import { browseLink, EMPTY, toQuery } from '@/movies/browse'
 import { MovieCard } from '@/movies/MovieCard'
 import { ROW_SIZE, type CuratedRow as Row } from '@/movies/rows'
 
-/** `first`: the top row, whose posters load at once (the home page's largest paint). */
+/** `first`: the top row, whose posters load at once (the page's largest paint). */
 export function CuratedRow({ row, first = false }: { row: Row; first?: boolean }) {
   const movies = useMovies({ ...toQuery({ ...EMPTY, ...row.filters }), page_size: ROW_SIZE })
   const headingId = `row-${row.key}-heading`
