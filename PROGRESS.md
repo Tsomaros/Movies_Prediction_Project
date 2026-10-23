@@ -1363,3 +1363,99 @@ Write-up: `reports/audit.md`.
   - `make smoke URL=https://… WEB=https://…` checks both live services.
 - **Once October 2026 has passed,** the year list won't offer the small-drama and horror examples' year, though they still send it.
 - **The quick loops:** `make test-fast` (309 tests, about 15 s) and `make web-test` (106 tests, about 10 s).
+
+## Day 11: Results page (done 2026-10-23)
+
+- [x] 0. Plan document: left untouched, as on Days 8–10. Dimitris's choices before the build:
+  - the model card is a generated JSON file next to the models (the image has no `reports/`), not a live read of `reports/`;
+  - the accuracy panel shows the 2019+ test and the 2026 holdout;
+  - until Day 13, "Try a variation" opens the form pre-filled and the next result shows a compare strip.
+- [x] 1. Model-card endpoint (`GET /api/v1/model-card`)
+- [x] 2. Page and summary cards (`/predict/result`, skeletons, badges)
+- [x] 3. Range chart (shared log money axis, break-even band, score axis, screen-reader list)
+- [x] 4. Drivers (tabs, up/down columns, strength bars)
+- [x] 5. Comparable films (posters, real numbers, "why similar" tags, links)
+- [x] 6. Notes (warnings, limitations, accuracy panel)
+- [x] 7. Actions (edit, try a variation, copy link, print/PDF)
+- [x] 8. Tests and checks (126 Vitest tests; phone, both themes, print)
+- [x] 9. Wrap-up: README with a screenshot, CLAUDE.md, commit
+
+### Task 1: model-card endpoint
+
+- **`ml/eval/model_card.py`** writes `ml/artifacts/final/model_card.json` (committed) from `reports/final_test.json`, `reports/audit_metrics.json` and the manifest. Nothing is recomputed. Per target (revenue in both modes, budget, score) it has LightGBM next to B2 on the same films: the films, coverage, within 2×, the median width, and the typical miss (money as exp(MAE log), score in points).
+- **`GET /api/v1/model-card`** (`backend/app/routers/model_card.py`) adds the database's films and years (79,199, 1960–2025). It answers 503 if the card is missing or belongs to other models than the ones served. It is cached for an hour, like `/meta/options`.
+- **Tests:** `tests/test_model_card.py` (the committed card equals one built now, belongs to the manifest, and copies the reports' numbers exactly) and three API tests; the endpoint is in `ENDPOINTS`. `scripts/smoke.py` checks it too.
+
+### Task 2: page and summary cards
+
+- **`/predict/result?f=…`** (lazy, `src/pages/PredictResult.tsx`, parts in `src/result/`) reads the form from the URL. `usePrediction` asks under the same query key that the form page's `usePredict` fills before navigating, so a form submit is one request. A shared link also predicts once.
+- **Three cards:** box office, budget and audience score, each with the expected value and the likely range. Badges: "Rough estimate" (with a sentence), "Budget estimated" (with the estimate used) and the given budget against similar films ("Budget typical for similar films").
+- **Numbers:** `money()` mirrors `format_money` (2 significant figures), the score has one decimal; "2025 US dollars, worldwide" and what "likely" means are stated once at the top.
+- **Errors:** a link without a complete form, a 429, a network failure (with Try again) and a model card that can't load each get their own message, and the rest of the page keeps working.
+
+### Task 3: range chart
+
+- Budget and revenue on one log money axis (ticks at powers of ten, plus 3s when fewer than three fit), the expected value as an upright mark, the given budget as a diamond, and a legend.
+- **The break-even zone** (2–2.5× the budget used, given or estimated) is hatched across the revenue row, with a sentence: below / inside / above, and "a rule of thumb, not a forecast".
+- The score on its own 0–10 axis. Screen readers get the same numbers as a list; the drawing is hidden from them.
+
+### Task 4: drivers
+
+- Tabs per target, opening on Revenue; "Pushes it up" and "Pulls it down" columns with arrow icons, in blue and orange; 1–3 strength bars plus the word; "(the estimated budget)" on an estimated driver; "Nothing notable." for an empty column.
+
+### Task 5: comparable films
+
+- Five cards: poster (lazy, fixed 2:3, a placeholder without one), title, year, budget and revenue or "not reported", score, and the "why similar" tags; each links to `/movies/:id` (Day 12's page).
+
+### Task 6: notes
+
+- This form's warnings plus the score note, an always-visible limitations note, and "How accurate is this?" from `/model-card`, for the revenue mode in use, with a link to the README.
+
+### Task 7: actions
+
+- Edit inputs, Try a variation, Copy link, Print or save as PDF.
+- **The variation strip:** the form keeps `?base=` (the previous version); the next result names the changed fields and shows how far each expected value moved, e.g. revenue ×0.33 when the studio and budget were removed from the Superhero sequel.
+- **Print stylesheet:** always the light palette, all three driver tabs, no header or buttons, cards kept whole where they fit.
+
+### Changes from the plan
+
+- **"Why similar" needed new data.** `Index.query` now returns `why`: up to 3 tags from the strongest similarity parts ("Same genres", "Also superhero, science fiction", "Similar story", "Similar budget", "Same era", and "Same language" for films not in English). The movie page's similar films get them too. The golden snapshot stores ids only, so it is unchanged.
+- **The raw JSON under the form is gone:** Predict opens the results page.
+- **The accuracy panel is a plain section,** not a fold-out: always visible, and it prints.
+- **The smoke script checks `/model-card`** (15 checks now).
+- **shadcn's tabs and skeleton were added;** the tooltip it offered was not kept.
+
+### Task 8: checks
+
+| | |
+| --- | --- |
+| Python tests | 399 (`make test`), 316 quick (`make test-fast`), API 60 |
+| Frontend tests | 126 (Vitest), on real API answers saved in `src/test/predictions.json` and `model_card.json` |
+| Frontend coverage | 97.1% of lines, 88.6% of branches |
+| Results page chunk | 34 kB (10.7 kB gzipped), plus the form's shared Zod chunk (37 kB gzipped) |
+| Docker | both images rebuilt; all 15 smoke checks pass |
+
+- **By hand** (Vite against the real API): desktop in light and dark, and a 375 px phone with no sideways scrolling; the Superhero sequel, a variation without studio and budget, and the error states.
+- **Print:** checked with headless Edge from dark mode: 6 light pages with every section and all three driver tabs.
+- **Two bugs found in the browser and fixed:** the results page opened at the form's scroll position (`ScrollRestoration` added), and in light mode the revenue bar covered the break-even band (the band now sits on top).
+- **Wording fixed:** the accuracy note said "trained on 79,199 films", which is the database size; it now says "built from 79,199 films released 1960–2025". "The dark mark" became "the upright mark", because it is white in dark mode.
+
+### Task 9: wrap-up
+
+- **README:** `/model-card` in the API table and how the card is made, the "why" tags, a results-page section with a screenshot (`docs/images/results-page.png`), the test counts, the smoke checks, and three new Limitations (break-even is a rule of thumb, the variation strip compares expected values only, the "why" cut-offs are hand-set).
+- **CLAUDE.md:** the `ml.eval.model_card` command, the endpoint's rules and the results page's structure.
+- **Commit:** `fcdc2e7` on `day6` (42 files).
+
+### Surprises / inputs for Day 12+
+
+- **Day 12 (film pages):**
+  - the comparable cards already link to `/movies/:id`, still a placeholder;
+  - the movie page's `similar` films now carry `why` tags, ready for its cards;
+  - the results page's poster card (`src/result/Comparables.tsx`) can be reused for the browse grid.
+- **Day 13 (compare):**
+  - "Try a variation" goes to `/predict?f=…&base=…`; repoint it to `/predict/compare`;
+  - the variation strip compares middles only; the "within the uncertainty" threshold should go into the model card;
+  - the results page already shows its own 429 and network messages, so the edge-case list can build on them.
+- **After a model or report change,** rerun `uv run python -m ml.eval.model_card`: the API answers 503 to a stale card, and a test fails.
+- **The results page loads the form's Zod chunk** (37 kB gzipped), because it imports `toApiBody` from `src/form/model.ts`.
+- **The quick loops:** `make test-fast` (316 tests, about 15 s) and `make web-test` (126 tests, about 15 s).
