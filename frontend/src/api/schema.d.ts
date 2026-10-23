@@ -721,6 +721,11 @@ export interface components {
              * @description TMDB popularity when pulled (display and sorting only)
              */
             popularity: number | null;
+            /**
+             * Revenue 2025
+             * @description Worldwide revenue in 2025 dollars; None when unknown or doubted
+             */
+            revenue_2025: number | null;
             poster: components["schemas"]["Poster"] | null;
             /** Original Title */
             original_title: string | null;
@@ -805,6 +810,11 @@ export interface components {
              * @description TMDB popularity when pulled (display and sorting only)
              */
             popularity: number | null;
+            /**
+             * Revenue 2025
+             * @description Worldwide revenue in 2025 dollars; None when unknown or doubted
+             */
+            revenue_2025: number | null;
             poster: components["schemas"]["Poster"] | null;
         };
         /** Options */
@@ -1190,10 +1200,10 @@ export interface operations {
                 year_to?: number | null;
                 /** @description Original language code (en, fr...) */
                 language?: string | null;
-                /** @description Only films with a reported budget and revenue we trust */
-                has_money?: boolean;
-                /** @description popularity (TMDB, when pulled), newest, title or score */
-                sort?: "popularity" | "newest" | "title" | "score";
+                /** @description Lowest TMDB score; films with any number of votes */
+                score_min?: number | null;
+                /** @description popularity (TMDB, when pulled), newest, title, score (50+ votes only) or revenue (2025 $, trusted figures only) */
+                sort?: "popularity" | "newest" | "title" | "score" | "revenue";
                 page?: number;
                 page_size?: number;
             };

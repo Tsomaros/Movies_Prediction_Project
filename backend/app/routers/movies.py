@@ -43,15 +43,16 @@ def list_movies(
     year_from: Optional[int] = Query(None, ge=1900, le=2100),
     year_to: Optional[int] = Query(None, ge=1900, le=2100),
     language: Optional[str] = Query(None, pattern=r"^[a-z]{2}$", description="Original language code (en, fr...)"),
-    has_money: bool = Query(False, description="Only films with a reported budget and revenue we trust"),
-    sort: Sort = Query("popularity", description="popularity (TMDB, when pulled), newest, title or score"),
+    score_min: Optional[float] = Query(None, ge=0, le=10, description="Lowest TMDB score; films with any number of votes"),
+    sort: Sort = Query("popularity", description="popularity (TMDB, when pulled), newest, title, score (50+ votes only) "
+                                                 "or revenue (2025 $, trusted figures only)"),
     page: int = Query(1, ge=1, le=10_000),
     page_size: int = Query(24, ge=1, le=MAX_PAGE_SIZE),
     con: sqlite3.Connection = Depends(get_db),
 ):
     if year_from is not None and year_to is not None and year_from > year_to:
         return unprocessable({"year_to": "must be the same as or after year_from"})
-    rows, total = repo.search(con, q, genre, year_from, year_to, language, has_money, sort, page, page_size)
+    rows, total = repo.search(con, q, genre, year_from, year_to, language, score_min, sort, page, page_size)
     response.headers["Cache-Control"] = CACHE
     return {"items": [_summary(r) for r in rows], "total": total, "page": page, "page_size": page_size,
             "pages": math.ceil(total / page_size)}

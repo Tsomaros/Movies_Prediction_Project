@@ -15,7 +15,7 @@ import { useMetaOptions, usePredict } from '@/api/hooks'
 import { Button } from '@/components/ui/button'
 import { CreatorForm } from '@/form/CreatorForm'
 import type { FormValues } from '@/form/model'
-import { BASE_PARAM, clearDraft, encodeForm, resultPath, saveDraft, startingForm, URL_PARAM } from '@/form/persist'
+import { BASE_PARAM, clearDraft, LIKE_PARAM, encodeForm, resultPath, saveDraft, startingForm, URL_PARAM } from '@/form/persist'
 import PageHeading from '@/pages/PageHeading'
 
 export const SAVE_MS = 400
@@ -29,6 +29,7 @@ export default function Predict() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [start] = useState(() => startingForm(`?${searchParams}`))
   const [base] = useState(() => searchParams.get(BASE_PARAM))
+  const [like] = useState(() => (start.source === 'link' ? searchParams.get(LIKE_PARAM) : null))
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => () => clearTimeout(timer.current), [])
@@ -74,6 +75,10 @@ export default function Predict() {
       {base ? (
         <p className="text-muted-foreground -mt-4 text-sm" data-testid="variation-hint">
           Trying a variation: change one thing and predict again to see what it does.
+        </p>
+      ) : like ? (
+        <p className="text-muted-foreground -mt-4 text-sm" data-testid="like-hint">
+          Started from {like}: change what makes your film different, then predict.
         </p>
       ) : STARTED_FROM[start.source] && <p className="text-muted-foreground -mt-4 text-sm">{STARTED_FROM[start.source]}</p>}
       {options.isPending && <p className="text-muted-foreground" aria-live="polite">Loading the form…</p>}

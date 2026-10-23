@@ -1,0 +1,320 @@
+{
+ "id": 299536,
+ "title": "Avengers: Infinity War",
+ "year": 2018,
+ "release_date": "2018-04-25",
+ "genres": [
+  "Adventure",
+  "Action",
+  "Science Fiction"
+ ],
+ "original_language": "en",
+ "score": 8.245,
+ "votes": 33200,
+ "score_ok": true,
+ "popularity": 91.1707,
+ "revenue_2025": 2633107249.0,
+ "poster": {
+  "small": "https://image.tmdb.org/t/p/w342/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg",
+  "large": "https://image.tmdb.org/t/p/w780/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg"
+ },
+ "original_title": "Avengers: Infinity War",
+ "tagline": "An entire universe. Once and for all.",
+ "overview": "As the Avengers and their allies have continued to protect the world from threats too large for any one hero to handle, a new danger has emerged from the cosmic shadows: Thanos. A despot of intergalactic infamy, his goal is to collect all six Infinity Stones, artifacts of unimaginable power, and use them to inflict his twisted will on all of reality. Everything the Avengers have fought for has led up to this moment - the fate of Earth and existence itself has never been more uncertain.",
+ "runtime": 149,
+ "status": "Released",
+ "certification": "PG-13",
+ "spoken_languages": [
+  "en",
+  "xh"
+ ],
+ "themes": [
+  "based on a book",
+  "science fiction",
+  "superhero",
+  "fantasy and magic"
+ ],
+ "franchise": {
+  "id": 86311,
+  "name": "The Avengers Collection"
+ },
+ "companies": [
+  {
+   "id": 420,
+   "name": "Marvel Studios",
+   "origin_country": "US"
+  }
+ ],
+ "countries": [
+  "US"
+ ],
+ "cast": [
+  {
+   "id": 3223,
+   "name": "Robert Downey Jr.",
+   "character": "Tony Stark / Iron Man",
+   "order": 0
+  },
+  {
+   "id": 16828,
+   "name": "Chris Evans",
+   "character": "Steve Rogers / Captain America",
+   "order": 1
+  },
+  {
+   "id": 74568,
+   "name": "Chris Hemsworth",
+   "character": "Thor",
+   "order": 2
+  },
+  {
+   "id": 16851,
+   "name": "Josh Brolin",
+   "character": "Thanos",
+   "order": 3
+  },
+  {
+   "id": 103,
+   "name": "Mark Ruffalo",
+   "character": "Bruce Banner / Hulk",
+   "order": 4
+  },
+  {
+   "id": 1245,
+   "name": "Scarlett Johansson",
+   "character": "Natasha Romanoff / Black Widow",
+   "order": 5
+  },
+  {
+   "id": 1896,
+   "name": "Don Cheadle",
+   "character": "James Rhodes / War Machine",
+   "order": 6
+  },
+  {
+   "id": 71580,
+   "name": "Benedict Cumberbatch",
+   "character": "Doctor Strange",
+   "order": 7
+  },
+  {
+   "id": 1136406,
+   "name": "Tom Holland",
+   "character": "Peter Parker / Spider-Man",
+   "order": 8
+  },
+  {
+   "id": 172069,
+   "name": "Chadwick Boseman",
+   "character": "T'Challa / Black Panther",
+   "order": 9
+  },
+  {
+   "id": 8691,
+   "name": "Zoe Saldaña",
+   "character": "Gamora",
+   "order": 10
+  },
+  {
+   "id": 543261,
+   "name": "Karen Gillan",
+   "character": "Nebula",
+   "order": 11
+  },
+  {
+   "id": 91606,
+   "name": "Tom Hiddleston",
+   "character": "Loki",
+   "order": 12
+  },
+  {
+   "id": 6162,
+   "name": "Paul Bettany",
+   "character": "Vision",
+   "order": 13
+  },
+  {
+   "id": 550843,
+   "name": "Elizabeth Olsen",
+   "character": "Wanda Maximoff / Scarlet Witch",
+   "order": 14
+  }
+ ],
+ "crew": [
+  {
+   "id": 19271,
+   "name": "Anthony Russo",
+   "job": "Director"
+  },
+  {
+   "id": 19272,
+   "name": "Joe Russo",
+   "job": "Director"
+  },
+  {
+   "id": 5551,
+   "name": "Christopher Markus",
+   "job": "Screenplay"
+  },
+  {
+   "id": 5552,
+   "name": "Stephen McFeely",
+   "job": "Screenplay"
+  },
+  {
+   "id": 10850,
+   "name": "Kevin Feige",
+   "job": "Producer"
+  },
+  {
+   "id": 37,
+   "name": "Alan Silvestri",
+   "job": "Original Music Composer"
+  },
+  {
+   "id": 967026,
+   "name": "Trent Opaloch",
+   "job": "Director of Photography"
+  },
+  {
+   "id": 35176,
+   "name": "Jeffrey Ford",
+   "job": "Editor"
+  },
+  {
+   "id": 1355525,
+   "name": "Matthew Schmidt",
+   "job": "Editor"
+  }
+ ],
+ "money": {
+  "budget": 300000000,
+  "revenue": 2052415039,
+  "budget_2025": 384879354.0,
+  "revenue_2025": 2633107249.0,
+  "suspect": false,
+  "suspect_reason": null,
+  "revenue_incomplete": false
+ },
+ "rating": {
+  "average": 8.245,
+  "votes": 33200,
+  "usable": true
+ },
+ "similar": [
+  {
+   "id": 299534,
+   "title": "Avengers: Endgame",
+   "year": 2019,
+   "poster_path": "/bR8ISy1O9XQxqiy0fQFw2BX72RQ.jpg",
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/bR8ISy1O9XQxqiy0fQFw2BX72RQ.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/bR8ISy1O9XQxqiy0fQFw2BX72RQ.jpg"
+   },
+   "budget": 448595063.0,
+   "revenue": 3702884831.0,
+   "score": 8.246,
+   "similarity": 0.813,
+   "why": [
+    "Same genres",
+    "Similar story",
+    "Similar budget"
+   ]
+  },
+  {
+   "id": 44912,
+   "title": "Green Lantern",
+   "year": 2011,
+   "poster_path": "/fj21HwUprqjjwTdkKC1XZurRSpV.jpg",
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/fj21HwUprqjjwTdkKC1XZurRSpV.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/fj21HwUprqjjwTdkKC1XZurRSpV.jpg"
+   },
+   "budget": 286435878.0,
+   "revenue": 314866318.0,
+   "score": 5.204,
+   "similarity": 0.761,
+   "why": [
+    "Same genres",
+    "Same themes",
+    "Similar budget"
+   ]
+  },
+  {
+   "id": 99861,
+   "title": "Avengers: Age of Ultron",
+   "year": 2015,
+   "poster_path": "/4ssDuvEDkSArWEdyBl2X5EHvYKU.jpg",
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/4ssDuvEDkSArWEdyBl2X5EHvYKU.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/4ssDuvEDkSArWEdyBl2X5EHvYKU.jpg"
+   },
+   "budget": 319411498.0,
+   "revenue": 1910221698.0,
+   "score": 7.278,
+   "similarity": 0.747,
+   "why": [
+    "Same genres",
+    "Similar budget",
+    "Similar story"
+   ]
+  },
+  {
+   "id": 271110,
+   "title": "Captain America: Civil War",
+   "year": 2016,
+   "poster_path": "/rAGiXaUfPzY7CDEyNKUofk3Kw2e.jpg",
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/rAGiXaUfPzY7CDEyNKUofk3Kw2e.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/rAGiXaUfPzY7CDEyNKUofk3Kw2e.jpg"
+   },
+   "budget": 335566254.0,
+   "revenue": 1550378398.0,
+   "score": 7.454,
+   "similarity": 0.714,
+   "why": [
+    "Same genres",
+    "Similar budget",
+    "Same era"
+   ]
+  },
+  {
+   "id": 141052,
+   "title": "Justice League",
+   "year": 2017,
+   "poster_path": "/eifGNCSDuxJeS1loAXil5bIGgvC.jpg",
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/eifGNCSDuxJeS1loAXil5bIGgvC.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/eifGNCSDuxJeS1loAXil5bIGgvC.jpg"
+   },
+   "budget": 394279945.0,
+   "revenue": 869159892.0,
+   "score": 6.064,
+   "similarity": 0.712,
+   "why": [
+    "Same genres",
+    "Similar budget",
+    "Also based on a book, superhero"
+   ]
+  },
+  {
+   "id": 127585,
+   "title": "X-Men: Days of Future Past",
+   "year": 2014,
+   "poster_path": "/tYfijzolzgoMOtegh1Y7j2Enorg.jpg",
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/tYfijzolzgoMOtegh1Y7j2Enorg.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/tYfijzolzgoMOtegh1Y7j2Enorg.jpg"
+   },
+   "budget": 340202800.0,
+   "revenue": 1017948966.0,
+   "score": 7.538,
+   "similarity": 0.705,
+   "why": [
+    "Same genres",
+    "Similar budget",
+    "Also based on a book, science fiction"
+   ]
+  }
+ ]
+}

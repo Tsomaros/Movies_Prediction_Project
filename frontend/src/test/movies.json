@@ -1,0 +1,514 @@
+{
+ "items": [
+  {
+   "id": 15196,
+   "title": "Clue",
+   "year": 1985,
+   "release_date": "1985-12-13",
+   "genres": [
+    "Comedy",
+    "Crime",
+    "Mystery"
+   ],
+   "original_language": "en",
+   "score": 7.215,
+   "votes": 2095,
+   "score_ok": true,
+   "popularity": 118.2025,
+   "revenue_2025": 43869265.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/aRxbYOYHS8T73nzR8hsLousoplR.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/aRxbYOYHS8T73nzR8hsLousoplR.jpg"
+   }
+  },
+  {
+   "id": 460458,
+   "title": "Resident Evil: Welcome to Raccoon City",
+   "year": 2021,
+   "release_date": "2021-11-24",
+   "genres": [
+    "Action",
+    "Horror",
+    "Science Fiction"
+   ],
+   "original_language": "en",
+   "score": 5.947,
+   "votes": 2907,
+   "score_ok": true,
+   "popularity": 107.2315,
+   "revenue_2025": 49832142.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/bArhvjRHl535XMaSh9VjInF2mSZ.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/bArhvjRHl535XMaSh9VjInF2mSZ.jpg"
+   }
+  },
+  {
+   "id": 9479,
+   "title": "The Nightmare Before Christmas",
+   "year": 1993,
+   "release_date": "1993-10-09",
+   "genres": [
+    "Fantasy",
+    "Animation",
+    "Family"
+   ],
+   "original_language": "en",
+   "score": 7.852,
+   "votes": 10766,
+   "score_ok": true,
+   "popularity": 105.5933,
+   "revenue_2025": 168670837.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/oQffRNjK8e19rF7xVYEN8ew0j7b.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/oQffRNjK8e19rF7xVYEN8ew0j7b.jpg"
+   }
+  },
+  {
+   "id": 755898,
+   "title": "War of the Worlds",
+   "year": 2025,
+   "release_date": "2025-07-29",
+   "genres": [
+    "Science Fiction",
+    "Thriller"
+   ],
+   "original_language": "en",
+   "score": 4.053,
+   "votes": 1174,
+   "score_ok": true,
+   "popularity": 99.2107,
+   "revenue_2025": null,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/yvirUYrva23IudARHn3mMGVxWqM.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/yvirUYrva23IudARHn3mMGVxWqM.jpg"
+   }
+  },
+  {
+   "id": 10601,
+   "title": "Peter Pan",
+   "year": 2003,
+   "release_date": "2003-12-18",
+   "genres": [
+    "Adventure",
+    "Fantasy",
+    "Family"
+   ],
+   "original_language": "en",
+   "score": 7.129,
+   "votes": 2833,
+   "score_ok": true,
+   "popularity": 96.1346,
+   "revenue_2025": 213606452.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/6QdU3TZZrIvXFzoHOwafZAynFjB.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/6QdU3TZZrIvXFzoHOwafZAynFjB.jpg"
+   }
+  },
+  {
+   "id": 299536,
+   "title": "Avengers: Infinity War",
+   "year": 2018,
+   "release_date": "2018-04-25",
+   "genres": [
+    "Adventure",
+    "Action",
+    "Science Fiction"
+   ],
+   "original_language": "en",
+   "score": 8.245,
+   "votes": 33200,
+   "score_ok": true,
+   "popularity": 91.1707,
+   "revenue_2025": 2633107249.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg"
+   }
+  },
+  {
+   "id": 45722,
+   "title": "Don't Look Down",
+   "year": 2008,
+   "release_date": "2008-10-18",
+   "genres": [
+    "Drama",
+    "Romance"
+   ],
+   "original_language": "es",
+   "score": 5.7,
+   "votes": 71,
+   "score_ok": true,
+   "popularity": 82.9676,
+   "revenue_2025": null,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/s7igxMxtKQKHdnDxnSAJej7RTGp.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/s7igxMxtKQKHdnDxnSAJej7RTGp.jpg"
+   }
+  },
+  {
+   "id": 299534,
+   "title": "Avengers: Endgame",
+   "year": 2019,
+   "release_date": "2019-04-24",
+   "genres": [
+    "Adventure",
+    "Science Fiction",
+    "Action"
+   ],
+   "original_language": "en",
+   "score": 8.246,
+   "votes": 29056,
+   "score_ok": true,
+   "popularity": 81.0505,
+   "revenue_2025": 3702884831.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/bR8ISy1O9XQxqiy0fQFw2BX72RQ.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/bR8ISy1O9XQxqiy0fQFw2BX72RQ.jpg"
+   }
+  },
+  {
+   "id": 83533,
+   "title": "Avatar: Fire and Ash",
+   "year": 2025,
+   "release_date": "2025-12-17",
+   "genres": [
+    "Science Fiction",
+    "Adventure",
+    "Fantasy"
+   ],
+   "original_language": "en",
+   "score": 7.647,
+   "votes": 4557,
+   "score_ok": true,
+   "popularity": 77.4042,
+   "revenue_2025": 1485999890.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/bRBeSHfGHwkEpImlhxPmOcUsaeg.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/bRBeSHfGHwkEpImlhxPmOcUsaeg.jpg"
+   }
+  },
+  {
+   "id": 44629,
+   "title": "Animal Kingdom",
+   "year": 2010,
+   "release_date": "2010-06-03",
+   "genres": [
+    "Crime",
+    "Drama"
+   ],
+   "original_language": "en",
+   "score": 6.8,
+   "votes": 945,
+   "score_ok": true,
+   "popularity": 75.7654,
+   "revenue_2025": 1477387.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/zhj8YPQKuRev5N3KoHacsPnF4mB.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/zhj8YPQKuRev5N3KoHacsPnF4mB.jpg"
+   }
+  },
+  {
+   "id": 1084242,
+   "title": "Zootopia 2",
+   "year": 2025,
+   "release_date": "2025-11-26",
+   "genres": [
+    "Animation",
+    "Adventure",
+    "Comedy",
+    "Mystery",
+    "Family"
+   ],
+   "original_language": "en",
+   "score": 7.667,
+   "votes": 3591,
+   "score_ok": true,
+   "popularity": 73.3674,
+   "revenue_2025": 1868208796.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/oJ7g2CifqpStmoYQyaLQgEU32qO.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/oJ7g2CifqpStmoYQyaLQgEU32qO.jpg"
+   }
+  },
+  {
+   "id": 354912,
+   "title": "Coco",
+   "year": 2017,
+   "release_date": "2017-10-27",
+   "genres": [
+    "Family",
+    "Animation",
+    "Music",
+    "Adventure"
+   ],
+   "original_language": "en",
+   "score": 8.201,
+   "votes": 21589,
+   "score_ok": true,
+   "popularity": 72.6558,
+   "revenue_2025": 1070655587.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/6Ryitt95xrO8KXuqRGm1fUuNwqF.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/6Ryitt95xrO8KXuqRGm1fUuNwqF.jpg"
+   }
+  },
+  {
+   "id": 14836,
+   "title": "Coraline",
+   "year": 2009,
+   "release_date": "2009-02-05",
+   "genres": [
+    "Animation",
+    "Family",
+    "Fantasy",
+    "Horror"
+   ],
+   "original_language": "en",
+   "score": 7.945,
+   "votes": 9600,
+   "score_ok": true,
+   "popularity": 67.3456,
+   "revenue_2025": 279091206.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/4jeFXQYytChdZYE9JYO7Un87IlW.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/4jeFXQYytChdZYE9JYO7Un87IlW.jpg"
+   }
+  },
+  {
+   "id": 872585,
+   "title": "Oppenheimer",
+   "year": 2023,
+   "release_date": "2023-07-19",
+   "genres": [
+    "Drama",
+    "History",
+    "War"
+   ],
+   "original_language": "en",
+   "score": 8.022,
+   "votes": 12727,
+   "score_ok": true,
+   "popularity": 66.9746,
+   "revenue_2025": 1006523278.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"
+   }
+  },
+  {
+   "id": 671,
+   "title": "Harry Potter and the Philosopher's Stone",
+   "year": 2001,
+   "release_date": "2001-11-16",
+   "genres": [
+    "Adventure",
+    "Fantasy"
+   ],
+   "original_language": "en",
+   "score": 7.905,
+   "votes": 30456,
+   "score_ok": true,
+   "popularity": 66.6386,
+   "revenue_2025": 1872828479.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/wuMc08IPKEatf9rnMNXvIDxqP4W.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/wuMc08IPKEatf9rnMNXvIDxqP4W.jpg"
+   }
+  },
+  {
+   "id": 157336,
+   "title": "Interstellar",
+   "year": 2014,
+   "release_date": "2014-11-04",
+   "genres": [
+    "Adventure",
+    "Drama",
+    "Science Fiction"
+   ],
+   "original_language": "en",
+   "score": 8.491,
+   "votes": 41560,
+   "score_ok": true,
+   "popularity": 65.5537,
+   "revenue_2025": 1015990767.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg"
+   }
+  },
+  {
+   "id": 634649,
+   "title": "Spider-Man: No Way Home",
+   "year": 2021,
+   "release_date": "2021-12-15",
+   "genres": [
+    "Action",
+    "Adventure",
+    "Science Fiction"
+   ],
+   "original_language": "en",
+   "score": 7.9,
+   "votes": 23377,
+   "score_ok": true,
+   "popularity": 65.1492,
+   "revenue_2025": 2284360533.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg"
+   }
+  },
+  {
+   "id": 1184918,
+   "title": "The Wild Robot",
+   "year": 2024,
+   "release_date": "2024-09-12",
+   "genres": [
+    "Family",
+    "Animation",
+    "Science Fiction",
+    "Adventure"
+   ],
+   "original_language": "en",
+   "score": 8.31,
+   "votes": 6755,
+   "score_ok": true,
+   "popularity": 64.1681,
+   "revenue_2025": 340939664.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/wTnV3PCVW5O92JMrFvvrRcV39RU.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/wTnV3PCVW5O92JMrFvvrRcV39RU.jpg"
+   }
+  },
+  {
+   "id": 1470424,
+   "title": "Virtual Assistant",
+   "year": 2025,
+   "release_date": "2025-11-06",
+   "genres": [
+    "Thriller",
+    "Mystery",
+    "Horror"
+   ],
+   "original_language": "ru",
+   "score": 7.159,
+   "votes": 63,
+   "score_ok": true,
+   "popularity": 63.2439,
+   "revenue_2025": 1011203.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/x3J1bIGoN8ES7aWeGHlLTgIg5C3.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/x3J1bIGoN8ES7aWeGHlLTgIg5C3.jpg"
+   }
+  },
+  {
+   "id": 24428,
+   "title": "The Avengers",
+   "year": 2012,
+   "release_date": "2012-04-25",
+   "genres": [
+    "Science Fiction",
+    "Action",
+    "Adventure"
+   ],
+   "original_language": "en",
+   "score": 8.081,
+   "votes": 40098,
+   "score_ok": true,
+   "popularity": 62.8383,
+   "revenue_2025": 2131113943.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg"
+   }
+  },
+  {
+   "id": 414906,
+   "title": "The Batman",
+   "year": 2022,
+   "release_date": "2022-03-01",
+   "genres": [
+    "Crime",
+    "Mystery",
+    "Thriller"
+   ],
+   "original_language": "en",
+   "score": 7.674,
+   "votes": 12716,
+   "score_ok": true,
+   "popularity": 62.6383,
+   "revenue_2025": 850666738.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/74xTEgt7R36Fpooo50r9T25onhq.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/74xTEgt7R36Fpooo50r9T25onhq.jpg"
+   }
+  },
+  {
+   "id": 361743,
+   "title": "Top Gun: Maverick",
+   "year": 2022,
+   "release_date": "2022-05-21",
+   "genres": [
+    "Action",
+    "Drama"
+   ],
+   "original_language": "en",
+   "score": 8.158,
+   "votes": 11752,
+   "score_ok": true,
+   "popularity": 62.6096,
+   "revenue_2025": 1638788828.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/n0YuM4f5lvGAP6MAW2kBIzugXnc.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/n0YuM4f5lvGAP6MAW2kBIzugXnc.jpg"
+   }
+  },
+  {
+   "id": 502356,
+   "title": "The Super Mario Bros. Movie",
+   "year": 2023,
+   "release_date": "2023-04-05",
+   "genres": [
+    "Family",
+    "Comedy",
+    "Adventure",
+    "Fantasy",
+    "Animation"
+   ],
+   "original_language": "en",
+   "score": 7.587,
+   "votes": 11240,
+   "score_ok": true,
+   "popularity": 61.8995,
+   "revenue_2025": 1438820517.0,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/qNBAXBIQlnOThrVvA6mA2B5ggV6.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/qNBAXBIQlnOThrVvA6mA2B5ggV6.jpg"
+   }
+  },
+  {
+   "id": 787747,
+   "title": "Shell",
+   "year": 2025,
+   "release_date": "2025-10-01",
+   "genres": [
+    "Horror",
+    "Drama",
+    "Thriller"
+   ],
+   "original_language": "en",
+   "score": 5.029,
+   "votes": 86,
+   "score_ok": true,
+   "popularity": 61.2868,
+   "revenue_2025": null,
+   "poster": {
+    "small": "https://image.tmdb.org/t/p/w342/2XBNS8DxMFP7qOoTOY7cc8OYFwI.jpg",
+    "large": "https://image.tmdb.org/t/p/w780/2XBNS8DxMFP7qOoTOY7cc8OYFwI.jpg"
+   }
+  }
+ ],
+ "total": 79199,
+ "page": 1,
+ "page_size": 24,
+ "pages": 3300
+}

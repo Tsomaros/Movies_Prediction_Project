@@ -42,7 +42,7 @@ A value of `0` in TMDB's `budget` or `revenue` means "unknown", not zero. See [C
 
 ### TMDB terms
 
-- Free for non-commercial use with attribution. The TMDB logo is less prominent than our own branding.
+- Free for non-commercial use with attribution. Every page's footer carries TMDB's "Primary short" logo (`frontend/public/tmdb-logo.svg`, byte for byte their file: its SHA-256 equals the checksum in TMDB's own file name), smaller than our own brand, with the notice below and a link to TMDB. Film pages also link to the film on TMDB.
 - Data is not cached for more than six months.
 - The client stays at about 20 requests/second, well under TMDB's per-IP limit.
 
@@ -431,7 +431,7 @@ A FastAPI backend in `backend/app/`. Every endpoint lives under `/api/v1`, and t
 | --- | --- | --- |
 | POST | `/api/v1/predict` | A creator form in; ranges, drivers, comparable films and warnings out |
 | POST | `/api/v1/predict/compare` | A base form and 1–3 variants; every prediction plus the differences |
-| GET | `/api/v1/movies` | Search (`q`), filters (`genre`, `year_from`, `year_to`, `language`, `has_money`), `sort` (popularity, newest, title, score), `page`, `page_size` (at most 48) |
+| GET | `/api/v1/movies` | Search (`q`), filters (`genre`, `year_from`, `year_to`, `language`, `score_min`: films with any number of votes), `sort` (popularity, newest, title, score: 50+ votes only, revenue: 2025 $, trusted figures only), `page`, `page_size` (at most 48); each film with its score, votes and revenue in 2025 $ |
 | GET | `/api/v1/movies/{id}` | Facts, themes, cast and crew, money (as reported and in 2025 $), score, posters and 6 similar films |
 | GET | `/api/v1/people?role=director\|actor&q=` | Director and actor autocomplete |
 | GET | `/api/v1/companies?q=`, `/api/v1/collections?q=` | Studio and franchise autocomplete |
@@ -482,7 +482,7 @@ curl -s localhost:8000/api/v1/predict -H 'Content-Type: application/json' -d '{
 
 Memory was 1,236 MB at first. The track record (`ml/features/history.py`) kept 350k small objects (about 870 MB); it now packs them into flat arrays (about 108 MB), and the rebuilt features table is bit-for-bit identical to the stored one. Day 9 brought the app under the 450 MB gate for the free host.
 
-`tests/test_api.py` (60 tests, offline, on a small fake database and small models) checks:
+`tests/test_api.py` (61 tests, offline, on a small fake database and small models) checks:
 - every endpoint, pinned to a list so a new one must get a test;
 - both revenue modes, the cache, compare's differences, every kind of 422, and the 31st request;
 - FTS input that would be syntax, pages, filters and sorting;
@@ -510,7 +510,8 @@ cd frontend && npm run coverage
 | `src/app/` | routes, layout (header, navigation, footer with the TMDB notice), theme, providers |
 | `src/api/` | the typed client (`client.ts`), the hooks (`hooks.ts`), shared error handling (`errors.ts`), and `schema.d.ts` generated from the API |
 | `src/form/` | the creator form: values and Zod rules (`model.ts`), the examples, the URL and draft (`persist.ts`), and its inputs (`inputs/`) |
-| `src/pages/` | the home page, `/predict`, the results page `/predict/result`, and placeholders for the film pages (Day 12) |
+| `src/pages/` | the home page, `/predict`, the results page `/predict/result`, `/movies`, `/movies/:id` and `/about` |
+| `src/movies/` | the public side's parts: the browse state in the URL (`browse.ts`), filters, poster, cards, pager, the home page's rows (`rows.ts`, one config entry per row) and "Predict a film like this" (`predictLike.ts`) |
 | `src/result/` | the results page's parts: summary cards, the range chart, drivers, comparable films, notes and accuracy, the variation strip, and number formatting (`format.ts`) |
 
 **The form** (`/predict`) is one card, with the optional fields folded under "More details":
@@ -547,7 +548,21 @@ While a prediction loads, skeletons keep the layout still. A link without a comp
 
 **Types from the API.** `npm run gen:api` turns the API's OpenAPI schema into `src/api/schema.d.ts` (committed), so an API change fails the type check. For this, the schema now documents every 422 as our `{detail, errors}` shape (`backend/app/schemas/errors.py`) and types the form fields of `/meta/options` (`FieldSpec`). A Python test keeps `frontend/src/test/options.json`, the options the form tests run on, equal to the contract.
 
-**Bundle:** the home page loads 134 kB of JavaScript (gzipped); the form page adds 95 kB when it opens (Zod, Radix, cmdk).
+**The public side** (Day 12):
+
+| Browse | Film page |
+| --- | --- |
+| ![Browse: science fiction, 1980–1999, score 7+](docs/images/browse-page.png) | ![The film page of Avengers: Infinity War](docs/images/film-page.png) |
+
+- **Home:** four curated rows from `src/movies/rows.ts`: Most popular, Top rated (50+ votes), From the 1990s and Biggest box office (2025 $). Each is a browse query, so "See all" opens the same films on `/movies`. On a phone a row scrolls sideways.
+- **Browse** (`/movies`): search as you type (300 ms after the last keystroke, over titles, original titles and plots), genre, years, original language and lowest score, five sorts, and numbered pages. Everything is in the URL, so a link or the back button shows the same films. Filters sit in a sidebar on wide screens and in a drawer on phones, active ones show as removable chips, and "no results" offers a button per filter. Small, medium or large posters, or a list, remembered in this browser.
+- **Scores always come with their votes,** e.g. "9.4 (12 votes)". The score filter includes films with few votes; the score sort and the "Top rated" row need 50+, our usable-score rule, so a 10.0 from two votes never tops them.
+- **Posters** keep a fixed 2:3 shape while they load (lazily, w342 in grids, w780 on the film page); a film without one gets a placeholder with its title.
+- **Film page** (`/movies/:id`): facts, overview, genres and our themes, the score with its votes (and a note under 50), money as reported or in 2025 dollars, key crew, studios, countries and franchise, the cast with initials avatars in a colour derived from the name (our data has no photos), similar films with their "why" tag, and a link to the film on TMDB. The browser tab shows the film's title. An unknown id gets a "We don't have this film" page with search and home links.
+- **"Predict a film like this"** opens the form with the film's genres, themes, runtime, language, US rating, first director and top 5 cast (`filmToForm`, the one place that decides this). The date stays next year's, and the form says which film it started from. Values the form would refuse are dropped; TMDB's "NR" becomes "unrated", and a missing rating is left for the creator to pick.
+- **About** (`/about`): the data, how a prediction is made, the accuracy panel from `/model-card`, what the app can't do, and links to the code.
+
+**Bundle:** every page but the home page loads on demand. The home page loads 145 kB of JavaScript (gzipped), browse adds 15 kB and a film page 30 kB; the form page adds about 90 kB (Zod, Radix, cmdk).
 
 ## Running with Docker
 
@@ -578,7 +593,7 @@ docker compose down
 **The smoke script** (`scripts/smoke.py`) waits for `/health`, then checks:
 - the model version;
 - the three golden forms, each middle equal to `tests/golden/predictions.json` to 6 significant figures;
-- compare, a bad form's 422, search, a movie page, autocomplete, options and the model card;
+- compare, a bad form's 422, search, the box-office sort and the score filter, a movie page, autocomplete, options and the model card;
 - with `--web-url` (`make smoke` passes `WEB`, default :8080): the home page, the script bundle (gzipped, cached for a year), a client-side route served as the app, and the API through the frontend's proxy.
 
 It exits with status 1 on any failure, the same against local Docker and the live URL.
@@ -611,8 +626,8 @@ Every prediction is unchanged: the full features table rebuilt both ways matches
 ## Testing
 
 ```bash
-make test        # everything: 399 tests, about 2.5 min with the database and models
-make test-fast   # skips the slow and real-data tests: 316 tests, about 15 s
+make test        # everything: 400 tests, about 2.5 min with the database and models
+make test-fast   # skips the slow and real-data tests: 317 tests, about 15 s
 make coverage    # everything, with line and branch coverage of ml/ and backend/
 ```
 
@@ -629,7 +644,7 @@ Two markers (`pyproject.toml`) sort the tests:
 | Golden examples | `tests/test_golden.py`, `tests/test_api_golden.py` | the three golden forms through `predict()` and over HTTP equal the snapshot, in under 400 ms |
 | The API | `tests/test_api.py` | every endpoint, the cache, the rate limit, errors, read-only connections, parallel requests, and that the app refuses to start on a model file that doesn't match its manifest; the OpenAPI schema's error shapes and field specs |
 | The model card | `tests/test_model_card.py` | the committed `model_card.json` equals one built from the reports now, belongs to the served models, and copies the reports' numbers exactly |
-| The frontend | `frontend/src/**/*.test.ts(x)` (Vitest, Testing Library) | 126 tests: the rules against the API's real limits, invalid input blocked, the autocomplete (Enter waits for the suggestions), the examples sending exactly the golden forms, the URL and draft round trips, every API error kind, routes and the theme; the results page on the three golden answers saved from the real API (cards, badges, break-even, notes, comparables, drivers, the accuracy numbers equal to the model card), form → results with one request, the actions, the variation strip, and each failure state; 97% of lines and 89% of branches (`npm run coverage`) |
+| The frontend | `frontend/src/**/*.test.ts(x)` (Vitest, Testing Library) | the rules against the API's real limits, invalid input blocked, the autocomplete (Enter waits for the suggestions), the examples sending exactly the golden forms, the URL and draft round trips, every API error kind, routes and the theme; the results page on the three golden answers saved from the real API (cards, badges, break-even, notes, comparables, drivers, the accuracy numbers equal to the model card), form → results with one request, the actions, the variation strip, and each failure state; the browse state in the URL, search writing `?q=` once after typing, filters, chips, the no-results buttons, the remembered view, the film page (money toggle, few votes, no poster, 404), "Predict a film like this", the home rows from their config, and TMDB's logo and notice on every route; 152 tests, 97% of lines and 88% of branches (`npm run coverage`) |
 
 **Fuzzing found one real bug.** A whole-number field (year, month or runtime) sent as NaN or Infinity crashed the contract check with an `OverflowError`, and the API answered 500. JSON parsers, the server's included, accept those values. They now get the usual 422 "must be a number" (`ml/features/contract.py`, with 12 new tests).
 
@@ -694,6 +709,8 @@ The money models hold up on new films; the score ranges under-cover, because you
 - **Drivers describe the model, not causes.** "A budget of $40M strongly raises the expected revenue" says what the model leans on for films like this one; spending more would not by itself earn more. The drivers explain the middle prediction only, not the width of the range.
 - **Breakouts stay outside the range.** *Get Out* earned $340M against a range of $160K–$59M, even with the all-data models that saw it in training; its drivers (small budget, new director, small studios) describe the typical film like it.
 - **Empty optional fields count against a film.** No production country or studio looks like the obscure films in the data that have none (no country: about −38% revenue for a small horror film). `predict()` warns about it.
+- **"Predict a film like this" carries only part of a film.** It leaves out the studio, country, franchise, budget and synopsis, and takes the first credited director when there are two (the form has one).
+- **Cast and crew have no photos.** The pull didn't fetch people's images, so the film page shows initials avatars.
 - **The default browse order is TMDB's popularity on the day of the pull.** It is a trending number, so the first page starts with *Clue* (1985) rather than the best-known films.
 - **The rate limit sees the proxy, not the visitor, behind a proxy.** It counts per client IP from the connection. Behind the frontend's nginx in `docker compose`, every visitor shares one count of 30 a minute; on Render (Day 14) it must read `X-Forwarded-For` instead.
 - **The examples are dated October 2026 and May 2027,** like the golden forms they send. Once a date has passed, the year list (this year to four years ahead) no longer offers it, though the form still sends it.

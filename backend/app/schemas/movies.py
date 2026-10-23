@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 
 from backend.app.schemas.prediction import Comparable, Poster
 
-Sort = Literal["popularity", "newest", "title", "score"]
+Sort = Literal["popularity", "newest", "title", "score", "revenue"]
 
 
 class MovieSummary(BaseModel):
@@ -29,6 +29,7 @@ class MovieSummary(BaseModel):
     votes: int
     score_ok: bool = Field(description="At least 50 votes: the score is used by our models")
     popularity: Optional[float] = Field(description="TMDB popularity when pulled (display and sorting only)")
+    revenue_2025: Optional[float] = Field(description="Worldwide revenue in 2025 dollars; None when unknown or doubted")
     poster: Optional[Poster]
 
 

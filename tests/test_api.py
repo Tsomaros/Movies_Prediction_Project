@@ -360,7 +360,24 @@ def test_filters_combine(api):
     count = lambda **p: api.get(MOVIES, params=p).json()["total"]
     assert count(genre="Action") == 100 and count(year_from=2010, year_to=2012) == 60
     assert count(genre="Action", year_from=2010, year_to=2012) == 20
-    assert count(language="en") == 300 and count(language="fr") == 0 and count(has_money=True) == 300
+    assert count(language="en") == 300 and count(language="fr") == 0
+    scores = [m["score"] for m in api.get(MOVIES, params={"page_size": 48}).json()["items"]]
+    assert count(score_min=0) == 300 and 0 < count(score_min=sorted(scores)[24]) < 300
+    assert api.get(MOVIES, params={"score_min": 11}).status_code == 422
+
+
+def test_the_score_filter_keeps_low_vote_films_but_the_score_sort_does_not(db, predictor):
+    import shutil
+    import tempfile
+    from pathlib import Path
+    tmp = Path(tempfile.mkdtemp())
+    shutil.copyfile(db / "movies.db", tmp / "movies.db")
+    with sqlite3.connect(tmp / "movies.db") as con:  # film 1: a perfect score from 2 votes
+        con.execute("UPDATE movies SET vote_average = 10, vote_count = 2, score_ok = 0 WHERE id = 1")
+    with TestClient(create_app(Settings(db_path=tmp / "movies.db"), predictor=predictor)) as c:
+        top = c.get(MOVIES, params={"score_min": 9.9}).json()
+        assert [m["id"] for m in top["items"]] == [1] and top["items"][0]["votes"] == 2
+        assert 1 not in [m["id"] for m in c.get(MOVIES, params={"sort": "score", "page_size": 48}).json()["items"]]
 
 
 def test_sorting(api):
@@ -369,6 +386,8 @@ def test_sorting(api):
     assert titles(api.get(MOVIES, params={"sort": "title"}))[:3] == ["Film 1", "Film 10", "Film 100"]
     best = api.get(MOVIES, params={"sort": "score", "page_size": 48}).json()["items"]
     assert all(a["score"] >= b["score"] for a, b in zip(best, best[1:]))
+    biggest = api.get(MOVIES, params={"sort": "revenue", "page_size": 48}).json()["items"]
+    assert all(a["revenue_2025"] >= b["revenue_2025"] for a, b in zip(biggest, biggest[1:]))
 
 
 def test_bad_browse_parameters_are_named(api):

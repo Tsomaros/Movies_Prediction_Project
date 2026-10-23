@@ -1,4 +1,5 @@
-// The frame around every page: header (brand, navigation, theme toggle), the page, and the footer.
+// The frame around every page: header (brand, navigation, theme toggle), the page, and the footer with TMDB's
+// attribution (their logo, unaltered and smaller than ours, the required notice and a link).
 // Mobile first: on a phone the navigation is a second row under the brand; from `sm` it sits in the header.
 import { ClapperboardIcon } from 'lucide-react'
 import { Link, NavLink, Outlet, ScrollRestoration } from 'react-router'
@@ -9,6 +10,7 @@ import { cn } from '@/lib/utils'
 const NAV = [
   { to: '/predict', label: 'Plan a film' },
   { to: '/movies', label: 'Browse films' },
+  { to: '/about', label: 'About' },
 ] as const
 
 function Nav({ className }: { className?: string }) {
@@ -47,10 +49,14 @@ export function Header() {
 export function Footer() {
   return (
     <footer className="border-t text-muted-foreground mt-12 print:mt-4">
-      <div className="mx-auto flex max-w-5xl flex-col gap-1 px-4 py-6 text-xs sm:flex-row sm:justify-between">
-        <p>Ranges are estimates from past films, not guarantees.</p>
-        {/* Day 12 adds the TMDB logo next to this notice (less prominent than our own branding) */}
-        <p data-testid="tmdb-attribution">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+      <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
+        <p>Ranges are estimates from past films, not guarantees. <Link to="/about" className="underline">About</Link></p>
+        <div data-testid="tmdb-attribution" className="flex items-center gap-3">
+          <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" className="shrink-0">
+            <img src="/tmdb-logo.svg" alt="TMDB" width={92} height={12} className="h-3 w-auto" />
+          </a>
+          <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+        </div>
       </div>
     </footer>
   )

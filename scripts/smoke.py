@@ -10,7 +10,7 @@ Checks, each printed as one line with its time:
 - the three golden forms (tests/golden/forms.json) through POST /predict: ordered ranges, the revenue mode,
   the warning codes and each middle equal to tests/golden/predictions.json to 6 significant figures;
 - POST /predict/compare with two variants, and a bad form that must get the readable 422;
-- search, a movie page, autocomplete and /meta/options on the real data;
+- search, the box-office sort and the score filter, a movie page, autocomplete and /meta/options on the real data;
 - /model-card belongs to the served models and has the 2019+ test and the 2026 holdout;
 - with --web-url, the frontend: the home page, its script bundle (cached for a year), a deep link served
   as the app (/predict/...), and /api/v1/health and /meta/options through the frontend's proxy.
@@ -185,6 +185,15 @@ def main() -> None:
         return f"{found['total']} found, first: {found['items'][0]['title']}"
 
     s.check("GET /movies?q=avengers infinity", search)
+
+    def browse() -> str:
+        biggest = s.get("/movies", sort="revenue", page_size=3)["items"]
+        assert biggest[0]["revenue_2025"] >= biggest[1]["revenue_2025"] > 0, biggest[:2]
+        top = s.get("/movies", score_min=9, page_size=1)
+        assert top["total"] > 0 and top["items"][0]["score"] >= 9
+        return f"biggest: {biggest[0]['title']}; {top['total']:,} films scored 9+ (any votes)"
+
+    s.check("GET /movies?sort=revenue, ?score_min=9", browse)
 
     def movie() -> str:
         m = s.get("/movies/299536")

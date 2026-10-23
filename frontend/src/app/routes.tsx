@@ -1,12 +1,11 @@
 // Every route of the app, under the shared Layout. Exported as data so tests can mount them in a memory router.
-// The form and results pages load on demand: their libraries (Zod, Radix, cmdk) are most of the bundle, and the
-// home page doesn't need them.
+// Every page but the home page loads on demand, so a visitor downloads only what the page they open needs.
+// The form and results pages carry most of the bundle (Zod, Radix, cmdk).
 import type { RouteObject } from 'react-router'
 
 import Layout from '@/app/Layout'
 import Home from '@/pages/Home'
 import NotFound, { RouteError } from '@/pages/NotFound'
-import { MovieDetail, Movies } from '@/pages/placeholders'
 
 export const routes: RouteObject[] = [
   {
@@ -16,8 +15,9 @@ export const routes: RouteObject[] = [
       { path: '/', element: <Home /> },
       { path: '/predict', lazy: () => import('@/pages/Predict').then(m => ({ Component: m.default })) },
       { path: '/predict/result', lazy: () => import('@/pages/PredictResult').then(m => ({ Component: m.default })) },
-      { path: '/movies', element: <Movies /> },
-      { path: '/movies/:id', element: <MovieDetail /> },
+      { path: '/movies', lazy: () => import('@/pages/Movies').then(m => ({ Component: m.default })) },
+      { path: '/movies/:id', lazy: () => import('@/pages/MovieDetail').then(m => ({ Component: m.default })) },
+      { path: '/about', lazy: () => import('@/pages/About').then(m => ({ Component: m.default })) },
       { path: '*', element: <NotFound /> },
     ],
   },

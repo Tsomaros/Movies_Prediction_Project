@@ -1,26 +1,10 @@
 // Five earlier films like the planned one, with what they really cost, earned and scored. Each links to its
 // film page; its "why" tags come from the API (the parts of the similarity that matched).
-import { FilmIcon } from 'lucide-react'
 import { Link } from 'react-router'
 
 import type { Comparable } from '@/api/client'
+import { Poster } from '@/movies/Poster'
 import { money, points } from '@/result/format'
-
-function Poster({ film }: { film: Comparable }) {
-  return (
-    <div className="bg-muted aspect-[2/3] w-full overflow-hidden rounded-md">
-      {film.poster ? (
-        <img src={film.poster.small} alt={`Poster of ${film.title}`} loading="lazy" decoding="async"
-          className="size-full object-cover" />
-      ) : (
-        <div className="text-muted-foreground flex size-full flex-col items-center justify-center gap-1 p-2 text-center text-xs">
-          <FilmIcon className="size-6" aria-hidden />
-          No poster
-        </div>
-      )}
-    </div>
-  )
-}
 
 function Fact({ label, value }: { label: string; value: number | null }) {
   return (
@@ -50,7 +34,7 @@ export function Comparables({ films }: { films: Comparable[] }) {
           {films.map(film => (
             <li key={film.id} className="grid content-start gap-2">
               <Link to={`/movies/${film.id}`} className="group grid gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-ring">
-                <Poster film={film} />
+                <Poster poster={film.poster} title={film.title} />
                 <span className="font-medium leading-tight group-hover:underline">
                   {film.title} <span className="text-muted-foreground font-normal">({film.year})</span>
                 </span>

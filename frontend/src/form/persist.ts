@@ -10,6 +10,7 @@ import { emptyForm, type FormValues, type NameRef } from '@/form/model'
 
 export const URL_PARAM = 'f'
 export const BASE_PARAM = 'base' // the results page's previous version ("Try a variation")
+export const LIKE_PARAM = 'like' // the title of the film a form was started from ("Predict a film like this")
 export const DRAFT_KEY = 'movie-prediction:draft'
 
 function toBase64Url(text: string): string {

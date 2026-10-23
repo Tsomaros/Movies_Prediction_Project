@@ -1,6 +1,8 @@
 import { Link } from 'react-router'
 
 import { Button } from '@/components/ui/button'
+import { CuratedRow } from '@/movies/CuratedRow'
+import { ROWS } from '@/movies/rows'
 
 const POINTS = [
   { title: 'Budget, revenue and audience score', text: 'Each as a range: low, middle and high, right about 8 times in 10.' },
@@ -31,6 +33,9 @@ export default function Home() {
           </li>
         ))}
       </ul>
+      <div className="mt-12 grid gap-10">
+        {ROWS.map(row => <CuratedRow key={row.key} row={row} />)}
+      </div>
     </section>
   )
 }

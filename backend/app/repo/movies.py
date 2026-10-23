@@ -1,7 +1,7 @@
 """Read-only queries for the public movie pages.
 
     fts_query(text)                     -> a safe FTS5 query: every word as a quoted prefix ("tom"* "han"*), or None
-    search(con, q, genre, year_from, year_to, language, has_money, sort, page, page_size)
+    search(con, q, genre, year_from, year_to, language, score_min, sort, page, page_size)
                                         -> (rows for that page, total matching)
     movie(con, movie_id)                -> one film's facts, people, money and score, or None
     film_keywords(con, movie_id)        -> the film's TMDB keyword ids (for its themes)
@@ -22,7 +22,8 @@ SORTS = {  # name -> ORDER BY; ties broken by id so pages never overlap
     "popularity": "m.popularity IS NULL, m.popularity DESC, m.id",
     "newest": "m.release_date IS NULL, m.release_date DESC, m.id",
     "title": "m.title COLLATE NOCASE, m.year, m.id",
-    "score": "m.vote_average DESC, m.vote_count DESC, m.id",  # films with a usable score only
+    "score": "m.vote_average DESC, m.vote_count DESC, m.id",  # films with a usable score (50+ votes) only
+    "revenue": "m.revenue_2025 DESC, m.id",  # films with a trusted revenue only, in 2025 dollars
 }
 CREW_JOBS = ("Director", "Screenplay", "Writer", "Producer", "Original Music Composer", "Director of Photography",
              "Editor")  # the order shown
@@ -30,7 +31,8 @@ TOP_CAST = 15
 GENRES_SQL = """(SELECT json_group_array(name) FROM (SELECT g.name FROM movie_genres mg JOIN genres g ON g.id = mg.genre_id
                  WHERE mg.movie_id = m.id ORDER BY mg.ord))"""
 SUMMARY = f"""m.id, m.title, m.year, m.release_date, m.poster_path, m.original_language, m.vote_average, m.vote_count,
-              m.score_ok, m.popularity, {GENRES_SQL} AS genres"""
+              m.score_ok, m.popularity, CASE WHEN m.money_suspect THEN NULL ELSE m.revenue_2025 END AS revenue_2025,
+              {GENRES_SQL} AS genres"""
 
 
 def fts_query(text: str | None) -> str | None:
@@ -39,8 +41,10 @@ def fts_query(text: str | None) -> str | None:
 
 
 def search(con: sqlite3.Connection, q: str | None = None, genre: str | None = None, year_from: int | None = None,
-           year_to: int | None = None, language: str | None = None, has_money: bool = False,
+           year_to: int | None = None, language: str | None = None, score_min: float | None = None,
            sort: str = "popularity", page: int = 1, page_size: int = 24) -> tuple[list[dict[str, Any]], int]:
+    """score_min keeps films of any vote count (the page shows the votes next to the score); sorting by score
+    keeps only films with a usable score (50+ votes), so a 10.0 from 2 votes never tops the list."""
     joins, where, args = "", ["m.release_date IS NOT NULL"], []
     if q is not None:
         match = fts_query(q)
@@ -62,10 +66,15 @@ def search(con: sqlite3.Connection, q: str | None = None, genre: str | None = No
     if language:
         where.append("m.original_language = ?")
         args.append(language)
-    if has_money:
-        where.append("m.budget IS NOT NULL AND m.revenue IS NOT NULL AND NOT m.money_suspect")
+    if score_min is not None:
+        # "+" keeps SQLite off the vote_count index: nearly every film has votes, and walking it took 0.63 s against
+        # 0.11 s for a plain scan of the table
+        where.append("+m.vote_count > 0 AND m.vote_average >= ?")
+        args.append(score_min)
     if sort == "score":
         where.append("m.score_ok")
+    if sort == "revenue":
+        where.append("m.revenue_2025 IS NOT NULL AND NOT m.money_suspect")
     clause = f"FROM movies m {joins} WHERE {' AND '.join(where)}"
     total = con.execute(f"SELECT COUNT(*) {clause}", args).fetchone()[0]
     rows = con.execute(f"SELECT {SUMMARY} {clause} ORDER BY {SORTS[sort]} LIMIT ? OFFSET ?",

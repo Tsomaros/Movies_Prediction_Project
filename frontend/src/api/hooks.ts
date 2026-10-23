@@ -9,9 +9,11 @@
 //   usePrediction(form)                    -> the same answer as a query (the results page): from that cache when
 //                                             the form page just asked, else one request; errors are the page's
 //   useModelCard()                         -> GET /model-card, cached an hour
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+//   useMovies(query) / useMovie(id)        -> browse and one film, cached an hour like the API says; a new page or
+//                                             filter keeps the last results on screen until the new ones arrive
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { api, type NameKind, type PredictForm } from '@/api/client'
+import { ApiError, api, type MovieQuery, type NameKind, type PredictForm } from '@/api/client'
 import { notifyError } from '@/api/errors'
 import { useDebounced } from '@/lib/useDebounced'
 
@@ -68,4 +70,23 @@ export function usePrediction(form: PredictForm | null) {
 
 export function useModelCard() {
   return useQuery({ queryKey: ['model-card'], queryFn: ({ signal }) => api.getModelCard(signal), staleTime: HOUR })
+}
+
+export function useMovies(query: MovieQuery) {
+  return useQuery({
+    queryKey: ['movies', query],
+    queryFn: ({ signal }) => api.listMovies(query, signal),
+    staleTime: HOUR,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useMovie(id: number | null) {
+  return useQuery({
+    queryKey: ['movie', id],
+    queryFn: ({ signal }) => api.getMovie(id!, signal),
+    enabled: id !== null,
+    staleTime: HOUR,
+    retry: (count, error) => !(error instanceof ApiError && error.kind === 'not_found') && count < 1,
+  })
 }

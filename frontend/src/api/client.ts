@@ -1,13 +1,14 @@
 // The one typed client for the backend (/api/v1, proxied by Vite in dev and by nginx in docker compose).
 //
-//   getOptions(), searchNames(kind, q), predict(form), getModelCard()   -> typed bodies from schema.d.ts (npm run gen:api)
+//   getOptions(), searchNames(kind, q), predict(form), getModelCard(),
+//   listMovies(query), getMovie(id)                     -> typed bodies from schema.d.ts (npm run gen:api)
 //   ApiError                                             -> every failure, with a `kind` the UI can act on:
 //     validation   422, `fieldErrors` keyed by the API's dotted paths ("actors.2", "budget")
 //     rate_limited 429, `retryAfter` seconds from the Retry-After header
 //     not_found    404
 //     network      the request never got an answer (offline, server down, CORS)
 //     server       any other status, or a body that isn't JSON
-import type { components } from '@/api/schema'
+import type { components, operations } from '@/api/schema'
 
 type Schemas = components['schemas']
 export type Options = Schemas['Options']
@@ -19,6 +20,14 @@ export type FieldErrors = Schemas['FieldErrors']
 export type Comparable = Schemas['Comparable']
 export type Driver = Schemas['Driver']
 export type ModelCard = Schemas['ModelCard']
+export type MovieSummary = Schemas['MovieSummary']
+export type MovieList = Schemas['MovieList']
+export type MovieDetail = Schemas['MovieDetail']
+/** GET /movies's query (every filter optional), from the generated schema; null is left out. */
+type ListQuery = NonNullable<operations['list_movies_api_v1_movies_get']['parameters']['query']>
+export type MovieQuery = { [K in keyof ListQuery]?: NonNullable<ListQuery[K]> }
+export type Sort = NonNullable<MovieQuery['sort']>
+export type Genre = NonNullable<MovieQuery['genre']>
 
 export const API_BASE = '/api/v1'
 
@@ -97,4 +106,6 @@ export const api = {
   predict: (form: PredictForm, signal?: AbortSignal) =>
     request<Prediction>('/predict', { method: 'POST', body: form, signal }),
   getModelCard: (signal?: AbortSignal) => request<ModelCard>('/model-card', { signal }),
+  listMovies: (query: MovieQuery, signal?: AbortSignal) => request<MovieList>('/movies', { query, signal }),
+  getMovie: (id: number, signal?: AbortSignal) => request<MovieDetail>(`/movies/${id}`, { signal }),
 }

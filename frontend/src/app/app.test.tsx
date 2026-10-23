@@ -14,15 +14,16 @@ describe('routes', () => {
     ['/predict', 'Plan a film'],
     ['/predict/result', 'Your prediction'],
     ['/movies', 'Browse films'],
-    ['/movies/603', 'Film'],
+    ['/about', 'About'],
     ['/no/such/page', 'Page not found'],
   ])('%s shows "%s"', async (path, heading) => {
     renderApp(path)
     expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument()
   })
 
-  test('every page has the header, the navigation and the TMDB notice', () => {
+  test('every page has the header, the navigation and the TMDB notice', async () => {
     renderApp('/movies')
+    await screen.findByRole('heading', { level: 1, name: 'Browse films' })
     expect(screen.getByRole('link', { name: /Movie Prediction/ })).toHaveAttribute('href', '/')
     expect(screen.getAllByRole('navigation', { name: 'Main' }).length).toBeGreaterThan(0)
     expect(screen.getByTestId('tmdb-attribution')).toHaveTextContent('not endorsed or certified by TMDB')
