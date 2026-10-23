@@ -1,7 +1,8 @@
 // The frame around every page: header (brand, navigation, theme toggle), the page, and the footer with TMDB's
 // attribution (their logo, unaltered and smaller than ours, the required notice and a link).
 // Mobile first: on a phone the navigation is a second row under the brand; from `sm` it sits in the header.
-// A route with `handle: { bleed: true }` (the start page, /series) fills the width between header and footer.
+// A route with `handle: { bleed: true }` (/series) fills the width between header and footer; one with
+// `handle: { bare: true }` (the start page) has no header or footer at all and carries TmdbNotice itself.
 import { ClapperboardIcon } from 'lucide-react'
 import { Link, NavLink, Outlet, ScrollRestoration, useMatches } from 'react-router'
 
@@ -48,26 +49,38 @@ export function Header() {
   )
 }
 
-export type RouteHandle = { bleed?: boolean }
+export type RouteHandle = { bleed?: boolean; bare?: boolean }
+
+/** TMDB's attribution: their logo (unaltered, smaller than ours), the required notice and a link. */
+export function TmdbNotice({ className }: { className?: string }) {
+  return (
+    <div data-testid="tmdb-attribution" className={cn('flex items-center gap-3', className)}>
+      <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" className="shrink-0">
+        <img src="/tmdb-logo.svg" alt="TMDB" width={92} height={12} className="h-3 w-auto" />
+      </a>
+      <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+    </div>
+  )
+}
 
 export function Footer({ flush = false }: { flush?: boolean }) {
   return (
     <footer className={cn('border-t text-muted-foreground print:mt-4', !flush && 'mt-12')}>
       <div className="mx-auto flex max-w-5xl flex-col gap-3 px-4 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
         <p>Ranges are estimates from past films, not guarantees. <Link to="/about" className="underline">About</Link></p>
-        <div data-testid="tmdb-attribution" className="flex items-center gap-3">
-          <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer" className="shrink-0">
-            <img src="/tmdb-logo.svg" alt="TMDB" width={92} height={12} className="h-3 w-auto" />
-          </a>
-          <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
-        </div>
+        <TmdbNotice />
       </div>
     </footer>
   )
 }
 
 export default function Layout() {
-  const bleed = useMatches().some(m => (m.handle as RouteHandle | undefined)?.bleed)
+  const handles = useMatches().map(m => (m.handle ?? {}) as RouteHandle)
+  const bleed = handles.some(h => h.bleed)
+  // A new page starts at the top; back and forward return to where you were. Keyed by the address, because a
+  // full reload gives every page the same "default" key and would restore another page's position.
+  const scroll = <ScrollRestoration getKey={location => location.pathname + location.search} />
+  if (handles.some(h => h.bare)) return <><Outlet />{scroll}</>
   return (
     <div className="flex min-h-svh flex-col">
       <Header />
@@ -75,9 +88,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <Footer flush={bleed} />
-      {/* A new page starts at the top; back and forward return to where you were. Keyed by the address, because a
-          full reload gives every page the same "default" key and would restore another page's position. */}
-      <ScrollRestoration getKey={location => location.pathname + location.search} />
+      {scroll}
     </div>
   )
 }

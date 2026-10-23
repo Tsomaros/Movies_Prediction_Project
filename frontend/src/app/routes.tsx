@@ -10,6 +10,7 @@ import NotFound, { RouteError } from '@/pages/NotFound'
 import Start from '@/pages/Start'
 
 const bleed: RouteHandle = { bleed: true }
+const bare: RouteHandle = { bare: true }
 
 export const routes: RouteObject[] = [
   {
@@ -18,7 +19,7 @@ export const routes: RouteObject[] = [
     children: [{
       errorElement: <RouteError />,
       children: [
-        { path: '/', element: <Start />, handle: bleed },
+        { path: '/', element: <Start />, handle: bare },
         { path: '/predict', lazy: () => import('@/pages/Predict').then(m => ({ Component: m.default })) },
         { path: '/predict/result', lazy: () => import('@/pages/PredictResult').then(m => ({ Component: m.default })) },
         { path: '/predict/compare', lazy: () => import('@/pages/PredictCompare').then(m => ({ Component: m.default })) },

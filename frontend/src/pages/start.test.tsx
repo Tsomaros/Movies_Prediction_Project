@@ -45,13 +45,19 @@ describe('the start page', () => {
     }
   })
 
-  test('the header reaches Predict from the start page', async () => {
+  test("no header or footer; Predict, About, the theme and TMDB's notice sit under the cards", async () => {
     mockFetch({})
     const { router } = renderApp('/')
-    const nav = screen.getAllByRole('navigation', { name: 'Main' })[0]
-    expect([...nav.querySelectorAll('a')].map(a => a.textContent)).toEqual(['Movies', 'Browse', 'Predict', 'About'])
-    await userEvent.click(screen.getAllByRole('link', { name: 'Predict' })[0])
+    expect(await screen.findByRole('heading', { level: 1, name: 'Movie Prediction' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument()
+    expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
+    expect(screen.getByTestId('tmdb-attribution')).toHaveTextContent('not endorsed or certified by TMDB')
+    expect(screen.getByRole('link', { name: 'About' })).toHaveAttribute('href', '/about')
+    expect(screen.getByRole('button', { name: 'Switch to dark theme' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('link', { name: 'Predict a film' }))
     await waitFor(() => expect(router.state.location.pathname).toBe('/predict')) // the page loads on demand
+    expect((await screen.findAllByRole('navigation', { name: 'Main' })).length).toBeGreaterThan(0) // other pages keep the header
   })
 })
 

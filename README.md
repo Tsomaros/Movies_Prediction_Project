@@ -42,7 +42,7 @@ A value of `0` in TMDB's `budget` or `revenue` means "unknown", not zero. See [C
 
 ### TMDB terms
 
-- Free for non-commercial use with attribution. Every page's footer carries TMDB's "Primary short" logo (`frontend/public/tmdb-logo.svg`, byte for byte their file: its SHA-256 equals the checksum in TMDB's own file name), smaller than our own brand, with the notice below and a link to TMDB. Film pages also link to the film on TMDB.
+- Free for non-commercial use with attribution. Every page carries TMDB's "Primary short" logo (in the footer, or under the start page's cards) (`frontend/public/tmdb-logo.svg`, byte for byte their file: its SHA-256 equals the checksum in TMDB's own file name), smaller than our own brand, with the notice below and a link to TMDB. Film pages also link to the film on TMDB.
 - Data is not cached for more than six months. That includes the start page's two poster collages (`make collages`): rebuild them at least every six months.
 - The client stays at about 20 requests/second, well under TMDB's per-IP limit.
 
@@ -521,11 +521,11 @@ cd frontend && npm run coverage
 | `src/result/` | the results page's parts: summary cards, the range chart, drivers, comparable films, notes and accuracy, and number formatting (`format.ts`) |
 | `src/compare/` | the compare page's parts: the variants in the URL, the presets and "within the uncertainty" (`variants.ts`), the picker, the side-by-side view, and the month sweep (`sweep.ts`, `MonthSweep.tsx`) |
 
-**The start page** (`/`) has two panels over poster collages: **Movies** opens `/movies`, **Series** opens `/series` ("coming soon", over the same collage blurred). The header (Movies · Browse · Predict · About) is the same on every page, so the form is one click away.
+**The start page** (`/`) has no header or footer: the title, then two bordered cards in the middle of the screen, each over a poster collage. **Movies** opens `/movies`, **Series** opens `/series` ("coming soon", over the same collage blurred). Under the cards: "Predict a film", "About", the theme switch and TMDB's logo and notice. Every other page has the header (Movies · Browse · Predict · About) and the footer.
 
-![The start page: Movies and Series panels](docs/images/start-page.png)
+![The start page: Movies and Series cards](docs/images/start-page.png)
 
-- **Panels:** side by side on wide screens, stacked on a phone. Hovering or focusing one widens it to 58%, lightens its overlay and lifts its title. Each panel is one link with a visible focus ring.
+- **Cards:** 320 × 400 px side by side on wide screens; on a phone they stack and turn landscape (16:10), so both fit on one screen. Hovering or focusing a card lifts it, lightens its overlay and lifts its title. Each card is one link with a visible focus ring.
 - **The collages** pan slowly with a CSS transform; the pan is off when the system asks for reduced motion.
 - **The images** are two static WebP files (about 155 kB each, 1200 × 1000) in `frontend/public/collages/`, made by `scripts/build_collages.py` (`make collages`): 24 w185 posters each, tiled in turned rows with Pillow. Movies are the 24 most popular films with a poster in our database; series come from TMDB's popular TV list (two pages of 20). They are committed, so building the app never calls TMDB.
 
@@ -609,7 +609,7 @@ A full reload also returns to the top of the page now: scroll positions are kept
 
 | Lighthouse 12 (mobile / desktop) | Performance | Accessibility | Best practices | SEO |
 | --- | --- | --- | --- | --- |
-| Start page | 89 / 100 | 100 / 100 | 100 / 100 | 100 / 100 |
+| Start page | 88 / 100 | 100 / 100 | 100 / 100 | 100 / 100 |
 | Series | 93 / 100 | 100 / 100 | 100 / 100 | 100 / 100 |
 | Movies (rows) | 88 / 97 | 100 / 100 | 100 / 100 | 100 / 100 |
 | Browse | 86 / 97 | 100 / 100 | 100 / 100 | 100 / 100 |
@@ -622,7 +622,7 @@ A full reload also returns to the top of the page now: scroll positions are kept
   - Layout shift on the form went from 0.13 to 0 and on compare from 0.29 to 0.06: the loading states now take the final layout's room.
   - Accessibility on the form and results went from 95–97 to 100: the runtime slider's handle gets its name, "More details" became an `h2`, and the inactive tabs and the drivers' blue heading got enough contrast.
   - Also fixed: a pager label that didn't match its text ("Page 3300" vs "3,300"), the first row of posters now loads at once (it is the page's largest paint), and a preconnect to TMDB's image host.
-- **The start page, Series, Movies and Browse rows and the form** were measured again after the start page was added; results and compare are from Day 13. On a phone the start page's largest paint is a 1200 px collage (about 155 kB) on Lighthouse's slow-4G profile; a smaller phone copy would save about 150 kB.
+- **The start page, Series, Movies and Browse rows and the form** were measured again after the start page was added; results and compare are from Day 13. On a phone the start page's largest paint is a card's 1200 px collage (about 155 kB) on Lighthouse's slow-4G profile; a smaller phone copy would save about 150 kB.
 - **Left as is:** mobile browse scores 86–92 between runs. Its largest paint is a TMDB poster on Lighthouse's slow-4G profile, and the API serves w342 posters where a phone grid would need w185.
 - **Keyboard only:** a Playwright script in Edge runs the whole creator flow with Tab, Enter, Space and the arrow keys: an example, Predict, the drivers' tabs, Compare, a preset, a variant made by hand, removing one, then the sweep. Every element it lands on shows a focus mark; the drivers' tab panel had none, and now does.
 - **Browsers:**

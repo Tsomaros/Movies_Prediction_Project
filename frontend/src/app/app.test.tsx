@@ -32,8 +32,8 @@ describe('routes', () => {
   })
 
   test('the navigation moves between pages and marks the current one', async () => {
-    const { router } = renderApp('/')
-    const nav = screen.getAllByRole('navigation', { name: 'Main' })[0]
+    const { router } = renderApp('/about')
+    const nav = (await screen.findAllByRole('navigation', { name: 'Main' }))[0]
     await userEvent.click(within(nav).getByRole('link', { name: 'Predict' }))
     expect(router.state.location.pathname).toBe('/predict')
     expect(within(nav).getByRole('link', { name: 'Predict' })).toHaveAttribute('aria-current', 'page')
