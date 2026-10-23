@@ -1557,3 +1557,176 @@ Write-up: `reports/audit.md`.
 - **Day 13 (Lighthouse):** the home page now loads 145 kB gzipped, including the TanStack Query chunk for the rows; a film page loads the form's Zod chunk (26 kB) because "Predict a film like this" encodes a form.
 - **Day 14:** the logo is in `frontend/public/`, so the single production container must copy `dist/` with it.
 - **The quick loops:** `make test-fast` (317 tests, about 18 s) and `make web-test` (152 tests, about 20 s).
+
+## Day 13: Compare, release-month sweep, edge cases and final polish (done 2026-10-23)
+
+- [x] 0. Plan document: left untouched, as on Days 8–12. Dimitris's choices before the build:
+  - a change is "within the uncertainty" below 10% of the median 80% range on validation;
+  - the compare page replaces Day 11's "Try a variation" strip;
+  - "Make it a franchise" opens a search for an existing franchise;
+  - the quality pass uses `npx lighthouse` and Playwright's Firefox and WebKit, downloaded outside the repo, and Dimitris checks one real phone.
+  - **Carry-overs:** none. Fuzzing (Day 9), the shareable URL and draft (Day 10) and print (Day 11) were all done on their days.
+- [x] 1. Compare: building variations
+- [x] 2. Compare: the view
+- [x] 3. Honest differences
+- [x] 4. Month sweep
+- [x] 5. Edge cases and error states
+- [x] 6. Final quality pass (Firefox not run, see below)
+- [x] 7. Tests (178 Vitest tests, 404 Python tests, 17 smoke checks)
+- [x] 8. Wrap-up: README with two screenshots, CLAUDE.md, commit
+
+### Tasks 1–2: compare (`/predict/compare`)
+
+- **The base and up to 3 variants:**
+  - the base form is in `?f=` and the variants in `?v=` (base64url JSON, `src/compare/variants.ts`);
+  - each variant is `{name, changes}` and changes exactly one field, so a difference has one clear cause;
+  - Back undoes the last change, and a link shares the comparison.
+- **Presets (`presetAction`), each changing one field:**
+  - Holiday release (December);
+  - Make it a franchise (opens the franchise search);
+  - Double the budget (needs a budget, at most the contract's maximum);
+  - Unknown cast (the same number of new names);
+  - PG-13 instead of R (shown only for R films).
+  - A preset that doesn't fit is disabled with the reason: "Add a budget to the form first", "Already part of a franchise", "Already added".
+- **Changes by hand:** release month or year, runtime, budget (or leaving it out), rating, language, director or franchise. Numbers are checked against `/meta/options` before sending, and a value the film already has or a duplicate variant is refused.
+- **The view:**
+  - **Columns:** your film and each variant in columns, stacked on a phone. Each shows the three expected values and ranges, the change against your film, a note when the revenue mode changed, and the revenue drivers that moved ("Release timing: now no clear effect (was a moderate drag)").
+  - **Chart:** the revenue ranges on one log axis, each with its own break-even band. It reuses the results page's chart parts, now exported from `RangeChart.tsx`.
+  - **Requests:** one `POST /predict/compare` (Day 8's endpoint) answers for all variants. A variant the API refuses is named on its column.
+- **Removed:** `src/result/Variation.tsx`, `BASE_PARAM`, `changedFields` and the `?base=` handling on the form and results pages. The results page now links to "Compare variations" and "Best release month".
+
+### Task 3: honest differences
+
+- **The thresholds** are written by `ml/eval/model_card.py` into the card's new `uncertainty` section, copied from the validation widths in `reports/metrics.json`:
+
+  | | Median validation width | Threshold |
+  | --- | --- | --- |
+  | Revenue, budget given | ×36.2 | ×1.43 |
+  | Revenue, budget estimated | ×47.7 | ×1.47 |
+  | Budget | ×8.09 | ×1.23 |
+  | Score | 1.68 points | 0.17 points |
+
+  For money the threshold is width^0.1 (a tenth on the log scale); for the score it is 0.1 × width.
+- **The frontend's `meaningful()`** reads them from `/model-card` and never hard-codes one. A change below the threshold is greyed out with "within the uncertainty"; a note under the columns gives the thresholds and the years.
+- `tests/test_model_card.py` checks the thresholds against the report; the card was regenerated and committed.
+
+### Task 4: month sweep
+
+- **`POST /api/v1/predict/sweep`:**
+  - the body is `{form, field, values}`, with `field` one of release_month, runtime or budget, and 2–12 values;
+  - it returns the three ranges and the revenue mode for each value;
+  - one sweep counts as one request against the rate limit, and every point goes through the prediction cache;
+  - 422 keys are `form.<field>` and `values.<i>`, and the shared error handler knows the sweep's body.
+- **Measured:** 1.6 s in Docker for 12 uncached months; cached, a few milliseconds.
+- **The chart** (`MonthSweep.tsx`): expected revenue and its likely range per month on a log axis.
+  - Your month is shaded, the best is ★, and months within the revenue threshold of the best are ≈ "about as good".
+  - A screen-reader table carries the same numbers.
+  - When every month is about as good, it says the month makes little difference.
+- **The small indie drama:** December $34M against October's $26M, ×1.3, under the ×1.47 threshold, so every month is "about as good".
+
+### Task 5: edge cases
+
+| Situation | Now |
+| --- | --- |
+| Server waking up | after 3 s, `SlowNotice`: "Waking up the server, this can take up to a minute on free hosting" (form, results, compare, browse, film page) |
+| API down or network error | "Can't reach the server…" with Retry; the form keeps its content (new test) |
+| 429 | "You're going a bit fast. Try again in a minute" (or the minutes from `Retry-After`) |
+| Unknown person | already there: the "new person" option and the results note |
+| Broken shared URL | `readForm` returns the fields it dropped. The form, results and compare pages name them, and the rest loads. `browseResets` does the same on browse, and an unknown genre waits for the genre list instead of a 422 |
+| Movie not found | already there (Day 12) |
+| Unexpected crash | the `errorElement` moved to a pathless route inside the Layout, so the header, navigation and footer keep working |
+| Slow connection | skeletons that take the final layout's room (form, compare picker) |
+
+- **Also fixed:** the Day 12 input about a full reload restoring another page's scroll position. `ScrollRestoration` is now keyed by pathname and search.
+
+### Task 6: quality pass
+
+- **Lighthouse 12,** on the Docker app, mobile / desktop, after the fixes:
+
+  | Page | Performance | Accessibility | Best practices | SEO |
+  | --- | --- | --- | --- | --- |
+  | Home | 98 / 98 | 100 / 100 | 100 / 100 | 100 / 100 |
+  | Browse | 88 / 98 | 100 / 100 | 100 / 100 | 100 / 100 |
+  | Form | 90 / 100 | 100 / 100 | 100 / 100 | 100 / 100 |
+  | Results | 94 / 100 | 100 / 100 | 100 / 100 | 100 / 100 |
+  | Compare | 93 / 100 | 100 / 100 | 100 / 100 | 100 / 100 |
+
+- **The first run** had SEO 83 everywhere, accessibility 95 on the form and 97 on results, and layout shift of 0.13–0.18 on the form and 0.29 on compare. The fixes:
+  - a meta description, and `public/robots.txt` (nginx answered `/robots.txt` with the app's page);
+  - loading placeholders the size of the real layout: layout shift is 0 on the form and 0.06 on compare;
+  - the slider's handle gets the slider's name (`components/ui/slider.tsx`), and "More details" is an `h2` (`accordion.tsx`);
+  - contrast for the inactive driver tabs and the blue "Pushes it up" heading;
+  - the pager's labels now match their text ("Page 3,300");
+  - the first row of posters loads at once on browse and home, and the page preconnects to `image.tmdb.org`.
+- **Keyboard only:** a Playwright script in Edge runs the creator flow with keys alone: an example, Predict, the driver tabs by arrows, Compare, a preset by Space, a variant made by hand, removing one, then the sweep. The drivers' tab panel had no focus mark (Tailwind's `outline-none` sets the outline style to none) and now has one.
+- **WebKit** (Playwright 1.64), desktop and as an iPhone 13: 6 pages plus the creator flow pass, with no console errors.
+  - It found a real bug on the phone: the sweep's `sr-only` table kept its full width (a table ignores the 1 px width), so the compare page was 471 px wide on a 390 px screen.
+  - The table now sits inside an `sr-only` wrapper, and CLAUDE.md records the rule.
+- **Firefox:** not run. Playwright's Firefox build won't start on this machine ("side-by-side configuration is incorrect", usually a missing Visual C++ runtime), and no system software was installed to work around it.
+- **Phone:** Dimitris checks one real phone.
+
+### Changes from the plan
+
+- **No new compare endpoint:** `POST /predict/compare` already existed from Day 8; only the page was new.
+- **The sweep takes runtime and budget as well as the month,** as the plan suggested for later; only the month has a chart.
+- **"Make it a franchise" opens a search** (Dimitris's choice) instead of adding a franchise by itself: a new name would be a first entry and change nothing.
+- **Firefox was not checked** (above).
+- **Added beyond the plan:**
+  - the browse-link notice and the reload scroll fix (both Day 12 inputs);
+  - presets disable themselves once added;
+  - the "drivers that moved" lines name before and after.
+
+### Task 7: checks
+
+| | |
+| --- | --- |
+| Python tests | 404 (`make test`, about 2 min), 320 quick; API 63 (sweep: 12 points equal to single predictions, every 422 key, one hit on the rate limit); fuzz adds 60 sweep bodies |
+| Frontend tests | 178 (26 new), on real compare and sweep answers saved in `src/test/compare.json` and `sweep.json` |
+| Frontend coverage | 96.7% of lines, 85.9% of branches |
+| Bundle (gzipped) | home 145 kB unchanged; the compare page adds about 40 kB, 8 kB of its own |
+| Docker | both images rebuilt; all 17 smoke checks pass (new: the 12-month sweep) |
+
+- **New frontend tests:**
+  - every preset changes one field or says why not;
+  - the `?v=` round trip and broken variants;
+  - both sides of each threshold, and the drivers that moved;
+  - adding a preset, adding by hand (5 fields), and the editor's refusals;
+  - a variant the API refuses, a failed compare and sweep, and a broken base link;
+  - the sweep's 12 months, with the best and "about as good";
+  - the waking-up notice (fake timers, and a real 3 s wait);
+  - the API down, a 429 on the form, links edited by hand on the form, results and browse pages;
+  - a crashing page keeping the navigation.
+- **By hand** (Vite against the real API, then the Docker app):
+  - the small drama with all presets, a franchise variant picked by search, and a manual variant;
+  - removing a variant;
+  - the sweep, at 1280 and 375 px, light and dark.
+- **Fixed after looking:**
+  - presets could be added twice;
+  - a hand-made variant showed its change twice (title and subtitle);
+  - the sweep listed 11 months when every month was about as good.
+- **A tool hiccup, not an app bug:** the first `uvicorn` started from the shell for testing was stopped by its port and reported exit 127; the restart served the new schema.
+
+### Task 8: wrap-up
+
+- **README:**
+  - the sweep row in the API table, the thresholds, the sweep's errors and timing;
+  - `src/compare/` in the folder table;
+  - a compare section with screenshots (`docs/images/compare-page.png`, `month-sweep.png`) and the edge-case table;
+  - the Lighthouse table, the keyboard and browser results, the bundle;
+  - test, fuzz and smoke counts;
+  - three new Limitations: the threshold is a rule of thumb, the sweep moves only the month, Firefox not checked. The "Try a variation" one is gone.
+- **CLAUDE.md:** the sweep endpoint and the card's `uncertainty`, the compare page's structure and rules, `SlowNotice`, the in-layout error route, the scroll key, and `sr-only` never on a table.
+- **Commit:** `b9acc7a` on `main` (59 files).
+
+### Surprises / inputs for Day 14+
+
+- **Day 14 (deployment):**
+  - a sweep is 12 predictions, about 1.6 s in Docker and longer on a free CPU, but only one request against the rate limit; watch it on Render;
+  - `SlowNotice` and `robots.txt` assume the single container serves `public/` (with the TMDB logo);
+  - the rate limit still needs `X-Forwarded-For` behind Render's proxy (Day 12 limitation).
+- **Day 15 (docs):**
+  - Firefox and a real phone are still to check;
+  - the Lighthouse scripts (`lh.mjs`, `browsers.mjs`, `keyboard.mjs`) are in the session scratchpad, not the repo; they'd need to be added if the checks should be repeatable;
+  - mobile browse performance (88–92) is limited by w342 posters where w185 would do; the API would have to offer the smaller size.
+- **The thresholds are fixed fractions:** for many films a month, a rating or a holiday release stays within the uncertainty, which is honest but can feel flat in a demo. The franchise and unknown-cast presets show clear differences.
+- **The quick loops:** `make test-fast` (320 tests, about 18 s) and `make web-test` (178 tests, about 20 s).
