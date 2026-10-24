@@ -1,4 +1,5 @@
-"""The demo account (Day 14): auth, lists, ratings, notes, caps, limits and the nightly reset, over HTTP.
+"""The demo account (Day 14): auth, lists, ratings, notes, caps, limits and the nightly reset, over HTTP,
+plus the logged-in side of "Surprise me" (Day 14.5).
 
 Needs Postgres at TEST_DATABASE_URL (default: the compose db on :5432, `make test-pg`); skipped without it.
 The module gets a throwaway database (created, migrated, dropped at the end) and every test starts from
@@ -22,6 +23,7 @@ from psycopg.rows import dict_row
 from backend.app.deps import COOKIE, connect_read_only
 from backend.app.main import create_app
 from backend.app.services.auth import hash_password
+from backend.app.services.ratelimit import RateLimiter
 from backend.app.settings import API_PREFIX, Settings
 from backend.app.userdb import repo
 from backend.app.userdb.migrate import migrate
@@ -364,6 +366,47 @@ def test_the_notes_tab_pages_every_note_with_its_film(acct):
     last = acct.get(f"{ME}/notes", params={"page": 2}).json()["items"]
     assert [n["body"] for n in last] == ["note 0", "Newest seed note", "Older seed note"]
     assert last[1]["movie"]["id"] == 1
+
+
+# ---------------------------------------------------------------- "Surprise me" (Day 14.5)
+
+
+def spins(c, **params):
+    """Every film GET /random gives with Spin again until nothing is left, and the final reason."""
+    c.app.state.limiters["random"] = RateLimiter(10_000)
+    shown = []
+    while True:
+        r = c.get(f"{API_PREFIX}/random", params={**params, "exclude": ",".join(map(str, shown))})
+        assert r.status_code == 200, r.text
+        if r.json()["movie"] is None:
+            return set(shown), r.json()["reason"]
+        shown.append(r.json()["movie"]["id"])
+
+
+def test_surprise_me_never_picks_a_watched_film(acct):
+    everything, _ = spins(acct, decade=2020)  # logged out: nothing is left out
+    demo(acct)
+    for movie_id in (12, 13, 27):  # 2020-22 films above the floor
+        assert put(acct, movie_id, status="watched").status_code == 200
+    unseen, reason = spins(acct, decade=2020)
+    assert unseen == everything - {12, 13, 27} and reason == "all_seen"
+    assert spins(acct, decade=2020, source="all")[0] == unseen
+
+
+def test_surprise_me_from_the_watchlist_has_no_floor_and_keeps_the_filters(acct):
+    assert acct.get(f"{API_PREFIX}/random", params={"source": "watchlist"}).status_code == 401
+    demo(acct)
+    assert put(acct, 5, status="plan_to_watch").status_code == 200  # film 5 scores 5.0: under the floor
+    assert spins(acct, source="watchlist") == ({3, 4, 5}, "all_seen")  # the seed's watchlist plus film 5
+    assert spins(acct, source="watchlist", genre="Drama") == ({4}, "all_seen")
+    assert spins(acct, source="watchlist", decade=2020) == (set(), "no_match")
+
+
+def test_an_empty_watchlist_says_so(acct):
+    demo(acct)
+    for movie_id in (3, 4):
+        assert put(acct, movie_id, status="watched").status_code == 200
+    assert spins(acct, source="watchlist") == (set(), "watchlist_empty")
 
 
 # ---------------------------------------------------------------- caps and limits

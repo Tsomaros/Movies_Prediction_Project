@@ -5,6 +5,7 @@
 //   me(), demoLogin(), login(body), logout()             -> the demo account's session (an httpOnly cookie, same origin)
 //   myMovies(query), statuses(ids), setEntry(id, body), removeEntry(id),
 //   filmNotes(id), addNote(id, body), allNotes(page), editNote(id, body), deleteNote(id)   -> lists and notes
+//   random(query)                                        -> "Surprise me": one random film, or why there is none
 //   ApiError                                             -> every failure, with a `kind` the UI can act on:
 //     validation   422, `fieldErrors` keyed by the API's dotted paths ("actors.2", "budget")
 //     rate_limited 429, `retryAfter` seconds from the Retry-After header
@@ -44,6 +45,10 @@ export type Counts = Schemas['Counts']
 export type MySort = NonNullable<NonNullable<operations['my_movies_api_v1_me_movies_get']['parameters']['query']>['sort']>
 export type Note = Schemas['Note']
 export type NotePage = Schemas['NotePage']
+export type RandomPick = Schemas['RandomPick']
+export type RandomMovie = Schemas['RandomMovie']
+type RandomQueryAll = NonNullable<operations['random_film_api_v1_random_get']['parameters']['query']>
+export type RandomQuery = { [K in keyof RandomQueryAll]?: NonNullable<RandomQueryAll[K]> }
 /** GET /movies's query (every filter optional), from the generated schema; null is left out. */
 type ListQuery = NonNullable<operations['list_movies_api_v1_movies_get']['parameters']['query']>
 export type MovieQuery = { [K in keyof ListQuery]?: NonNullable<ListQuery[K]> }
@@ -152,4 +157,6 @@ export const api = {
   allNotes: (page: number, signal?: AbortSignal) => request<NotePage>('/me/notes', { query: { page }, signal }),
   editNote: (id: number, body: string) => request<Note>(`/me/notes/${id}`, { method: 'PATCH', body: { body } }),
   deleteNote: (id: number) => request<void>(`/me/notes/${id}`, { method: 'DELETE' }),
+  random: ({ gems, ...query }: RandomQuery, signal?: AbortSignal) =>
+    request<RandomPick>('/random', { query: { ...query, gems: gems ? 'true' : undefined }, signal }),
 }

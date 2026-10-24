@@ -15,6 +15,7 @@ from backend.app.services.prediction import PredictionService, merge
 from backend.app.services.ratelimit import RateLimiter
 from backend.app.settings import API_PREFIX, Settings
 from tests import test_accounts as accounts  # the module, not its tests: they run there, against Postgres
+from tests import test_random as surprise  # the same: the "Surprise me" tests run in their own module
 from tests.test_eval import db  # noqa: F401 (fixture: a small movies.db with a features table, 2008-2022)
 from tests.test_models import (budget_model, budget_rows, revenue_model, revenue_rows,  # noqa: F401 (fixtures)
                                score_model, score_rows)
@@ -579,6 +580,7 @@ ENDPOINTS = {  # every endpoint and the test above that covers it; a new endpoin
     ("GET", "/meta/options"): test_meta_options_match_the_contract_with_themes_filled_in,
     ("GET", "/model-card"): test_the_model_card_has_the_test_results_and_the_database,
     ("GET", "/health"): test_health_reports_the_models_the_database_and_the_cache,
+    ("GET", "/random"): surprise.test_spin_again_never_repeats_and_covers_exactly_the_films_above_the_floor,
     # the demo account (Day 14), tested against Postgres in tests/test_accounts.py
     ("POST", "/auth/login"): accounts.test_password_login_works_and_any_wrong_detail_gets_the_same_answer,
     ("POST", "/auth/demo"): accounts.test_me_is_quiet_when_logged_out_and_names_the_user_after_a_demo_login,

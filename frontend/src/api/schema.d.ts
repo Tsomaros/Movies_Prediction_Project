@@ -364,6 +364,23 @@ export interface paths {
         patch: operations["edit_note_api_v1_me_notes__note_id__patch"];
         trace?: never;
     };
+    "/api/v1/random": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Surprise me: a random film you haven't seen, or one from your watchlist */
+        get: operations["random_film_api_v1_random_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -645,7 +662,7 @@ export interface components {
             watched_on?: string | null;
             /**
              * Rating
-             * @description Watched films only, 1-10
+             * @description Watched films only, 1-10; left out keeps the current rating, null clears it
              */
             rating?: number | null;
         };
@@ -1305,6 +1322,69 @@ export interface components {
              * @description Served from the prediction cache
              */
             cached: boolean;
+        };
+        /** RandomMovie */
+        RandomMovie: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Year */
+            year: number | null;
+            /** Release Date */
+            release_date: string | null;
+            /** Genres */
+            genres: string[];
+            /** Original Language */
+            original_language: string | null;
+            /**
+             * Score
+             * @description TMDB vote average (0-10); None when nobody voted
+             */
+            score: number | null;
+            /** Votes */
+            votes: number;
+            /**
+             * Score Ok
+             * @description At least 50 votes: the score is used by our models
+             */
+            score_ok: boolean;
+            /**
+             * Popularity
+             * @description TMDB popularity when pulled (display and sorting only)
+             */
+            popularity: number | null;
+            /**
+             * Revenue 2025
+             * @description Worldwide revenue in 2025 dollars; None when unknown or doubted
+             */
+            revenue_2025: number | null;
+            poster: components["schemas"]["Poster"] | null;
+            /**
+             * Runtime
+             * @description Minutes; None when unknown
+             */
+            runtime: number | null;
+        };
+        /** RandomPick */
+        RandomPick: {
+            /** @description None when there is nothing to pick (see reason) */
+            movie: components["schemas"]["RandomMovie"] | null;
+            /**
+             * Reason
+             * @description watchlist_empty: no films on the watchlist; no_match: the filters match no film; all_seen: every match is watched or already shown
+             */
+            reason: ("watchlist_empty" | "no_match" | "all_seen") | null;
+            /**
+             * Shuffle
+             * @description Up to 8 posters of other candidates, for the reveal
+             */
+            shuffle: components["schemas"]["Poster"][];
+            /**
+             * Pool
+             * @description How many films the pick was made from (0 with a reason)
+             */
+            pool: number;
         };
         /** Range */
         Range: {
@@ -2749,6 +2829,75 @@ export interface operations {
             };
             /** @description Too many changes in a minute; see Retry-After */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"];
+                };
+            };
+        };
+    };
+    random_film_api_v1_random_get: {
+        parameters: {
+            query?: {
+                source?: "all" | "watchlist";
+                genre?: ("Action" | "Adventure" | "Animation" | "Comedy" | "Crime" | "Documentary" | "Drama" | "Family" | "Fantasy" | "History" | "Horror" | "Music" | "Mystery" | "Romance" | "Science Fiction" | "TV Movie" | "Thriller" | "War" | "Western") | null;
+                /** @description 1960, 1970 ... 2020 */
+                decade?: number | null;
+                /** @description Original language code (en, fr...) */
+                language?: string | null;
+                /** @description Longest runtime in minutes */
+                max_runtime?: number | null;
+                /** @description Include hidden gems: no vote/score floor (whole-database mode) */
+                gems?: boolean;
+                /** @description Ids already shown, comma-separated (at most 200) */
+                exclude?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RandomPick"];
+                };
+            };
+            /** @description Watchlist mode needs a login */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"];
+                };
+            };
+            /** @description Some fields need fixing */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FieldErrors"];
+                };
+            };
+            /** @description Too many spins in a minute; see Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"];
+                };
+            };
+            /** @description Watchlist mode on a server without accounts */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

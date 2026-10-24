@@ -4,7 +4,10 @@
     search(con, q, genre, year_from, year_to, language, score_min, sort, page, page_size)
                                         -> (rows for that page, total matching)
     movie(con, movie_id)                -> one film's facts, people, money and score, or None
-    summaries(con, ids)                 -> {id: summary} for the films among ids that exist (one query)
+    summaries(con, ids)                 -> {id: summary, with runtime} for the films among ids that exist (one query)
+    random_candidates(con, genre, decade, language, max_runtime, floor, ids)
+                                        -> the ids of the films a "Surprise me" spin may pick (Day 14.5)
+    posters(con, ids)                   -> {id: poster_path} for the films among ids that have a poster
     film_keywords(con, movie_id)        -> the film's TMDB keyword ids (for its themes)
 
 User text never reaches FTS5 as syntax: words are pulled out with a Unicode regex and quoted, so input like
@@ -93,8 +96,50 @@ def _summary(r: sqlite3.Row) -> dict[str, Any]:
 def summaries(con: sqlite3.Connection, ids: list[int]) -> dict[int, dict[str, Any]]:
     if not ids:
         return {}
-    rows = con.execute(f"SELECT {SUMMARY} FROM movies m WHERE m.id IN ({','.join('?' * len(ids))})", list(ids))
+    rows = con.execute(f"SELECT {SUMMARY}, m.runtime FROM movies m WHERE m.id IN ({','.join('?' * len(ids))})",
+                       list(ids))
     return {r["id"]: _summary(r) for r in rows}
+
+
+def random_candidates(con: sqlite3.Connection, genre: str | None = None, decade: int | None = None,
+                      language: str | None = None, max_runtime: int | None = None,
+                      floor: tuple[int, float] | None = None, ids: list[int] | None = None) -> list[int]:
+    """floor = (fewest votes, lowest score), or None for no floor. ids limits the films to those (a watchlist);
+    without ids every film needs a poster, because the reveal is a poster shuffle. A film with no runtime is
+    left out under max_runtime."""
+    where, args = ["m.release_date IS NOT NULL"], []
+    if ids is not None:
+        if not ids:
+            return []
+        where.append(f"m.id IN ({','.join('?' * len(ids))})")
+        args.extend(ids)
+    else:
+        where.append("m.poster_path IS NOT NULL")
+    if floor is not None:
+        where.append("m.vote_count >= ? AND m.vote_average >= ?")
+        args.extend(floor)
+    if genre:
+        where.append("EXISTS (SELECT 1 FROM movie_genres mg JOIN genres g ON g.id = mg.genre_id "
+                     "WHERE mg.movie_id = m.id AND g.name = ?)")
+        args.append(genre)
+    if decade is not None:
+        where.append("m.year BETWEEN ? AND ?")
+        args.extend((decade, decade + 9))
+    if language:
+        where.append("m.original_language = ?")
+        args.append(language)
+    if max_runtime is not None:
+        where.append("m.runtime <= ?")
+        args.append(max_runtime)
+    return [r[0] for r in con.execute(f"SELECT m.id FROM movies m WHERE {' AND '.join(where)}", args)]
+
+
+def posters(con: sqlite3.Connection, ids: list[int]) -> dict[int, str]:
+    if not ids:
+        return {}
+    rows = con.execute(f"SELECT id, poster_path FROM movies WHERE poster_path IS NOT NULL "
+                       f"AND id IN ({','.join('?' * len(ids))})", list(ids))
+    return {r[0]: r[1] for r in rows}
 
 
 def movie(con: sqlite3.Connection, movie_id: int) -> dict[str, Any] | None:

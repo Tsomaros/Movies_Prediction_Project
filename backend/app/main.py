@@ -11,7 +11,8 @@ The lifespan hook runs once at startup and keeps on app.state:
 - predictions, rate_limiter: the prediction cache (CACHE_SIZE entries) and the per-IP limit (RATE_LIMIT a minute);
 - started:   the time it finished, plus load_seconds, for /health;
 - userdb, demo_seed, limiters: the user-database pool (None without USER_DATABASE_URL: /auth and /me then
-  answer 503), the demo account's starting set and the login/demo/write limits (Day 14).
+  answer 503), the demo account's starting set and the login/demo/write limits (Day 14) and the
+  "Surprise me" limit (Day 14.5).
 app.state.clock gives the current UTC time to the accounts side (tests freeze it).
 Then memory freed while loading is handed back to the system (release_free_memory, Linux only).
 The database itself is never held open: every request gets its own read-only connection (deps.get_db).
@@ -34,7 +35,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app import errors
 from backend.app.deps import connect_read_only
 from backend.app.routers import (auth, collections, companies, health, meta, model_card, movies, my_movies, notes,
-                                 people, predict, sweep)
+                                 people, predict, random, sweep)
 from backend.app.services.lookups import Lookups
 from backend.app.services.prediction import PredictionService
 from backend.app.services.ratelimit import RateLimiter
@@ -45,8 +46,9 @@ from ml.predict import Predictor
 
 log = logging.getLogger("uvicorn.error")
 
-ROUTERS = (predict, sweep, movies, people, companies, collections, meta, model_card, health, auth, my_movies, notes)
-LIMITS = {"login": 5, "demo": 10, "write": 30}  # a minute: login and demo per client IP, writes per user
+ROUTERS = (predict, sweep, movies, people, companies, collections, meta, model_card, health, auth, my_movies, notes,
+           random)
+LIMITS = {"login": 5, "demo": 10, "write": 30, "random": 60}  # a minute: writes per user, the others per client IP
 DESCRIPTION = (
     "Budget, revenue and audience-score ranges for a planned film, with the drivers behind them and "
     "comparable past films, plus search over the 79,199 films in our TMDB data. This product uses the "

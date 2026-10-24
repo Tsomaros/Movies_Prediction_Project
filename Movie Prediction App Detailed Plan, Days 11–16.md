@@ -1,6 +1,6 @@
 # Movie Prediction App: Detailed Plan, Days 11–16
 
-Oct 22, 2026 · @Dimitris (Day 14 inserted Oct 24, 2026)
+Oct 22, 2026 · @Dimitris (Day 14 and Day 14.5 inserted Oct 24, 2026)
 
 ## Overview
 
@@ -12,6 +12,7 @@ Week three (Days 11–16) takes the project from a working form to a deployed, d
 - **Day 12:** the public side: browse, detail pages, curated home rows and TMDB attribution.
 - **Day 13:** compare with up to 3 variants, a release-month sweep, every error state, and a quality pass.
 - **Day 14:** a one-click demo account with a watched list, a watchlist, ratings and private notes, stored in Neon Postgres.
+- **Day 14.5:** "Surprise me": a random unseen film or a pick from your watchlist, with a poster-shuffle reveal and filters.
 - **Day 15:** deployment on Render Free (no card), monitoring and an interview-day safety net.
 - **Day 16:** documentation, model card, demo script and interview preparation.
 
@@ -176,6 +177,41 @@ Day 14 ends with one demo user who logs in with one click, tracks watched films 
 
 **Done when** the demo button logs in, both lists, ratings and notes work on desktop and mobile in both themes, data survives a container restart, the reset brings back the starting set, and all tests pass.
 
+## Day 14.5: "Surprise me" random picker
+
+Day 14.5 ends with a "Surprise me" button in the header that picks a random film, either one you haven't seen from the whole database or one from your watchlist, with a short poster-shuffle reveal and optional filters. It was planned the same way as the other days: Claude proposed options, Dimitris chose.
+
+### Decisions
+
+| Topic | Decision | Why |
+| --- | --- | --- |
+| Sources | "Anything I haven't seen" (whole database minus watched) and "From my watchlist" | Covers both "find me something new" and "pick from my list" |
+| Quality | Whole-database mode: 200+ votes and score ≥ 6.0 (11,043 films with a poster; 100/6.0 gave 16,084, 500/6.5 gave 4,726). "Include hidden gems" removes the floor but still needs a poster (78,346 of 79,199 films). Watchlist mode has no floor | Pure random surfaces mostly obscure films; you chose your watchlist yourself; the reveal is a poster shuffle |
+| Placement | Button in the header opening a dialog (bottom sheet on phones) | Reachable from every page; one component, easy to move |
+| Filters | Optional and collapsed: genre, decade, language, max runtime; remembered in the browser | One click still works; "I have 100 minutes" is useful |
+| Reveal | Posters shuffle for about 1 s, then settle; instant with "reduce motion" | Fun without slowing repeat spins or hurting accessibility |
+| Re-rolls | "Spin again" never repeats a film in the open tab (shown ids sent as `exclude`, at most 200) | Five spins give five different films |
+| Logged out | Whole-database mode works (no watched exclusion, also with no accounts database); watchlist mode opens the login dialog, then spins | Same pattern as the rest of Day 14 |
+| Empty states | A 200 with `movie: null` and a reason: `watchlist_empty`, `no_match` (the filters match nothing), `all_seen` (everything matching is watched or shown) | The dialog shows a helpful message, not an error |
+| Rate limit | Its own limiter, 60 a minute per IP (browse has none) | Picks can't be cached like browse pages |
+| Data access | Watched/watchlist ids from Postgres, candidates from SQLite, the pick made in Python | User data and films live in different databases; about 11k ids is a few ms |
+
+### Tasks
+
+1. **Quality floor check (15 min).** Count candidates at a few vote/score thresholds; the floor lives in `services/random_pick.py`.
+2. **Endpoint (1 h).** `GET /api/v1/random?source=all|watchlist&genre=…&decade=…&language=…&max_runtime=…&gems=false&exclude=…`, service code in `services/random_pick.py`. Returns the browse card shape plus runtime and about 8 extra posters for the shuffle; `Cache-Control: private, no-store`.
+3. **Backend tests (45 min).** Never a watched film; watchlist mode only watchlist films; the floor only in whole-database mode and `gems=true` removes it; each filter; `exclude` prevents repeats; each empty state; logged-out watchlist → 401.
+4. **Dialog and header button (1 h).** Dice icon; dialog on desktop, bottom sheet on phones; source switch; collapsed filters remembered in the browser.
+5. **Reveal and result card (45 min).** Poster shuffle then settle; poster, title, year, score with votes, runtime, genres; Open details, Add to watchlist, Mark as watched (also takes it off the watchlist), Spin again.
+6. **Empty states (20 min).** "Add films first" with a browse link; "Loosen a filter" with clear filters; a friendly "all seen" with Start over.
+7. **Demo account seed (15 min).** Check the demo user has watched and watchlist films, so both modes demo well.
+8. **Frontend tests and checks (30 min).** Vitest: logged-out watchlist opens the login dialog; reduce motion skips the animation; empty states. One spin in the Playwright flow. Phone and theme check.
+9. **Wrap-up (15 min).** `PROGRESS.md`, README section and screenshot, commit.
+
+**Time:** about 5 hours.
+
+**Done when** a visitor can spin a random unseen film with or without filters, a logged-in user can spin from their watchlist, re-spins never repeat, every empty state shows a helpful message, and it works on desktop and phone in both themes.
+
 ## Day 15: Deployment
 
 Day 15 ends with the app live at a public link on a free host that needs no card, verified end to end, monitored, and backed up for interview day.
@@ -243,7 +279,7 @@ Day 16 ends with a repo that explains itself in 30 seconds or in depth, a rehear
 | 0:30–2:00 | Creator flow | Superhero sequel example → ranges, break-even band, drivers, comparables |
 | 2:00–3:00 | Honesty | Accuracy panel, rough-estimate badge, unknown-cast example |
 | 3:00–4:00 | What if | Compare presets, month sweep, "within the uncertainty" label |
-| 4:00–4:30 | Public side | Browse → detail → "Predict a film like this"; the demo button, a rating and a note |
+| 4:00–4:30 | Public side | Browse → detail → "Predict a film like this"; the demo button, a rating and a note; a 15-second "Surprise me" spin |
 | 4:30–5:00 | Under the hood | Time-split evaluation, time-travel test, architecture in one line |
 
 ### Tasks

@@ -13,6 +13,7 @@ The accounts side (Day 14):
     optional_user / current_user
                               -> the logged-in user ({id, username, is_demo}) from the mp_session cookie, or
                                  None / 401
+    maybe_user                -> the logged-in user, or None when logged out or when accounts are off (no 503)
     same_origin_write         -> 403 for a write whose Origin isn't the API's own or one of CORS_ORIGINS,
                                  415 for a body that isn't JSON (with SameSite=Lax, this stops cross-site writes)
     limit(name, message)      -> a dependency that counts one request per client IP on app.state.limiters[name]
@@ -88,6 +89,14 @@ def client_ip(request: Request) -> str:
 def optional_user(request: Request, conn: psycopg.Connection = Depends(get_userdb)) -> Optional[dict[str, Any]]:
     token = request.cookies.get(COOKIE)
     return userdb.session_user(conn, token_hash(token), now(request)) if token else None
+
+
+def maybe_user(request: Request) -> Optional[dict[str, Any]]:
+    token, pool = request.cookies.get(COOKIE), request.app.state.userdb
+    if token is None or pool is None:
+        return None
+    with pool.connection() as conn:
+        return userdb.session_user(conn, token_hash(token), now(request))
 
 
 def current_user(user: Optional[dict[str, Any]] = Depends(optional_user)) -> dict[str, Any]:

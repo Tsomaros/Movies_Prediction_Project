@@ -1,5 +1,5 @@
 // The demo account's whole path in a real browser (Day 14; Day 15 reruns it against the live site):
-// demo login -> mark a film watched with a rating -> add a note -> see both in My movies.
+// demo login -> mark a film watched with a rating -> add a note -> see both in My movies; then a "Surprise me" spin.
 // It cleans up after itself (the film leaves the lists, the note is deleted), so it can run again on the
 // shared account; the nightly reset restores the starting set anyway.
 import { expect, test } from '@playwright/test'
@@ -47,4 +47,21 @@ test('demo login, a rating and a note, then both in My movies', async ({ page })
   await page.reload()
   await expect(page.getByRole('radiogroup', { name: 'Your lists' }).getByRole('radio', { name: 'Not in a list' }))
     .toHaveAttribute('aria-checked', 'true')
+})
+
+test('Surprise me: a spin, a second spin with a different film, then its page', async ({ page }) => {
+  await page.goto('/movies')
+  await page.getByRole('button', { name: 'Surprise me' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Surprise me' })
+  await dialog.getByRole('radio', { name: "Anything I haven't seen" }).click()
+  await dialog.getByRole('button', { name: /^Spin/ }).click()
+  const title = dialog.getByRole('heading', { level: 3 })
+  await expect(title).toBeVisible({ timeout: 10_000 })
+  const first = await title.textContent()
+  await dialog.getByRole('button', { name: 'Spin again' }).click()
+  await expect(title).not.toHaveText(first!, { timeout: 10_000 })
+  const second = await title.textContent()
+  await dialog.getByRole('link', { name: 'Open details' }).click()
+  await expect(page).toHaveURL(/\/movies\/\d+$/)
+  await expect(page.getByRole('heading', { level: 1 })).toContainText(second!)
 })

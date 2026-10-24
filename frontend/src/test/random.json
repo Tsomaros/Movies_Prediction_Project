@@ -1,0 +1,60 @@
+{
+    "movie": {
+        "id": 78,
+        "title": "Blade Runner",
+        "year": 1982,
+        "release_date": "1982-06-25",
+        "genres": [
+            "Science Fiction",
+            "Drama",
+            "Thriller"
+        ],
+        "original_language": "en",
+        "score": 7.936,
+        "votes": 15535,
+        "score_ok": true,
+        "popularity": 35.9481,
+        "revenue_2025": 139285016.0,
+        "poster": {
+            "small": "https://image.tmdb.org/t/p/w342/63N9uy8nd9j7Eog2axPQ8lbr3Wj.jpg",
+            "large": "https://image.tmdb.org/t/p/w780/63N9uy8nd9j7Eog2axPQ8lbr3Wj.jpg"
+        },
+        "runtime": 118
+    },
+    "reason": null,
+    "shuffle": [
+        {
+            "small": "https://image.tmdb.org/t/p/w342/uPyLsKl8Z0LOoxeaFXsY5MxhR5s.jpg",
+            "large": "https://image.tmdb.org/t/p/w780/uPyLsKl8Z0LOoxeaFXsY5MxhR5s.jpg"
+        },
+        {
+            "small": "https://image.tmdb.org/t/p/w342/qqqkiZSU9EBGZ1KiDmfn07S7qvv.jpg",
+            "large": "https://image.tmdb.org/t/p/w780/qqqkiZSU9EBGZ1KiDmfn07S7qvv.jpg"
+        },
+        {
+            "small": "https://image.tmdb.org/t/p/w342/jQYlydvHm3kUix1f8prMucrplhm.jpg",
+            "large": "https://image.tmdb.org/t/p/w780/jQYlydvHm3kUix1f8prMucrplhm.jpg"
+        },
+        {
+            "small": "https://image.tmdb.org/t/p/w342/e3eimdUK6lLe0iaSlLrYVQF3yeL.jpg",
+            "large": "https://image.tmdb.org/t/p/w780/e3eimdUK6lLe0iaSlLrYVQF3yeL.jpg"
+        },
+        {
+            "small": "https://image.tmdb.org/t/p/w342/sfg5KUOdR4bfoPiDf63LVG7mlfw.jpg",
+            "large": "https://image.tmdb.org/t/p/w780/sfg5KUOdR4bfoPiDf63LVG7mlfw.jpg"
+        },
+        {
+            "small": "https://image.tmdb.org/t/p/w342/oFJosj5ECYjf1jkvpTEjGNzPx2x.jpg",
+            "large": "https://image.tmdb.org/t/p/w780/oFJosj5ECYjf1jkvpTEjGNzPx2x.jpg"
+        },
+        {
+            "small": "https://image.tmdb.org/t/p/w342/2wEyQkFXX6ReyW44YQa1kLQYkCg.jpg",
+            "large": "https://image.tmdb.org/t/p/w780/2wEyQkFXX6ReyW44YQa1kLQYkCg.jpg"
+        },
+        {
+            "small": "https://image.tmdb.org/t/p/w342/6uvRcSy1DCh0zONGMRO4bEj44hq.jpg",
+            "large": "https://image.tmdb.org/t/p/w780/6uvRcSy1DCh0zONGMRO4bEj44hq.jpg"
+        }
+    ],
+    "pool": 111
+}

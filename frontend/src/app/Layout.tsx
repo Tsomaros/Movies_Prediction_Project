@@ -4,6 +4,7 @@
 // A route with `handle: { bleed: true }` (/series) fills the width between header and footer; one with
 // `handle: { bare: true }` (the start page) has no header or footer at all and carries TmdbNotice itself.
 // Every page sits inside LoginProvider, so a logged-out click on a list button opens the login dialog in place.
+// "Surprise me" (src/surprise/) sits before the account menu, so it is reachable from every page with a header.
 import { ClapperboardIcon } from 'lucide-react'
 import { Link, NavLink, Outlet, ScrollRestoration, useMatches } from 'react-router'
 
@@ -11,6 +12,7 @@ import { ThemeToggle } from '@/app/theme'
 import { AccountMenu } from '@/auth/AccountMenu'
 import { LoginProvider } from '@/auth/LoginDialog'
 import { cn } from '@/lib/utils'
+import { SurpriseButton } from '@/surprise/SurpriseButton'
 
 const NAV = [
   { to: '/movies', label: 'Movies' },
@@ -44,6 +46,7 @@ export function Header() {
         </Link>
         <Nav className="hidden sm:flex" />
         <div className="ml-auto flex items-center gap-2">
+          <SurpriseButton />
           <AccountMenu />
           <ThemeToggle />
         </div>

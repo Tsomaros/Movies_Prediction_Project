@@ -1730,3 +1730,88 @@ Write-up: `reports/audit.md`.
   - mobile browse performance (88–92) is limited by w342 posters where w185 would do; the API would have to offer the smaller size.
 - **The thresholds are fixed fractions:** for many films a month, a rating or a holiday release stays within the uncertainty, which is honest but can feel flat in a demo. The franchise and unknown-cast presets show clear differences.
 - **The quick loops:** `make test-fast` (320 tests, about 18 s) and `make web-test` (178 tests, about 20 s).
+
+## Day 14.5: "Surprise me" random picker (done 2026-10-24)
+
+- [x] 0. Plan document: Day 14.5 inserted into `Days 11–16` from Dimitris's document, with the choices made before the build:
+  - quality floor of 200 votes and a 6.0 score (11,043 films with a poster);
+  - "Include hidden gems" drops the floor but keeps the poster rule;
+  - its own rate limit of 60 spins a minute per IP, because browse has none;
+  - this `PROGRESS.md` entry.
+- [x] 1. Quality floor check
+- [x] 2. Endpoint `GET /api/v1/random`
+- [x] 3. Backend tests (15 offline, 3 against Postgres)
+- [x] 4. Dialog and header button
+- [x] 5. Reveal and result card
+- [x] 6. Empty states
+- [x] 7. Demo seed: checked, no change needed
+- [x] 8. Frontend tests (12 new) and one Playwright spin
+- [x] 9. Wrap-up: README section and screenshot, CLAUDE.md, this entry, commit
+
+### Task 1: quality floor
+
+Films with a poster in `build/movies.db`, by votes and score:
+
+| Votes \ score | 5.5 | 6.0 | 6.5 | 7.0 |
+| --- | --- | --- | --- | --- |
+| 100+ | 19,445 | 16,084 | 11,061 | 5,972 |
+| 200+ | 13,080 | **11,043** | 7,766 | 4,338 |
+| 500+ | 7,409 | 6,512 | 4,726 | 2,740 |
+
+The floor lives in `services/random_pick.py` as `FLOOR = (200, 6.0)`. With hidden gems on, the pool is 78,346 films.
+
+### Task 2: endpoint
+
+- **The path:**
+  - `repo/movies.random_candidates` gets the candidate ids from SQLite: the filters, the floor, and a poster unless the films come from the watchlist;
+  - the watched or watchlist ids come from Postgres;
+  - `random_pick.pick` chooses in Python and names the reason when it can't: `no_match` or `all_seen`. The router adds `watchlist_empty`.
+- **The answer:** the browse card plus the runtime (`summaries` now selects it), up to 8 other candidates' posters for the shuffle, and the pool size. An empty state is a 200 with `movie: null`.
+- **Rules:**
+  - `exclude` is comma-separated, at most 200 ids;
+  - `decade` is 1960–2020 in steps of 10;
+  - `max_runtime` is 60–240;
+  - every answer is `private, no-store`.
+- **New dependency `maybe_user`:** None without a cookie or without an accounts database, so whole-database mode works with no Postgres at all. Watchlist mode answers 401 when logged out and 503 without accounts.
+- **Timing:** about 65 ms a spin locally (Docker through nginx: about 60 ms), almost all of it the SQLite candidate query over the 220 MB file.
+
+### Tasks 4–6: the frontend (`src/surprise/`)
+
+- **`SurpriseButton`** sits in the header, before the account menu: icon only on phones, "Surprise me" from `sm`.
+  - It holds `useSurprise()`: the choices, the ids picked in this tab and the last pick, so closing the dialog loses nothing.
+  - It loads `SurpriseDialog` on the first click. Kept in the main bundle, the dialog had cost 8.4 kB gzipped (the Radix menus); now it costs 1.1 kB, and the dialog is a 3 kB chunk.
+- **The dialog** is a `Dialog` from 640 px and a bottom `Sheet` below (`useMediaQuery`, now in `lib/useReducedMotion.ts`). It has the source switch and "Filters (n)", which opens genre, decade, language, runtime and hidden gems. The choices are kept in localStorage, each field checked on load.
+- **`Reveal`:** the shuffle posters are stacked and flick past for about 1 s, slowing down; with reduce motion the pick shows at once.
+- **`PickCard`:** its list button reuses `useStatuses`/`useListChange` (optimistic, behind a login).
+- **Empty states:** "Add films first" (link to Browse), "Loosen a filter" (Clear filters), "You've seen them all" (Start over).
+
+### Changes from the plan
+
+- **Lazy loading:** I first left it out for simplicity, then added it back after the smoke check showed the main bundle 8.4 kB larger.
+- **The watchlist choice is not disabled when logged out:** it shows a login hint, and Spin opens the login dialog and then spins. This is how the document's "Logged out" row works, and it is what the test checks.
+- **The 401 test runs against Postgres:** offline there is no accounts database, so watchlist mode is a 503 there. The 401 is tested in `test_accounts.py`.
+
+### Task 8: checks
+
+| | |
+| --- | --- |
+| Python tests | 465 (`make test`, about 3 min), 335 quick, 46 accounts (`pg`) |
+| Frontend tests | 231 (12 new), on a real `/random` answer saved in `src/test/random.json` |
+| Frontend coverage | 97.4% of lines, 86.7% of branches (was 97.2% / 86.7%); `src/surprise/` 100% of lines |
+| Playwright | 2 flows pass against Docker: the demo account, then a spin, a different second spin and its page |
+| Docker | both images rebuilt, all smoke checks pass |
+
+- **By hand** (Vite against the real API, then Docker):
+  - spins logged in and from the watchlist;
+  - Mark as watched saved, then toggled back;
+  - the 1960s on the watchlist gives "Loosen a filter", and Clear filters works;
+  - the bottom sheet at 375 px, and both themes.
+- **One flaky run:** a full coverage run once failed the existing `/movies` rows test, which passed alone and on the rerun.
+
+### Surprises / inputs for Day 15+
+
+- **Day 15 (deployment):**
+  - a spin is a scan of about 79k rows in SQLite (about 60 ms here). On Render's 0.1 CPU that could reach about half a second, during the reveal's second. If it feels slow, cache the candidate ids per filter set (the database is read-only).
+  - `/random` needs the real client IP for its per-IP limit, the same as login.
+- **Disk:** C: had 1.2 GB free during the Docker build; the next image build may need the Docker cache pruned again.
+- **The local demo watchlist** had 7 films, not 8: earlier manual tests changed it. The nightly reset restores it.
