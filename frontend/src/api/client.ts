@@ -2,10 +2,15 @@
 //
 //   getOptions(), searchNames(kind, q), predict(form), compare(body), sweep(body), getModelCard(),
 //   listMovies(query), getMovie(id)                     -> typed bodies from schema.d.ts (npm run gen:api)
+//   me(), demoLogin(), login(body), logout()             -> the demo account's session (an httpOnly cookie, same origin)
+//   myMovies(query), statuses(ids), setEntry(id, body), removeEntry(id),
+//   filmNotes(id), addNote(id, body), allNotes(page), editNote(id, body), deleteNote(id)   -> lists and notes
 //   ApiError                                             -> every failure, with a `kind` the UI can act on:
 //     validation   422, `fieldErrors` keyed by the API's dotted paths ("actors.2", "budget")
 //     rate_limited 429, `retryAfter` seconds from the Retry-After header
+//     unauthorized 401 (not logged in, or the session ended)
 //     not_found    404
+//     conflict     409 (a list or the notes are full; the message says so)
 //     network      the request never got an answer (offline, server down, CORS)
 //     server       any other status, or a body that isn't JSON
 import type { components, operations } from '@/api/schema'
@@ -28,6 +33,17 @@ export type ModelCard = Schemas['ModelCard']
 export type MovieSummary = Schemas['MovieSummary']
 export type MovieList = Schemas['MovieList']
 export type MovieDetail = Schemas['MovieDetail']
+export type User = Schemas['User']
+export type Me = Schemas['Me']
+export type Status = Schemas['EntryRequest']['status']
+export type EntryRequest = Schemas['EntryRequest']
+export type Entry = Schemas['Entry']
+export type MyMovieList = Schemas['MyMovieList']
+export type MyMovie = Schemas['MyMovie']
+export type Counts = Schemas['Counts']
+export type MySort = NonNullable<NonNullable<operations['my_movies_api_v1_me_movies_get']['parameters']['query']>['sort']>
+export type Note = Schemas['Note']
+export type NotePage = Schemas['NotePage']
 /** GET /movies's query (every filter optional), from the generated schema; null is left out. */
 type ListQuery = NonNullable<operations['list_movies_api_v1_movies_get']['parameters']['query']>
 export type MovieQuery = { [K in keyof ListQuery]?: NonNullable<ListQuery[K]> }
@@ -36,7 +52,7 @@ export type Genre = NonNullable<MovieQuery['genre']>
 
 export const API_BASE = '/api/v1'
 
-export type ApiErrorKind = 'validation' | 'rate_limited' | 'not_found' | 'network' | 'server'
+export type ApiErrorKind = 'validation' | 'rate_limited' | 'unauthorized' | 'not_found' | 'conflict' | 'network' | 'server'
 
 export class ApiError extends Error {
   readonly kind: ApiErrorKind
@@ -59,7 +75,7 @@ export class ApiError extends Error {
 type Query = Record<string, string | number | undefined>
 
 async function request<T>(path: string, { method = 'GET', query, body, signal }:
-  { method?: 'GET' | 'POST'; query?: Query; body?: unknown; signal?: AbortSignal } = {}): Promise<T> {
+  { method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; query?: Query; body?: unknown; signal?: AbortSignal } = {}): Promise<T> {
   const params = new URLSearchParams()
   for (const [k, v] of Object.entries(query ?? {})) if (v !== undefined) params.set(k, String(v))
   const url = `${API_BASE}${path}${params.size ? `?${params}` : ''}`
@@ -76,6 +92,7 @@ async function request<T>(path: string, { method = 'GET', query, body, signal }:
     throw new ApiError('network', "Can't reach the server. Check your connection and try again.")
   }
 
+  if (response.status === 204) return undefined as T // logout, removing a film or a note: no body
   const data: unknown = await response.json().catch(() => undefined)
   if (response.ok && data !== undefined) return data as T
   const detail = (data as { detail?: unknown } | undefined)?.detail
@@ -89,7 +106,9 @@ async function request<T>(path: string, { method = 'GET', query, body, signal }:
     const seconds = Number(response.headers.get('Retry-After'))
     throw new ApiError('rate_limited', message, { status, retryAfter: Number.isFinite(seconds) && seconds > 0 ? seconds : null })
   }
+  if (status === 401) throw new ApiError('unauthorized', message, { status })
   if (status === 404) throw new ApiError('not_found', message, { status })
+  if (status === 409) throw new ApiError('conflict', message, { status })
   throw new ApiError('server', 'Something went wrong on our side. Please try again.', { status })
 }
 
@@ -117,4 +136,20 @@ export const api = {
   getModelCard: (signal?: AbortSignal) => request<ModelCard>('/model-card', { signal }),
   listMovies: (query: MovieQuery, signal?: AbortSignal) => request<MovieList>('/movies', { query, signal }),
   getMovie: (id: number, signal?: AbortSignal) => request<MovieDetail>(`/movies/${id}`, { signal }),
+
+  me: (signal?: AbortSignal) => request<Me>('/auth/me', { signal }),
+  demoLogin: () => request<Me>('/auth/demo', { method: 'POST' }),
+  login: (body: { username: string; password: string }) => request<Me>('/auth/login', { method: 'POST', body }),
+  logout: () => request<void>('/auth/logout', { method: 'POST' }),
+  myMovies: (query: { status: Status; sort: MySort; page: number }, signal?: AbortSignal) =>
+    request<MyMovieList>('/me/movies', { query, signal }),
+  statuses: (ids: number[], signal?: AbortSignal) =>
+    request<Schemas['StatusList']>('/me/movies/status', { query: { ids: ids.join(',') }, signal }),
+  setEntry: (id: number, body: EntryRequest) => request<Entry>(`/me/movies/${id}`, { method: 'PUT', body }),
+  removeEntry: (id: number) => request<void>(`/me/movies/${id}`, { method: 'DELETE' }),
+  filmNotes: (id: number, signal?: AbortSignal) => request<Schemas['NoteList']>(`/me/movies/${id}/notes`, { signal }),
+  addNote: (id: number, body: string) => request<Note>(`/me/movies/${id}/notes`, { method: 'POST', body: { body } }),
+  allNotes: (page: number, signal?: AbortSignal) => request<NotePage>('/me/notes', { query: { page }, signal }),
+  editNote: (id: number, body: string) => request<Note>(`/me/notes/${id}`, { method: 'PATCH', body: { body } }),
+  deleteNote: (id: number) => request<void>(`/me/notes/${id}`, { method: 'DELETE' }),
 }

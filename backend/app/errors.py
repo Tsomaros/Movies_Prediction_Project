@@ -5,7 +5,9 @@
 Every 422 body is {"detail": "Some fields need fixing", "errors": {field: message}}, with the field as a
 dotted path: "runtime" for /predict, "base.runtime" or "variants.1.budget" for /predict/compare,
 "form.runtime" or "values.3" for /predict/sweep, and
-"q" or "page" for query parameters. A shape error also lists every rule problem the contract finds in the
+"q" or "page" for query parameters. The contract's rules apply to the /predict endpoints only; the
+accounts endpoints get Pydantic's messages ("body", "rating", "watched_on").
+A user database that can't be reached (Neon waking up too slowly, or down) answers 503, not 500. A shape error also lists every rule problem the contract finds in the
 same body, with the contract's message where it has one, so a wrong type reads the same as a wrong value
 ("must be a number", "unknown field", "required") and one response names everything to fix.
 """
@@ -17,9 +19,12 @@ from typing import Any
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from psycopg import OperationalError
+from psycopg_pool import PoolTimeout
 
 from backend.app.schemas.form import MAX_SWEEP, MAX_VARIANTS, MIN_SWEEP
 from backend.app.services.prediction import merge
+from backend.app.settings import API_PREFIX
 from ml.features.contract import FIELDS_BY_NAME, validate
 from ml.predict import InvalidForm
 
@@ -86,7 +91,8 @@ def _pydantic_message(error: dict[str, Any]) -> str:
 def install(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     async def shape_error(request: Request, exc: RequestValidationError) -> JSONResponse:
-        errors = _contract_errors(exc.body)  # every rule problem, not only the fields with a wrong shape
+        # every rule problem, not only the fields with a wrong shape
+        errors = _contract_errors(exc.body) if request.url.path.startswith(f"{API_PREFIX}/predict") else {}
         for error in exc.errors():
             errors.setdefault(_path(tuple(error["loc"])), _pydantic_message(error))
         return unprocessable(errors)
@@ -94,3 +100,9 @@ def install(app: FastAPI) -> None:
     @app.exception_handler(InvalidForm)
     async def rule_error(request: Request, exc: InvalidForm) -> JSONResponse:
         return unprocessable(exc.errors)
+
+    @app.exception_handler(OperationalError)
+    @app.exception_handler(PoolTimeout)
+    async def userdb_down(request: Request, exc: Exception) -> JSONResponse:
+        return JSONResponse(status_code=503, content={"detail": "The accounts database isn't answering. Please try again "
+                                                                "in a few seconds."}, headers={"Retry-After": "5"})

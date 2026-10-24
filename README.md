@@ -439,6 +439,9 @@ A FastAPI backend in `backend/app/`. Every endpoint lives under `/api/v1`, and t
 | GET | `/api/v1/meta/options` | Every form field and limit from the contract, the 27 themes, common languages and countries, suggested years |
 | GET | `/api/v1/model-card` | The served models' accuracy: the 2019+ test and the 2026 holdout next to the best baseline, training films, the database's size and years, and the "within the uncertainty" thresholds |
 | GET | `/api/v1/health` | Status, model version, database build, uptime and the prediction cache |
+| POST | `/api/v1/auth/demo`, `/api/v1/auth/login`, `/api/v1/auth/logout`; GET `/api/v1/auth/me` | The demo account's session ([Accounts](#accounts-day-14)) |
+| GET, PUT, DELETE | `/api/v1/me/movies`, `/api/v1/me/movies/{id}`, `/api/v1/me/movies/status?ids=` | Your watched list (date, 1–10 rating) and watchlist |
+| GET, POST, PATCH, DELETE | `/api/v1/me/movies/{id}/notes`, `/api/v1/me/notes`, `/api/v1/me/notes/{id}` | Your private notes |
 
 **Predictions.**
 - **The form:** `/predict` takes the creator form from `ml/features/contract.py`. People, companies and the franchise can be an id from autocomplete, a typed name or `{id, name}`. Leave `budget` out and it is estimated.
@@ -466,7 +469,7 @@ curl -s localhost:8000/api/v1/predict -H 'Content-Type: application/json' -d '{
 - **Rate limit:** 30 prediction requests a minute per IP, shared by `/predict`, `/compare` and `/sweep` (our own sliding window, in memory). The 31st gets a 429, "Please try again in a minute", with `Retry-After`.
 - **Prediction cache:** the 1,000 most recently used predictions are kept (LRU), keyed by the validated form, so the same film written two ways is one entry.
 - **HTTP caching:** movie, autocomplete, options and model-card responses are cacheable for an hour (`Cache-Control: public, max-age=3600`); health is `no-store`.
-- **Settings:** `MOVIES_DB`, `MODELS_DIR`, `CORS_ORIGINS` (default the Vite dev server), `RATE_LIMIT` and `CACHE_SIZE` come from environment variables.
+- **Settings:** `MOVIES_DB`, `MODELS_DIR`, `CORS_ORIGINS` (default the Vite dev server), `RATE_LIMIT`, `CACHE_SIZE` and `USER_DATABASE_URL` come from environment variables, or from `.env`.
 
 **Search and lookups.**
 - **Search:** every word of `q` is a quoted prefix in SQLite FTS5, over titles, original titles and overviews, with accents ignored. Typed text can never be FTS syntax.
@@ -497,6 +500,30 @@ Memory was 1,236 MB at first. The track record (`ml/features/history.py`) kept 3
 - the golden forms over HTTP equal `predict()` and the snapshot, in under 400 ms;
 - real autocomplete, movie pages, options and health.
 
+## Accounts (Day 14)
+
+One shared demo account, with one-click login, a watched list with dates and 1–10 ratings, a plan-to-watch list and private notes on any film. Movies stay in the read-only SQLite file; user data lives in Postgres, because Render Free wipes the container's disk on every sleep and redeploy. Locally that is the `db` service of `docker compose` (Postgres 18); live it is Neon's free Postgres in Frankfurt.
+
+```bash
+docker compose up -d --wait db   # Postgres on :5432
+make userdb                      # migrations, then the demo account and its starting set (USER_DATABASE_URL, DEMO_PASSWORD in .env)
+make test-pg                     # the 43 accounts tests against a throwaway database there
+```
+
+**How it works.**
+- **Login:** "Try the demo account" logs in with one click and never hashes a password. "Log in with password" checks an argon2id hash at OWASP's minimum (19 MiB, 2 passes), because argon2's default 64 MiB is too much for a 512 MB server. A wrong username or password always gets the same answer.
+- **Sessions:** a random 32-byte token in an httpOnly, SameSite=Lax cookie (`mp_session`, Secure on https, a fixed 7 days). Only its SHA-256 is stored, so logout really ends a session.
+- **Cross-site writes:** SameSite=Lax, plus every write must carry an `Origin` that is the site's own (or one of `CORS_ORIGINS`) and send JSON; otherwise 403 or 415.
+- **The rules live in the database:** one list per film, and a date or rating only on a watched film (`CHECK`s), notes of 1–2,000 characters. Every user table has `user_id`, so real users would need no schema change.
+- **Lists:** marking a film watched dates it today (Athens) unless a date is given; a date or rating left out keeps its value. Moving a film to the watchlist clears both, and the app offers Undo.
+- **Joining two databases:** `GET /me/movies` reads the user's entries (at most 500) from Postgres, fetches those films from SQLite in one query, then sorts (date added, title, your rating, watched date) and pages in Python. It returns the same film cards as `/movies`.
+- **Limits for a shared account:** 30 writes a minute per user, 500 list entries and 200 notes (409 beyond), password login 5 and demo login 10 a minute per IP. Every `/me` answer is `Cache-Control: private, no-store`; someone else's note is a 404.
+- **Nightly reset:** the first demo login after midnight Athens time restores `backend/app/userdb/demo_seed.json` (12 watched films, 8 on the watchlist, 4 notes) in one transaction under `pg_advisory_xact_lock`, so two visitors arriving at once reset once. Render Free has no cron.
+- **The real client IP:** uvicorn reads `X-Forwarded-For` from the proxies in `FORWARDED_ALLOW_IPS` (nginx in compose), so the per-IP limits count each visitor and https sets the Secure cookie.
+- **Without `USER_DATABASE_URL`** `/auth` and `/me` answer 503 and everything else works as before; an unreachable database is a 503 too, never a 500.
+
+**In the app.** The header shows "Log in", or an initials avatar, a "Demo" chip and a menu with My movies and Log out. A logged-out click on a list button opens a small login dialog in place, and the click completes after the login. A film's page has Watched / Plan to watch / Not in a list, the watched date, 10 keyboard-friendly stars ("8 out of 10", shown as 8/10 next to the TMDB score) and your notes (2,000-character counter, Ctrl+Enter, edit in place, delete with Undo). Browse shows a labelled badge on your films from one status request per page, and quick buttons on hover with a mouse. `/my-movies` has Watched, Plan to watch and Notes tabs with counts, its tab, sort and page in the URL. Buttons change at once and roll back with a toast if the server says no; list writes run one at a time in click order.
+
 ## Frontend
 
 A React app in `frontend/` (Vite 8, React 19, TypeScript 6, Tailwind 4 with shadcn/ui, React Router 8, TanStack Query 5, React Hook Form + Zod 4). It needs Node 24.
@@ -517,6 +544,7 @@ cd frontend && npm run coverage
 | `src/api/` | the typed client (`client.ts`), the hooks (`hooks.ts`), shared error handling (`errors.ts`), and `schema.d.ts` generated from the API |
 | `src/form/` | the creator form: values and Zod rules (`model.ts`), the examples, the URL and draft (`persist.ts`), and its inputs (`inputs/`) |
 | `src/pages/` | the start page `/`, `/series` (coming soon), `/movies` (curated rows), `/browse` (search), `/predict`, the results page `/predict/result`, the compare page `/predict/compare`, `/movies`, `/movies/:id` and `/about` |
+| `src/auth/`, `src/me/` | the session (`session.ts`), the login choices and dialog, the account menu; the lists and notes hooks (optimistic, `hooks.ts`), the list control, stars, notes, card badges and the `/my-movies` URL state |
 | `src/movies/` | the public side's parts: the browse state in the URL (`browse.ts`), filters, poster, cards, pager, the curated rows of `/movies` (`rows.ts`, one config entry per row) and "Predict a film like this" (`predictLike.ts`) |
 | `src/result/` | the results page's parts: summary cards, the range chart, drivers, comparable films, notes and accuracy, and number formatting (`format.ts`) |
 | `src/compare/` | the compare page's parts: the variants in the URL, the presets and "within the uncertainty" (`variants.ts`), the picker, the side-by-side view, and the month sweep (`sweep.ts`, `MonthSweep.tsx`) |
@@ -633,7 +661,7 @@ A full reload also returns to the top of the page now: scroll positions are kept
 
 ## Running with Docker
 
-Two containers (`docker-compose.yml`): the backend, with the database, the app's models and the 8-bit text model baked in (`backend/Dockerfile`), and the frontend (`frontend/Dockerfile`), which serves the app on http://localhost:8080 and proxies `/api` to the backend. It needs Docker and the local data and models (`data/movies.db`, `ml/artifacts/final/`, `make model`).
+Three containers (`docker-compose.yml`): Postgres for the demo account (Day 14, data kept in the `userdb` volume), the backend, with the database, the app's models and the 8-bit text model baked in (`backend/Dockerfile`), and the frontend (`frontend/Dockerfile`), which serves the app on http://localhost:8080 and proxies `/api` to the backend. It needs Docker and the local data and models (`data/movies.db`, `ml/artifacts/final/`, `make model`).
 
 ```bash
 make docker-build   # build/movies.db (slim copy) + build/context.joblib (prebuilt track records), then both images
@@ -693,14 +721,16 @@ Every prediction is unchanged: the full features table rebuilt both ways matches
 ## Testing
 
 ```bash
-make test        # everything: 404 tests, about 2 min with the database and models
-make test-fast   # skips the slow and real-data tests: 320 tests, about 15 s
+make test        # everything: 447 tests, about 2 min with the database, the models and the compose Postgres
+make test-fast   # skips the slow, real-data and Postgres tests: 320 tests, about 15 s
+make test-pg     # starts the compose Postgres, then the 43 accounts tests
 make coverage    # everything, with line and branch coverage of ml/ and backend/
 ```
 
-Two markers (`pyproject.toml`) sort the tests:
+Three markers (`pyproject.toml`) sort the tests:
 - `slow`: the end-to-end, fuzz and real-database time-travel tests;
-- `real_data`: the tests that need `data/movies.db` and the app's models. They are also skipped automatically when those files are missing.
+- `real_data`: the tests that need `data/movies.db` and the app's models. They are also skipped automatically when those files are missing;
+- `pg`: the accounts tests, against a throwaway database on the Postgres at `TEST_DATABASE_URL` (default the compose `db` on :5432). They are skipped when it can't be reached.
 
 | What | Where | What it proves |
 | --- | --- | --- |
@@ -710,8 +740,10 @@ Two markers (`pyproject.toml`) sort the tests:
 | Logic | `tests/test_sanity.py` | bounds, a monotone budget, invariance, the revenue modes, form edges and matched-pair directions on the real models |
 | Golden examples | `tests/test_golden.py`, `tests/test_api_golden.py` | the three golden forms through `predict()` and over HTTP equal the snapshot, in under 400 ms |
 | The API | `tests/test_api.py` | every endpoint, the cache, the rate limit, errors, read-only connections, parallel requests, and that the app refuses to start on a model file that doesn't match its manifest; the OpenAPI schema's error shapes and field specs |
+| Accounts | `tests/test_accounts.py` (`pg`) | 401 on every `/me` route when logged out, a wrong password, the 6th login and 11th demo login in a minute, the cookie's flags (Secure on https only), only the token's hash stored, an old cookie after logout, an expired session, writes from another site or without JSON; lists created, switched and removed, a field left out keeping its value, the database refusing a rating on a watchlist film, unknown films, the 48-film status limit, tabs, sorts and pages; notes newest first, edit and delete, someone else's note as a 404, the 2,000-character limit, the Notes tab's pages; the 501st entry, 201st note and 31st write; the reset at 23:59:59 and 00:00:01 Athens time restoring the seed exactly, and four simultaneous demo logins resetting once |
+| The demo flow | `frontend/e2e/demo.spec.ts` (Playwright, Edge; `npm run e2e`, default against :8080) | in a real browser: a logged-out click, the demo login in the dialog, 8/10 by keyboard, a note with Ctrl+Enter, both in My movies after a reload, then it cleans up |
 | The model card | `tests/test_model_card.py` | the committed `model_card.json` equals one built from the reports now, belongs to the served models, and copies the reports' numbers exactly, the uncertainty thresholds included |
-| The frontend | `frontend/src/**/*.test.ts(x)` (Vitest, Testing Library) | the rules against the API's real limits, invalid input blocked, the autocomplete (Enter waits for the suggestions), the examples sending exactly the golden forms, the URL and draft round trips, every API error kind, routes and the theme; the results page on the three golden answers saved from the real API (cards, badges, break-even, notes, comparables, drivers, the accuracy numbers equal to the model card), form → results with one request, the actions, and each failure state; compare and the sweep on real answers saved from the API (every preset changes one field or says why not, the `?v=` round trip and broken variants, "within the uncertainty" on both sides of each threshold, the drivers that moved, a variant the API refuses, 12 months with the best and "about as good"); the edge cases (the waking-up notice after 3 s, the API down, 429, links edited by hand on four pages, a crashing page keeping the navigation); the browse state in the URL, search writing `?q=` once after typing, filters, chips, the no-results buttons, the remembered view, the film page (money toggle, few votes, no poster, 404), "Predict a film like this", the curated rows from their config, and TMDB's logo and notice on every route; the start page's panels and their reduced-motion switch, `/series`, the header's links, `/movies` against `/browse` and old `/movies?…` links reaching `/browse`; 190 tests, 97% of lines and 86% of branches (`npm run coverage`) |
+| The frontend | `frontend/src/**/*.test.ts(x)` (Vitest, Testing Library) | the rules against the API's real limits, invalid input blocked, the autocomplete (Enter waits for the suggestions), the examples sending exactly the golden forms, the URL and draft round trips, every API error kind, routes and the theme; the results page on the three golden answers saved from the real API (cards, badges, break-even, notes, comparables, drivers, the accuracy numbers equal to the model card), form → results with one request, the actions, and each failure state; compare and the sweep on real answers saved from the API (every preset changes one field or says why not, the `?v=` round trip and broken variants, "within the uncertainty" on both sides of each threshold, the drivers that moved, a variant the API refuses, 12 months with the best and "about as good"); the edge cases (the waking-up notice after 3 s, the API down, 429, links edited by hand on four pages, a crashing page keeping the navigation); the browse state in the URL, search writing `?q=` once after typing, filters, chips, the no-results buttons, the remembered view, the film page (money toggle, few votes, no poster, 404), "Predict a film like this", the curated rows from their config, and TMDB's logo and notice on every route; the start page's panels and their reduced-motion switch, `/series`, the header's links, `/movies` against `/browse` and old `/movies?…` links reaching `/browse`; the accounts (a logged-out click completing after the login in the dialog, the password form: success back to `?next=`, a wrong password, empty and blank fields, a failing demo login; `?next=` only to a path on this site, an optimistic change rolling back with a toast, "Rating removed · Undo", the watched date, the stars by keyboard saving once, notes added with Ctrl+Enter, edited in place, deleted with Undo or rolled back, `/my-movies`' URL state, tabs, empty tab and retry, the browse badges from one request and the quick buttons, logout leaving nothing private); 219 tests, 97.2% of lines and 86.7% of branches (`npm run coverage`) |
 
 **Fuzzing found one real bug.** A whole-number field (year, month or runtime) sent as NaN or Infinity crashed the contract check with an `OverflowError`, and the API answered 500. JSON parsers, the server's included, accept those values. They now get the usual 422 "must be a number" (`ml/features/contract.py`, with 12 new tests).
 
@@ -779,7 +811,9 @@ The money models hold up on new films; the score ranges under-cover, because you
 - **"Predict a film like this" carries only part of a film.** It leaves out the studio, country, franchise, budget and synopsis, and takes the first credited director when there are two (the form has one).
 - **Cast and crew have no photos.** The pull didn't fetch people's images, so the film page shows initials avatars.
 - **The default browse order is TMDB's popularity on the day of the pull.** It is a trending number, so the first page starts with *Clue* (1985) rather than the best-known films.
-- **The rate limit sees the proxy, not the visitor, behind a proxy.** It counts per client IP from the connection. Behind the frontend's nginx in `docker compose`, every visitor shares one count of 30 a minute; on Render (Day 14) it must read `X-Forwarded-For` instead.
+- **The client IP is only as good as `FORWARDED_ALLOW_IPS`.** uvicorn takes the visitor's address from `X-Forwarded-For` when the request comes from a listed proxy. Compose trusts any address (`*`), so a request straight to :8000 could claim any IP; on Render it must list only Render's proxy (Day 15).
+- **Everyone shares the demo account.** Its lists and "private" notes are private to the account, not to a visitor: anyone logged in to it sees and can change them until the nightly reset.
+- **Undo on a deleted note adds it back as a new note,** at the top of the list with today's date.
 - **The examples are dated October 2026 and May 2027,** like the golden forms they send. Once a date has passed, the year list (this year to four years ahead) no longer offers it, though the form still sends it.
 - **The Docker image is 984 MB unpacked, above the ~700 MB aim** (370 MB compressed). The Python packages take 441 MB, scipy alone 143 MB: LightGBM imports `scipy.sparse` when it loads, so scipy can't be left out. The 100 MB of precompiled bytecode stays, so startup doesn't recompile everything.
 - **Startup peaks at 489 MB.** That is under Render Free's 512 MB, but not by much: a bigger database or model would need another look.
@@ -795,4 +829,5 @@ The money models hold up on new films; the score ranges under-cover, because you
 
 ## Next steps
 
+- A movie chat assistant.
 - IMDb score (via OMDb) as an alternative score target.

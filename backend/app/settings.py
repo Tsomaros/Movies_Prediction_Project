@@ -1,4 +1,4 @@
-"""API settings, read once from environment variables.
+"""API settings, read once from environment variables (and from .env, when there is one).
 
     Settings.from_env()  -> the settings below, each with a default that works from the repository root
 
@@ -9,6 +9,10 @@
 | RATE_LIMIT    | 30                          | prediction requests per minute per client IP         |
 | CACHE_SIZE    | 1000                        | predictions kept in the LRU cache                    |
 | CONTEXT_FILE  | (none: build at startup)    | prebuilt track records (ml.features.build prebuilt)  |
+| USER_DATABASE_URL | (none: accounts off)    | Postgres for the demo account (Day 14); without it /auth and /me answer 503 |
+
+The browser origins are also the only ones allowed to write to /auth and /me (deps.same_origin_write),
+besides the API's own origin.
 """
 
 from __future__ import annotations
@@ -16,6 +20,8 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 from ml.data.build_db import DB_FILE
 from ml.predict import FINAL_DIR
@@ -35,9 +41,11 @@ class Settings:
     rate_limit: int = 30
     cache_size: int = 1000
     context_file: Path | None = None
+    user_database_url: str | None = None
 
     @classmethod
     def from_env(cls) -> Settings:
+        load_dotenv()
         env = os.environ
         return cls(
             db_path=Path(env.get("MOVIES_DB", str(DB_FILE))),
@@ -46,4 +54,5 @@ class Settings:
             rate_limit=int(env.get("RATE_LIMIT", "30")),
             cache_size=int(env.get("CACHE_SIZE", "1000")),
             context_file=Path(env["CONTEXT_FILE"]) if env.get("CONTEXT_FILE") else None,
+            user_database_url=env.get("USER_DATABASE_URL") or None,
         )

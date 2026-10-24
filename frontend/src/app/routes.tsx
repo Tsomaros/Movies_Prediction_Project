@@ -28,6 +28,8 @@ export const routes: RouteObject[] = [
         { path: '/movies/:id', lazy: () => import('@/pages/MovieDetail').then(m => ({ Component: m.default })) },
         { path: '/series', handle: bleed, lazy: () => import('@/pages/Series').then(m => ({ Component: m.default })) },
         { path: '/about', lazy: () => import('@/pages/About').then(m => ({ Component: m.default })) },
+        { path: '/login', lazy: () => import('@/pages/Login').then(m => ({ Component: m.default })) },
+        { path: '/my-movies', lazy: () => import('@/pages/MyMovies').then(m => ({ Component: m.default })) },
         { path: '*', element: <NotFound /> },
       ],
     }],

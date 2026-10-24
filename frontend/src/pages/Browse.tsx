@@ -2,12 +2,14 @@
 // (applied 300 ms after the last keystroke), the filters, the sort and the page, so a link or the back button
 // always shows the same films. Filters sit in a sidebar from `lg`, in a drawer on smaller screens; the grid
 // size or list view is remembered in this browser. The curated rows have their own page, /movies.
-import { LayoutGridIcon, ListIcon, SearchIcon, SlidersHorizontalIcon, XIcon } from 'lucide-react'
+// Logged in, each poster shows its list badge (one /me/movies/status request per page) and quick list buttons.
+import { SearchIcon, SlidersHorizontalIcon, XIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
 import { useMetaOptions, useMovies } from '@/api/hooks'
 import { SlowNotice } from '@/app/SlowNotice'
+import { useMe } from '@/auth/session'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -15,41 +17,18 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { codeName } from '@/form/format'
 import { useDebounced } from '@/lib/useDebounced'
 import { cn } from '@/lib/utils'
+import { useStatuses } from '@/me/hooks'
 import {
-  activeFilters, browseResets, EMPTY, loadView, readBrowse, saveView, SORTS, toQuery, type BrowseState, type View, VIEWS, writeBrowse,
+  activeFilters, browseResets, EMPTY, loadView, readBrowse, saveView, SORTS, toQuery, type BrowseState, type View, GRID, writeBrowse,
 } from '@/movies/browse'
 import { Filters, FilterSelect } from '@/movies/Filters'
 import { MovieCard, MovieListItem } from '@/movies/MovieCard'
 import { Pager } from '@/movies/Pager'
+import { ViewPicker } from '@/movies/ViewPicker'
 import PageHeading from '@/pages/PageHeading'
 
 export const SEARCH_MS = 300
 const EAGER = 6 // the first row of posters is the page's largest paint: load it at once
-
-const GRID: Record<Exclude<View, 'list'>, string> = {
-  small: 'grid-cols-3 sm:grid-cols-5 lg:grid-cols-6',
-  medium: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4',
-  large: 'grid-cols-2 lg:grid-cols-3',
-}
-const VIEW_LABELS: Record<View, string> = { small: 'Small posters', medium: 'Medium posters', large: 'Large posters', list: 'List' }
-
-function ViewPicker({ view, onChange }: { view: View; onChange: (v: View) => void }) {
-  return (
-    <div role="radiogroup" aria-label="Show films as" className="bg-muted inline-flex rounded-md p-0.5">
-      {VIEWS.map(v => (
-        <button key={v} type="button" role="radio" aria-checked={view === v} aria-label={VIEW_LABELS[v]} title={VIEW_LABELS[v]}
-          onClick={() => onChange(v)}
-          className={cn('inline-flex h-8 items-center gap-1 rounded px-2 text-xs',
-            view === v ? 'bg-background shadow-xs' : 'text-muted-foreground hover:text-foreground')}>
-          {v === 'list' ? <ListIcon className="size-4" aria-hidden /> : (
-            <><LayoutGridIcon className={cn(v === 'small' ? 'size-3' : v === 'medium' ? 'size-3.5' : 'size-4')} aria-hidden />
-              <span className="hidden sm:inline">{v[0].toUpperCase()}</span></>
-          )}
-        </button>
-      ))}
-    </div>
-  )
-}
 
 export default function Browse() {
   const [params, setParams] = useSearchParams()
@@ -84,6 +63,8 @@ export default function Browse() {
   const active = activeFilters(state, languageName)
   const hrefFor = (page: number) => `/browse?${writeBrowse({ ...state, page })}`
   const data = movies.data
+  const { user } = useMe()
+  const statuses = useStatuses(user && data ? data.items.map(f => f.id) : [])
 
   return (
     <div className="grid gap-6">
@@ -189,7 +170,8 @@ export default function Browse() {
                 {data.items.map((film, i) => (
                   <li key={film.id}>
                     {view === 'list' ? <MovieListItem film={film} eager={i < EAGER} />
-                      : <MovieCard film={film} showRevenue={state.sort === 'revenue'} eager={i < EAGER} />}
+                      : <MovieCard film={film} showRevenue={state.sort === 'revenue'} eager={i < EAGER}
+                          entry={statuses.get(film.id)} quick={user !== null} />}
                   </li>
                 ))}
               </ul>

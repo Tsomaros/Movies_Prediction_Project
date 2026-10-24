@@ -11,6 +11,7 @@
 //   activeFilters(state)      -> the filters in use, for "clear" chips and the no-results state
 //   pageNumbers(page, pages)  -> the pager's numbers, null for a gap: (7, 20) -> [1, null, 6, 7, 8, null, 20]
 //   loadView() / saveView(v)  -> the grid size or list view, remembered in this browser (try/catch: storage can fail)
+//   GRID                      -> the grid's columns for each poster size
 import type { MovieQuery, Sort } from '@/api/client'
 
 export const PAGE_SIZE = 24
@@ -124,6 +125,11 @@ export function activeFilters(state: BrowseState, languageName: (code: string) =
 
 export type View = 'small' | 'medium' | 'large' | 'list'
 export const VIEWS: View[] = ['small', 'medium', 'large', 'list']
+export const GRID: Record<Exclude<View, 'list'>, string> = {
+  small: 'grid-cols-3 sm:grid-cols-5 lg:grid-cols-6',
+  medium: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4',
+  large: 'grid-cols-2 lg:grid-cols-3',
+}
 export const VIEW_KEY = 'movie-prediction:view'
 
 export function loadView(): View {

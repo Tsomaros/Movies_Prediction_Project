@@ -1,9 +1,12 @@
 // One film in a grid, a row of the home page or the list view: poster, title, year and the score with its
 // vote count ("7.4 (1,203 votes)"), so a high score from a handful of votes is visible as such.
+// For a logged-in visitor a card can also show its list status (`entry`: a badge on the poster) and the quick
+// list buttons (`quick`), which sit beside the link, never inside it.
 import { StarIcon } from 'lucide-react'
 import { Link } from 'react-router'
 
-import type { MovieSummary } from '@/api/client'
+import type { Entry, MovieSummary } from '@/api/client'
+import { QuickButtons, StatusBadge } from '@/me/CardStatus'
 import { votes } from '@/movies/people'
 import { Poster } from '@/movies/Poster'
 import { money } from '@/result/format'
@@ -19,11 +22,17 @@ export function ScoreText({ score, votes: n }: { score: number | null | undefine
   )
 }
 
-export function MovieCard({ film, showRevenue = false, eager = false }: { film: MovieSummary; showRevenue?: boolean; eager?: boolean }) {
+export function MovieCard({ film, showRevenue = false, eager = false, entry, quick = false }: {
+  film: MovieSummary; showRevenue?: boolean; eager?: boolean; entry?: Entry; quick?: boolean
+}) {
   return (
+    <div className="group/card relative">
     <Link to={`/movies/${film.id}`}
       className="group grid content-start gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-      <Poster poster={film.poster} title={film.title} eager={eager} />
+      <span className="relative block">
+        <Poster poster={film.poster} title={film.title} eager={eager} />
+        {entry && <StatusBadge entry={entry} />}
+      </span>
       <span className="grid gap-0.5">
         <span className="line-clamp-2 text-sm font-medium leading-tight group-hover:underline">{film.title}</span>
         <span className="text-muted-foreground text-xs">{film.year ?? 'Year unknown'}</span>
@@ -33,6 +42,8 @@ export function MovieCard({ film, showRevenue = false, eager = false }: { film: 
         )}
       </span>
     </Link>
+    {quick && <QuickButtons movieId={film.id} title={film.title} entry={entry} />}
+    </div>
   )
 }
 

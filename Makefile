@@ -1,4 +1,4 @@
-.PHONY: setup model data db features tune train evaluate test test-fast coverage api docker-build docker-run smoke web-setup web web-test gen-api collages
+.PHONY: setup model data db features tune train evaluate test test-fast test-pg coverage api userdb docker-build docker-run smoke web-setup web web-test gen-api collages
 
 # Create .venv and install the locked dependencies (then `make model` for the text model)
 setup:
@@ -39,9 +39,14 @@ evaluate:
 test:
 	uv run pytest
 
-# The quick loop: skip the slow end-to-end tests and the ones on the real data and models
+# The quick loop: skip the slow end-to-end tests, the ones on the real data and models, and the Postgres ones
 test-fast:
-	uv run pytest -m "not slow and not real_data"
+	uv run pytest -m "not slow and not real_data and not pg"
+
+# The accounts tests against the compose Postgres (started here; each run uses a throwaway database)
+test-pg:
+	docker compose up -d --wait db
+	uv run pytest -m pg
 
 # The whole suite with line and branch coverage of ml/ and backend/ (terminal report)
 coverage:
@@ -50,6 +55,12 @@ coverage:
 # Run the API on http://localhost:8000 with reload (docs at /docs); loads the app's models once (about 15 s)
 api:
 	uv run uvicorn backend.app.main:app --reload --port 8000
+
+# The user database at USER_DATABASE_URL (.env): apply the migrations, then (re)create the demo account and
+# its starting set (needs DEMO_PASSWORD; refuses seed films missing from data/movies.db)
+userdb:
+	uv run python -m backend.app.userdb.migrate
+	uv run python -m backend.app.userdb.seed
 
 # The images: the slim database copy, the prebuilt track records (build/), then the backend and frontend (needs Docker)
 docker-build:

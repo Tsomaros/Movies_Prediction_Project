@@ -1,18 +1,21 @@
-# Movie Prediction App: Detailed Plan, Days 11–15
+# Movie Prediction App: Detailed Plan, Days 11–16
 
-Oct 22, 2026 · @Dimitris
+Oct 22, 2026 · @Dimitris (Day 14 inserted Oct 24, 2026)
 
 ## Overview
 
-Week three (Days 11–15) takes the project from a working form to a deployed, documented, demo-ready app. Each day was planned the same way as before: Claude researched and proposed options, Dimitris chose, and a day was only closed once he approved it.
+Week three (Days 11–16) takes the project from a working form to a deployed, documented, demo-ready app. Each day was planned the same way as before: Claude researched and proposed options, Dimitris chose, and a day was only closed once he approved it.
 
 **What week three adds**
 
 - **Day 11:** the results page, with ranges, a break-even band, drivers, comparables and honest accuracy numbers.
 - **Day 12:** the public side: browse, detail pages, curated home rows and TMDB attribution.
 - **Day 13:** compare with up to 3 variants, a release-month sweep, every error state, and a quality pass.
-- **Day 14:** deployment on Render Free (no card), monitoring and an interview-day safety net.
-- **Day 15:** documentation, model card, demo script and interview preparation.
+- **Day 14:** a one-click demo account with a watched list, a watchlist, ratings and private notes, stored in Neon Postgres.
+- **Day 15:** deployment on Render Free (no card), monitoring and an interview-day safety net.
+- **Day 16:** documentation, model card, demo script and interview preparation.
+
+**Schedule change (Oct 24).** Day 14 (accounts) was inserted; deployment moved from Day 14 to Day 15 and documentation from Day 15 to Day 16. A movie chat assistant is listed in the README's next steps.
 
 **Principle for this week:** the app should be understandable in 5 seconds and trustworthy on a closer look. Every number shown comes from the model or the test results, never typed by hand.
 
@@ -121,9 +124,61 @@ Day 13 ends with a "what if" tool that makes differences easy and honest to read
 
 **Done when** a creator can compare up to 3 variations and sweep release months with honest uncertainty labels, every error state shows a helpful message, and Lighthouse scores are recorded.
 
-## Day 14: Deployment
+## Day 14: Test user, watched list, watchlist and notes
 
-Day 14 ends with the app live at a public link on a free host that needs no card, verified end to end, monitored, and backed up for interview day.
+Day 14 ends with one demo user who logs in with one click, tracks watched films with a date and a 1–10 rating, keeps a plan-to-watch list, and writes private notes on any movie. The data lives in Neon Postgres so it survives Render's sleep and redeploys, and it resets to a tidy starting set every night.
+
+**Why a separate database.** Render Free web services have an ephemeral filesystem: anything written at runtime, including a SQLite file, is lost on every redeploy, restart or spin-down after 15 minutes idle. Movies stay in the read-only SQLite database baked into the image; user data goes to Neon.
+
+**Principles for this day**
+
+- The movie database and the public endpoints don't change; they stay read-only and cacheable.
+- Every user table has `user_id`, so real users later need no schema change.
+- The database enforces the rules (one list per film, rating only on watched films), so the API can't create bad states.
+- One shared demo account is safe: private notes, write limits, caps and a nightly reset.
+- Without `USER_DATABASE_URL` the accounts endpoints answer 503 and everything else works as before.
+
+### Decisions
+
+| Topic | Decision | Why |
+| --- | --- | --- |
+| User data | Neon Postgres Free, Postgres 18, Frankfurt (`aws-eu-central-1`); movies stay in read-only SQLite | Survives sleep and redeploys; permanent free tier, no card |
+| Rejected storage | Supabase (pauses after 7 days idle), Render Postgres (expires after 30 days), SQLite in the container (wiped on sleep) | Each would break the live demo at some point |
+| Local dev and tests | `postgres:18` in `docker compose`; tests use a throwaway database there, marked `pg` and skipped when no Postgres is reachable | Same engine everywhere; `make test-fast` stays offline |
+| DB access | psycopg 3 + plain SQL in a small repository layer; small pool (1–4), direct connection | Same style as the SQLite side; no PgBouncer quirks |
+| Migrations | Numbered SQL files plus a short runner that records what ran | Enough for a few tables |
+| Lists | Watched or plan-to-watch, one per film; watched date defaults to today; optional 1–10 rating on watched films | Simple, enforced by the database |
+| Notes | Private, many per film, newest first, max 2,000 characters | No moderation; works like a journal |
+| Login | "Try the demo account" button first, small password link below | Interviewers get in with one click |
+| Sessions | Sessions table, SHA-256 of a random 32-byte token in Postgres, httpOnly cookie, fixed 7 days; no session secret | Logout really ends a session; a hash of a random token needs no key |
+| Secrets | `USER_DATABASE_URL` and `DEMO_PASSWORD` only | Nothing unused to configure |
+| Passwords | argon2id at OWASP minimum (19 MB, 2 passes) | Safe on a 512 MB server |
+| Nightly reset | Lazy, on the first demo login after midnight Athens time, guarded by an advisory lock | No cron on Render Free |
+| Abuse limits | 30 writes/min per user; 500 list entries and 200 notes; login 5/min, demo login 10/min per IP | One account is shared by everyone |
+| Client IP | uvicorn's proxy headers with `FORWARDED_ALLOW_IPS`, done now instead of on deployment day | Per-IP login limits need the visitor's address, and the Secure cookie needs the real scheme |
+| Logged-out click | Login dialog opens in place, then the action completes | No lost clicks |
+| Card buttons | Quick buttons on hover (desktop); badges only on phones | Clean grid on small screens |
+| Rating input | 10 stars, shown as "8/10" | Matches the 0–10 TMDB scale |
+| E2E | One Playwright flow, reused on Day 15 against the live site | Proves the whole path works |
+
+### Tasks
+
+1. **Neon and schema (1 h 15 min).** Neon project (Frankfurt, Postgres 18), `USER_DATABASE_URL` with `connect_timeout=10` (the Free compute suspends after 5 minutes idle and takes 0.5 s to a few seconds to wake). psycopg pool of 1–4 with a check before each checkout. `backend/app/userdb/migrations/001_init.sql` and a runner recording `schema_migrations`. Tables `users`, `user_movies` (primary key user and movie; rating and date only when watched), `comments` (1–2,000 characters), `sessions`, `app_state`; UTC `timestamptz`; deleting a user deletes their rows; `movie_id` is checked by the API, with no cross-database key. `demo_seed.json` (about 12 watched, 8 on the watchlist, 4 notes) and a seed script that refuses ids missing from the movie database.
+2. **Auth (1 h 30 min).** `POST /auth/login`, `POST /auth/demo`, `POST /auth/logout`, `GET /auth/me` (`{"user": null}` when logged out, not a 401). Cookie `mp_session`: httpOnly, Secure on https, SameSite=Lax, path `/`. CSRF: SameSite=Lax plus a matching `Origin` and JSON on every write. A wrong password always says "Wrong username or password". The demo login runs the nightly reset in one transaction under `pg_advisory_xact_lock`.
+3. **User endpoints (1 h 45 min).** Under `/api/v1/me`, private and `Cache-Control: private, no-store`: `GET /me/movies` (one tab plus counts for all three), `PUT` and `DELETE /me/movies/{id}`, `GET /me/movies/status?ids=` (up to 48), `GET` and `POST /me/movies/{id}/notes`, `GET /me/notes`, `PATCH` and `DELETE /me/notes/{note_id}`. The user's rows (at most 500) are joined with SQLite in one query and sorted and paged in Python, returning the `/movies` card shape. Unknown film or someone else's note → 404; over the caps → 409; over the write limit → 429.
+4. **Frontend (3 h).** `useMe`; `/login` with the big demo button; a login dialog for logged-out clicks; header avatar, "Demo" chip and menu; on the film page Watched / Plan to watch / Not in a list, a date, 10 stars and notes (2,000-character counter, Ctrl+Enter, inline edit, delete with Undo); badges and hover buttons on the browse grid from one status call per page; `/my-movies` with Watched, Plan to watch and Notes tabs, state in the URL, "Demo data resets every night"; optimistic updates with rollback; keyboard stars announcing "8 out of 10".
+5. **Tests (1 h 45 min).** Auth, lists, notes, caps and limits, the reset with a frozen clock and two simultaneous logins, against the compose Postgres; Vitest for the dialog, rollback, stars and URL state; one Playwright flow (demo login → watched with a rating → note → My movies).
+6. **Wrap-up (15 min).** README section on accounts and the demo button, `PROGRESS.md`, commit.
+
+**Time:** about 9.5 hours.
+
+**Cut line:** if behind, the Playwright flow moves to the Day 15 session first, then the Notes tab. The demo button, lists, rating, notes on the detail page and the reset always stay.
+
+**Done when** the demo button logs in, both lists, ratings and notes work on desktop and mobile in both themes, data survives a container restart, the reset brings back the starting set, and all tests pass.
+
+## Day 15: Deployment
+
+Day 15 ends with the app live at a public link on a free host that needs no card, verified end to end, monitored, and backed up for interview day.
 
 ### Hosting options considered
 
@@ -157,15 +212,16 @@ Day 14 ends with the app live at a public link on a free host that needs no card
 4. **Live verification (1 h).** `scripts/smoke.py` against the public URL; full manual run-through on desktop and phone in both themes; attribution check; record wake-up time and live prediction speed.
 5. **Monitoring (1 h).** Uptime alerts (not keep-alive); Sentry on FastAPI and React with one test error.
 6. **Safety net (1 h).** Warm-up routine; local `docker compose up` from a clean clone; 2–3 minute demo video plus a README GIF.
-7. **Wrap-up (30 min).** README: live link, honest live-speed numbers, deployment section; `PROGRESS.md`; tag `v1.0`.
+7. **Accounts on Render (from Day 14).** Set `USER_DATABASE_URL` and `DEMO_PASSWORD` on Render; run the migrations and the seed; add demo login and a list toggle to `scripts/smoke.py`; run the Playwright flow against the live URL; check the real client IP reaches the rate limiter; repeat the memory check with the Postgres driver loaded.
+8. **Wrap-up (30 min).** README: live link, honest live-speed numbers, deployment section; `PROGRESS.md`; tag `v1.0`.
 
 **Future upgrade (README next step):** a fully static version, with models in ONNX running in the browser and browse data as files, would host free anywhere with no sleeping.
 
 **Done when** the live link passes the smoke test and the manual run-through, monitoring and Sentry are active, and both backups are ready.
 
-## Day 15: Documentation and demo prep
+## Day 16: Documentation and demo prep
 
-Day 15 ends with a repo that explains itself in 30 seconds or in depth, a rehearsed 5-minute demo, and everything needed for the interview conversation.
+Day 16 ends with a repo that explains itself in 30 seconds or in depth, a rehearsed 5-minute demo, and everything needed for the interview conversation.
 
 ### Decisions
 
@@ -173,7 +229,7 @@ Day 15 ends with a repo that explains itself in 30 seconds or in depth, a rehear
 | --- | --- | --- |
 | README | Focused README + `docs/` folder | Skimmers get the essentials; engineers can go deep |
 | Diagrams | Mermaid, rendered on GitHub | Versioned with the code, no redrawing |
-| Decision log | `docs/decisions.md` | Answers "why did you choose X?" in writing |
+| Decision log | `docs/decisions.md`, including "two databases" and "why Neon" (Day 14) | Answers "why did you choose X?" in writing |
 | Model card | `MODEL_CARD.md`, Hugging Face style | Shows ML maturity; matches `/model-card` |
 | Demo | The 5-minute storyline below, with a failure card | Smooth and rehearsed |
 | Summary | One-page PDF | Easy to send before the interview |
@@ -187,13 +243,13 @@ Day 15 ends with a repo that explains itself in 30 seconds or in depth, a rehear
 | 0:30–2:00 | Creator flow | Superhero sequel example → ranges, break-even band, drivers, comparables |
 | 2:00–3:00 | Honesty | Accuracy panel, rough-estimate badge, unknown-cast example |
 | 3:00–4:00 | What if | Compare presets, month sweep, "within the uncertainty" label |
-| 4:00–4:30 | Public side | Browse → detail → "Predict a film like this" |
+| 4:00–4:30 | Public side | Browse → detail → "Predict a film like this"; the demo button, a rating and a note |
 | 4:30–5:00 | Under the hood | Time-split evaluation, time-travel test, architecture in one line |
 
 ### Tasks
 
 1. **README and docs (2 h).** README: pitch, live link, GIF, key test results, quick start, architecture, limitations, next steps, attribution. `docs/`: `data.md`, `modeling.md`, `evaluation.md`, `api.md`.
-2. **Mermaid diagrams (45 min).** System (browser → FastAPI → SQLite + models, plus the offline pipeline) and prediction flow (form → features → budget → revenue → score → drivers → comparables).
+2. **Mermaid diagrams (45 min).** System (browser → FastAPI → SQLite + models and Neon Postgres for user data, plus the offline pipeline) and prediction flow (form → features → budget → revenue → score → drivers → comparables).
 3. **Decision log (1 h).** One entry per key decision: choice, alternatives, why. Drawn from these plan documents.
 4. **Model card (45 min).** Intended use, data and biases, test metrics and coverage, known failure cases, limitations.
 5. **Demo script and rehearsal (1 h).** The storyline above, an "if something fails" card, two timed rehearsals.
@@ -209,13 +265,19 @@ These came out of week-three planning and are already reflected in the Days 1–
 
 | Day | Change | Reason |
 | --- | --- | --- |
-| 3 | MiniLM quantized to int8 before training; if already built, swapped at inference on Day 14 after a consistency check | Fits Render Free's 512 MB and 0.1 CPU without retraining after the test run |
+| 3 | MiniLM quantized to int8 before training; if already built, swapped at inference on deployment day (Day 15) after a consistency check | Fits Render Free's 512 MB and 0.1 CPU without retraining after the test run |
 | 9 | Memory measurement becomes a gate: under about 450 MB after 100 predictions | Render Free has 512 MB RAM |
 | 8 | New endpoints: `GET /model-card` (Day 11) and `POST /predict/sweep` (Day 13) | Accuracy panel and month sweep |
 | 8 | `GET /movies` gains a score filter, loses the money-data filter (Day 12) | Visitor preference |
 
 ## Sources
 
+- [Render: Deploy for Free](https://render.com/docs/free): ephemeral filesystem, 15-minute spin-down, free Postgres expires after 30 days with a 14-day grace period
+- [Neon: free managed Postgres FAQ](https://neon.com/faqs/managed-postgres-databases-free-tier): permanent free plan, 0.5 GB and 100 compute-hours per project, no card
+- [Neon: scale to zero FAQ](https://neon.com/faqs/postgres-databases-vector-embeddings-scale-to-zero): Free compute suspends after 5 minutes, can't be disabled
+- [Neon changelog, 5 June 2026](https://neon.com/docs/changelog/2026-06-05): Postgres 18 is the default for new projects
+- [Prisma: Neon guide](https://www.prisma.io/docs/v6/orm/overview/databases/neon): cold start from 500 ms to a few seconds, `connect_timeout`
+- [Supabase pricing guide (nocode.mba)](https://www.nocode.mba/articles/supabase-pricing): free projects pause after 7 days of inactivity
 - [Render: platforms with a real free tier in 2026](https://render.com/articles/platforms-with-a-real-free-tier-for-developers-in-2026.md): no-card free web services, 15-minute sleep, Fly.io free tier status
 - [Render free tier details (agentdeals.dev)](https://agentdeals.dev/vendor/render): 512 MB RAM, 0.1 CPU
 - [Render.com in mid-2026 (jwatte.com)](https://jwatte.com/blog/render-com-platform-review.md): bandwidth cut, about 1 minute to wake

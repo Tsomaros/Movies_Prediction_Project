@@ -22,6 +22,7 @@ Element.prototype.scrollIntoView ??= function () {}
 window.scrollTo = () => {} // jsdom only logs "not implemented" (React Router's ScrollRestoration calls it)
 Element.prototype.hasPointerCapture ??= () => false
 Element.prototype.releasePointerCapture ??= () => {}
+Element.prototype.setPointerCapture ??= () => {} // sonner's toasts call it on a click
 
 afterEach(() => {
   cleanup()

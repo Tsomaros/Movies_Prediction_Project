@@ -1,12 +1,15 @@
-// The frame around every page: header (brand, navigation, theme toggle), the page, and the footer with TMDB's
+// The frame around every page: header (brand, navigation, account menu, theme toggle), the page, and the footer with TMDB's
 // attribution (their logo, unaltered and smaller than ours, the required notice and a link).
 // Mobile first: on a phone the navigation is a second row under the brand; from `sm` it sits in the header.
 // A route with `handle: { bleed: true }` (/series) fills the width between header and footer; one with
 // `handle: { bare: true }` (the start page) has no header or footer at all and carries TmdbNotice itself.
+// Every page sits inside LoginProvider, so a logged-out click on a list button opens the login dialog in place.
 import { ClapperboardIcon } from 'lucide-react'
 import { Link, NavLink, Outlet, ScrollRestoration, useMatches } from 'react-router'
 
 import { ThemeToggle } from '@/app/theme'
+import { AccountMenu } from '@/auth/AccountMenu'
+import { LoginProvider } from '@/auth/LoginDialog'
 import { cn } from '@/lib/utils'
 
 const NAV = [
@@ -40,7 +43,8 @@ export function Header() {
           Movie Prediction
         </Link>
         <Nav className="hidden sm:flex" />
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <AccountMenu />
           <ThemeToggle />
         </div>
       </div>
@@ -80,15 +84,17 @@ export default function Layout() {
   // A new page starts at the top; back and forward return to where you were. Keyed by the address, because a
   // full reload gives every page the same "default" key and would restore another page's position.
   const scroll = <ScrollRestoration getKey={location => location.pathname + location.search} />
-  if (handles.some(h => h.bare)) return <><Outlet />{scroll}</>
+  if (handles.some(h => h.bare)) return <LoginProvider><Outlet />{scroll}</LoginProvider>
   return (
-    <div className="flex min-h-svh flex-col">
-      <Header />
-      <main className={cn('w-full flex-1', bleed ? 'flex flex-col' : 'mx-auto max-w-5xl px-4 py-6 sm:py-10')}>
-        <Outlet />
-      </main>
-      <Footer flush={bleed} />
-      {scroll}
-    </div>
+    <LoginProvider>
+      <div className="flex min-h-svh flex-col">
+        <Header />
+        <main className={cn('w-full flex-1', bleed ? 'flex flex-col' : 'mx-auto max-w-5xl px-4 py-6 sm:py-10')}>
+          <Outlet />
+        </main>
+        <Footer flush={bleed} />
+        {scroll}
+      </div>
+    </LoginProvider>
   )
 }

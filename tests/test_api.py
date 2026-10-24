@@ -14,6 +14,7 @@ from backend.app.services.lookups import NameIndex
 from backend.app.services.prediction import PredictionService, merge
 from backend.app.services.ratelimit import RateLimiter
 from backend.app.settings import API_PREFIX, Settings
+from tests import test_accounts as accounts  # the module, not its tests: they run there, against Postgres
 from tests.test_eval import db  # noqa: F401 (fixture: a small movies.db with a features table, 2008-2022)
 from tests.test_models import (budget_model, budget_rows, revenue_model, revenue_rows,  # noqa: F401 (fixtures)
                                score_model, score_rows)
@@ -578,6 +579,20 @@ ENDPOINTS = {  # every endpoint and the test above that covers it; a new endpoin
     ("GET", "/meta/options"): test_meta_options_match_the_contract_with_themes_filled_in,
     ("GET", "/model-card"): test_the_model_card_has_the_test_results_and_the_database,
     ("GET", "/health"): test_health_reports_the_models_the_database_and_the_cache,
+    # the demo account (Day 14), tested against Postgres in tests/test_accounts.py
+    ("POST", "/auth/login"): accounts.test_password_login_works_and_any_wrong_detail_gets_the_same_answer,
+    ("POST", "/auth/demo"): accounts.test_me_is_quiet_when_logged_out_and_names_the_user_after_a_demo_login,
+    ("POST", "/auth/logout"): accounts.test_an_old_cookie_gets_a_401_after_logout,
+    ("GET", "/auth/me"): accounts.test_me_is_quiet_when_logged_out_and_names_the_user_after_a_demo_login,
+    ("GET", "/me/movies"): accounts.test_my_movies_has_one_tab_a_page_at_a_time_with_every_count,
+    ("GET", "/me/movies/status"): accounts.test_status_answers_for_up_to_48_films_and_refuses_more,
+    ("PUT", "/me/movies/{movie_id}"): accounts.test_create_switch_and_remove_a_film,
+    ("DELETE", "/me/movies/{movie_id}"): accounts.test_create_switch_and_remove_a_film,
+    ("GET", "/me/movies/{movie_id}/notes"): accounts.test_notes_add_edit_delete_newest_first,
+    ("POST", "/me/movies/{movie_id}/notes"): accounts.test_notes_add_edit_delete_newest_first,
+    ("GET", "/me/notes"): accounts.test_the_notes_tab_pages_every_note_with_its_film,
+    ("PATCH", "/me/notes/{note_id}"): accounts.test_notes_add_edit_delete_newest_first,
+    ("DELETE", "/me/notes/{note_id}"): accounts.test_notes_add_edit_delete_newest_first,
 }
 
 

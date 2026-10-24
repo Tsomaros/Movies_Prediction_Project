@@ -17,6 +17,8 @@ describe('routes', () => {
     ['/browse', 'Browse films'],
     ['/series', 'Series: coming soon'],
     ['/about', 'About'],
+    ['/login', 'Log in'],
+    ['/my-movies', 'My movies'],
     ['/no/such/page', 'Page not found'],
   ])('%s shows "%s"', async (path, heading) => {
     renderApp(path)
@@ -36,7 +38,8 @@ describe('routes', () => {
     const nav = (await screen.findAllByRole('navigation', { name: 'Main' }))[0]
     await userEvent.click(within(nav).getByRole('link', { name: 'Predict' }))
     expect(router.state.location.pathname).toBe('/predict')
-    expect(within(nav).getByRole('link', { name: 'Predict' })).toHaveAttribute('aria-current', 'page')
+    // the page is lazy-loaded: under a busy test run the link can be marked a moment after the URL changes
+    await waitFor(() => expect(within(nav).getByRole('link', { name: 'Predict' })).toHaveAttribute('aria-current', 'page'))
     expect(await screen.findByRole('heading', { level: 1, name: 'Plan a film' })).toBeInTheDocument()
   })
 })

@@ -36,7 +36,7 @@ ENV PATH=/app/.venv/bin:$PATH \
     MODELS_DIR=/app/ml/artifacts/final \
     CONTEXT_FILE=/app/data/context.joblib \
     MALLOC_ARENA_MAX=2 \
-    CORS_ORIGINS=http://localhost:5173
+    CORS_ORIGINS=http://localhost:5173     FORWARDED_ALLOW_IPS=127.0.0.1
 USER app
 EXPOSE 8000
 
@@ -44,5 +44,7 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
     CMD ["python", "-c", "import sys, urllib.request; sys.exit(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=4).status != 200)"]
 
-# One worker: each worker loads every model, and the prediction cache and rate limiter live in its memory
+# One worker: each worker loads every model, and the prediction cache and rate limiter live in its memory.
+# uvicorn reads X-Forwarded-For/-Proto only from FORWARDED_ALLOW_IPS (compose: nginx; Render: its proxy), so
+# request.client.host is the visitor and https sets the Secure cookie. USER_DATABASE_URL comes from the host.
 CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

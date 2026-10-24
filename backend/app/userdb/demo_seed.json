@@ -1,0 +1,24 @@
+{
+  "username": "demo",
+  "watched": [
+    {"movie_id": 496243, "watched_on": "2026-10-18", "rating": 9},
+    {"movie_id": 157336, "watched_on": "2026-10-11", "rating": 10},
+    {"movie_id": 27205, "watched_on": "2026-09-27", "rating": 9},
+    {"movie_id": 129, "watched_on": "2026-09-14", "rating": 8},
+    {"movie_id": 603, "watched_on": "2026-08-30", "rating": 8},
+    {"movie_id": 155, "watched_on": "2026-08-02", "rating": 9},
+    {"movie_id": 120, "watched_on": "2026-07-19", "rating": 7},
+    {"movie_id": 680, "watched_on": "2026-06-21", "rating": null},
+    {"movie_id": 550, "watched_on": null, "rating": 6},
+    {"movie_id": 278, "watched_on": null, "rating": 10},
+    {"movie_id": 238, "watched_on": null, "rating": null},
+    {"movie_id": 13, "watched_on": null, "rating": null}
+  ],
+  "plan_to_watch": [693134, 872585, 545611, 569094, 438631, 361743, 346698, 76600],
+  "notes": [
+    {"movie_id": 496243, "body": "The house is the whole film: up the stairs is wealth, down the stairs is the basement. Watch where people stand."},
+    {"movie_id": 157336, "body": "Saw it again on a big screen. The docking scene still works, and the score carries the last hour."},
+    {"movie_id": 693134, "body": "Watch Dune (2021) again first, then this one in IMAX if it comes back."},
+    {"movie_id": 129, "body": "A good one to show someone new to Ghibli. The train ride is my favourite part."}
+  ]
+}

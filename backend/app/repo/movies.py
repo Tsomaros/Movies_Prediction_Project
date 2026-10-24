@@ -4,6 +4,7 @@
     search(con, q, genre, year_from, year_to, language, score_min, sort, page, page_size)
                                         -> (rows for that page, total matching)
     movie(con, movie_id)                -> one film's facts, people, money and score, or None
+    summaries(con, ids)                 -> {id: summary} for the films among ids that exist (one query)
     film_keywords(con, movie_id)        -> the film's TMDB keyword ids (for its themes)
 
 User text never reaches FTS5 as syntax: words are pulled out with a Unicode regex and quoted, so input like
@@ -87,6 +88,13 @@ def _summary(r: sqlite3.Row) -> dict[str, Any]:
     out["genres"] = json.loads(out["genres"]) if out["genres"] else []
     out["score_ok"] = bool(out["score_ok"])
     return out
+
+
+def summaries(con: sqlite3.Connection, ids: list[int]) -> dict[int, dict[str, Any]]:
+    if not ids:
+        return {}
+    rows = con.execute(f"SELECT {SUMMARY} FROM movies m WHERE m.id IN ({','.join('?' * len(ids))})", list(ids))
+    return {r["id"]: _summary(r) for r in rows}
 
 
 def movie(con: sqlite3.Connection, movie_id: int) -> dict[str, Any] | None:

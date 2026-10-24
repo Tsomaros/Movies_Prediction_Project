@@ -9,7 +9,10 @@ The lifespan hook runs once at startup and keeps on app.state:
 - predictor: the app's models, feature context and comparables index, after the manifest check (about 11-14 s);
 - lookups:   the autocomplete indexes (about 2-3 s, about 33 MB);
 - predictions, rate_limiter: the prediction cache (CACHE_SIZE entries) and the per-IP limit (RATE_LIMIT a minute);
-- started:   the time it finished, plus load_seconds, for /health.
+- started:   the time it finished, plus load_seconds, for /health;
+- userdb, demo_seed, limiters: the user-database pool (None without USER_DATABASE_URL: /auth and /me then
+  answer 503), the demo account's starting set and the login/demo/write limits (Day 14).
+app.state.clock gives the current UTC time to the accounts side (tests freeze it).
 Then memory freed while loading is handed back to the system (release_free_memory, Linux only).
 The database itself is never held open: every request gets its own read-only connection (deps.get_db).
 A new endpoint is a new module in backend/app/routers/ with a `router`, added to ROUTERS below.
@@ -21,6 +24,7 @@ import ctypes
 import logging
 import sys
 import time
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager, closing
 from typing import AsyncIterator
 
@@ -29,16 +33,20 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app import errors
 from backend.app.deps import connect_read_only
-from backend.app.routers import collections, companies, health, meta, model_card, movies, people, predict, sweep
+from backend.app.routers import (auth, collections, companies, health, meta, model_card, movies, my_movies, notes,
+                                 people, predict, sweep)
 from backend.app.services.lookups import Lookups
 from backend.app.services.prediction import PredictionService
 from backend.app.services.ratelimit import RateLimiter
 from backend.app.settings import API_PREFIX, Settings
+from backend.app.userdb.pool import make_pool
+from backend.app.userdb.seed import load_seed
 from ml.predict import Predictor
 
 log = logging.getLogger("uvicorn.error")
 
-ROUTERS = (predict, sweep, movies, people, companies, collections, meta, model_card, health)
+ROUTERS = (predict, sweep, movies, people, companies, collections, meta, model_card, health, auth, my_movies, notes)
+LIMITS = {"login": 5, "demo": 10, "write": 30}  # a minute: login and demo per client IP, writes per user
 DESCRIPTION = (
     "Budget, revenue and audience-score ranges for a planned film, with the drivers behind them and "
     "comparable past films, plus search over the 79,199 films in our TMDB data. This product uses the "
@@ -75,17 +83,24 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
             app.state.lookups = lookups
         app.state.predictions = PredictionService(app.state.predictor, settings.cache_size)
         app.state.rate_limiter = RateLimiter(settings.rate_limit)
+        app.state.limiters = {name: RateLimiter(n) for name, n in LIMITS.items()}
+        app.state.userdb = make_pool(settings.user_database_url) if settings.user_database_url else None
+        app.state.demo_seed = load_seed()
         release_free_memory()
         app.state.load_seconds = round(time.perf_counter() - start, 1)
         app.state.started = time.time()
         log.info("loaded the models and lookups in %.1f s (model version %s)", app.state.load_seconds,
                  getattr(app.state.predictor, "manifest", {}).get("version", "?"))
         yield
+        if app.state.userdb is not None:
+            app.state.userdb.close()
 
     app = FastAPI(title="Movie Prediction API", version="1.0.0", description=DESCRIPTION, lifespan=lifespan)
     app.state.settings = settings
-    app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins), allow_methods=["GET", "POST"],
-                       allow_headers=["*"])
+    app.state.clock = lambda: datetime.now(timezone.utc)
+    # The app and the API share one origin (Vite's proxy, nginx), so the cookie needs no CORS credentials
+    app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins),
+                       allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["*"])
     errors.install(app)
     for module in ROUTERS:
         app.include_router(module.router, prefix=API_PREFIX)

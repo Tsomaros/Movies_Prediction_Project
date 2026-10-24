@@ -18,6 +18,7 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    include: ['src/**/*.test.{ts,tsx}'], // e2e/ is Playwright's (npm run e2e)
     setupFiles: ['./src/test/setup.ts'],
     css: false,
     coverage: { // npm run coverage: lines and branches of our code (shadcn's generated components are left out)

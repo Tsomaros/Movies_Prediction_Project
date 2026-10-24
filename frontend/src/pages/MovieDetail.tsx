@@ -1,6 +1,7 @@
 // /movies/:id: one film. Facts and overview, the score with its votes, the money as reported or in 2025 dollars,
 // the cast (initials avatars: our data has no photos) and key crew, similar films, and "Predict a film like this",
-// which opens the creator form pre-filled (src/movies/predictLike.ts).
+// which opens the creator form pre-filled (src/movies/predictLike.ts). Your lists (watched with a date and a
+// 10-star rating, or plan to watch) sit under the score, and your private notes after the overview.
 import { ArrowLeftIcon, ExternalLinkIcon, SparklesIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
@@ -13,6 +14,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { codeName } from '@/form/format'
 import { encodeForm, LIKE_PARAM, URL_PARAM } from '@/form/persist'
 import { cn } from '@/lib/utils'
+import { FilmNotes } from '@/me/FilmNotes'
+import { useStatuses } from '@/me/hooks'
+import { ListControl } from '@/me/ListControl'
 import { ScoreText } from '@/movies/MovieCard'
 import { crewByJob, initials, nameHue, runtimeText } from '@/movies/people'
 import { Poster } from '@/movies/Poster'
@@ -116,6 +120,7 @@ export default function MovieDetail() {
   const film = useMovie(movieId)
   const options = useMetaOptions()
   const navigate = useNavigate()
+  const yours = useStatuses(movieId === null ? [] : [movieId]).get(movieId ?? -1)
 
   if (movieId === null || (film.error instanceof ApiError && film.error.kind === 'not_found')) return <NotFoundFilm />
   if (film.isError) {
@@ -162,7 +167,9 @@ export default function MovieDetail() {
             {f.rating.votes > 0 && !f.rating.usable && (
               <span className="text-muted-foreground"> · fewer than 50 votes, so our models don't use this score</span>
             )}
+            {yours?.rating != null && <span data-testid="film-your-rating"> · You: <span className="font-medium">{yours.rating}/10</span></span>}
           </p>
+          <ListControl movieId={f.id} />
           <Chips label="Genres" items={f.genres} />
           <Chips label="Themes" items={f.themes} />
           {f.overview && <p className="max-w-prose">{f.overview}</p>}
@@ -172,6 +179,8 @@ export default function MovieDetail() {
           </div>
         </div>
       </div>
+
+      <FilmNotes movieId={f.id} />
 
       <div className="grid gap-6 md:grid-cols-[1fr_20rem]">
         <section aria-labelledby="made-heading" className="grid content-start gap-2 text-sm">
