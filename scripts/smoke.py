@@ -13,7 +13,7 @@ Checks, each printed as one line with its time:
   the readable 422;
 - search, the box-office sort and the score filter, a movie page, autocomplete and /meta/options on the real data;
 - a person page (Day 14.6): the first actor found for "hanks", with films and a TMDB photo, and a director's
-  page opening on directing (Day 14.7);
+  page opening on directing (Day 14.7); his career forecast and model films, and Nolan's genre chips (Day 14.8);
 - /model-card belongs to the served models and has the 2019+ test and the 2026 holdout;
 - with --web-url, the frontend: the start page, its two poster collages, its script bundle (cached for a year), a deep link served
   as the app (/predict/... and /people/31), and /api/v1/health and /meta/options through the frontend's proxy.
@@ -251,6 +251,22 @@ def main() -> None:
         return f"{p['name']}: {len(acting['films'])} films, known for {first['known_for']}; Nolan opens on directing"
 
     s.check("GET /people/{id} (the first actor for hanks)", person)
+
+    def career() -> str:
+        first = s.get("/people", role="actor", q="hanks")[0]
+        c = s.get(f"/people/{first['id']}/career")
+        f = c["forecast"]
+        assert c["role"] == "acting" and f["status"] == "ok" and f["low"] < f["mid"] < f["high"], f
+        m = s.get(f"/people/{first['id']}/career/model", role="acting")
+        usual, new = m["usual"]["prediction"], m["new"]["prediction"]
+        assert usual["low"] < usual["high"] and new["low"] < new["high"], m
+        nolan = s.get("/people/525/career/model", role="directing")
+        assert nolan["chips"], nolan
+        return (f"next film {f['low']:.1f}-{f['high']:.1f} from {f['explain']['n_rated']} rated films; usual "
+                f"{usual['low']:.1f}-{usual['high']:.1f}, new {new['low']:.1f}-{new['high']:.1f}; "
+                f"Nolan's chips {', '.join(x['name'] for x in nolan['chips'])}")
+
+    s.check("GET /people/{id}/career and /career/model (Day 14.8)", career)
 
     def options() -> str:
         o = s.get("/meta/options")

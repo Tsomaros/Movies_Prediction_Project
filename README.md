@@ -574,6 +574,33 @@ Every person in our data has a page at `/people/:id`: actors (Day 14.6) and crew
 
 ![The cast of Avengers: Infinity War with their TMDB photos](docs/images/cast-photos.png)
 
+## Career section (Day 14.8)
+
+Each person page has a Career section between the stats and the films, for the role the page shows: acting, directing or writing. Other roles show a one-line note.
+
+- **The chart:** one dot per dated film, filled for leads (cast order 0–2) and crew, hollow for supporting roles, and faint grey under 50 votes. A line shows the centred average of 5 rated films, and a ring marks the best film. "Compared with its year" plots each score minus that year's database average. Hover shows the film, a click opens it; on touch the first tap shows it, the second opens it. "View as table" lists every dated film.
+- **Their next film, from their track record:** an 80% range from their rated films (5+ needed). Recent films count more: a film h years older than their latest counts half. Their weighted average is trusted n_eff / (n_eff + k), and the role's average over the last 10 years the rest. The range is that middle ± q × the spread, with their own spread blended with the role's the same way. "How is this calculated?" fills in their numbers and the test result.
+- **The settings come from a backtest** (`make career`, a few seconds, `ml/artifacts/career_forecast.json`):
+  - Every rated film after a person's 5th is a "next film", forecast from strictly earlier films only, and each person weighs the same.
+  - h and k are tuned for the lowest error on next films before 2019. q is then the smallest value that covers 80% of them.
+  - The table reports next films from 2019 onward:
+
+  | Role | h (years) | k | q | Coverage | MAE | Database average MAE | Width | People | Films |
+  | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+  | Acting | 5 | 3 | 1.35 | 81.6% | 0.59 | 0.64 | 1.99 | 9,594 | 31,498 |
+  | Directing | 3 | 1 | 1.50 | 84.2% | 0.51 | 0.61 | 1.79 | 764 | 1,524 |
+  | Writing | 3 | 1 | 1.60 | 85.0% | 0.54 | 0.62 | 1.92 | 1,015 | 2,102 |
+
+  Unlike the Day 5 models, this small forecast is tuned on 2016–18 too: it is separate and has only three numbers per role.
+- **The film model:** the Day 5 score model on two made-up films. Each shows the recipe it was given and has "Edit in predictor", which opens the form pre-filled with the named people and the median budget.
+  - **Their usual film:** built from their last 10 rated films in the role: the 2 most common genres and 3 themes, language, month, US rating, country, the median runtime and budget, next year's date. The cast and director are people they made 2+ films with.
+  - **Something new:** the most common recent genre pair they have never worked in, with no named collaborators. Up to 4 chips try other never-done genres.
+  - **Filling the gaps:** missing values come from recent films of those genres, so every recipe is a form the contract accepts.
+  - Writing has no model, because the form has no writer field.
+- **Endpoints:** `GET /people/{id}/career` and `GET /people/{id}/career/model` (see API). Both count toward the predict limit.
+  - **Speed:** `/career` takes 6–25 ms. A model answer takes about 400 ms locally, through the prediction cache, and then comes from an LRU of 2,000.
+- **Bundle:** the section and Recharts are their own lazy chunk (351 kB, 103 kB gzipped). The main bundle and the person page are unchanged.
+
 ## Frontend
 
 A React app in `frontend/` (Vite 8, React 19, TypeScript 6, Tailwind 4 with shadcn/ui, React Router 8, TanStack Query 5, React Hook Form + Zod 4). It needs Node 24.

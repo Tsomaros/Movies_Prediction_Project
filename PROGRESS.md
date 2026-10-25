@@ -1940,3 +1940,65 @@ The floor lives in `services/random_pick.py` as `FLOOR = (200, 6.0)`. With hidde
 - **The people row now makes two requests per search** (actors and directors). Both are cached for an hour, but on Render that is two hits on each keystroke pause; one combined endpoint would halve it if needed.
 - **Refresh:** the crew details were pulled on Oct 25, 2026, so the six-month refresh is due by April 2027, the same as the actors'.
 - **A frontend test failed under load twice this session:** the `/movies` rows test on Day 14.5, and an unnamed one today, while the Python suites ran alongside. Both passed alone. If it shows up again on Day 15, run the suite on its own and note which test it was.
+
+## Day 14.8: Career chart and forecast (Docker checks pending)
+
+- [x] 0. Plan document: Day 14.8 inserted after Day 14.7; Dimitris's spec and plan copied to `docs/superpowers/` (`f57f1c1`). His choices:
+  - Day 14.8;
+  - the page's own role switch drives the section;
+  - the backtest as written: tune before 2019, report 2019+.
+- [x] 1. Career queries (`8fd7f03`)
+- [x] 2. Forecast maths (`ece1fc0`)
+- [x] 3. Backtest and settings (`1800eca`)
+- [x] 4. Recipes (`ccbbb3c`)
+- [x] 5. Endpoints (`90c157a`)
+- [x] 6. Frontend hooks, explanation, `recipeToForm` (`ceb5150`)
+- [x] 7. Chart and table (`7d33e4f`)
+- [x] 8. The section on person pages (`faabfef`)
+- [ ] 9. Wrap-up: docs and checks (this commit); Docker image, memory, smoke and Playwright still to run
+
+### The backtest (2019+ next films)
+
+| Role | h | k | q | Coverage | MAE | Database average | People |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Acting | 5 | 3 | 1.35 | 81.6% | 0.587 | 0.637 | 9,594 |
+| Directing | 3 | 1 | 1.50 | 84.2% | 0.507 | 0.609 | 764 |
+| Writing | 3 | 1 | 1.60 | 85.0% | 0.537 | 0.621 | 1,015 |
+
+Acting is inside the plan's 0.75–0.85 band, and every role beats the database average. No role falls back to the acting settings. The run takes about 4 s.
+
+### Changes from the plan
+
+- **Rated = 50+ votes** (`MIN_VOTES`); the spec's 30 was a guess at the constant.
+- **One role switch:** the page's `?role=` drives the section; other roles get "The career chart covers acting, directing and writing." Only `?view=` is new.
+- **Lead = `ord <= 2`**; the column is `ord`, and `year` replaces `release_year`.
+- **Recipes are always valid forms.** The contract needs 5 actors, 1+ themes and a certification, so gaps are filled from recent films of the recipe's genres. Missing actor slots become "New actor N", which match nobody. Runtime is clamped to 40–300, because 2,360 people have a median under 40.
+- **Scoring goes through `PredictionService`**, the same path and cache as `POST /predict`. The career cache key also holds next year.
+- **"Edit in predictor" leaves "new" slots empty**, so the creator types real names.
+- **Files:** the frontend lives in `src/career/`, `recipeToForm` in `movies/predictLike.ts`; the schema's range is `ModelScoreRange` (a name clash).
+- **`make career` is a file target** on `data/movies.db`, and `docker-build` depends on it.
+- **The plan's tests were adapted** to the real schema: `movie_cast` can't hold a duplicate credit, and the missing-fields test became a fill test.
+
+### Checks
+
+| | |
+| --- | --- |
+| Python tests | 582 (`make test`); new: 9 queries, 9 maths, 12 backtest, 22 recipes, 25 endpoints |
+| Frontend tests | 280 (`npm run check`), 26 new |
+| Bundle | the section and Recharts are their own lazy chunk, 351 kB (103 kB gzipped); the main bundle 269 kB, the person page 9.6 kB |
+| Speed (local) | `/career` 6–25 ms; `/career/model` about 400 ms the first time, then about 6 ms |
+| Docker, memory, smoke, Playwright | not run: drive C: is full (about 0.5 GB free), and `slim_db.py`'s VACUUM needs about 1 GB |
+
+- **By hand** (the dev servers, real API):
+  - **Tom Hanks:**
+    - the chart with the best-film ring (The Green Mile, 8.5), the forecast 6.0–7.8 and both model rows, in dark on desktop;
+    - the year view at 375 px in light, with no sideways scroll.
+  - **Nolan:** the Fantasy chip replaces Comedy + Romance with Fantasy + Comedy (6.5–8.1) and is highlighted.
+
+### Surprises / inputs for Day 15+
+
+- **Tom Hanks's usual film is Drama + Documentary**, because recent films include documentaries where he appears as himself. He has credits in every genre (low-vote films included), so he gets no chips, only "They've already worked in every genre."
+- **Something new can score above the usual film.** For Hanks it's 7.46 against 6.96, from new themes and no named co-stars. That's honest model output, not a bug.
+- **A chip that repeats the default pair** (Nolan's Romance gives Romance + Comedy) scores the same as the default but misses the prediction cache, because the genre order differs.
+- **The first `/career/model` call takes about 400 ms locally.** Check it on Render's small CPU against the 3 s target.
+- **Disk:** C: is full. Free about 2 GB before `make docker-build`.
