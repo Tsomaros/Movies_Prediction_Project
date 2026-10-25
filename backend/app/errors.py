@@ -5,7 +5,8 @@
 Every 422 body is {"detail": "Some fields need fixing", "errors": {field: message}}, with the field as a
 dotted path: "runtime" for /predict, "base.runtime" or "variants.1.budget" for /predict/compare,
 "form.runtime" or "values.3" for /predict/sweep, and
-"q" or "page" for query parameters. The contract's rules apply to the /predict endpoints only; the
+"q" or "page" for query parameters. /people/{id}/career/model's genre errors (routers/career.py) keep the shape
+with the problem as the detail: {"detail": "Unknown genre", "errors": {"genre": "Unknown genre"}}. The contract's rules apply to the /predict endpoints only; the
 accounts endpoints get Pydantic's messages ("body", "rating", "watched_on").
 A user database that can't be reached (Neon waking up too slowly, or down) answers 503, not 500. A shape error also lists every rule problem the contract finds in the
 same body, with the contract's message where it has one, so a wrong type reads the same as a wrong value

@@ -17,6 +17,7 @@ from backend.app.settings import API_PREFIX, Settings
 from tests import test_accounts as accounts  # the module, not its tests: they run there, against Postgres
 from tests import test_random as surprise  # the same: the "Surprise me" tests run in their own module
 from tests import test_people_api as person_api  # and the person pages' tests
+from tests import test_career_api as career_api  # and the Career section's
 from tests.test_eval import db  # noqa: F401 (fixture: a small movies.db with a features table, 2008-2022)
 from tests.test_models import (budget_model, budget_rows, revenue_model, revenue_rows,  # noqa: F401 (fixtures)
                                score_model, score_rows)
@@ -584,6 +585,8 @@ ENDPOINTS = {  # every endpoint and the test above that covers it; a new endpoin
     ("GET", "/health"): test_health_reports_the_models_the_database_and_the_cache,
     ("GET", "/random"): surprise.test_spin_again_never_repeats_and_covers_exactly_the_films_above_the_floor,
     ("GET", "/people/{person_id}"): person_api.test_a_person_page_has_details_stats_and_films,
+    ("GET", "/people/{person_id}/career"): career_api.test_career_full_response,
+    ("GET", "/people/{person_id}/career/model"): career_api.test_model_response_and_no_budget_in_score_call,
     # the demo account (Day 14), tested against Postgres in tests/test_accounts.py
     ("POST", "/auth/login"): accounts.test_password_login_works_and_any_wrong_detail_gets_the_same_answer,
     ("POST", "/auth/demo"): accounts.test_me_is_quiet_when_logged_out_and_names_the_user_after_a_demo_login,

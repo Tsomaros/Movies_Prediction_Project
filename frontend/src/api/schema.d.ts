@@ -123,6 +123,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/people/{person_id}/career": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One person's scores over the years in one role, and a track-record forecast of their next film */
+        get: operations["career_api_v1_people__person_id__career_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/people/{person_id}/career/model": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The score model on "Their usual film" and "Something new" for an actor or director */
+        get: operations["career_model_api_v1_people__person_id__career_model_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/companies": {
         parameters: {
             query?: never;
@@ -447,6 +481,17 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** BestFilm */
+        BestFilm: {
+            /** Movie Id */
+            movie_id: number;
+            /** Title */
+            title: string;
+            /** Year */
+            year: number;
+            /** Score */
+            score: number;
+        };
         /** BoxOffice */
         BoxOffice: {
             /**
@@ -517,6 +562,103 @@ export interface components {
             given: number | null;
             comparison: components["schemas"]["BudgetComparison"];
         };
+        /** CareerFilmOut */
+        CareerFilmOut: {
+            /** Movie Id */
+            movie_id: number;
+            /** Title */
+            title: string;
+            /** Year */
+            year: number;
+            /**
+             * Release Date
+             * @description YYYY-MM-DD, when TMDB has the day
+             */
+            release_date: string | null;
+            /**
+             * Score
+             * @description TMDB's average score (1-10)
+             */
+            score: number | null;
+            /** Vote Count */
+            vote_count: number;
+            /**
+             * Rated
+             * @description 50+ votes and a score: a solid dot that counts for the line and the forecast; otherwise a faint dot only
+             */
+            rated: boolean;
+            /**
+             * Lead
+             * @description Acting: billed in the top 3; None for crew roles
+             */
+            lead: boolean | null;
+            /**
+             * Character
+             * @description Acting: who they played
+             */
+            character: string | null;
+            /**
+             * Poster Small
+             * @description A TMDB poster (w342), when there is one
+             */
+            poster_small: string | null;
+            /**
+             * Year Avg
+             * @description The average score of rated films released that year
+             */
+            year_avg: number | null;
+        };
+        /** CareerModelResponse */
+        CareerModelResponse: {
+            /** @description "Their usual film"; left out when a genre was asked for */
+            usual?: components["schemas"]["ModelFilm"] | null;
+            /** @description "Something new": the default pick, or the asked genre */
+            new: components["schemas"]["NewFilm"];
+            /**
+             * Chips
+             * @description Up to 4 genres they've never done; left out when a genre was asked for
+             */
+            chips?: components["schemas"]["Chip"][] | null;
+        };
+        /** CareerResponse */
+        CareerResponse: {
+            /** Person Id */
+            person_id: number;
+            /**
+             * Role
+             * @description The role asked for, else their role with the most films
+             * @enum {string}
+             */
+            role: "acting" | "directing" | "writing";
+            /**
+             * Roles Available
+             * @description Roles with 5+ rated films, plus the one shown
+             */
+            roles_available: components["schemas"]["RoleCount"][];
+            /**
+             * Films
+             * @description Oldest first; films without a year are left out
+             */
+            films: components["schemas"]["CareerFilmOut"][];
+            /**
+             * Line
+             * @description One point per rated film, oldest first
+             */
+            line: components["schemas"]["LinePoint"][];
+            /** @description Highest score (ties: more votes, then newer); None without rated films */
+            best_film: components["schemas"]["BestFilm"] | null;
+            /**
+             * Latest Year Avg
+             * @description The newest year's average, to shift the band in the compared-with-its-year view
+             */
+            latest_year_avg: number | null;
+            forecast: components["schemas"]["TrackForecast"];
+            /**
+             * Model Available
+             * @description Acting or directing with 1+ rated film: /career/model answers
+             */
+            model_available: boolean;
+        };
         /** CastMember */
         CastMember: {
             /** Id */
@@ -529,6 +671,18 @@ export interface components {
             order: number | null;
             /** @description TMDB photo (small: w185, large: h632), when the person pull has one */
             photo?: components["schemas"]["Poster"] | null;
+        };
+        /** Chip */
+        Chip: {
+            /** Genre Id */
+            genre_id: number;
+            /** Name */
+            name: string;
+            /**
+             * Default
+             * @description The genre of the default pick
+             */
+            default: boolean;
         };
         /** CodeCount */
         CodeCount: {
@@ -782,7 +936,7 @@ export interface components {
         FieldErrors: {
             /**
              * Detail
-             * @description Always "Some fields need fixing"
+             * @description "Some fields need fixing"; the genre errors of /people/{id}/career/model say "Unknown genre" or "Genre already done"
              */
             detail: string;
             /**
@@ -833,6 +987,47 @@ export interface components {
              * @description code / codes: the regular expression a code must match
              */
             pattern?: string | null;
+        };
+        /** ForecastExplain */
+        ForecastExplain: {
+            /**
+             * N Rated
+             * @description Rated films the forecast uses
+             */
+            n_rated: number;
+            /**
+             * Half Life
+             * @description Years after which a film counts half; None: every film the same
+             */
+            half_life: number | null;
+            /**
+             * Own Share
+             * @description How much their weighted average is trusted (0-1); the database average gets the rest
+             */
+            own_share: number;
+            /**
+             * Own Avg
+             * @description Their weighted average score
+             */
+            own_avg: number;
+            /**
+             * Db Avg
+             * @description The role's average score over rated films of the 10 latest years
+             */
+            db_avg: number;
+        };
+        /** ForecastTest */
+        ForecastTest: {
+            /**
+             * Coverage
+             * @description Share of real next films from 2019 on inside a range built this way
+             */
+            coverage: number;
+            /**
+             * N People
+             * @description People whose next films were tested
+             */
+            n_people: number;
         };
         /**
          * FormChanges
@@ -945,6 +1140,16 @@ export interface components {
                 [key: string]: number;
             };
         };
+        /** LinePoint */
+        LinePoint: {
+            /** Year */
+            year: number;
+            /**
+             * Value
+             * @description A centred mean over 5 rated films (fewer at the ends)
+             */
+            value: number;
+        };
         /** LoginRequest */
         LoginRequest: {
             /** Username */
@@ -1033,6 +1238,29 @@ export interface components {
             sources: {
                 [key: string]: string;
             };
+        };
+        /** ModelFilm */
+        ModelFilm: {
+            recipe: components["schemas"]["RecipeOut"];
+            prediction: components["schemas"]["ModelScoreRange"];
+        };
+        /** ModelScoreRange */
+        ModelScoreRange: {
+            /**
+             * Low
+             * @description The score model's calibrated 10th percentile
+             */
+            low: number;
+            /**
+             * Mid
+             * @description Its median
+             */
+            mid: number;
+            /**
+             * High
+             * @description Its 90th percentile
+             */
+            high: number;
         };
         /** Money */
         Money: {
@@ -1221,6 +1449,16 @@ export interface components {
             /** Pages */
             pages: number;
             counts: components["schemas"]["Counts"];
+        };
+        /** NewFilm */
+        NewFilm: {
+            recipe: components["schemas"]["RecipeOut"];
+            prediction: components["schemas"]["ModelScoreRange"];
+            /**
+             * Note
+             * @description Set when they have worked in every genre, so their usual genres are used
+             */
+            note: string | null;
         };
         /** Note */
         Note: {
@@ -1601,6 +1839,62 @@ export interface components {
              */
             rough: boolean;
         };
+        /** RecipeLabels */
+        RecipeLabels: {
+            /**
+             * Genres
+             * @description Genre names
+             */
+            genres: string[];
+            /** Themes */
+            themes: string[];
+            /**
+             * Collaborators
+             * @description The named people other than the person
+             */
+            collaborators: string[];
+        };
+        /** RecipeOut */
+        RecipeOut: {
+            /**
+             * Genres
+             * @description TMDB genre ids
+             */
+            genres: number[];
+            /** Themes */
+            themes: string[];
+            /** Language */
+            language: string;
+            /** Runtime */
+            runtime: number;
+            /** Release Month */
+            release_month: number;
+            /**
+             * Release Year
+             * @description Next year
+             */
+            release_year: number;
+            /** Certification */
+            certification: string;
+            /** Country */
+            country: string | null;
+            /**
+             * Director
+             * @description A person, or "new" for a new director
+             */
+            director: components["schemas"]["SlotPerson"] | "new";
+            /**
+             * Actors
+             * @description 3 slots as shown on the card; the model gets "new" actors up to 5
+             */
+            actors: (components["schemas"]["SlotPerson"] | "new")[];
+            /**
+             * Budget 2025
+             * @description Their median known budget in 2025 $, for the predictor pre-fill only: the score model never gets a budget
+             */
+            budget_2025: number | null;
+            labels: components["schemas"]["RecipeLabels"];
+        };
         /** Ref */
         Ref: {
             /** Id */
@@ -1666,6 +1960,24 @@ export interface components {
             films: components["schemas"]["Credit"][];
             stats: components["schemas"]["PersonStats"];
         };
+        /** RoleCount */
+        RoleCount: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "acting" | "directing" | "writing";
+            /**
+             * Film Count
+             * @description Dated films in this role
+             */
+            film_count: number;
+            /**
+             * Rated Count
+             * @description Of those, films with a usable score (50+ votes)
+             */
+            rated_count: number;
+        };
         /** Score */
         Score: {
             /** Average */
@@ -1723,6 +2035,13 @@ export interface components {
              * @description Score: the variant's middle minus the base's
              */
             points?: number | null;
+        };
+        /** SlotPerson */
+        SlotPerson: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string | null;
         };
         /** StatusList */
         StatusList: {
@@ -1802,6 +2121,28 @@ export interface components {
             revenue_estimated: components["schemas"]["TargetAccuracy"];
             budget: components["schemas"]["TargetAccuracy"];
             score: components["schemas"]["TargetAccuracy"];
+        };
+        /** TrackForecast */
+        TrackForecast: {
+            /**
+             * Status
+             * @description not_enough_films below 5 rated films
+             * @enum {string}
+             */
+            status: "ok" | "not_enough_films";
+            /**
+             * Low
+             * @description The 80% range of their next film's score; None without a forecast
+             */
+            low: number | null;
+            /** Mid */
+            mid: number | null;
+            /** High */
+            high: number | null;
+            /** @description The numbers behind it; None without a forecast */
+            explain: components["schemas"]["ForecastExplain"] | null;
+            /** @description The backtest of this role's settings */
+            test: components["schemas"]["ForecastTest"];
         };
         /** Training */
         Training: {
@@ -2146,6 +2487,112 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FieldErrors"];
+                };
+            };
+        };
+    };
+    career_api_v1_people__person_id__career_get: {
+        parameters: {
+            query?: {
+                /** @description acting, directing or writing; default: their role with the most films */
+                role?: ("acting" | "directing" | "writing") | null;
+            };
+            header?: never;
+            path: {
+                person_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareerResponse"];
+                };
+            };
+            /** @description No such person, or no credits in this role */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"];
+                };
+            };
+            /** @description Some fields need fixing */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FieldErrors"];
+                };
+            };
+            /** @description Too many prediction requests from this address; see Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"];
+                };
+            };
+        };
+    };
+    career_model_api_v1_people__person_id__career_model_get: {
+        parameters: {
+            query: {
+                /** @description acting or directing (writing: 404, the model has no writer input) */
+                role: "acting" | "directing" | "writing";
+                /** @description A genre id from `chips`: only that "Something new" */
+                genre?: number | null;
+            };
+            header?: never;
+            path: {
+                person_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareerModelResponse"];
+                };
+            };
+            /** @description No such person, or no credits in this role */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"];
+                };
+            };
+            /** @description Some fields need fixing */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FieldErrors"];
+                };
+            };
+            /** @description Too many prediction requests from this address; see Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"];
                 };
             };
         };

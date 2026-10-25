@@ -16,6 +16,13 @@
                                     -> [{genre_id, name, default}]: up to 4 never-done genres, the default among them
     recipe_to_form(recipe, genre_names)
                                     -> the creator form for the score model (no budget, franchise or companies)
+    career_model_response(con, predictions, person_id, role, genre_id, next_year)
+                                    -> {usual, new, chips}, or {new} for a chip's genre: each film its recipe and
+                                       the score model's range {low, mid, high}; ValueError as usual_recipe,
+                                       UnknownGenre / GenreAlreadyDone as new_recipe
+    CareerModelCache(size=2000)     -> an LRU of those answers, shared by the thread pool:
+                                       cache.response(con, predictions, person_id, role, genre_id, next_year)
+                                       keyed by (person, role, genre or "default", model version, next_year)
 
 A recipe is always a form the contract accepts: gaps in their films are filled, never left None. Themes and the
 certification come from recent rated films with all the recipe's genres (else its first genre), the month too;
@@ -29,15 +36,19 @@ from __future__ import annotations
 import itertools
 import sqlite3
 import statistics
-from collections import Counter
+import threading
+from collections import Counter, OrderedDict
 from typing import Any, Hashable, Iterable, Literal, TypedDict
 
 from backend.app.repo import career as repo
 from backend.app.repo.career import Role, repeat_collaborators
+from backend.app.services.prediction import PredictionService
+from ml.data.clean import MIN_VOTES
 from ml.features.contract import CERTIFICATIONS, MAX_RUNTIME, MIN_ACTORS, MIN_RUNTIME, certification_category
 
 __all__ = ["PersonSlot", "Recipe", "GenreAlreadyDone", "UnknownGenre", "repeat_collaborators", "usual_recipe",
-           "never_done_genres", "recent_genre_counts", "new_recipe", "chips", "recipe_to_form"]
+           "never_done_genres", "recent_genre_counts", "new_recipe", "chips", "recipe_to_form", "career_model_response",
+           "CareerModelCache"]
 
 PersonSlot = dict[str, Any] | Literal["new"]
 ModelRole = Literal["acting", "directing"]
@@ -240,3 +251,49 @@ def recipe_to_form(recipe: Recipe, genre_names: dict[int, str]) -> dict[str, Any
         "actors": [_ref(s, f"New actor {i}") for i, s in enumerate(slots, 1)],
         "countries": [recipe["country"]] if recipe["country"] else [],
     }
+
+
+def _scored(predictions: PredictionService, recipe: Recipe, names: dict[int, str]) -> dict[str, Any]:
+    """The recipe and the score model's range, through the same validation and cache as POST /predict."""
+    out, _ = predictions.predict(recipe_to_form(recipe, names))
+    s = out["score"]
+    return {"recipe": recipe, "prediction": {"low": s["low"], "mid": s["middle"], "high": s["high"]}}
+
+
+def career_model_response(con: sqlite3.Connection, predictions: PredictionService, person_id: int, role: ModelRole,
+                          genre_id: int | None, next_year: int) -> dict[str, Any]:
+    themes = predictions.predictor.ctx.themes
+    names = repo.genre_names(con)
+    usual = usual_recipe(con, person_id, role, MIN_VOTES, next_year, themes)
+    new, note = new_recipe(con, person_id, role, usual, MIN_VOTES, themes, genre_id)
+    something_new = {**_scored(predictions, new, names), "note": note}
+    if genre_id is not None:
+        return {"new": something_new}
+    default = new["genres"][0] if note is None else None
+    return {"usual": _scored(predictions, usual, names), "new": something_new,
+            "chips": chips(con, person_id, role, default, MIN_VOTES)}
+
+
+class CareerModelCache:
+    def __init__(self, size: int = 2000):
+        self.size = size
+        self._cache: OrderedDict[tuple[Any, ...], dict[str, Any]] = OrderedDict()
+        self._lock = threading.Lock()
+
+    def response(self, con: sqlite3.Connection, predictions: PredictionService, person_id: int, role: ModelRole,
+                 genre_id: int | None, next_year: int) -> dict[str, Any]:
+        key = (person_id, role, "default" if genre_id is None else genre_id,
+               predictions.predictor.manifest["version"], next_year)
+        with self._lock:
+            if key in self._cache:
+                self._cache.move_to_end(key)
+                return self._cache[key]
+        out = career_model_response(con, predictions, person_id, role, genre_id, next_year)  # outside the lock
+        with self._lock:
+            self._cache[key] = out
+            while len(self._cache) > self.size:
+                self._cache.popitem(last=False)
+        return out
+
+    def __len__(self) -> int:
+        return len(self._cache)

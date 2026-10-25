@@ -8,6 +8,8 @@
 The lifespan hook runs once at startup and keeps on app.state:
 - predictor: the app's models, feature context and comparables index, after the manifest check (about 11-14 s);
 - lookups:   the autocomplete indexes (about 2-3 s, about 33 MB);
+- career, career_models: the career forecast's settings (CAREER_FILE, loaded first: a missing file stops the
+  start) and the cache of /career/model answers (Day 14.8);
 - predictions, rate_limiter: the prediction cache (CACHE_SIZE entries) and the per-IP limit (RATE_LIMIT a minute);
 - started:   the time it finished, plus load_seconds, for /health;
 - userdb, demo_seed, limiters: the user-database pool (None without USER_DATABASE_URL: /auth and /me then
@@ -34,8 +36,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app import errors
 from backend.app.deps import connect_read_only
-from backend.app.routers import (auth, collections, companies, health, meta, model_card, movies, my_movies, notes,
-                                 people, predict, random, sweep)
+from backend.app.routers import (auth, career, collections, companies, health, meta, model_card, movies, my_movies,
+                                 notes, people, predict, random, sweep)
+from backend.app.services.career_forecast import load_career_artifact
+from backend.app.services.career_model import CareerModelCache
 from backend.app.services.lookups import Lookups
 from backend.app.services.prediction import PredictionService
 from backend.app.services.ratelimit import RateLimiter
@@ -46,8 +50,8 @@ from ml.predict import Predictor
 
 log = logging.getLogger("uvicorn.error")
 
-ROUTERS = (predict, sweep, movies, people, companies, collections, meta, model_card, health, auth, my_movies, notes,
-           random)
+ROUTERS = (predict, sweep, movies, people, career, companies, collections, meta, model_card, health, auth, my_movies,
+           notes, random)
 LIMITS = {"login": 5, "demo": 10, "write": 30, "random": 60}  # a minute: writes per user, the others per client IP
 DESCRIPTION = (
     "Budget, revenue and audience-score ranges for a planned film, with the drivers behind them and "
@@ -76,6 +80,8 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         start = time.perf_counter()
+        app.state.career = load_career_artifact(settings.career_file)  # a few KB; fails before the slow loads
+        app.state.career_models = CareerModelCache()
         app.state.predictor = predictor or Predictor.load(settings.models_dir, settings.db_path,
                                                           context_file=settings.context_file)
         if lookups is None:

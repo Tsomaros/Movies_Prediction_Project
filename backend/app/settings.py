@@ -10,6 +10,7 @@
 | CACHE_SIZE    | 1000                        | predictions kept in the LRU cache                    |
 | CONTEXT_FILE  | (none: build at startup)    | prebuilt track records (ml.features.build prebuilt)  |
 | USER_DATABASE_URL | (none: accounts off)    | Postgres for the demo account (Day 14); without it /auth and /me answer 503 |
+| CAREER_FILE   | ml/artifacts/career_forecast.json | the career forecast's settings (make career, Day 14.8); missing: no start |
 
 The browser origins are also the only ones allowed to write to /auth and /me (deps.same_origin_write),
 besides the API's own origin.
@@ -27,6 +28,7 @@ from ml.data.build_db import DB_FILE
 from ml.predict import FINAL_DIR
 
 API_PREFIX = "/api/v1"
+CAREER_FILE = Path("ml/artifacts/career_forecast.json")  # written by ml.career.backtest (make career)
 
 
 def _origins(text: str) -> tuple[str, ...]:
@@ -42,6 +44,7 @@ class Settings:
     cache_size: int = 1000
     context_file: Path | None = None
     user_database_url: str | None = None
+    career_file: Path = CAREER_FILE
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -55,4 +58,5 @@ class Settings:
             cache_size=int(env.get("CACHE_SIZE", "1000")),
             context_file=Path(env["CONTEXT_FILE"]) if env.get("CONTEXT_FILE") else None,
             user_database_url=env.get("USER_DATABASE_URL") or None,
+            career_file=Path(env.get("CAREER_FILE", str(CAREER_FILE))),
         )

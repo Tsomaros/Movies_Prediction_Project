@@ -14,7 +14,8 @@ from pydantic import BaseModel, Field
 
 
 class FieldErrors(BaseModel):
-    detail: str = Field(description='Always "Some fields need fixing"')
+    detail: str = Field(description='"Some fields need fixing"; the genre errors of /people/{id}/career/model say '
+                                    '"Unknown genre" or "Genre already done"')
     errors: dict[str, str] = Field(description='One message per field, keyed by its dotted path ("actors.2", '
                                                '"variants.1.budget", "q")')
 
