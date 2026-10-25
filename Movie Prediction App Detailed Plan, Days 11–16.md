@@ -285,6 +285,7 @@ Day 14.8 adds a Career section to every person page, between the stats strip and
 | Scoring | Through the existing `PredictionService` (and its cache), score only shown; never a budget | The same path as `POST /predict` |
 | Limits | Both career endpoints count toward the predict limit (30 a minute per IP) | The spec |
 | Chart | Recharts, in the lazy person page chunk | The spec |
+| Revenue view (follow-up) | "Score / Revenue" replaces "Compared with its year": the same forecast and backtest on log 2025 $ of trusted revenue, and the model films' box office with their median budget | Dimitris asked for it after seeing the section |
 
 ### Tasks
 

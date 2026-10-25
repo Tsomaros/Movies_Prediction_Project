@@ -1999,8 +1999,31 @@ Acting is inside the plan's 0.75–0.85 band, and every role beats the database 
     - the year view at 375 px in light, with no sideways scroll.
   - **Nolan:** the Fantasy chip replaces Comedy + Romance with Fantasy + Comedy (6.5–8.1) and is highlighted.
 
+### Revenue view (follow-up, `e354800`, `c18ba90`)
+
+Dimitris asked to replace "Compared with its year" with box office, built the same way as the score. His choices: chart, forecast and model; trusted revenue only (15,845 films); the model films get their median budget.
+
+- **Removed:** the year view, `year_averages`, `year_avg`, `latest_year_avg`.
+- **Revenue forecast:** the same maths on log 2025 $, its own backtest (artifact v2). On 2019+ next films:
+
+  | Role | h | k | q | Coverage | Within 2× | Log error | Database average | People |
+  | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+  | Acting | 12 | 3 | 1.45 | 84.6% | 23% | 1.96 | 2.09 | 4,007 |
+  | Directing (falls back to acting) | 12 | 3 | 1.45 | 86.8% | 31% | 1.59 | 2.14 | 298 |
+  | Writing | 8 | 1 | 1.40 | 87.0% | 32% | 1.35 | 2.26 | 351 |
+
+  The score settings are unchanged.
+- **Wide ranges, shown plainly (Dimitris's choice):** Nolan's next film reads $1.3M–$7.4B. The forecast shrinks toward the database's typical film (about $5.5M), and only 23–32% of real next films land within 2×. The card says so with those numbers.
+- **Model films:** the form now carries the median budget when known (revenue mode "given"). The score is identical with or without it (checked on Hanks and Nolan); `EXCLUDED` keeps `log_budget` out of the score model.
+- **Checks:**
+  - Python: `test_career_*`, `test_api`, `test_people_api` 176, fast suite 465.
+  - Frontend: 289 tests; the section chunk is 353 kB (104 kB gzipped).
+  - Docker: smoke passes (the career line now includes Hanks's box office $7M–$1,320M); memory 380 MiB; Playwright 2/2.
+  - By hand: Nolan's Revenue view in Docker, with the log axis, band, hard-to-call line and the model rows "with their median budget of $240M".
+
 ### Surprises / inputs for Day 15+
 
+- **Shorts count in the box office.** Nolan's 8-minute *Quay* (2015, $70K) is a dot and pulls his revenue line and forecast down. Leaving out films under the form's 40-minute minimum would fix it.
 - **Tom Hanks's usual film is Drama + Documentary**, because recent films include documentaries where he appears as himself. He has credits in every genre (low-vote films included), so he gets no chips, only "They've already worked in every genre."
 - **Something new can score above the usual film.** For Hanks it's 7.46 against 6.96, from new themes and no named co-stars. That's honest model output, not a bug.
 - **A chip that repeats the default pair** (Nolan's Romance gives Romance + Comedy) scores the same as the default but misses the prediction cache, because the genre order differs.
