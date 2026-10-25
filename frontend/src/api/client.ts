@@ -6,6 +6,7 @@
 //   myMovies(query), statuses(ids), setEntry(id, body), removeEntry(id),
 //   filmNotes(id), addNote(id, body), allNotes(page), editNote(id, body), deleteNote(id)   -> lists and notes
 //   random(query)                                        -> "Surprise me": one random film, or why there is none
+//   getPerson(id), searchPeople(q, limit)                -> a person page; actors with a photo and known-for film
 //   ApiError                                             -> every failure, with a `kind` the UI can act on:
 //     validation   422, `fieldErrors` keyed by the API's dotted paths ("actors.2", "budget")
 //     rate_limited 429, `retryAfter` seconds from the Retry-After header
@@ -46,6 +47,8 @@ export type MySort = NonNullable<NonNullable<operations['my_movies_api_v1_me_mov
 export type Note = Schemas['Note']
 export type NotePage = Schemas['NotePage']
 export type RandomPick = Schemas['RandomPick']
+export type PersonDetail = Schemas['PersonDetail']
+export type PersonMatch = Schemas['PersonMatch']
 export type RandomMovie = Schemas['RandomMovie']
 type RandomQueryAll = NonNullable<operations['random_film_api_v1_random_get']['parameters']['query']>
 export type RandomQuery = { [K in keyof RandomQueryAll]?: NonNullable<RandomQueryAll[K]> }
@@ -157,6 +160,9 @@ export const api = {
   allNotes: (page: number, signal?: AbortSignal) => request<NotePage>('/me/notes', { query: { page }, signal }),
   editNote: (id: number, body: string) => request<Note>(`/me/notes/${id}`, { method: 'PATCH', body: { body } }),
   deleteNote: (id: number) => request<void>(`/me/notes/${id}`, { method: 'DELETE' }),
+  getPerson: (id: number, signal?: AbortSignal) => request<PersonDetail>(`/people/${id}`, { signal }),
+  searchPeople: (q: string, limit: number, signal?: AbortSignal) =>
+    request<PersonMatch[]>('/people', { query: { role: 'actor', q, limit }, signal }),
   random: ({ gems, ...query }: RandomQuery, signal?: AbortSignal) =>
     request<RandomPick>('/random', { query: { ...query, gems: gems ? 'true' : undefined }, signal }),
 }

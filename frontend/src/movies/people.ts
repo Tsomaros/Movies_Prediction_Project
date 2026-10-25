@@ -3,8 +3,10 @@
 //   initials(name)        -> "Robert Downey Jr." -> "RD", "Zendaya" -> "Z"
 //   nameHue(name)         -> a hue 0-359 from the name, so a person's avatar has the same colour on every page
 //   runtimeText(minutes)  -> 149 -> "2 h 29 min", 90 -> "1 h 30 min", 45 -> "45 min"
-//   crewByJob(crew, jobs) -> [{job, names}] in the order of `jobs`, each name once
+//   crewByJob(crew, jobs) -> [{job, people: [{id, name}]}] in the order of `jobs`, each person once
 //   votes(n)              -> 1 -> "1 vote", 1203 -> "1,203 votes"
+//   formatLife(born, died, today) -> "Born 9 Jul 1956 · 70", "1920–1990", "Died 1990", or null (dates are
+//                            "YYYY-MM-DD", read as calendar dates: no time zone can move them a day)
 
 const SUFFIXES = new Set(['jr', 'jr.', 'sr', 'sr.', 'ii', 'iii', 'iv'])
 
@@ -28,11 +30,31 @@ export function runtimeText(minutes: number): string {
   return h === 0 ? `${m} min` : m === 0 ? `${h} h` : `${h} h ${m} min`
 }
 
-export function crewByJob(crew: { name?: string | null; job: string }[], jobs: string[]) {
-  return jobs.map(job => ({
-    job,
-    names: [...new Set(crew.filter(c => c.job === job && c.name).map(c => c.name!))],
-  })).filter(g => g.names.length > 0)
+export function crewByJob(crew: { id: number; name?: string | null; job: string }[], jobs: string[]) {
+  return jobs.map(job => {
+    const seen = new Set<number>()
+    const people = crew.filter(c => c.job === job && c.name && !seen.has(c.id) && seen.add(c.id))
+      .map(c => ({ id: c.id, name: c.name! }))
+    return { job, people }
+  }).filter(g => g.people.length > 0)
 }
 
 export const votes = (n: number) => `${n.toLocaleString('en-US')} ${n === 1 ? 'vote' : 'votes'}`
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+function parts(iso: string | null | undefined) {
+  const m = iso ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso) : null
+  return m ? { y: Number(m[1]), m: Number(m[2]), d: Number(m[3]) } : null
+}
+
+export function formatLife(born: string | null | undefined, died: string | null | undefined, today = new Date()): string | null {
+  const b = parts(born)
+  const d = parts(died)
+  if (b && d) return `${b.y}–${d.y}`
+  if (d) return `Died ${d.y}`
+  if (!b) return null
+  const [ty, tm, td] = [today.getFullYear(), today.getMonth() + 1, today.getDate()]
+  const age = ty - b.y - (tm < b.m || (tm === b.m && td < b.d) ? 1 : 0)
+  return `Born ${b.d} ${MONTHS[b.m - 1]} ${b.y} · ${age}`
+}

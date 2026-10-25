@@ -2,6 +2,7 @@
 // the cast (initials avatars: our data has no photos) and key crew, similar films, and "Predict a film like this",
 // which opens the creator form pre-filled (src/movies/predictLike.ts). Your lists (watched with a date and a
 // 10-star rating, or plan to watch) sit under the score, and your private notes after the overview.
+// Cast and crew names link to their person pages (/people/:id).
 import { ArrowLeftIcon, ExternalLinkIcon, SparklesIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
@@ -189,7 +190,12 @@ export default function MovieDetail() {
             {crew.map(g => (
               <div key={g.job} className="contents">
                 <dt className="text-muted-foreground">{JOB_LABELS[g.job] ?? g.job}</dt>
-                <dd>{g.names.slice(0, MAX_PER_JOB).join(', ')}{g.names.length > MAX_PER_JOB && ` and ${g.names.length - MAX_PER_JOB} more`}</dd>
+                <dd>
+                  {g.people.slice(0, MAX_PER_JOB).map((p, i) => (
+                    <span key={p.id}>{i > 0 && ', '}<Link to={`/people/${p.id}`} className="hover:underline">{p.name}</Link></span>
+                  ))}
+                  {g.people.length > MAX_PER_JOB && ` and ${g.people.length - MAX_PER_JOB} more`}
+                </dd>
               </div>
             ))}
             {f.companies.length > 0 && <><dt className="text-muted-foreground">Studios</dt><dd>{f.companies.map(c => c.name).join(', ')}</dd></>}
@@ -208,7 +214,7 @@ export default function MovieDetail() {
               <li key={`${c.id}-${c.order}`} className="flex items-center gap-3">
                 <Avatar name={c.name ?? '?'} />
                 <span className="grid">
-                  <span className="font-medium">{c.name}</span>
+                  <Link to={`/people/${c.id}`} className="font-medium hover:underline">{c.name}</Link>
                   {c.character && <span className="text-muted-foreground text-sm">{c.character}</span>}
                 </span>
               </li>

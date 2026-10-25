@@ -106,6 +106,27 @@ export function useMovies(query: MovieQuery, enabled = true) {
   })
 }
 
+export function usePerson(id: number | null) {
+  return useQuery({
+    queryKey: ['person', id],
+    queryFn: ({ signal }) => api.getPerson(id!, signal),
+    enabled: id !== null,
+    staleTime: HOUR,
+    retry: (count, error) => !(error instanceof ApiError && error.kind === 'not_found') && count < 1,
+  })
+}
+
+/** Actors for browse search's people row: at most `limit`, only for 2+ typed characters (q is already debounced). */
+export function usePeopleRow(q: string, limit: number) {
+  const text = q.trim()
+  return useQuery({
+    queryKey: ['people-row', text, limit],
+    queryFn: ({ signal }) => api.searchPeople(text, limit, signal),
+    enabled: text.length >= 2,
+    staleTime: HOUR,
+  })
+}
+
 export function useMovie(id: number | null) {
   return useQuery({
     queryKey: ['movie', id],

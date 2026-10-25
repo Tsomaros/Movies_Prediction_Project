@@ -3,10 +3,11 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import type { ModelCard, MovieDetail, MovieList, Options } from '@/api/client'
+import { emptyForm } from '@/form/model'
 import { decodeForm, LIKE_PARAM } from '@/form/persist'
 import { browseLink, EMPTY, pageNumbers, readBrowse, VIEW_KEY, writeBrowse } from '@/movies/browse'
-import { crewByJob, initials, nameHue, runtimeText } from '@/movies/people'
-import { filmToForm } from '@/movies/predictLike'
+import { crewByJob, formatLife, initials, nameHue, runtimeText } from '@/movies/people'
+import { filmToForm, personToForm } from '@/movies/predictLike'
 import { ROWS } from '@/movies/rows'
 import { SEARCH_MS } from '@/pages/Browse'
 import { mockFetch } from '@/test/fetch'
@@ -63,8 +64,29 @@ describe('people and facts', () => {
 
   test('runtime and crew text', () => {
     expect([runtimeText(149), runtimeText(120), runtimeText(45)]).toEqual(['2 h 29 min', '2 h', '45 min'])
-    expect(crewByJob(FILM.crew, ['Director', 'Editor'])).toEqual([
+    const names = crewByJob(FILM.crew, ['Director', 'Editor']).map(g => ({ job: g.job, names: g.people.map(p => p.name) }))
+    expect(names).toEqual([
       { job: 'Director', names: ['Anthony Russo', 'Joe Russo'] }, { job: 'Editor', names: ['Jeffrey Ford', 'Matthew Schmidt'] }])
+    expect(crewByJob(FILM.crew, ['Director'])[0].people[0]).toEqual(
+      { id: FILM.crew.find(c => c.name === 'Anthony Russo')!.id, name: 'Anthony Russo' })
+  })
+
+  test('life dates: a birthday with the age, a lifespan, a death year, or nothing', () => {
+    const today = new Date(2026, 9, 25)
+    expect(formatLife('1956-07-09', null, today)).toBe('Born 9 Jul 1956 · 70')
+    expect(formatLife('1956-10-26', null, today)).toBe('Born 26 Oct 1956 · 69') // the birthday is tomorrow
+    expect(formatLife('1956-10-25', null, today)).toBe('Born 25 Oct 1956 · 70')
+    expect(formatLife('1920-01-01', '1990-06-01', today)).toBe('1920–1990')
+    expect(formatLife(null, '1990-06-01', today)).toBe('Died 1990')
+    expect(formatLife(null, null, today)).toBeNull()
+    expect(formatLife('not a date', undefined, today)).toBeNull()
+  })
+
+  test('"Predict a film with this actor" starts a fresh form with them as the lead', () => {
+    const form = personToForm({ id: 31, name: 'Tom Hanks' }, new Date(2026, 9, 25))
+    expect(form.actors).toEqual([{ id: 31, name: 'Tom Hanks' }])
+    expect(form).toEqual({ ...emptyForm(new Date(2026, 9, 25)), actors: [{ id: 31, name: 'Tom Hanks' }] })
+    expect(form.director).toBeNull()
   })
 })
 
@@ -179,7 +201,13 @@ describe('the film page', () => {
     const cast = screen.getByRole('region', { name: 'Cast' })
     expect(within(cast).getByText('RD')).toBeInTheDocument()
     expect(within(cast).getByText('Tony Stark / Iron Man')).toBeInTheDocument()
-    expect(screen.getByText('Anthony Russo, Joe Russo')).toBeInTheDocument()
+    const rdj = FILM.cast.find(c => c.name === 'Robert Downey Jr.')!
+    expect(within(cast).getByRole('link', { name: 'Robert Downey Jr.' })).toHaveAttribute('href', `/people/${rdj.id}`)
+    const made = screen.getByRole('region', { name: 'Made by' })
+    const directors = within(made).getByText('Anthony Russo').closest('dd')!
+    expect(directors).toHaveTextContent('Anthony Russo, Joe Russo')
+    const russo = FILM.crew.find(c => c.name === 'Joe Russo')!
+    expect(within(directors).getByRole('link', { name: 'Joe Russo' })).toHaveAttribute('href', `/people/${russo.id}`)
     const similar = screen.getByRole('region', { name: 'Similar films' })
     expect(within(similar).getAllByRole('link')[0]).toHaveAttribute('href', `/movies/${FILM.similar[0].id}`)
     expect(screen.getByRole('link', { name: /This film on TMDB/ })).toHaveAttribute('href', 'https://www.themoviedb.org/movie/299536')
