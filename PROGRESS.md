@@ -1925,13 +1925,18 @@ The floor lives in `services/random_pick.py` as `FLOOR = (200, 6.0)`. With hidde
 | Smoke | all checks pass, including Nolan opening on directing |
 | Playwright | both flows pass against Docker |
 
-- **By hand:**
-  - Nolan's page at 375 px in light (the switch wraps to two lines);
-  - The Dark Knight's cast photos in dark, on desktop;
-  - the role switch and the director button on the dev servers.
+- **By hand** (the Docker app):
+  - **Nolan's page:**
+    - at 375 px in light, the switch wraps to two lines;
+    - clicking Writing gives `?role=writing` and 14 films with their "Writer" credit, "Wrote 14 films", and no predict button;
+    - back on Directing, "Predict a film with this director" opens `/predict` with Nolan in the Director field and the "Started from Christopher Nolan" hint.
+  - **The people row:** "spielberg" shows Steven Spielberg once, labelled Director (39 directed against 36 acting); "kubrick" shows Stanley Kubrick as Director. "tom" shows six actors, because they have more films than any director named Tom.
+  - **The Dark Knight's cast photos,** in dark on desktop.
+  - **On the dev servers:** a screenshot of Nolan's page and Inception's cast photos.
 
 ### Surprises / inputs for Day 15+
 
 - **Crew photos are sparse on TMDB** (29%), so most crew pages show initials. That's expected, not a bug.
 - **The people row now makes two requests per search** (actors and directors). Both are cached for an hour, but on Render that is two hits on each keystroke pause; one combined endpoint would halve it if needed.
 - **Refresh:** the crew details were pulled on Oct 25, 2026, so the six-month refresh is due by April 2027, the same as the actors'.
+- **A frontend test failed under load twice this session:** the `/movies` rows test on Day 14.5, and an unnamed one today, while the Python suites ran alongside. Both passed alone. If it shows up again on Day 15, run the suite on its own and note which test it was.
