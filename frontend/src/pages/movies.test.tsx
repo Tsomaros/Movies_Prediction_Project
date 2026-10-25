@@ -191,6 +191,19 @@ describe('the browse page', () => {
   })
 })
 
+describe('cast photos on the film page', () => {
+  test('a cast member with a TMDB photo shows it; one without keeps the initials', async () => {
+    const photo = { small: 'https://image.tmdb.org/t/p/w185/rdj.jpg', large: 'https://image.tmdb.org/t/p/h632/rdj.jpg' }
+    serve(undefined, { ...FILM, cast: FILM.cast.map((c, i) => (i === 0 ? { ...c, photo } : c)) })
+    renderApp(`/movies/${FILM.id}`)
+    const cast = await screen.findByRole('region', { name: 'Cast' })
+    const items = within(cast).getAllByRole('listitem')
+    expect(items[0].querySelector('img')).toHaveAttribute('src', photo.small)
+    expect(within(items[1]).getByText(initials(FILM.cast[1].name!))).toBeInTheDocument()
+    expect(items[1].querySelector('img')).toBeNull()
+  })
+})
+
 describe('people in browse search', () => {
   const PEOPLE = peopleRowJson as PersonMatch[] // a real answer: actors matching "tom"
   const EMPTY_LIST: MovieList = { items: [], total: 0, page: 1, page_size: 24, pages: 0 }
@@ -254,6 +267,7 @@ describe('the film page', () => {
     expect(within(cast).getByText('RD')).toBeInTheDocument()
     expect(within(cast).getByText('Tony Stark / Iron Man')).toBeInTheDocument()
     const rdj = FILM.cast.find(c => c.name === 'Robert Downey Jr.')!
+    expect(cast.querySelectorAll('img')).toHaveLength(0) // the saved answer predates photos: initials for everyone
     expect(within(cast).getByRole('link', { name: 'Robert Downey Jr.' })).toHaveAttribute('href', `/people/${rdj.id}`)
     const made = screen.getByRole('region', { name: 'Made by' })
     const directors = within(made).getByText('Anthony Russo').closest('dd')!

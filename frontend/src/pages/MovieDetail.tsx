@@ -1,5 +1,5 @@
 // /movies/:id: one film. Facts and overview, the score with its votes, the money as reported or in 2025 dollars,
-// the cast (initials avatars: our data has no photos) and key crew, similar films, and "Predict a film like this",
+// the cast (TMDB photos where the person pull has one, initials otherwise) and key crew, similar films, and "Predict a film like this",
 // which opens the creator form pre-filled (src/movies/predictLike.ts). Your lists (watched with a date and a
 // 10-star rating, or plan to watch) sit under the score, and your private notes after the overview.
 // Cast and crew names link to their person pages (/people/:id).
@@ -28,7 +28,8 @@ const CREW_JOBS = ['Director', 'Screenplay', 'Writer', 'Producer', 'Original Mus
 const JOB_LABELS: Record<string, string> = { 'Original Music Composer': 'Music', 'Director of Photography': 'Cinematography' }
 const MAX_PER_JOB = 4
 
-function Avatar({ name }: { name: string }) {
+function Avatar({ name, photo }: { name: string; photo?: Film['cast'][number]['photo'] }) {
+  if (photo) return <img src={photo.small} alt="" loading="lazy" decoding="async" className="bg-muted size-12 shrink-0 rounded-full object-cover" />
   return (
     <span aria-hidden className="inline-flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
       style={{ backgroundColor: `hsl(${nameHue(name)} 45% 38%)` }}>
@@ -212,7 +213,7 @@ export default function MovieDetail() {
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {f.cast.map(c => (
               <li key={`${c.id}-${c.order}`} className="flex items-center gap-3">
-                <Avatar name={c.name ?? '?'} />
+                <Avatar name={c.name ?? '?'} photo={c.photo} />
                 <span className="grid">
                   <Link to={`/people/${c.id}`} className="font-medium hover:underline">{c.name}</Link>
                   {c.character && <span className="text-muted-foreground text-sm">{c.character}</span>}

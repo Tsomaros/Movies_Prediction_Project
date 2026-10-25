@@ -3,7 +3,8 @@
     fts_query(text)                     -> a safe FTS5 query: every word as a quoted prefix ("tom"* "han"*), or None
     search(con, q, genre, year_from, year_to, language, score_min, sort, page, page_size)
                                         -> (rows for that page, total matching)
-    movie(con, movie_id)                -> one film's facts, people, money and score, or None
+    movie(con, movie_id)                -> one film's facts, people (the cast with their TMDB photo path), money and
+                                           score, or None
     summaries(con, ids)                 -> {id: summary, with runtime} for the films among ids that exist (one query)
     random_candidates(con, genre, decade, language, max_runtime, floor, ids)
                                         -> the ids of the films a "Surprise me" spin may pick (Day 14.5)
@@ -160,7 +161,8 @@ def movie(con: sqlite3.Connection, movie_id: int) -> dict[str, Any] | None:
     out["spoken_languages"] = [x[0] for x in con.execute(
         "SELECT language FROM movie_languages WHERE movie_id = ? ORDER BY language", (movie_id,))]
     out["cast"] = [dict(x) for x in con.execute(
-        """SELECT p.id, p.name, c.character, c.ord AS "order" FROM movie_cast c JOIN people p ON p.id = c.person_id
+        """SELECT p.id, p.name, c.character, c.ord AS "order", d.profile_path
+           FROM movie_cast c JOIN people p ON p.id = c.person_id LEFT JOIN person_details d ON d.person_id = p.id
            WHERE c.movie_id = ? ORDER BY c.ord LIMIT ?""", (movie_id, TOP_CAST))]
     order = " ".join(f"WHEN '{job}' THEN {i}" for i, job in enumerate(CREW_JOBS))
     out["crew"] = [dict(x) for x in con.execute(

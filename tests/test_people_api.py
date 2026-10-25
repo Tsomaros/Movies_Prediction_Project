@@ -124,3 +124,13 @@ def test_search_folds_accents_both_ways(client):
 def test_search_text_with_syntax_is_just_text(client, q):
     r = client.get(PEOPLE, params={"role": "actor", "q": q})
     assert r.status_code == 200 and isinstance(r.json(), list)
+
+
+def test_a_film_page_shows_each_cast_members_photo_when_the_pull_has_one(person_db):
+    from types import SimpleNamespace
+    predictor = SimpleNamespace(index=None, ctx=SimpleNamespace(themes={}))  # no similar films or themes needed here
+    with TestClient(create_app(Settings(db_path=person_db), predictor=predictor)) as c:
+        cast = {m["id"]: m for m in c.get(f"{API_PREFIX}/movies/8").json()["cast"]}
+    assert cast[HANKS]["photo"] == {"small": "https://image.tmdb.org/t/p/w185/hanks.jpg",
+                                    "large": "https://image.tmdb.org/t/p/h632/hanks.jpg"}
+    assert cast[2008]["photo"] is None and "profile_path" not in cast[2008]

@@ -567,6 +567,8 @@ export interface components {
             character: string | null;
             /** Order */
             order: number | null;
+            /** @description TMDB photo (small: w185, large: h632), when the person pull has one */
+            photo?: components["schemas"]["Poster"] | null;
         };
         /** CodeCount */
         CodeCount: {

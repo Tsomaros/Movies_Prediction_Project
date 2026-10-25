@@ -21,7 +21,7 @@ from backend.app.repo import movies as repo
 from backend.app.schemas.errors import VALIDATION, Message
 from backend.app.schemas.form import Genre
 from backend.app.schemas.movies import MovieDetail, MovieList, Sort
-from backend.app.services.posters import poster
+from backend.app.services.posters import poster, profile
 from ml.features.contract import GENRES
 from ml.predict import Predictor
 
@@ -97,5 +97,6 @@ def get_movie(movie_id: int, response: Response, con: sqlite3.Connection = Depen
                   "revenue_2025": film["revenue_2025"], "suspect": bool(film["money_suspect"]),
                   "suspect_reason": film["money_suspect_reason"], "revenue_incomplete": bool(film["revenue_incomplete"])},
         "rating": {"average": film["vote_average"], "votes": film["vote_count"] or 0, "usable": film["score_ok"]},
+        "cast": [{**c, "photo": profile(c["profile_path"])} for c in film["cast"]],
         "similar": _similar(predictor, film, themes),
     }

@@ -53,6 +53,7 @@ class Company(Ref):
 class CastMember(Ref):
     character: Optional[str]
     order: Optional[int]
+    photo: Optional[Poster] = Field(None, description="TMDB photo (small: w185, large: h632), when the person pull has one")
 
 
 class CrewMember(Ref):
