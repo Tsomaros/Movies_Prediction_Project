@@ -130,7 +130,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** One person's scores over the years in one role, and a track-record forecast of their next film */
+        /** One person's scores and box office over the years in one role, and track-record forecasts of their next film */
         get: operations["career_api_v1_people__person_id__career_get"];
         put?: never;
         post?: never;
@@ -147,7 +147,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** The score model on "Their usual film" and "Something new" for an actor or director */
+        /** The film model's score and revenue for "Their usual film" and "Something new" (actor or director) */
         get: operations["career_model_api_v1_people__person_id__career_model_get"];
         put?: never;
         post?: never;
@@ -489,8 +489,11 @@ export interface components {
             title: string;
             /** Year */
             year: number;
-            /** Score */
-            score: number;
+            /**
+             * Value
+             * @description Its score, or its trusted revenue in 2025 $
+             */
+            value: number;
         };
         /** BoxOffice */
         BoxOffice: {
@@ -580,6 +583,11 @@ export interface components {
              * @description TMDB's average score (1-10)
              */
             score: number | null;
+            /**
+             * Revenue
+             * @description Worldwide box office in 2025 $ when it is trusted (known, not doubted, not incomplete): a dot in the revenue view
+             */
+            revenue: number | null;
             /** Vote Count */
             vote_count: number;
             /**
@@ -602,11 +610,24 @@ export interface components {
              * @description A TMDB poster (w342), when there is one
              */
             poster_small: string | null;
+        };
+        /** CareerMetric */
+        CareerMetric: {
             /**
-             * Year Avg
-             * @description The average score of rated films released that year
+             * Line
+             * @description One point per film with a value, oldest first
              */
-            year_avg: number | null;
+            line: components["schemas"]["LinePoint"][];
+            /** @description Highest value (ties: more votes, then newer); None without films with a value */
+            best_film: components["schemas"]["BestFilm"] | null;
+            forecast: components["schemas"]["TrackForecast"];
+        };
+        /** CareerMetrics */
+        CareerMetrics: {
+            /** @description Rated films' scores (50+ votes) */
+            score: components["schemas"]["CareerMetric"];
+            /** @description Trusted revenues, in 2025 $ */
+            revenue: components["schemas"]["CareerMetric"];
         };
         /** CareerModelResponse */
         CareerModelResponse: {
@@ -640,19 +661,7 @@ export interface components {
              * @description Oldest first; films without a year are left out
              */
             films: components["schemas"]["CareerFilmOut"][];
-            /**
-             * Line
-             * @description One point per rated film, oldest first
-             */
-            line: components["schemas"]["LinePoint"][];
-            /** @description Highest score (ties: more votes, then newer); None without rated films */
-            best_film: components["schemas"]["BestFilm"] | null;
-            /**
-             * Latest Year Avg
-             * @description The newest year's average, to shift the band in the compared-with-its-year view
-             */
-            latest_year_avg: number | null;
-            forecast: components["schemas"]["TrackForecast"];
+            metrics: components["schemas"]["CareerMetrics"];
             /**
              * Model Available
              * @description Acting or directing with 1+ rated film: /career/model answers
@@ -991,10 +1000,10 @@ export interface components {
         /** ForecastExplain */
         ForecastExplain: {
             /**
-             * N Rated
-             * @description Rated films the forecast uses
+             * N Films
+             * @description Films the forecast uses: rated films (score) or films with a trusted revenue (revenue)
              */
-            n_rated: number;
+            n_films: number;
             /**
              * Half Life
              * @description Years after which a film counts half; None: every film the same
@@ -1007,12 +1016,12 @@ export interface components {
             own_share: number;
             /**
              * Own Avg
-             * @description Their weighted average score
+             * @description Their weighted average: a score, or the weighted geometric mean revenue in 2025 $
              */
             own_avg: number;
             /**
              * Db Avg
-             * @description The role's average score over rated films of the 10 latest years
+             * @description The role's average over the 10 latest years: the mean score of rated films, or the geometric mean revenue in 2025 $ of trusted-revenue films
              */
             db_avg: number;
         };
@@ -1028,6 +1037,11 @@ export interface components {
              * @description People whose next films were tested
              */
             n_people: number;
+            /**
+             * Within 2X
+             * @description Revenue only: share of those next films whose revenue was within 2x of the middle; None for the score
+             */
+            within_2x?: number | null;
         };
         /**
          * FormChanges
@@ -1146,7 +1160,7 @@ export interface components {
             year: number;
             /**
              * Value
-             * @description A centred mean over 5 rated films (fewer at the ends)
+             * @description A centred mean over 5 films with a value (fewer at the ends); revenue: the geometric mean, in 2025 $
              */
             value: number;
         };
@@ -1242,7 +1256,37 @@ export interface components {
         /** ModelFilm */
         ModelFilm: {
             recipe: components["schemas"]["RecipeOut"];
-            prediction: components["schemas"]["ModelScoreRange"];
+            /** @description From one predict() call: the score and the revenue ranges */
+            prediction: components["schemas"]["ModelPrediction"];
+        };
+        /** ModelPrediction */
+        ModelPrediction: {
+            score: components["schemas"]["ModelScoreRange"];
+            revenue: components["schemas"]["ModelRevenueRange"];
+        };
+        /** ModelRevenueRange */
+        ModelRevenueRange: {
+            /**
+             * Low
+             * @description The revenue model's calibrated 10th percentile, 2025 $
+             */
+            low: number;
+            /**
+             * Mid
+             * @description Its median
+             */
+            mid: number;
+            /**
+             * High
+             * @description Its 90th percentile
+             */
+            high: number;
+            /**
+             * Mode
+             * @description given: with the recipe's budget_2025; estimated: with the budget model's estimate
+             * @enum {string}
+             */
+            mode: "given" | "estimated";
         };
         /** ModelScoreRange */
         ModelScoreRange: {
@@ -1453,7 +1497,8 @@ export interface components {
         /** NewFilm */
         NewFilm: {
             recipe: components["schemas"]["RecipeOut"];
-            prediction: components["schemas"]["ModelScoreRange"];
+            /** @description From one predict() call: the score and the revenue ranges */
+            prediction: components["schemas"]["ModelPrediction"];
             /**
              * Note
              * @description Set when they have worked in every genre, so their usual genres are used
@@ -1890,7 +1935,7 @@ export interface components {
             actors: (components["schemas"]["SlotPerson"] | "new")[];
             /**
              * Budget 2025
-             * @description Their median known budget in 2025 $, for the predictor pre-fill only: the score model never gets a budget
+             * @description Their median trusted budget in 2025 $, given to the model as the budget (revenue mode given); None: the model estimates it. The score model never uses a budget
              */
             budget_2025: number | null;
             labels: components["schemas"]["RecipeLabels"];
@@ -2126,13 +2171,13 @@ export interface components {
         TrackForecast: {
             /**
              * Status
-             * @description not_enough_films below 5 rated films
+             * @description not_enough_films below 5 films with a value
              * @enum {string}
              */
             status: "ok" | "not_enough_films";
             /**
              * Low
-             * @description The 80% range of their next film's score; None without a forecast
+             * @description The 80% range of their next film's score, or of its revenue in 2025 $; None without a forecast
              */
             low: number | null;
             /** Mid */
@@ -2141,7 +2186,7 @@ export interface components {
             high: number | null;
             /** @description The numbers behind it; None without a forecast */
             explain: components["schemas"]["ForecastExplain"] | null;
-            /** @description The backtest of this role's settings */
+            /** @description The backtest of this role's settings for this metric */
             test: components["schemas"]["ForecastTest"];
         };
         /** Training */

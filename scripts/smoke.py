@@ -13,7 +13,8 @@ Checks, each printed as one line with its time:
   the readable 422;
 - search, the box-office sort and the score filter, a movie page, autocomplete and /meta/options on the real data;
 - a person page (Day 14.6): the first actor found for "hanks", with films and a TMDB photo, and a director's
-  page opening on directing (Day 14.7); his career forecast and model films, and Nolan's genre chips (Day 14.8);
+  page opening on directing (Day 14.7); his score and revenue career forecasts and model films, and Nolan's genre
+  chips (Day 14.8);
 - /model-card belongs to the served models and has the 2019+ test and the 2026 holdout;
 - with --web-url, the frontend: the start page, its two poster collages, its script bundle (cached for a year), a deep link served
   as the app (/predict/... and /people/31), and /api/v1/health and /meta/options through the frontend's proxy.
@@ -255,16 +256,21 @@ def main() -> None:
     def career() -> str:
         first = s.get("/people", role="actor", q="hanks")[0]
         c = s.get(f"/people/{first['id']}/career")
-        f = c["forecast"]
+        f, r = c["metrics"]["score"]["forecast"], c["metrics"]["revenue"]["forecast"]
         assert c["role"] == "acting" and f["status"] == "ok" and f["low"] < f["mid"] < f["high"], f
+        assert r["status"] == "ok" and r["low"] < r["mid"] < r["high"], r
         m = s.get(f"/people/{first['id']}/career/model", role="acting")
-        usual, new = m["usual"]["prediction"], m["new"]["prediction"]
+        usual, new = m["usual"]["prediction"]["score"], m["new"]["prediction"]["score"]
         assert usual["low"] < usual["high"] and new["low"] < new["high"], m
+        money = m["usual"]["prediction"]["revenue"]
+        assert money["low"] < money["mid"] < money["high"], money
         nolan = s.get("/people/525/career/model", role="directing")
         assert nolan["chips"], nolan
-        return (f"next film {f['low']:.1f}-{f['high']:.1f} from {f['explain']['n_rated']} rated films; usual "
-                f"{usual['low']:.1f}-{usual['high']:.1f}, new {new['low']:.1f}-{new['high']:.1f}; "
-                f"Nolan's chips {', '.join(x['name'] for x in nolan['chips'])}")
+        return (f"next film {f['low']:.1f}-{f['high']:.1f} from {f['explain']['n_films']} rated films, box office "
+                f"${r['low'] / 1e6:,.0f}M-${r['high'] / 1e6:,.0f}M (mid ${r['mid'] / 1e6:,.0f}M) from "
+                f"{r['explain']['n_films']} films; usual {usual['low']:.1f}-{usual['high']:.1f} and "
+                f"${money['low'] / 1e6:,.0f}M-${money['high'] / 1e6:,.0f}M ({money['mode']}), new "
+                f"{new['low']:.1f}-{new['high']:.1f}; Nolan's chips {', '.join(x['name'] for x in nolan['chips'])}")
 
     s.check("GET /people/{id}/career and /career/model (Day 14.8)", career)
 

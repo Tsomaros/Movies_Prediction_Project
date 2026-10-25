@@ -1,17 +1,20 @@
-"""The track-record forecast of a person's next film score (Day 14.8): pure maths, no I/O.
+"""The track-record forecast of a person's next film (Day 14.8): pure maths, no I/O; the score and log revenue.
 
     MIN_RATED                                    -> rated films needed for a forecast (5)
     RoleSettings(h, k, q)                        -> one role's settings from the backtest: half-life in years
                                                     (math.inf: every film counts the same), shrinkage strength in
                                                     films, range multiplier
     Forecast(low, mid, high, n_rated, own_avg, own_share, db_avg)
-    track_record(history, settings, mu, sigma_pop) -> Forecast, or None with fewer than MIN_RATED films
-    rolling_line(points, window=5)               -> the career line: a centred mean over the ordered rated films
+    track_record(history, settings, mu, sigma_pop, bounds=(1.0, 10.0))
+                                                 -> Forecast, or None with fewer than MIN_RATED films; bounds
+                                                    None: no clipping (revenue, in log 2025 $)
+    rolling_line(points, window=5)               -> the career line: a centred mean over the ordered films
 
-history is (year, score) of rated films. With L the latest year, a film counts w = 0.5 ** ((L - year) / h). Their
-weighted average m is trusted n_eff / (n_eff + k), where n_eff = (Σw)² / Σw² is the effective film count, and the
-role's database average mu the rest; the spread blends their own weighted variance with sigma_pop the same way.
-The range is middle ± q·σ, clipped to the 1-10 scale. The latest film always weighs 1, so nothing divides by zero.
+history is (year, value) of the films that count: rated films' scores, or the log 2025 $ of trusted revenues.
+With L the latest year, a film counts w = 0.5 ** ((L - year) / h). Their weighted average m is trusted
+n_eff / (n_eff + k), where n_eff = (Σw)² / Σw² is the effective film count, and the role's database average mu the
+rest; the spread blends their own weighted variance with sigma_pop the same way. The range is middle ± q·σ,
+clipped to bounds (the 1-10 score scale by default). The latest film always weighs 1, so nothing divides by zero.
 """
 
 from __future__ import annotations
@@ -43,7 +46,8 @@ class Forecast:
     db_avg: float
 
 
-def track_record(history: list[tuple[int, float]], s: RoleSettings, mu: float, sigma_pop: float) -> Forecast | None:
+def track_record(history: list[tuple[int, float]], s: RoleSettings, mu: float, sigma_pop: float,
+                 bounds: tuple[float, float] | None = (LOW, HIGH)) -> Forecast | None:
     if len(history) < MIN_RATED:
         return None
     years = np.array([y for y, _ in history], dtype=float)
@@ -57,7 +61,7 @@ def track_record(history: list[tuple[int, float]], s: RoleSettings, mu: float, s
     sigma = math.sqrt(share * v + (1 - share) * sigma_pop ** 2)
 
     def clip(x: float) -> float:
-        return min(max(x, LOW), HIGH)
+        return x if bounds is None else min(max(x, bounds[0]), bounds[1])
 
     return Forecast(clip(c - s.q * sigma), clip(c), clip(c + s.q * sigma), len(history), m, share, mu)
 

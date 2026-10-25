@@ -25,12 +25,12 @@
    "year": 1990,
    "release_date": "1990-09-12",
    "score": 5.1,
+   "revenue": null,
    "vote_count": 56,
    "rated": true,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg",
-   "year_avg": 6.2383
+   "poster_small": "https://image.tmdb.org/t/p/w342/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg"
   },
   {
    "movie_id": 456684,
@@ -38,12 +38,12 @@
    "year": 1996,
    "release_date": "1996-07-14",
    "score": 5.8,
+   "revenue": null,
    "vote_count": 8,
    "rated": false,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/jBWtTViwpr9xN6PWuzp8WlxTSXB.jpg",
-   "year_avg": 6.2432
+   "poster_small": "https://image.tmdb.org/t/p/w342/jBWtTViwpr9xN6PWuzp8WlxTSXB.jpg"
   },
   {
    "movie_id": 43629,
@@ -51,12 +51,12 @@
    "year": 1997,
    "release_date": "1997-01-01",
    "score": 6.5,
+   "revenue": null,
    "vote_count": 510,
    "rated": true,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/cXDFFv6yZNW3vUHOKKUPJNnL0So.jpg",
-   "year_avg": 6.3582
+   "poster_small": "https://image.tmdb.org/t/p/w342/cXDFFv6yZNW3vUHOKKUPJNnL0So.jpg"
   },
   {
    "movie_id": 11660,
@@ -64,12 +64,12 @@
    "year": 1999,
    "release_date": "1999-04-02",
    "score": 7.116,
+   "revenue": 243782.0,
    "vote_count": 2008,
    "rated": true,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/3bX6VVSMf0dvzk5pMT4ALG5A92d.jpg",
-   "year_avg": 6.3753
+   "poster_small": "https://image.tmdb.org/t/p/w342/3bX6VVSMf0dvzk5pMT4ALG5A92d.jpg"
   },
   {
    "movie_id": 77,
@@ -77,12 +77,12 @@
    "year": 2000,
    "release_date": "2000-10-11",
    "score": 8.174,
+   "revenue": 74944739.0,
    "vote_count": 16928,
    "rated": true,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/nzlv62aC0octS5AklAiWpXLX9Z0.jpg",
-   "year_avg": 6.2762
+   "poster_small": "https://image.tmdb.org/t/p/w342/nzlv62aC0octS5AklAiWpXLX9Z0.jpg"
   },
   {
    "movie_id": 320,
@@ -90,12 +90,12 @@
    "year": 2002,
    "release_date": "2002-05-24",
    "score": 6.957,
+   "revenue": 203661285.0,
    "vote_count": 5602,
    "rated": true,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/riVXh3EimGO0y5dgQxEWPRy5Itg.jpg",
-   "year_avg": 6.2735
+   "poster_small": "https://image.tmdb.org/t/p/w342/riVXh3EimGO0y5dgQxEWPRy5Itg.jpg"
   },
   {
    "movie_id": 272,
@@ -103,12 +103,12 @@
    "year": 2005,
    "release_date": "2005-06-10",
    "score": 7.731,
+   "revenue": 617309814.0,
    "vote_count": 23370,
    "rated": true,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/sPX89Td70IDDjVr85jdSBb4rWGr.jpg",
-   "year_avg": 6.2235
+   "poster_small": "https://image.tmdb.org/t/p/w342/sPX89Td70IDDjVr85jdSBb4rWGr.jpg"
   },
   {
    "movie_id": 1124,
@@ -116,12 +116,12 @@
    "year": 2006,
    "release_date": "2006-10-19",
    "score": 8.212,
+   "revenue": 175267633.0,
    "vote_count": 18315,
    "rated": true,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/Ag2B2KHKQPukjH7WutmgnnSNurZ.jpg",
-   "year_avg": 6.2103
+   "poster_small": "https://image.tmdb.org/t/p/w342/Ag2B2KHKQPukjH7WutmgnnSNurZ.jpg"
   },
   {
    "movie_id": 155,
@@ -129,12 +129,12 @@
    "year": 2008,
    "release_date": "2008-07-16",
    "score": 8.538,
+   "revenue": 1508966563.0,
    "vote_count": 37016,
    "rated": true,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-   "year_avg": 6.1694
+   "poster_small": "https://image.tmdb.org/t/p/w342/qJ2tW6WMUDux911r6m7haRef0WH.jpg"
   },
   {
    "movie_id": 27205,
@@ -142,12 +142,12 @@
    "year": 2010,
    "release_date": "2010-07-15",
    "score": 8.373,
+   "revenue": 1239572562.0,
    "vote_count": 40486,
    "rated": true,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg",
-   "year_avg": 6.2086
+   "poster_small": "https://image.tmdb.org/t/p/w342/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg"
   },
   {
    "movie_id": 49026,
@@ -155,12 +155,12 @@
    "year": 2012,
    "release_date": "2012-07-17",
    "score": 7.799,
+   "revenue": 1516854507.0,
    "vote_count": 25150,
    "rated": true,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/hr0L2aueqlP2BYUblTTjmtn0hw4.jpg",
-   "year_avg": 6.1309
+   "poster_small": "https://image.tmdb.org/t/p/w342/hr0L2aueqlP2BYUblTTjmtn0hw4.jpg"
   },
   {
    "movie_id": 157336,
@@ -168,12 +168,12 @@
    "year": 2014,
    "release_date": "2014-11-04",
    "score": 8.491,
+   "revenue": 1015990767.0,
    "vote_count": 41560,
    "rated": true,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg",
-   "year_avg": 6.2021
+   "poster_small": "https://image.tmdb.org/t/p/w342/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg"
   },
   {
    "movie_id": 352114,
@@ -181,12 +181,12 @@
    "year": 2015,
    "release_date": "2015-08-19",
    "score": 6.0,
+   "revenue": 70485.0,
    "vote_count": 73,
    "rated": true,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/uluMeKfYFVvfZlmHgFBXqbnHXE2.jpg",
-   "year_avg": 6.2013
+   "poster_small": "https://image.tmdb.org/t/p/w342/uluMeKfYFVvfZlmHgFBXqbnHXE2.jpg"
   },
   {
    "movie_id": 374720,
@@ -194,12 +194,12 @@
    "year": 2017,
    "release_date": "2017-07-19",
    "score": 7.45,
+   "revenue": 721712007.0,
    "vote_count": 18123,
    "rated": true,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/b4Oe15CGLL61Ped0RAS9JpqdmCt.jpg",
-   "year_avg": 6.3277
+   "poster_small": "https://image.tmdb.org/t/p/w342/b4Oe15CGLL61Ped0RAS9JpqdmCt.jpg"
   },
   {
    "movie_id": 577922,
@@ -207,12 +207,12 @@
    "year": 2020,
    "release_date": "2020-08-22",
    "score": 7.172,
+   "revenue": 454709473.0,
    "vote_count": 11664,
    "rated": true,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/rrKH3VhHssGTCfPuaEQkxvEoElv.jpg",
-   "year_avg": 6.4213
+   "poster_small": "https://image.tmdb.org/t/p/w342/rrKH3VhHssGTCfPuaEQkxvEoElv.jpg"
   },
   {
    "movie_id": 872585,
@@ -220,98 +220,182 @@
    "year": 2023,
    "release_date": "2023-07-19",
    "score": 8.022,
+   "revenue": 1006523278.0,
    "vote_count": 12727,
    "rated": true,
    "lead": null,
    "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
-   "year_avg": 6.4751
+   "poster_small": "https://image.tmdb.org/t/p/w342/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"
   }
  ],
- "line": [
-  {
-   "year": 1990,
-   "value": 6.239
+ "metrics": {
+  "score": {
+   "line": [
+    {
+     "year": 1990,
+     "value": 6.239
+    },
+    {
+     "year": 1997,
+     "value": 6.723
+    },
+    {
+     "year": 1999,
+     "value": 6.769
+    },
+    {
+     "year": 2000,
+     "value": 7.296
+    },
+    {
+     "year": 2002,
+     "value": 7.638
+    },
+    {
+     "year": 2005,
+     "value": 7.922
+    },
+    {
+     "year": 2006,
+     "value": 7.962
+    },
+    {
+     "year": 2008,
+     "value": 8.131
+    },
+    {
+     "year": 2010,
+     "value": 8.283
+    },
+    {
+     "year": 2012,
+     "value": 7.84
+    },
+    {
+     "year": 2014,
+     "value": 7.623
+    },
+    {
+     "year": 2015,
+     "value": 7.382
+    },
+    {
+     "year": 2017,
+     "value": 7.427
+    },
+    {
+     "year": 2020,
+     "value": 7.161
+    },
+    {
+     "year": 2023,
+     "value": 7.548
+    }
+   ],
+   "best_film": {
+    "movie_id": 155,
+    "title": "The Dark Knight",
+    "year": 2008,
+    "value": 8.538
+   },
+   "forecast": {
+    "status": "ok",
+    "low": 6.39,
+    "mid": 7.391,
+    "high": 8.392,
+    "explain": {
+     "n_films": 15,
+     "half_life": 3.0,
+     "own_share": 0.787,
+     "own_avg": 7.653,
+     "db_avg": 6.421
+    },
+    "test": {
+     "coverage": 0.842,
+     "n_people": 764,
+     "within_2x": null
+    }
+   }
   },
-  {
-   "year": 1997,
-   "value": 6.723
-  },
-  {
-   "year": 1999,
-   "value": 6.769
-  },
-  {
-   "year": 2000,
-   "value": 7.296
-  },
-  {
-   "year": 2002,
-   "value": 7.638
-  },
-  {
-   "year": 2005,
-   "value": 7.922
-  },
-  {
-   "year": 2006,
-   "value": 7.962
-  },
-  {
-   "year": 2008,
-   "value": 8.131
-  },
-  {
-   "year": 2010,
-   "value": 8.283
-  },
-  {
-   "year": 2012,
-   "value": 7.84
-  },
-  {
-   "year": 2014,
-   "value": 7.623
-  },
-  {
-   "year": 2015,
-   "value": 7.382
-  },
-  {
-   "year": 2017,
-   "value": 7.427
-  },
-  {
-   "year": 2020,
-   "value": 7.161
-  },
-  {
-   "year": 2023,
-   "value": 7.548
-  }
- ],
- "best_film": {
-  "movie_id": 155,
-  "title": "The Dark Knight",
-  "year": 2008,
-  "score": 8.538
- },
- "latest_year_avg": 6.5725,
- "forecast": {
-  "status": "ok",
-  "low": 6.39,
-  "mid": 7.391,
-  "high": 8.392,
-  "explain": {
-   "n_rated": 15,
-   "half_life": 3.0,
-   "own_share": 0.787,
-   "own_avg": 7.653,
-   "db_avg": 6.4206
-  },
-  "test": {
-   "coverage": 0.842,
-   "n_people": 764
+  "revenue": {
+   "line": [
+    {
+     "year": 1999,
+     "value": 15495910.0
+    },
+    {
+     "year": 2000,
+     "value": 38930377.0
+    },
+    {
+     "year": 2002,
+     "value": 52598243.0
+    },
+    {
+     "year": 2005,
+     "value": 301513547.0
+    },
+    {
+     "year": 2006,
+     "value": 528461059.0
+    },
+    {
+     "year": 2008,
+     "value": 789623528.0
+    },
+    {
+     "year": 2010,
+     "value": 872363319.0
+    },
+    {
+     "year": 2012,
+     "value": 182631797.0
+    },
+    {
+     "year": 2014,
+     "value": 157584412.0
+    },
+    {
+     "year": 2015,
+     "value": 128945344.0
+    },
+    {
+     "year": 2017,
+     "value": 118790482.0
+    },
+    {
+     "year": 2020,
+     "value": 69463173.0
+    },
+    {
+     "year": 2023,
+     "value": 691258660.0
+    }
+   ],
+   "best_film": {
+    "movie_id": 49026,
+    "title": "The Dark Knight Rises",
+    "year": 2012,
+    "value": 1516854507.0
+   },
+   "forecast": {
+    "status": "ok",
+    "low": 1268134.0,
+    "mid": 96561582.0,
+    "high": 7352644993.0,
+    "explain": {
+     "n_films": 13,
+     "half_life": 12.0,
+     "own_share": 0.786,
+     "own_avg": 211379023.0,
+     "db_avg": 5461314.0
+    },
+    "test": {
+     "coverage": 0.8679,
+     "n_people": 298,
+     "within_2x": 0.3121
+    }
+   }
   }
  },
  "model_available": true

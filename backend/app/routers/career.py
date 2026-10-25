@@ -1,8 +1,8 @@
 """GET /people/{id}/career and GET /people/{id}/career/model: the person page's Career section (Day 14.8).
 
-/career is the chart and the track-record forecast (no model call). /career/model scores "Their usual film" and
-"Something new" with the score model, through the same PredictionService (validation and cache) as POST /predict,
-and keeps each answer in app.state.career_models; `genre` asks for one chip's "Something new" only. The film model
+/career is the chart and the score and revenue track-record forecasts (no model call). /career/model scores
+"Their usual film" and "Something new" with the film model (score and revenue, from one predict() call), through
+the same PredictionService (validation and cache) as POST /predict, and keeps each answer in app.state.career_models; `genre` asks for one chip's "Something new" only. The film model
 has no writer input, so role=writing is a 404 there. Both count toward the predict rate limit (RATE_LIMIT a
 minute per IP) and are cacheable for an hour. A bad genre is a 422 whose detail names the problem.
 """
@@ -43,7 +43,8 @@ def _no_credits() -> HTTPException:
 
 
 @router.get("/people/{person_id}/career", response_model=CareerResponse, responses={**ERRORS, **NOT_FOUND},
-            summary="One person's scores over the years in one role, and a track-record forecast of their next film")
+            summary="One person's scores and box office over the years in one role, and track-record forecasts of "
+                    "their next film")
 def career(person_id: int, request: Request, response: Response, role: Optional[Role] = ROLE,
            con: sqlite3.Connection = Depends(get_db)):
     _person(con, person_id)
@@ -57,7 +58,8 @@ def career(person_id: int, request: Request, response: Response, role: Optional[
 
 @router.get("/people/{person_id}/career/model", response_model=CareerModelResponse, response_model_exclude_unset=True,
             responses={**ERRORS, **NOT_FOUND},
-            summary='The score model on "Their usual film" and "Something new" for an actor or director')
+            summary='The film model\'s score and revenue for "Their usual film" and "Something new" (actor or '
+                    'director)')
 def career_model(person_id: int, request: Request, response: Response,
                  role: Role = Query(..., description="acting or directing (writing: 404, the model has no writer "
                                                      "input)"),

@@ -15,12 +15,12 @@
    "year": 1980,
    "release_date": "1980-08-29",
    "score": 5.165,
+   "revenue": 19155297.0,
    "vote_count": 79,
    "rated": true,
    "lead": false,
    "character": "Elliot",
-   "poster_small": "https://image.tmdb.org/t/p/w342/90rdztFCRAxQsEfy35cxH9qt3N1.jpg",
-   "year_avg": 6.2675
+   "poster_small": "https://image.tmdb.org/t/p/w342/90rdztFCRAxQsEfy35cxH9qt3N1.jpg"
   },
   {
    "movie_id": 27348,
@@ -28,12 +28,12 @@
    "year": 1982,
    "release_date": "1982-12-27",
    "score": 4.234,
+   "revenue": null,
    "vote_count": 109,
    "rated": true,
    "lead": true,
    "character": "Robbie Wheeling",
-   "poster_small": "https://image.tmdb.org/t/p/w342/4i0ISVGGZczwl3RaTIAa8BMu6Df.jpg",
-   "year_avg": 6.3114
+   "poster_small": "https://image.tmdb.org/t/p/w342/4i0ISVGGZczwl3RaTIAa8BMu6Df.jpg"
   },
   {
    "movie_id": 2619,
@@ -41,12 +41,12 @@
    "year": 1984,
    "release_date": "1984-03-09",
    "score": 6.262,
+   "revenue": 216457740.0,
    "vote_count": 1547,
    "rated": true,
    "lead": true,
    "character": "Allen Bauer",
-   "poster_small": "https://image.tmdb.org/t/p/w342/7FutTsMWBwVhjk1Ujf1wtndUVZh.jpg",
-   "year_avg": 6.3254
+   "poster_small": "https://image.tmdb.org/t/p/w342/7FutTsMWBwVhjk1Ujf1wtndUVZh.jpg"
   },
   {
    "movie_id": 12309,
@@ -54,12 +54,12 @@
    "year": 1984,
    "release_date": "1984-06-29",
    "score": 6.326,
+   "revenue": 119194244.0,
    "vote_count": 749,
    "rated": true,
    "lead": true,
    "character": "Rick Gassko",
-   "poster_small": "https://image.tmdb.org/t/p/w342/dZf3UpPZDvJYTODSUJQy7wYEop.jpg",
-   "year_avg": 6.3254
+   "poster_small": "https://image.tmdb.org/t/p/w342/dZf3UpPZDvJYTODSUJQy7wYEop.jpg"
   },
   {
    "movie_id": 10905,
@@ -67,12 +67,12 @@
    "year": 1985,
    "release_date": "1985-07-18",
    "score": 5.739,
+   "revenue": 25892189.0,
    "vote_count": 324,
    "rated": true,
    "lead": true,
    "character": "Richard",
-   "poster_small": "https://image.tmdb.org/t/p/w342/lD44uiCKnLVCKiEnB0urtqIR0nE.jpg",
-   "year_avg": 6.3845
+   "poster_small": "https://image.tmdb.org/t/p/w342/lD44uiCKnLVCKiEnB0urtqIR0nE.jpg"
   },
   {
    "movie_id": 19259,
@@ -80,12 +80,12 @@
    "year": 1985,
    "release_date": "1985-08-16",
    "score": 5.5,
+   "revenue": 59525963.0,
    "vote_count": 189,
    "rated": true,
    "lead": true,
    "character": "Lawrence Whatley Bourne III",
-   "poster_small": "https://image.tmdb.org/t/p/w342/tua28Wyv9uGBtPTBGCP7GsN3Znu.jpg",
-   "year_avg": 6.3845
+   "poster_small": "https://image.tmdb.org/t/p/w342/tua28Wyv9uGBtPTBGCP7GsN3Znu.jpg"
   },
   {
    "movie_id": 10466,
@@ -93,12 +93,12 @@
    "year": 1986,
    "release_date": "1986-03-26",
    "score": 6.521,
+   "revenue": 161651545.0,
    "vote_count": 1293,
    "rated": true,
    "lead": true,
    "character": "Walter Fielding, Jr.",
-   "poster_small": "https://image.tmdb.org/t/p/w342/bohhidIi1WWU5NNYF9l5wLQu3Ii.jpg",
-   "year_avg": 6.334
+   "poster_small": "https://image.tmdb.org/t/p/w342/bohhidIi1WWU5NNYF9l5wLQu3Ii.jpg"
   },
   {
    "movie_id": 29968,
@@ -106,12 +106,12 @@
    "year": 1986,
    "release_date": "1986-07-29",
    "score": 5.93,
+   "revenue": 95006323.0,
    "vote_count": 142,
    "rated": true,
    "lead": true,
    "character": "David Basner",
-   "poster_small": "https://image.tmdb.org/t/p/w342/m2G6Idl1CKJwOt8aFsnJk08sfDP.jpg",
-   "year_avg": 6.334
+   "poster_small": "https://image.tmdb.org/t/p/w342/m2G6Idl1CKJwOt8aFsnJk08sfDP.jpg"
   },
   {
    "movie_id": 35866,
@@ -119,12 +119,12 @@
    "year": 1986,
    "release_date": "1986-11-14",
    "score": 6.0,
+   "revenue": null,
    "vote_count": 58,
    "rated": true,
    "lead": true,
    "character": "David",
-   "poster_small": "https://image.tmdb.org/t/p/w342/fMiWlS4jNZysUquP6CZfKswukMo.jpg",
-   "year_avg": 6.334
+   "poster_small": "https://image.tmdb.org/t/p/w342/fMiWlS4jNZysUquP6CZfKswukMo.jpg"
   },
   {
    "movie_id": 10023,
@@ -132,12 +132,12 @@
    "year": 1987,
    "release_date": "1987-06-26",
    "score": 5.99,
+   "revenue": 189109836.0,
    "vote_count": 569,
    "rated": true,
    "lead": true,
    "character": "Pep Streebeck",
-   "poster_small": "https://image.tmdb.org/t/p/w342/77H17YDeHoJCHebpfGF1rY3Dfof.jpg",
-   "year_avg": 6.2887
+   "poster_small": "https://image.tmdb.org/t/p/w342/77H17YDeHoJCHebpfGF1rY3Dfof.jpg"
   },
   {
    "movie_id": 2280,
@@ -145,12 +145,12 @@
    "year": 1988,
    "release_date": "1988-06-03",
    "score": 7.192,
+   "revenue": 413873305.0,
    "vote_count": 4221,
    "rated": true,
    "lead": true,
    "character": "Josh",
-   "poster_small": "https://image.tmdb.org/t/p/w342/eWhCDJiwxvx3YXkAFRiHjimnF0j.jpg",
-   "year_avg": 6.2101
+   "poster_small": "https://image.tmdb.org/t/p/w342/eWhCDJiwxvx3YXkAFRiHjimnF0j.jpg"
   },
   {
    "movie_id": 40820,
@@ -158,12 +158,12 @@
    "year": 1988,
    "release_date": "1988-10-07",
    "score": 5.54,
+   "revenue": 57295134.0,
    "vote_count": 161,
    "rated": true,
    "lead": true,
    "character": "Steven Gold",
-   "poster_small": "https://image.tmdb.org/t/p/w342/dgbLnnEJIGldXOMt6OWy3X1l0AC.jpg",
-   "year_avg": 6.2101
+   "poster_small": "https://image.tmdb.org/t/p/w342/dgbLnnEJIGldXOMt6OWy3X1l0AC.jpg"
   },
   {
    "movie_id": 11974,
@@ -171,12 +171,12 @@
    "year": 1989,
    "release_date": "1989-02-17",
    "score": 6.763,
+   "revenue": 127601332.0,
    "vote_count": 1446,
    "rated": true,
    "lead": true,
    "character": "Ray Peterson",
-   "poster_small": "https://image.tmdb.org/t/p/w342/jwYKzJS0C3A711hmg1G4ptI0InF.jpg",
-   "year_avg": 6.2996
+   "poster_small": "https://image.tmdb.org/t/p/w342/jwYKzJS0C3A711hmg1G4ptI0InF.jpg"
   },
   {
    "movie_id": 6951,
@@ -184,12 +184,12 @@
    "year": 1989,
    "release_date": "1989-07-28",
    "score": 6.325,
+   "revenue": 184715351.0,
    "vote_count": 1497,
    "rated": true,
    "lead": true,
    "character": "Scott Turner",
-   "poster_small": "https://image.tmdb.org/t/p/w342/nllMNbjgvUpw378czm5vBYzZqg1.jpg",
-   "year_avg": 6.2996
+   "poster_small": "https://image.tmdb.org/t/p/w342/nllMNbjgvUpw378czm5vBYzZqg1.jpg"
   },
   {
    "movie_id": 2565,
@@ -197,12 +197,12 @@
    "year": 1990,
    "release_date": "1990-03-09",
    "score": 5.829,
+   "revenue": 97145435.0,
    "vote_count": 610,
    "rated": true,
    "lead": true,
    "character": "Joe Banks",
-   "poster_small": "https://image.tmdb.org/t/p/w342/fwjMUuDZUxedfsUpVQKQN8cYfzB.jpg",
-   "year_avg": 6.2383
+   "poster_small": "https://image.tmdb.org/t/p/w342/fwjMUuDZUxedfsUpVQKQN8cYfzB.jpg"
   },
   {
    "movie_id": 9586,
@@ -210,12 +210,12 @@
    "year": 1990,
    "release_date": "1990-12-21",
    "score": 5.6,
+   "revenue": 38688519.0,
    "vote_count": 560,
    "rated": true,
    "lead": true,
    "character": "Sherman McCoy",
-   "poster_small": "https://image.tmdb.org/t/p/w342/pdrPrygZ5dVKi8UxrUXMmq1k2iO.jpg",
-   "year_avg": 6.2383
+   "poster_small": "https://image.tmdb.org/t/p/w342/pdrPrygZ5dVKi8UxrUXMmq1k2iO.jpg"
   },
   {
    "movie_id": 966435,
@@ -223,12 +223,12 @@
    "year": 1991,
    "release_date": "1991-05-20",
    "score": 7.7,
+   "revenue": null,
    "vote_count": 6,
    "rated": false,
    "lead": false,
    "character": "Self",
-   "poster_small": "https://image.tmdb.org/t/p/w342/awOHdjvajTSpReWpxFNmgwOcooz.jpg",
-   "year_avg": 6.3137
+   "poster_small": "https://image.tmdb.org/t/p/w342/awOHdjvajTSpReWpxFNmgwOcooz.jpg"
   },
   {
    "movie_id": 11287,
@@ -236,12 +236,12 @@
    "year": 1992,
    "release_date": "1992-07-01",
    "score": 7.21,
+   "revenue": 304068399.0,
    "vote_count": 1607,
    "rated": true,
    "lead": true,
    "character": "Jimmy Dugan",
-   "poster_small": "https://image.tmdb.org/t/p/w342/f9BtX6wYOwJUyfUr4vyeT3COz6m.jpg",
-   "year_avg": 6.4147
+   "poster_small": "https://image.tmdb.org/t/p/w342/f9BtX6wYOwJUyfUr4vyeT3COz6m.jpg"
   },
   {
    "movie_id": 858,
@@ -249,12 +249,12 @@
    "year": 1993,
    "release_date": "1993-06-24",
    "score": 6.744,
+   "revenue": 508012128.0,
    "vote_count": 2733,
    "rated": true,
    "lead": true,
    "character": "Sam Baldwin",
-   "poster_small": "https://image.tmdb.org/t/p/w342/jAXfku1u1uaLGh4cUmK0ESf1pPu.jpg",
-   "year_avg": 6.3856
+   "poster_small": "https://image.tmdb.org/t/p/w342/jAXfku1u1uaLGh4cUmK0ESf1pPu.jpg"
   },
   {
    "movie_id": 9800,
@@ -262,12 +262,12 @@
    "year": 1993,
    "release_date": "1993-12-22",
    "score": 7.702,
+   "revenue": 460909603.0,
    "vote_count": 4795,
    "rated": true,
    "lead": true,
    "character": "Andrew Beckett",
-   "poster_small": "https://image.tmdb.org/t/p/w342/tFe5Yoo5zT495okA49bq1vPPkiV.jpg",
-   "year_avg": 6.3856
+   "poster_small": "https://image.tmdb.org/t/p/w342/tFe5Yoo5zT495okA49bq1vPPkiV.jpg"
   },
   {
    "movie_id": 13,
@@ -275,12 +275,12 @@
    "year": 1994,
    "release_date": "1994-06-23",
    "score": 8.462,
+   "revenue": 1472238049.0,
    "vote_count": 30703,
    "rated": true,
    "lead": true,
    "character": "Forrest Gump",
-   "poster_small": "https://image.tmdb.org/t/p/w342/saHP97rTPS5eLmrLQEcANmKrsFl.jpg",
-   "year_avg": 6.2275
+   "poster_small": "https://image.tmdb.org/t/p/w342/saHP97rTPS5eLmrLQEcANmKrsFl.jpg"
   },
   {
    "movie_id": 237353,
@@ -288,12 +288,12 @@
    "year": 1994,
    "release_date": "1994-07-03",
    "score": 7.5,
+   "revenue": null,
    "vote_count": 23,
    "rated": false,
    "lead": true,
    "character": "Self",
-   "poster_small": "https://image.tmdb.org/t/p/w342/dfjLE1HjdR9XhEpN04elCGUOJfA.jpg",
-   "year_avg": 6.2275
+   "poster_small": "https://image.tmdb.org/t/p/w342/dfjLE1HjdR9XhEpN04elCGUOJfA.jpg"
   },
   {
    "movie_id": 568,
@@ -301,12 +301,12 @@
    "year": 1995,
    "release_date": "1995-06-30",
    "score": 7.463,
+   "revenue": 751008747.0,
    "vote_count": 6174,
    "rated": true,
    "lead": true,
    "character": "Jim Lovell",
-   "poster_small": "https://image.tmdb.org/t/p/w342/tVeKscCm2fY1xDXZk8PgnZ87h9S.jpg",
-   "year_avg": 6.3436
+   "poster_small": "https://image.tmdb.org/t/p/w342/tVeKscCm2fY1xDXZk8PgnZ87h9S.jpg"
   },
   {
    "movie_id": 862,
@@ -314,12 +314,12 @@
    "year": 1995,
    "release_date": "1995-11-22",
    "score": 7.99,
+   "revenue": 848088325.0,
    "vote_count": 20702,
    "rated": true,
    "lead": true,
    "character": "Woody (voice)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg",
-   "year_avg": 6.3436
+   "poster_small": "https://image.tmdb.org/t/p/w342/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg"
   },
   {
    "movie_id": 711704,
@@ -327,12 +327,12 @@
    "year": 1995,
    "release_date": "1995-12-02",
    "score": 6.3,
+   "revenue": null,
    "vote_count": 11,
    "rated": false,
    "lead": false,
    "character": "Self",
-   "poster_small": "https://image.tmdb.org/t/p/w342/s2vPOYtuOY3DMYTduRx0cOzDcWm.jpg",
-   "year_avg": 6.3436
+   "poster_small": "https://image.tmdb.org/t/p/w342/s2vPOYtuOY3DMYTduRx0cOzDcWm.jpg"
   },
   {
    "movie_id": 32562,
@@ -340,12 +340,12 @@
    "year": 1996,
    "release_date": "1996-03-15",
    "score": 7.252,
+   "revenue": 2876663.0,
    "vote_count": 123,
    "rated": true,
    "lead": false,
    "character": "Self",
-   "poster_small": "https://image.tmdb.org/t/p/w342/x0DSh3uMeQk6EG1DHjGJUywN7C0.jpg",
-   "year_avg": 6.2432
+   "poster_small": "https://image.tmdb.org/t/p/w342/x0DSh3uMeQk6EG1DHjGJUywN7C0.jpg"
   },
   {
    "movie_id": 9591,
@@ -353,12 +353,12 @@
    "year": 1996,
    "release_date": "1996-10-04",
    "score": 6.886,
+   "revenue": 71034718.0,
    "vote_count": 957,
    "rated": true,
    "lead": true,
    "character": "Mr. White",
-   "poster_small": "https://image.tmdb.org/t/p/w342/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg",
-   "year_avg": 6.2432
+   "poster_small": "https://image.tmdb.org/t/p/w342/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg"
   },
   {
    "movie_id": 464729,
@@ -366,12 +366,12 @@
    "year": 1996,
    "release_date": "1996-12-18",
    "score": 7.5,
+   "revenue": null,
    "vote_count": 23,
    "rated": false,
    "lead": true,
    "character": "Self",
-   "poster_small": "https://image.tmdb.org/t/p/w342/ul7sy0m9GPifIgMaEXX8ivENqHP.jpg",
-   "year_avg": 6.2432
+   "poster_small": "https://image.tmdb.org/t/p/w342/ul7sy0m9GPifIgMaEXX8ivENqHP.jpg"
   },
   {
    "movie_id": 43714,
@@ -379,12 +379,12 @@
    "year": 1997,
    "release_date": "1997-01-01",
    "score": 7.0,
+   "revenue": null,
    "vote_count": 14,
    "rated": false,
    "lead": false,
    "character": "Self (archive footage) (uncredited)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/xP4CR20quD3iNi0qKxyhpjs0YNr.jpg",
-   "year_avg": 6.3582
+   "poster_small": "https://image.tmdb.org/t/p/w342/xP4CR20quD3iNi0qKxyhpjs0YNr.jpg"
   },
   {
    "movie_id": 857,
@@ -392,12 +392,12 @@
    "year": 1998,
    "release_date": "1998-07-24",
    "score": 8.234,
+   "revenue": 952263044.0,
    "vote_count": 17957,
    "rated": true,
    "lead": true,
    "character": "Captain Miller",
-   "poster_small": "https://image.tmdb.org/t/p/w342/uqx37cS8cpHg8U35f9U5IBlrCV3.jpg",
-   "year_avg": 6.3321
+   "poster_small": "https://image.tmdb.org/t/p/w342/uqx37cS8cpHg8U35f9U5IBlrCV3.jpg"
   },
   {
    "movie_id": 9489,
@@ -405,12 +405,12 @@
    "year": 1998,
    "release_date": "1998-12-18",
    "score": 6.713,
+   "revenue": 495656486.0,
    "vote_count": 3798,
    "rated": true,
    "lead": true,
    "character": "Joe Fox",
-   "poster_small": "https://image.tmdb.org/t/p/w342/rJLUSpmdxSMqqEsyzeCni3vy1ca.jpg",
-   "year_avg": 6.3321
+   "poster_small": "https://image.tmdb.org/t/p/w342/rJLUSpmdxSMqqEsyzeCni3vy1ca.jpg"
   },
   {
    "movie_id": 56235,
@@ -418,12 +418,12 @@
    "year": 1999,
    "release_date": "1999-06-11",
    "score": 7.1,
+   "revenue": null,
    "vote_count": 11,
    "rated": false,
    "lead": false,
    "character": "Narrator",
-   "poster_small": "https://image.tmdb.org/t/p/w342/89289dPlOMOIWTZtIhy4qHhBQpb.jpg",
-   "year_avg": 6.3753
+   "poster_small": "https://image.tmdb.org/t/p/w342/89289dPlOMOIWTZtIhy4qHhBQpb.jpg"
   },
   {
    "movie_id": 173458,
@@ -431,12 +431,12 @@
    "year": 1999,
    "release_date": "1999-09-09",
    "score": 6.8,
+   "revenue": null,
    "vote_count": 11,
    "rated": false,
    "lead": true,
    "character": "Self",
-   "poster_small": "https://image.tmdb.org/t/p/w342/1F0bQ77FBIEk0PbS3vV8mbLgZSj.jpg",
-   "year_avg": 6.3753
+   "poster_small": "https://image.tmdb.org/t/p/w342/1F0bQ77FBIEk0PbS3vV8mbLgZSj.jpg"
   },
   {
    "movie_id": 863,
@@ -444,12 +444,12 @@
    "year": 1999,
    "release_date": "1999-10-30",
    "score": 7.624,
+   "revenue": 961914924.0,
    "vote_count": 15500,
    "rated": true,
    "lead": true,
    "character": "Woody (voice)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/4rbcp3ng8n1MKHjpeqW0L7Fnpzz.jpg",
-   "year_avg": 6.3753
+   "poster_small": "https://image.tmdb.org/t/p/w342/4rbcp3ng8n1MKHjpeqW0L7Fnpzz.jpg"
   },
   {
    "movie_id": 497,
@@ -457,12 +457,12 @@
    "year": 1999,
    "release_date": "1999-12-10",
    "score": 8.506,
+   "revenue": 554668606.0,
    "vote_count": 20001,
    "rated": true,
    "lead": true,
    "character": "Paul Edgecomb",
-   "poster_small": "https://image.tmdb.org/t/p/w342/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg",
-   "year_avg": 6.3753
+   "poster_small": "https://image.tmdb.org/t/p/w342/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg"
   },
   {
    "movie_id": 8358,
@@ -470,12 +470,12 @@
    "year": 2000,
    "release_date": "2000-12-22",
    "score": 7.668,
+   "revenue": 803758905.0,
    "vote_count": 12662,
    "rated": true,
    "lead": true,
    "character": "Chuck Noland",
-   "poster_small": "https://image.tmdb.org/t/p/w342/7lLJgKnAicAcR5UEuo8xhSMj18w.jpg",
-   "year_avg": 6.2762
+   "poster_small": "https://image.tmdb.org/t/p/w342/7lLJgKnAicAcR5UEuo8xhSMj18w.jpg"
   },
   {
    "movie_id": 4147,
@@ -483,12 +483,12 @@
    "year": 2002,
    "release_date": "2002-07-12",
    "score": 7.367,
+   "revenue": 324170503.0,
    "vote_count": 4167,
    "rated": true,
    "lead": true,
    "character": "Michael Sullivan",
-   "poster_small": "https://image.tmdb.org/t/p/w342/loSpBeirRfTPJ3cMIqpQArstGhh.jpg",
-   "year_avg": 6.2735
+   "poster_small": "https://image.tmdb.org/t/p/w342/loSpBeirRfTPJ3cMIqpQArstGhh.jpg"
   },
   {
    "movie_id": 640,
@@ -496,12 +496,12 @@
    "year": 2002,
    "release_date": "2002-12-16",
    "score": 7.979,
+   "revenue": 630630615.0,
    "vote_count": 17747,
    "rated": true,
    "lead": true,
    "character": "Carl Hanratty",
-   "poster_small": "https://image.tmdb.org/t/p/w342/ctjEj2xM32OvBXCq8zAdK3ZrsAj.jpg",
-   "year_avg": 6.2735
+   "poster_small": "https://image.tmdb.org/t/p/w342/ctjEj2xM32OvBXCq8zAdK3ZrsAj.jpg"
   },
   {
    "movie_id": 459682,
@@ -509,12 +509,12 @@
    "year": 2003,
    "release_date": "2003-05-06",
    "score": 7.882,
+   "revenue": null,
    "vote_count": 38,
    "rated": false,
    "lead": false,
    "character": "Self",
-   "poster_small": "https://image.tmdb.org/t/p/w342/dW0ufGS32gimuicgzvf7P0YTSHf.jpg",
-   "year_avg": 6.3285
+   "poster_small": "https://image.tmdb.org/t/p/w342/dW0ufGS32gimuicgzvf7P0YTSHf.jpg"
   },
   {
    "movie_id": 5516,
@@ -522,12 +522,12 @@
    "year": 2004,
    "release_date": "2004-03-25",
    "score": 6.117,
+   "revenue": 130817147.0,
    "vote_count": 1820,
    "rated": true,
    "lead": true,
    "character": "Professor G.H. Dorr",
-   "poster_small": "https://image.tmdb.org/t/p/w342/l4g9R39NCp6VaYFrw6q8JwKNW9x.jpg",
-   "year_avg": 6.306
+   "poster_small": "https://image.tmdb.org/t/p/w342/l4g9R39NCp6VaYFrw6q8JwKNW9x.jpg"
   },
   {
    "movie_id": 594,
@@ -535,12 +535,12 @@
    "year": 2004,
    "release_date": "2004-06-17",
    "score": 7.356,
+   "revenue": 374231280.0,
    "vote_count": 9050,
    "rated": true,
    "lead": true,
    "character": "Viktor Navorski",
-   "poster_small": "https://image.tmdb.org/t/p/w342/cPB3ZMM4UdsSAhNdS4c7ps5nypY.jpg",
-   "year_avg": 6.306
+   "poster_small": "https://image.tmdb.org/t/p/w342/cPB3ZMM4UdsSAhNdS4c7ps5nypY.jpg"
   },
   {
    "movie_id": 37641,
@@ -548,12 +548,12 @@
    "year": 2004,
    "release_date": "2004-08-27",
    "score": 5.258,
+   "revenue": 260179.0,
    "vote_count": 60,
    "rated": true,
    "lead": false,
    "character": "Mailbox-Elvis",
-   "poster_small": "https://image.tmdb.org/t/p/w342/yfIRJpLwR0yGAj6PmWMHZVU8mB1.jpg",
-   "year_avg": 6.306
+   "poster_small": "https://image.tmdb.org/t/p/w342/yfIRJpLwR0yGAj6PmWMHZVU8mB1.jpg"
   },
   {
    "movie_id": 5255,
@@ -561,12 +561,12 @@
    "year": 2004,
    "release_date": "2004-11-10",
    "score": 6.728,
+   "revenue": 543108502.0,
    "vote_count": 7093,
    "rated": true,
    "lead": true,
    "character": "Hero Boy (Adult)/ Father / Conductor / Hobo / Scrooge / Santa Claus",
-   "poster_small": "https://image.tmdb.org/t/p/w342/eOoCzH0MqeGr2taUZO4SwG416PF.jpg",
-   "year_avg": 6.306
+   "poster_small": "https://image.tmdb.org/t/p/w342/eOoCzH0MqeGr2taUZO4SwG416PF.jpg"
   },
   {
    "movie_id": 591,
@@ -574,12 +574,12 @@
    "year": 2006,
    "release_date": "2006-05-17",
    "score": 6.736,
+   "revenue": 1214524968.0,
    "vote_count": 10402,
    "rated": true,
    "lead": true,
    "character": "Robert Langdon",
-   "poster_small": "https://image.tmdb.org/t/p/w342/9ejKfNk0LBhSI9AahH4f9NJNZNM.jpg",
-   "year_avg": 6.2103
+   "poster_small": "https://image.tmdb.org/t/p/w342/9ejKfNk0LBhSI9AahH4f9NJNZNM.jpg"
   },
   {
    "movie_id": 13508,
@@ -587,12 +587,12 @@
    "year": 2006,
    "release_date": "2006-08-04",
    "score": 7.243,
+   "revenue": 2682915.0,
    "vote_count": 208,
    "rated": true,
    "lead": false,
    "character": "Self (archive footage)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/uMamC9o5zNU9wn8fyuAo2gUCMiD.jpg",
-   "year_avg": 6.2103
+   "poster_small": "https://image.tmdb.org/t/p/w342/uMamC9o5zNU9wn8fyuAo2gUCMiD.jpg"
   },
   {
    "movie_id": 6538,
@@ -600,12 +600,12 @@
    "year": 2007,
    "release_date": "2007-12-19",
    "score": 6.548,
+   "revenue": 185644735.0,
    "vote_count": 1737,
    "rated": true,
    "lead": true,
    "character": "Charlie Wilson",
-   "poster_small": "https://image.tmdb.org/t/p/w342/45FghqcdSYRWK7PsHUInaFPNd8l.jpg",
-   "year_avg": 6.2374
+   "poster_small": "https://image.tmdb.org/t/p/w342/45FghqcdSYRWK7PsHUInaFPNd8l.jpg"
   },
   {
    "movie_id": 16279,
@@ -613,12 +613,12 @@
    "year": 2008,
    "release_date": "2008-01-18",
    "score": 6.014,
+   "revenue": 1347681.0,
    "vote_count": 284,
    "rated": true,
    "lead": false,
    "character": "Mr. Gable",
-   "poster_small": "https://image.tmdb.org/t/p/w342/iglKvmA7sq6Pnd6KWFnT6WW9Vpn.jpg",
-   "year_avg": 6.1694
+   "poster_small": "https://image.tmdb.org/t/p/w342/iglKvmA7sq6Pnd6KWFnT6WW9Vpn.jpg"
   },
   {
    "movie_id": 13448,
@@ -626,12 +626,12 @@
    "year": 2009,
    "release_date": "2009-04-20",
    "score": 6.731,
+   "revenue": 729683319.0,
    "vote_count": 7572,
    "rated": true,
    "lead": true,
    "character": "Robert Langdon",
-   "poster_small": "https://image.tmdb.org/t/p/w342/tFZQAuulEOtFTp0gHbVdEXwGrYe.jpg",
-   "year_avg": 6.0928
+   "poster_small": "https://image.tmdb.org/t/p/w342/tFZQAuulEOtFTp0gHbVdEXwGrYe.jpg"
   },
   {
    "movie_id": 10193,
@@ -639,12 +639,12 @@
    "year": 2010,
    "release_date": "2010-06-16",
    "score": 7.819,
+   "revenue": 1576838445.0,
    "vote_count": 16375,
    "rated": true,
    "lead": true,
    "character": "Woody (voice)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/AbbXspMOwdvwWZgVN0nabZq03Ec.jpg",
-   "year_avg": 6.2086
+   "poster_small": "https://image.tmdb.org/t/p/w342/AbbXspMOwdvwWZgVN0nabZq03Ec.jpg"
   },
   {
    "movie_id": 77887,
@@ -652,12 +652,12 @@
    "year": 2011,
    "release_date": "2011-06-16",
    "score": 6.989,
+   "revenue": null,
    "vote_count": 746,
    "rated": true,
    "lead": true,
    "character": "Woody (voice)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/iLFYR0HRLmPfXzQdvGvlJhfwtH1.jpg",
-   "year_avg": 6.1968
+   "poster_small": "https://image.tmdb.org/t/p/w342/iLFYR0HRLmPfXzQdvGvlJhfwtH1.jpg"
   },
   {
    "movie_id": 59861,
@@ -665,12 +665,12 @@
    "year": 2011,
    "release_date": "2011-06-30",
    "score": 5.996,
+   "revenue": 107492324.0,
    "vote_count": 1464,
    "rated": true,
    "lead": true,
    "character": "Larry Crowne",
-   "poster_small": "https://image.tmdb.org/t/p/w342/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg",
-   "year_avg": 6.1968
+   "poster_small": "https://image.tmdb.org/t/p/w342/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg"
   },
   {
    "movie_id": 82424,
@@ -678,12 +678,12 @@
    "year": 2011,
    "release_date": "2011-11-23",
    "score": 6.85,
+   "revenue": null,
    "vote_count": 617,
    "rated": true,
    "lead": true,
    "character": "Woody (voice)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/8siICxMft0JSWZDq9YrXh5U5PZx.jpg",
-   "year_avg": 6.1968
+   "poster_small": "https://image.tmdb.org/t/p/w342/8siICxMft0JSWZDq9YrXh5U5PZx.jpg"
   },
   {
    "movie_id": 87061,
@@ -691,12 +691,12 @@
    "year": 2011,
    "release_date": "2011-12-08",
    "score": 7.7,
+   "revenue": null,
    "vote_count": 58,
    "rated": true,
    "lead": false,
    "character": "Self - Filmmaker (archive footage)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/37dXuUl9Jv6NXFihaLsWbiYVBdv.jpg",
-   "year_avg": 6.1968
+   "poster_small": "https://image.tmdb.org/t/p/w342/37dXuUl9Jv6NXFihaLsWbiYVBdv.jpg"
   },
   {
    "movie_id": 64685,
@@ -704,12 +704,12 @@
    "year": 2011,
    "release_date": "2011-12-25",
    "score": 6.991,
+   "revenue": 79056302.0,
    "vote_count": 2195,
    "rated": true,
    "lead": true,
    "character": "Thomas Schell",
-   "poster_small": "https://image.tmdb.org/t/p/w342/6pszViNvKr1r31pP7gJNYDHEx5P.jpg",
-   "year_avg": 6.1968
+   "poster_small": "https://image.tmdb.org/t/p/w342/6pszViNvKr1r31pP7gJNYDHEx5P.jpg"
   },
   {
    "movie_id": 130925,
@@ -717,12 +717,12 @@
    "year": 2012,
    "release_date": "2012-09-14",
    "score": 7.15,
+   "revenue": null,
    "vote_count": 549,
    "rated": true,
    "lead": true,
    "character": "Woody (voice)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/eRxHdAPoXLPHOUvbNc49C4dw15k.jpg",
-   "year_avg": 6.1309
+   "poster_small": "https://image.tmdb.org/t/p/w342/eRxHdAPoXLPHOUvbNc49C4dw15k.jpg"
   },
   {
    "movie_id": 83542,
@@ -730,12 +730,12 @@
    "year": 2012,
    "release_date": "2012-10-26",
    "score": 6.899,
+   "revenue": 183086001.0,
    "vote_count": 7738,
    "rated": true,
    "lead": true,
    "character": "Dr. Henry Goose / Hotel Manager / Isaac Sachs / Dermot Hoggins / Cavendish Look-a-Like Actor / Zachry",
-   "poster_small": "https://image.tmdb.org/t/p/w342/8naVv2Xu3rWI5JKHz0vCujx6GaJ.jpg",
-   "year_avg": 6.1309
+   "poster_small": "https://image.tmdb.org/t/p/w342/8naVv2Xu3rWI5JKHz0vCujx6GaJ.jpg"
   },
   {
    "movie_id": 170039,
@@ -743,12 +743,12 @@
    "year": 2013,
    "release_date": "2013-02-16",
    "score": 6.0,
+   "revenue": null,
    "vote_count": 59,
    "rated": true,
    "lead": true,
    "character": "Self - Narrator",
-   "poster_small": "https://image.tmdb.org/t/p/w342/zqlOXMsJ0sSyForOe93BSfNW3Pi.jpg",
-   "year_avg": 6.214
+   "poster_small": "https://image.tmdb.org/t/p/w342/zqlOXMsJ0sSyForOe93BSfNW3Pi.jpg"
   },
   {
    "movie_id": 109424,
@@ -756,12 +756,12 @@
    "year": 2013,
    "release_date": "2013-10-10",
    "score": 7.536,
+   "revenue": 302564157.0,
    "vote_count": 7749,
    "rated": true,
    "lead": true,
    "character": "Captain Richard Phillips",
-   "poster_small": "https://image.tmdb.org/t/p/w342/8Td0kkocW6sD3uRpzwfMfkqMWhx.jpg",
-   "year_avg": 6.214
+   "poster_small": "https://image.tmdb.org/t/p/w342/8Td0kkocW6sD3uRpzwfMfkqMWhx.jpg"
   },
   {
    "movie_id": 213121,
@@ -769,12 +769,12 @@
    "year": 2013,
    "release_date": "2013-10-16",
    "score": 7.263,
+   "revenue": null,
    "vote_count": 1082,
    "rated": true,
    "lead": true,
    "character": "Woody (Voice)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/oPBEnNP4Fg4gv9c0KBhchmtoG4H.jpg",
-   "year_avg": 6.214
+   "poster_small": "https://image.tmdb.org/t/p/w342/oPBEnNP4Fg4gv9c0KBhchmtoG4H.jpg"
   },
   {
    "movie_id": 140823,
@@ -782,12 +782,12 @@
    "year": 2013,
    "release_date": "2013-11-29",
    "score": 7.336,
+   "revenue": 155636337.0,
    "vote_count": 3586,
    "rated": true,
    "lead": true,
    "character": "Walt Disney",
-   "poster_small": "https://image.tmdb.org/t/p/w342/4RkcUe5PKnYvrCwMjk8giUAoID7.jpg",
-   "year_avg": 6.214
+   "poster_small": "https://image.tmdb.org/t/p/w342/4RkcUe5PKnYvrCwMjk8giUAoID7.jpg"
   },
   {
    "movie_id": 256835,
@@ -795,12 +795,12 @@
    "year": 2014,
    "release_date": "2014-12-02",
    "score": 7.1,
+   "revenue": null,
    "vote_count": 1193,
    "rated": true,
    "lead": true,
    "character": "Woody (voice)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/kVOaFo8RaYQceHfTqbZGmV9R80q.jpg",
-   "year_avg": 6.2021
+   "poster_small": "https://image.tmdb.org/t/p/w342/kVOaFo8RaYQceHfTqbZGmV9R80q.jpg"
   },
   {
    "movie_id": 296098,
@@ -808,12 +808,12 @@
    "year": 2015,
    "release_date": "2015-10-15",
    "score": 7.243,
+   "revenue": 224917817.0,
    "vote_count": 7479,
    "rated": true,
    "lead": true,
    "character": "James B. Donovan",
-   "poster_small": "https://image.tmdb.org/t/p/w342/fmOOjHAQzxr0c1sfcY4qkiSRBH6.jpg",
-   "year_avg": 6.2013
+   "poster_small": "https://image.tmdb.org/t/p/w342/fmOOjHAQzxr0c1sfcY4qkiSRBH6.jpg"
   },
   {
    "movie_id": 305642,
@@ -821,12 +821,12 @@
    "year": 2015,
    "release_date": "2015-10-29",
    "score": 5.2,
+   "revenue": null,
    "vote_count": 111,
    "rated": true,
    "lead": false,
    "character": "Mr. Macauley",
-   "poster_small": "https://image.tmdb.org/t/p/w342/4g4siEftWGiIkGfvaPyyizmx61f.jpg",
-   "year_avg": 6.2013
+   "poster_small": "https://image.tmdb.org/t/p/w342/4g4siEftWGiIkGfvaPyyizmx61f.jpg"
   },
   {
    "movie_id": 270010,
@@ -834,12 +834,12 @@
    "year": 2016,
    "release_date": "2016-04-22",
    "score": 5.846,
+   "revenue": 12307908.0,
    "vote_count": 1260,
    "rated": true,
    "lead": true,
    "character": "Alan Clay",
-   "poster_small": "https://image.tmdb.org/t/p/w342/wmjWGb2tqtOA4XPnK1tpIfzRtSQ.jpg",
-   "year_avg": 6.2397
+   "poster_small": "https://image.tmdb.org/t/p/w342/wmjWGb2tqtOA4XPnK1tpIfzRtSQ.jpg"
   },
   {
    "movie_id": 363676,
@@ -847,12 +847,12 @@
    "year": 2016,
    "release_date": "2016-09-07",
    "score": 7.207,
+   "revenue": 323217416.0,
    "vote_count": 7959,
    "rated": true,
    "lead": true,
    "character": "Chesley 'Sully' Sullenberger",
-   "poster_small": "https://image.tmdb.org/t/p/w342/4vs83YcJ8TsabADDtaeCJ6ZTjYY.jpg",
-   "year_avg": 6.2397
+   "poster_small": "https://image.tmdb.org/t/p/w342/4vs83YcJ8TsabADDtaeCJ6ZTjYY.jpg"
   },
   {
    "movie_id": 207932,
@@ -860,12 +860,12 @@
    "year": 2016,
    "release_date": "2016-10-13",
    "score": 6.105,
+   "revenue": 295326839.0,
    "vote_count": 6835,
    "rated": true,
    "lead": true,
    "character": "Robert Langdon",
-   "poster_small": "https://image.tmdb.org/t/p/w342/5T6iVetK5AB1kgwAEKbDM2hTZJU.jpg",
-   "year_avg": 6.2397
+   "poster_small": "https://image.tmdb.org/t/p/w342/5T6iVetK5AB1kgwAEKbDM2hTZJU.jpg"
   },
   {
    "movie_id": 339988,
@@ -873,12 +873,12 @@
    "year": 2017,
    "release_date": "2017-04-27",
    "score": 5.525,
+   "revenue": 53427382.0,
    "vote_count": 4671,
    "rated": true,
    "lead": true,
    "character": "Eamon Bailey",
-   "poster_small": "https://image.tmdb.org/t/p/w342/bQVqd5rWrx5GbXhJNuvKy4Viz6j.jpg",
-   "year_avg": 6.3277
+   "poster_small": "https://image.tmdb.org/t/p/w342/bQVqd5rWrx5GbXhJNuvKy4Viz6j.jpg"
   },
   {
    "movie_id": 467062,
@@ -886,12 +886,12 @@
    "year": 2017,
    "release_date": "2017-10-05",
    "score": 7.538,
+   "revenue": null,
    "vote_count": 317,
    "rated": true,
    "lead": false,
    "character": "Self",
-   "poster_small": "https://image.tmdb.org/t/p/w342/2AAvIR2PHoxNITgLDOkXXlWLlua.jpg",
-   "year_avg": 6.3277
+   "poster_small": "https://image.tmdb.org/t/p/w342/2AAvIR2PHoxNITgLDOkXXlWLlua.jpg"
   },
   {
    "movie_id": 446354,
@@ -899,12 +899,12 @@
    "year": 2017,
    "release_date": "2017-12-22",
    "score": 7.006,
+   "revenue": 236264985.0,
    "vote_count": 5063,
    "rated": true,
    "lead": true,
    "character": "Ben Bradlee",
-   "poster_small": "https://image.tmdb.org/t/p/w342/h4XG3g6uMMPIBPjAoQhC2QIMdkl.jpg",
-   "year_avg": 6.3277
+   "poster_small": "https://image.tmdb.org/t/p/w342/h4XG3g6uMMPIBPjAoQhC2QIMdkl.jpg"
   },
   {
    "movie_id": 504561,
@@ -912,12 +912,12 @@
    "year": 2018,
    "release_date": "2018-09-09",
    "score": 7.288,
+   "revenue": null,
    "vote_count": 118,
    "rated": true,
    "lead": true,
    "character": "Self",
-   "poster_small": "https://image.tmdb.org/t/p/w342/yYtY9CRLyz4dXqTOiimdMF7Nt4e.jpg",
-   "year_avg": 6.3963
+   "poster_small": "https://image.tmdb.org/t/p/w342/yYtY9CRLyz4dXqTOiimdMF7Nt4e.jpg"
   },
   {
    "movie_id": 301528,
@@ -925,12 +925,12 @@
    "year": 2019,
    "release_date": "2019-06-19",
    "score": 7.463,
+   "revenue": 1353145921.0,
    "vote_count": 11100,
    "rated": true,
    "lead": true,
    "character": "Woody (voice)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/w9kR8qbmQ01HwnvK4alvnQ2ca0L.jpg",
-   "year_avg": 6.4709
+   "poster_small": "https://image.tmdb.org/t/p/w342/w9kR8qbmQ01HwnvK4alvnQ2ca0L.jpg"
   },
   {
    "movie_id": 501907,
@@ -938,12 +938,12 @@
    "year": 2019,
    "release_date": "2019-09-07",
    "score": 6.967,
+   "revenue": 85560688.0,
    "vote_count": 1826,
    "rated": true,
    "lead": true,
    "character": "Fred Rogers",
-   "poster_small": "https://image.tmdb.org/t/p/w342/pgxn1siPnWbSOKUeovfC86OwhWU.jpg",
-   "year_avg": 6.4709
+   "poster_small": "https://image.tmdb.org/t/p/w342/pgxn1siPnWbSOKUeovfC86OwhWU.jpg"
   },
   {
    "movie_id": 516486,
@@ -951,12 +951,12 @@
    "year": 2020,
    "release_date": "2020-07-09",
    "score": 7.416,
+   "revenue": null,
    "vote_count": 3510,
    "rated": true,
    "lead": true,
    "character": "Commander Krause",
-   "poster_small": "https://image.tmdb.org/t/p/w342/kjMbDciooTbJPofVXgAoFjfX8Of.jpg",
-   "year_avg": 6.4213
+   "poster_small": "https://image.tmdb.org/t/p/w342/kjMbDciooTbJPofVXgAoFjfX8Of.jpg"
   },
   {
    "movie_id": 740985,
@@ -964,12 +964,12 @@
    "year": 2020,
    "release_date": "2020-10-23",
    "score": 6.433,
+   "revenue": null,
    "vote_count": 3004,
    "rated": true,
    "lead": true,
    "character": "Self",
-   "poster_small": "https://image.tmdb.org/t/p/w342/3L1Ml5RWjFVfVq3rQENvgFymT0U.jpg",
-   "year_avg": 6.4213
+   "poster_small": "https://image.tmdb.org/t/p/w342/3L1Ml5RWjFVfVq3rQENvgFymT0U.jpg"
   },
   {
    "movie_id": 581032,
@@ -977,12 +977,12 @@
    "year": 2020,
    "release_date": "2020-12-25",
    "score": 6.901,
+   "revenue": 15808227.0,
    "vote_count": 2011,
    "rated": true,
    "lead": true,
    "character": "Captain Jefferson Kyle Kidd",
-   "poster_small": "https://image.tmdb.org/t/p/w342/fYQCgVRsQTEfUrP7cW5iAFVYOlh.jpg",
-   "year_avg": 6.4213
+   "poster_small": "https://image.tmdb.org/t/p/w342/fYQCgVRsQTEfUrP7cW5iAFVYOlh.jpg"
   },
   {
    "movie_id": 522402,
@@ -990,12 +990,12 @@
    "year": 2021,
    "release_date": "2021-11-04",
    "score": 7.816,
+   "revenue": null,
    "vote_count": 4245,
    "rated": true,
    "lead": true,
    "character": "Finch",
-   "poster_small": "https://image.tmdb.org/t/p/w342/eEJtzD1F05xDipFEDY98CTH5yZn.jpg",
-   "year_avg": 6.4797
+   "poster_small": "https://image.tmdb.org/t/p/w342/eEJtzD1F05xDipFEDY98CTH5yZn.jpg"
   },
   {
    "movie_id": 962192,
@@ -1003,12 +1003,12 @@
    "year": 2022,
    "release_date": "2022-06-08",
    "score": 6.766,
+   "revenue": null,
    "vote_count": 160,
    "rated": true,
    "lead": false,
    "character": "Self",
-   "poster_small": "https://image.tmdb.org/t/p/w342/jUVglxBw7KSkcVEhvfJs1eipPnk.jpg",
-   "year_avg": 6.416
+   "poster_small": "https://image.tmdb.org/t/p/w342/jUVglxBw7KSkcVEhvfJs1eipPnk.jpg"
   },
   {
    "movie_id": 614934,
@@ -1016,12 +1016,12 @@
    "year": 2022,
    "release_date": "2022-06-22",
    "score": 7.436,
+   "revenue": 317766647.0,
    "vote_count": 4076,
    "rated": true,
    "lead": true,
    "character": "Colonel Tom Parker",
-   "poster_small": "https://image.tmdb.org/t/p/w342/qBOKWqAFbveZ4ryjJJwbie6tXkQ.jpg",
-   "year_avg": 6.416
+   "poster_small": "https://image.tmdb.org/t/p/w342/qBOKWqAFbveZ4ryjJJwbie6tXkQ.jpg"
   },
   {
    "movie_id": 532639,
@@ -1029,12 +1029,12 @@
    "year": 2022,
    "release_date": "2022-09-07",
    "score": 6.241,
+   "revenue": null,
    "vote_count": 1796,
    "rated": true,
    "lead": true,
    "character": "Geppetto",
-   "poster_small": "https://image.tmdb.org/t/p/w342/zaZhjKrJeWczQ3AotKoQObppEbH.jpg",
-   "year_avg": 6.416
+   "poster_small": "https://image.tmdb.org/t/p/w342/zaZhjKrJeWczQ3AotKoQObppEbH.jpg"
   },
   {
    "movie_id": 937278,
@@ -1042,12 +1042,12 @@
    "year": 2022,
    "release_date": "2022-12-28",
    "score": 7.747,
+   "revenue": 124786153.0,
    "vote_count": 3826,
    "rated": true,
    "lead": true,
    "character": "Otto Anderson",
-   "poster_small": "https://image.tmdb.org/t/p/w342/130H1gap9lFfiTF9iDrqNIkFvC9.jpg",
-   "year_avg": 6.416
+   "poster_small": "https://image.tmdb.org/t/p/w342/130H1gap9lFfiTF9iDrqNIkFvC9.jpg"
   },
   {
    "movie_id": 747188,
@@ -1055,12 +1055,12 @@
    "year": 2023,
    "release_date": "2023-06-08",
    "score": 6.456,
+   "revenue": 56942303.0,
    "vote_count": 2680,
    "rated": true,
    "lead": true,
    "character": "Stanley Zak",
-   "poster_small": "https://image.tmdb.org/t/p/w342/hfo7pvL9Fys7rocfL4VOzw9qDEQ.jpg",
-   "year_avg": 6.4751
+   "poster_small": "https://image.tmdb.org/t/p/w342/hfo7pvL9Fys7rocfL4VOzw9qDEQ.jpg"
   },
   {
    "movie_id": 1251636,
@@ -1068,12 +1068,12 @@
    "year": 2024,
    "release_date": "2024-03-14",
    "score": 7.2,
+   "revenue": null,
    "vote_count": 52,
    "rated": true,
    "lead": true,
    "character": "Self - Narrator (voice)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/5GnpAw5BaQBNqYd4wE1IptYEVKd.jpg",
-   "year_avg": 6.4941
+   "poster_small": "https://image.tmdb.org/t/p/w342/5GnpAw5BaQBNqYd4wE1IptYEVKd.jpg"
   },
   {
    "movie_id": 940139,
@@ -1081,12 +1081,12 @@
    "year": 2024,
    "release_date": "2024-10-30",
    "score": 6.5,
+   "revenue": 15812721.0,
    "vote_count": 734,
    "rated": true,
    "lead": true,
    "character": "Richard",
-   "poster_small": "https://image.tmdb.org/t/p/w342/79euHUJJtfgeGU63ef38KtNjXEn.jpg",
-   "year_avg": 6.4941
+   "poster_small": "https://image.tmdb.org/t/p/w342/79euHUJJtfgeGU63ef38KtNjXEn.jpg"
   },
   {
    "movie_id": 1137350,
@@ -1094,12 +1094,12 @@
    "year": 2025,
    "release_date": "2025-05-23",
    "score": 6.531,
+   "revenue": 40566381.0,
    "vote_count": 1092,
    "rated": true,
    "lead": false,
    "character": "Leland",
-   "poster_small": "https://image.tmdb.org/t/p/w342/iXxIUVqpQAlyy98UjUlzjkMYuj6.jpg",
-   "year_avg": 6.5725
+   "poster_small": "https://image.tmdb.org/t/p/w342/iXxIUVqpQAlyy98UjUlzjkMYuj6.jpg"
   },
   {
    "movie_id": 1492608,
@@ -1107,346 +1107,610 @@
    "year": 2025,
    "release_date": "2025-09-04",
    "score": 7.9,
+   "revenue": null,
    "vote_count": 125,
    "rated": true,
    "lead": true,
    "character": "Self - Actor, Splash",
-   "poster_small": "https://image.tmdb.org/t/p/w342/mNEJdx9WSXeyMmkuQfTeY4zouNx.jpg",
-   "year_avg": 6.5725
+   "poster_small": "https://image.tmdb.org/t/p/w342/mNEJdx9WSXeyMmkuQfTeY4zouNx.jpg"
   }
  ],
- "line": [
-  {
-   "year": 1980,
-   "value": 5.22
-  },
-  {
-   "year": 1982,
-   "value": 5.497
-  },
-  {
-   "year": 1984,
-   "value": 5.545
-  },
-  {
-   "year": 1984,
-   "value": 5.612
-  },
-  {
-   "year": 1985,
-   "value": 6.07
-  },
-  {
-   "year": 1985,
-   "value": 6.003
-  },
-  {
-   "year": 1986,
-   "value": 5.938
-  },
-  {
-   "year": 1986,
-   "value": 5.988
-  },
-  {
-   "year": 1986,
-   "value": 6.327
-  },
-  {
-   "year": 1987,
-   "value": 6.13
-  },
-  {
-   "year": 1988,
-   "value": 6.297
-  },
-  {
-   "year": 1988,
-   "value": 6.362
-  },
-  {
-   "year": 1989,
-   "value": 6.33
-  },
-  {
-   "year": 1989,
-   "value": 6.011
-  },
-  {
-   "year": 1990,
-   "value": 6.345
-  },
-  {
-   "year": 1990,
-   "value": 6.342
-  },
-  {
-   "year": 1992,
-   "value": 6.617
-  },
-  {
-   "year": 1993,
-   "value": 7.144
-  },
-  {
-   "year": 1993,
-   "value": 7.516
-  },
-  {
-   "year": 1994,
-   "value": 7.672
-  },
-  {
-   "year": 1995,
-   "value": 7.774
-  },
-  {
-   "year": 1995,
-   "value": 7.611
-  },
-  {
-   "year": 1996,
-   "value": 7.565
-  },
-  {
-   "year": 1996,
-   "value": 7.415
-  },
-  {
-   "year": 1998,
-   "value": 7.342
-  },
-  {
-   "year": 1998,
-   "value": 7.593
-  },
-  {
-   "year": 1999,
-   "value": 7.749
-  },
-  {
-   "year": 1999,
-   "value": 7.576
-  },
-  {
-   "year": 2000,
-   "value": 7.829
-  },
-  {
-   "year": 2002,
-   "value": 7.527
-  },
-  {
-   "year": 2002,
-   "value": 7.297
-  },
-  {
-   "year": 2004,
-   "value": 6.815
-  },
-  {
-   "year": 2004,
-   "value": 6.688
-  },
-  {
-   "year": 2004,
-   "value": 6.439
-  },
-  {
-   "year": 2004,
-   "value": 6.664
-  },
-  {
-   "year": 2006,
-   "value": 6.503
-  },
-  {
-   "year": 2006,
-   "value": 6.654
-  },
-  {
-   "year": 2007,
-   "value": 6.654
-  },
-  {
-   "year": 2008,
-   "value": 6.871
-  },
-  {
-   "year": 2009,
-   "value": 6.82
-  },
-  {
-   "year": 2010,
-   "value": 6.71
-  },
-  {
-   "year": 2011,
-   "value": 6.877
-  },
-  {
-   "year": 2011,
-   "value": 7.071
-  },
-  {
-   "year": 2011,
-   "value": 6.905
-  },
-  {
-   "year": 2011,
-   "value": 6.937
-  },
-  {
-   "year": 2011,
-   "value": 7.118
-  },
-  {
-   "year": 2012,
-   "value": 6.948
-  },
-  {
-   "year": 2012,
-   "value": 6.915
-  },
-  {
-   "year": 2013,
-   "value": 6.97
-  },
-  {
-   "year": 2013,
-   "value": 7.007
-  },
-  {
-   "year": 2013,
-   "value": 7.047
-  },
-  {
-   "year": 2013,
-   "value": 7.296
-  },
-  {
-   "year": 2014,
-   "value": 6.828
-  },
-  {
-   "year": 2015,
-   "value": 6.545
-  },
-  {
-   "year": 2015,
-   "value": 6.519
-  },
-  {
-   "year": 2016,
-   "value": 6.32
-  },
-  {
-   "year": 2016,
-   "value": 5.977
-  },
-  {
-   "year": 2016,
-   "value": 6.444
-  },
-  {
-   "year": 2017,
-   "value": 6.676
-  },
-  {
-   "year": 2017,
-   "value": 6.692
-  },
-  {
-   "year": 2017,
-   "value": 6.964
-  },
-  {
-   "year": 2018,
-   "value": 7.252
-  },
-  {
-   "year": 2019,
-   "value": 7.228
-  },
-  {
-   "year": 2019,
-   "value": 7.113
-  },
-  {
-   "year": 2020,
-   "value": 7.036
-  },
-  {
-   "year": 2020,
-   "value": 7.107
-  },
-  {
-   "year": 2020,
-   "value": 7.066
-  },
-  {
-   "year": 2021,
-   "value": 7.07
-  },
-  {
-   "year": 2022,
-   "value": 7.032
-  },
-  {
-   "year": 2022,
-   "value": 7.201
-  },
-  {
-   "year": 2022,
-   "value": 6.929
-  },
-  {
-   "year": 2022,
-   "value": 7.016
-  },
-  {
-   "year": 2023,
-   "value": 6.829
-  },
-  {
-   "year": 2024,
-   "value": 6.887
-  },
-  {
-   "year": 2024,
-   "value": 6.917
-  },
-  {
-   "year": 2025,
-   "value": 7.033
-  },
-  {
-   "year": 2025,
-   "value": 6.977
-  }
- ],
- "best_film": {
-  "movie_id": 497,
-  "title": "The Green Mile",
-  "year": 1999,
-  "score": 8.506
- },
- "latest_year_avg": 6.5725,
- "forecast": {
-  "status": "ok",
-  "low": 6.006,
-  "mid": 6.903,
-  "high": 7.8,
-  "explain": {
-   "n_rated": 77,
-   "half_life": 5.0,
-   "own_share": 0.909,
-   "own_avg": 6.951,
-   "db_avg": 6.4197
-  },
-  "test": {
-   "coverage": 0.8163,
-   "n_people": 9594
+ "metrics": {
+  "score": {
+   "line": [
+    {
+     "year": 1980,
+     "value": 5.22
+    },
+    {
+     "year": 1982,
+     "value": 5.497
+    },
+    {
+     "year": 1984,
+     "value": 5.545
+    },
+    {
+     "year": 1984,
+     "value": 5.612
+    },
+    {
+     "year": 1985,
+     "value": 6.07
+    },
+    {
+     "year": 1985,
+     "value": 6.003
+    },
+    {
+     "year": 1986,
+     "value": 5.938
+    },
+    {
+     "year": 1986,
+     "value": 5.988
+    },
+    {
+     "year": 1986,
+     "value": 6.327
+    },
+    {
+     "year": 1987,
+     "value": 6.13
+    },
+    {
+     "year": 1988,
+     "value": 6.297
+    },
+    {
+     "year": 1988,
+     "value": 6.362
+    },
+    {
+     "year": 1989,
+     "value": 6.33
+    },
+    {
+     "year": 1989,
+     "value": 6.011
+    },
+    {
+     "year": 1990,
+     "value": 6.345
+    },
+    {
+     "year": 1990,
+     "value": 6.342
+    },
+    {
+     "year": 1992,
+     "value": 6.617
+    },
+    {
+     "year": 1993,
+     "value": 7.144
+    },
+    {
+     "year": 1993,
+     "value": 7.516
+    },
+    {
+     "year": 1994,
+     "value": 7.672
+    },
+    {
+     "year": 1995,
+     "value": 7.774
+    },
+    {
+     "year": 1995,
+     "value": 7.611
+    },
+    {
+     "year": 1996,
+     "value": 7.565
+    },
+    {
+     "year": 1996,
+     "value": 7.415
+    },
+    {
+     "year": 1998,
+     "value": 7.342
+    },
+    {
+     "year": 1998,
+     "value": 7.593
+    },
+    {
+     "year": 1999,
+     "value": 7.749
+    },
+    {
+     "year": 1999,
+     "value": 7.576
+    },
+    {
+     "year": 2000,
+     "value": 7.829
+    },
+    {
+     "year": 2002,
+     "value": 7.527
+    },
+    {
+     "year": 2002,
+     "value": 7.297
+    },
+    {
+     "year": 2004,
+     "value": 6.815
+    },
+    {
+     "year": 2004,
+     "value": 6.688
+    },
+    {
+     "year": 2004,
+     "value": 6.439
+    },
+    {
+     "year": 2004,
+     "value": 6.664
+    },
+    {
+     "year": 2006,
+     "value": 6.503
+    },
+    {
+     "year": 2006,
+     "value": 6.654
+    },
+    {
+     "year": 2007,
+     "value": 6.654
+    },
+    {
+     "year": 2008,
+     "value": 6.871
+    },
+    {
+     "year": 2009,
+     "value": 6.82
+    },
+    {
+     "year": 2010,
+     "value": 6.71
+    },
+    {
+     "year": 2011,
+     "value": 6.877
+    },
+    {
+     "year": 2011,
+     "value": 7.071
+    },
+    {
+     "year": 2011,
+     "value": 6.905
+    },
+    {
+     "year": 2011,
+     "value": 6.937
+    },
+    {
+     "year": 2011,
+     "value": 7.118
+    },
+    {
+     "year": 2012,
+     "value": 6.948
+    },
+    {
+     "year": 2012,
+     "value": 6.915
+    },
+    {
+     "year": 2013,
+     "value": 6.97
+    },
+    {
+     "year": 2013,
+     "value": 7.007
+    },
+    {
+     "year": 2013,
+     "value": 7.047
+    },
+    {
+     "year": 2013,
+     "value": 7.296
+    },
+    {
+     "year": 2014,
+     "value": 6.828
+    },
+    {
+     "year": 2015,
+     "value": 6.545
+    },
+    {
+     "year": 2015,
+     "value": 6.519
+    },
+    {
+     "year": 2016,
+     "value": 6.32
+    },
+    {
+     "year": 2016,
+     "value": 5.977
+    },
+    {
+     "year": 2016,
+     "value": 6.444
+    },
+    {
+     "year": 2017,
+     "value": 6.676
+    },
+    {
+     "year": 2017,
+     "value": 6.692
+    },
+    {
+     "year": 2017,
+     "value": 6.964
+    },
+    {
+     "year": 2018,
+     "value": 7.252
+    },
+    {
+     "year": 2019,
+     "value": 7.228
+    },
+    {
+     "year": 2019,
+     "value": 7.113
+    },
+    {
+     "year": 2020,
+     "value": 7.036
+    },
+    {
+     "year": 2020,
+     "value": 7.107
+    },
+    {
+     "year": 2020,
+     "value": 7.066
+    },
+    {
+     "year": 2021,
+     "value": 7.07
+    },
+    {
+     "year": 2022,
+     "value": 7.032
+    },
+    {
+     "year": 2022,
+     "value": 7.201
+    },
+    {
+     "year": 2022,
+     "value": 6.929
+    },
+    {
+     "year": 2022,
+     "value": 7.016
+    },
+    {
+     "year": 2023,
+     "value": 6.829
+    },
+    {
+     "year": 2024,
+     "value": 6.887
+    },
+    {
+     "year": 2024,
+     "value": 6.917
+    },
+    {
+     "year": 2025,
+     "value": 7.033
+    },
+    {
+     "year": 2025,
+     "value": 6.977
+    }
+   ],
+   "best_film": {
+    "movie_id": 497,
+    "title": "The Green Mile",
+    "year": 1999,
+    "value": 8.506
+   },
+   "forecast": {
+    "status": "ok",
+    "low": 6.006,
+    "mid": 6.903,
+    "high": 7.8,
+    "explain": {
+     "n_films": 77,
+     "half_life": 5.0,
+     "own_share": 0.909,
+     "own_avg": 6.951,
+     "db_avg": 6.42
+    },
+    "test": {
+     "coverage": 0.8163,
+     "n_people": 9594,
+     "within_2x": null
+    }
+   }
+  },
+  "revenue": {
+   "line": [
+    {
+     "year": 1980,
+     "value": 79062844.0
+    },
+    {
+     "year": 1984,
+     "value": 59809685.0
+    },
+    {
+     "year": 1984,
+     "value": 59752833.0
+    },
+    {
+     "year": 1985,
+     "value": 91541219.0
+    },
+    {
+     "year": 1985,
+     "value": 77641259.0
+    },
+    {
+     "year": 1986,
+     "value": 85149938.0
+    },
+    {
+     "year": 1986,
+     "value": 148225890.0
+    },
+    {
+     "year": 1987,
+     "value": 147097851.0
+    },
+    {
+     "year": 1988,
+     "value": 140301204.0
+    },
+    {
+     "year": 1988,
+     "value": 160254965.0
+    },
+    {
+     "year": 1989,
+     "value": 140266238.0
+    },
+    {
+     "year": 1989,
+     "value": 87316454.0
+    },
+    {
+     "year": 1990,
+     "value": 121917710.0
+    },
+    {
+     "year": 1990,
+     "value": 160720240.0
+    },
+    {
+     "year": 1992,
+     "value": 192971479.0
+    },
+    {
+     "year": 1993,
+     "value": 332356559.0
+    },
+    {
+     "year": 1993,
+     "value": 601473962.0
+    },
+    {
+     "year": 1994,
+     "value": 738432480.0
+    },
+    {
+     "year": 1995,
+     "value": 262369757.0
+    },
+    {
+     "year": 1995,
+     "value": 180503137.0
+    },
+    {
+     "year": 1996,
+     "value": 165440004.0
+    },
+    {
+     "year": 1996,
+     "value": 152246631.0
+    },
+    {
+     "year": 1998,
+     "value": 156130161.0
+    },
+    {
+     "year": 1998,
+     "value": 447214346.0
+    },
+    {
+     "year": 1999,
+     "value": 726518628.0
+    },
+    {
+     "year": 1999,
+     "value": 585666073.0
+    },
+    {
+     "year": 2000,
+     "value": 614566550.0
+    },
+    {
+     "year": 2002,
+     "value": 412358091.0
+    },
+    {
+     "year": 2002,
+     "value": 381149909.0
+    },
+    {
+     "year": 2004,
+     "value": 76405586.0
+    },
+    {
+     "year": 2004,
+     "value": 84712545.0
+    },
+    {
+     "year": 2004,
+     "value": 96577066.0
+    },
+    {
+     "year": 2004,
+     "value": 44387681.0
+    },
+    {
+     "year": 2006,
+     "value": 38580777.0
+    },
+    {
+     "year": 2006,
+     "value": 53608535.0
+    },
+    {
+     "year": 2007,
+     "value": 56870036.0
+    },
+    {
+     "year": 2008,
+     "value": 59918324.0
+    },
+    {
+     "year": 2009,
+     "value": 125346948.0
+    },
+    {
+     "year": 2010,
+     "value": 105673121.0
+    },
+    {
+     "year": 2011,
+     "value": 282213731.0
+    },
+    {
+     "year": 2011,
+     "value": 236654492.0
+    },
+    {
+     "year": 2012,
+     "value": 148929082.0
+    },
+    {
+     "year": 2013,
+     "value": 172627028.0
+    },
+    {
+     "year": 2013,
+     "value": 119003119.0
+    },
+    {
+     "year": 2015,
+     "value": 133329505.0
+    },
+    {
+     "year": 2016,
+     "value": 132685466.0
+    },
+    {
+     "year": 2016,
+     "value": 107140565.0
+    },
+    {
+     "year": 2016,
+     "value": 108200442.0
+    },
+    {
+     "year": 2017,
+     "value": 276988101.0
+    },
+    {
+     "year": 2017,
+     "value": 212332765.0
+    },
+    {
+     "year": 2019,
+     "value": 118231463.0
+    },
+    {
+     "year": 2019,
+     "value": 168889227.0
+    },
+    {
+     "year": 2020,
+     "value": 148646728.0
+    },
+    {
+     "year": 2022,
+     "value": 78881186.0
+    },
+    {
+     "year": 2022,
+     "value": 56275570.0
+    },
+    {
+     "year": 2023,
+     "value": 67947976.0
+    },
+    {
+     "year": 2024,
+     "value": 46205489.0
+    },
+    {
+     "year": 2025,
+     "value": 33179459.0
+    }
+   ],
+   "best_film": {
+    "movie_id": 10193,
+    "title": "Toy Story 3",
+    "year": 2010,
+    "value": 1576838445.0
+   },
+   "forecast": {
+    "status": "ok",
+    "low": 6855090.0,
+    "mid": 95123185.0,
+    "high": 1319956447.0,
+    "explain": {
+     "n_films": 58,
+     "half_life": 12.0,
+     "own_share": 0.928,
+     "own_avg": 118623657.0,
+     "db_avg": 5478270.0
+    },
+    "test": {
+     "coverage": 0.8462,
+     "n_people": 4007,
+     "within_2x": 0.2323
+    }
+   }
   }
  },
  "model_available": true
