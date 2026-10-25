@@ -2,7 +2,10 @@
 // logged in by asking GET /auth/me (once a visit; logging in or out updates the answer directly).
 //
 //   ME_KEY                -> ['me']: the session; every user query lives under it (['me', 'status', ids], ...)
-//   useMe()               -> the query plus `user` (null when logged out, also when accounts are off: a 503)
+//   useMe()               -> the query plus `user` (null when logged out, also when accounts are off: a 503).
+//                            A failed answer (accounts off or the database down) counts as logged out for the
+//                            rest of the visit: no new request on each mount or focus (each could wait 15 s,
+//                            hiding "Log in" meanwhile); the next page load asks again
 //   useDemoLogin()        -> POST /auth/demo (the one-click button)
 //   useLogin()            -> POST /auth/login with a username and password
 //   useLogout()           -> POST /auth/logout; every user query is dropped, so nothing private stays on screen
@@ -16,7 +19,10 @@ export const ME_KEY = ['me'] as const
 export const isMeKey = (key: QueryKey) => key[0] === 'me' && key.length > 1
 
 export function useMe() {
-  const query = useQuery({ queryKey: ME_KEY, queryFn: ({ signal }) => api.me(signal), staleTime: Infinity, retry: false })
+  const query = useQuery({
+    queryKey: ME_KEY, queryFn: ({ signal }) => api.me(signal), staleTime: Infinity,
+    retry: false, retryOnMount: false, refetchOnMount: false, refetchOnWindowFocus: false,
+  })
   return { ...query, user: query.data?.user ?? null }
 }
 

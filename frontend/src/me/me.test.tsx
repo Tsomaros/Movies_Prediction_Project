@@ -466,3 +466,19 @@ describe('the watched date', () => {
     expect(calls(all, `/me/movies/${FILM.id}`, 'PUT')).toHaveLength(1)
   })
 })
+
+describe('accounts down', () => {
+  test('a failed /auth/me shows "Log in" and is not asked again on every page or dialog', async () => {
+    const { calls: all } = serve({ routes: { '/api/v1/auth/me': { status: 503, body: { detail: "The accounts database isn't answering." } } } })
+    const { router } = renderApp(`/movies/${FILM.id}`)
+    expect(await screen.findByRole('link', { name: 'Log in' })).toBeInTheDocument()
+    await act(() => router.navigate('/browse'))
+    await screen.findByRole('heading', { level: 1, name: 'Browse films' })
+    expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Surprise me' }))
+    await screen.findByRole('dialog', { name: 'Surprise me' })
+    window.dispatchEvent(new Event('focus'))
+    expect(screen.getByRole('link', { name: 'Log in', hidden: true })).toBeInTheDocument()
+    expect(calls(all, '/auth/me')).toHaveLength(1)
+  })
+})
