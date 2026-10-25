@@ -1,6 +1,6 @@
 # Movie Prediction App: Detailed Plan, Days 11–16
 
-Oct 22, 2026 · @Dimitris (Day 14 and Day 14.5 inserted Oct 24, Day 14.6 and 14.7 Oct 25, 2026)
+Oct 22, 2026 · @Dimitris (Day 14 and Day 14.5 inserted Oct 24, Day 14.6, 14.7 and 14.8 Oct 25, 2026)
 
 ## Overview
 
@@ -15,6 +15,7 @@ Week three (Days 11–16) takes the project from a working form to a deployed, d
 - **Day 14.5:** "Surprise me": a random unseen film or a pick from your watchlist, with a poster-shuffle reveal and filters.
 - **Day 14.6:** actor pages: TMDB photo and biography, stats from our data, a sortable filmography, and "Predict a film with this actor"; people in browse search.
 - **Day 14.7:** the same pages for crew (directors, writers, producers and the rest) with a role switch, and cast photos on film pages.
+- **Day 14.8:** a Career section on person pages: scores over the years, a backtested next-film forecast, and the score model on their usual film and something new.
 - **Day 15:** deployment on Render Free (no card), monitoring and an interview-day safety net.
 - **Day 16:** documentation, model card, demo script and interview preparation.
 
@@ -265,6 +266,37 @@ Day 14.7 gives every crew member the actor-page treatment and shows TMDB photos 
 4. **Role switch** on the person page; the director predict button.
 5. **People row** with directors.
 6. **Wrap-up:** real data, image and memory, smoke, README, `PROGRESS.md`.
+
+## Day 14.8: Career chart and forecast
+
+Day 14.8 adds a Career section to every person page, between the stats strip and the films: a chart of their film scores over the years, a track-record forecast for their next film checked by a backtest, and the score model on two made-up films, "Their usual film" and "Something new". Dimitris wrote the spec and plan (`2026-10-25-career-chart-design.md`, `2026-10-25-career-chart.md`); the work runs task by task with subagents.
+
+### Decisions
+
+| Topic | Decision | Why |
+| --- | --- | --- |
+| Name | Day 14.8 | Day 14.7 is the crew pages; deployment stays Day 15 |
+| Rated film | `score_ok` (50+ votes, `MIN_VOTES` in `ml/data/clean.py`) and a year; fewer votes are faint dots only | The plan says import the constant; the spec's "30" was a guess at it |
+| Role | The page's own `?role=` switch; Career shows for acting, directing and writing, and says it isn't available for other roles. Only `?view=` is new | One switch per page; the forecast has no settings for crew roles |
+| Lead | Acting credit with `ord <= 2` | `ord` is the cast order column |
+| Forecast | Weighted track record shrunk toward the role's average, range `c ± q·σ` clipped to 1–10; h, k, q per role from the backtest | The spec's formulas |
+| Backtest years | Tune on next films before 2019, report 2019+; history = strictly earlier release dates | Dimitris's choice: a separate model from the Day 5 ones |
+| Model films | Recipes completed to a form the contract accepts: 5 actor slots (unknown ones as new names), themes and certification from recent films of those genres when their own films have none | `validate` needs 5–10 actors, 1+ themes and a certification |
+| Scoring | Through the existing `PredictionService` (and its cache), score only shown; never a budget | The same path as `POST /predict` |
+| Limits | Both career endpoints count toward the predict limit (30 a minute per IP) | The spec |
+| Chart | Recharts, in the lazy person page chunk | The spec |
+
+### Tasks
+
+1. **Career queries** (`repo/career.py`).
+2. **Forecast maths** (`ml/career/forecast.py`).
+3. **Backtest** (`ml/career/backtest.py`, `make career` -> `ml/artifacts/career_forecast.json`).
+4. **Recipes** (`services/career_model.py`).
+5. **Endpoints** `GET /people/{id}/career` and `/career/model`.
+6. **Frontend hooks**, the explanation text and `recipeToForm`.
+7. **Chart** and table.
+8. **Section and cards** on the person page.
+9. **Wrap-up:** image and memory, smoke, README, `PROGRESS.md`.
 
 ## Day 15: Deployment
 
