@@ -19,7 +19,8 @@ from pathlib import Path
 
 TRAINING_ONLY = ("features",)
 APP_TABLES = ("movies", "people", "companies", "keywords", "collections", "genres", "movie_genres", "movie_companies",
-              "movie_keywords", "movie_cast", "movie_crew", "movie_countries", "movie_languages", "meta", "movies_fts")
+              "movie_keywords", "movie_cast", "movie_crew", "movie_countries", "movie_languages", "meta", "movies_fts",
+              "person_details")
 
 
 def slim(src: Path, out: Path) -> dict[str, float]:

@@ -5,6 +5,9 @@ build never replaces a working database.
 
     uv run python -m ml.data.build_db
     uv run python -m ml.data.build_db --raw data/raw/tmdb_movies.jsonl --out data/movies.db
+
+The person_details table (Day 14.6) is always created; it is filled from data/raw/tmdb_people.jsonl when that
+pull exists (ml/data/people.py; `make people-db` refills it in place without a rebuild).
 """
 
 from __future__ import annotations
@@ -20,6 +23,7 @@ from typing import Any
 
 import pandas as pd
 
+from ml.data import people
 from ml.data.clean import (
     CPI_BASE_YEAR,
     CPI_FILE,
@@ -168,6 +172,7 @@ def _columns(con: sqlite3.Connection, table: str) -> list[str]:
 
 def write_db(con: sqlite3.Connection, tables: dict[str, pd.DataFrame], meta: dict[str, Any]) -> None:
     con.executescript(SCHEMA)
+    con.execute(people.TABLE)  # empty until people.load: every database has it, so the API never meets a missing table
     for name in TABLE_ORDER:
         columns = _columns(con, name)
         placeholders = ", ".join("?" * len(columns))
@@ -181,8 +186,10 @@ def write_db(con: sqlite3.Connection, tables: dict[str, pd.DataFrame], meta: dic
     con.commit()
 
 
-def build(raw_path: Path = RAW_MOVIES, cpi_path: Path = CPI_FILE, db_path: Path = DB_FILE) -> dict[str, Any]:
-    """Clean the raw pull and write it to db_path via a temp file; returns the cleaning report."""
+def build(raw_path: Path = RAW_MOVIES, cpi_path: Path = CPI_FILE, db_path: Path = DB_FILE,
+          people_path: Path | None = None) -> dict[str, Any]:
+    """Clean the raw pull and write it to db_path via a temp file; returns the cleaning report. With people_path,
+    person_details is filled from that person pull."""
     tables, report = clean(load_raw(raw_path), load_cpi(cpi_path))
     meta = {
         "built_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -203,6 +210,8 @@ def build(raw_path: Path = RAW_MOVIES, cpi_path: Path = CPI_FILE, db_path: Path 
         con.execute("PRAGMA journal_mode = OFF")  # a fresh file: if the build fails we just delete it
         con.execute("PRAGMA synchronous = OFF")
         write_db(con, tables, meta)
+        if people_path is not None:
+            report["people_details"] = people.load(con, people_path)
     except BaseException:
         con.close()
         tmp_path.unlink(missing_ok=True)
@@ -217,16 +226,22 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--raw", default=str(RAW_MOVIES))
     parser.add_argument("--cpi", default=str(CPI_FILE))
     parser.add_argument("--out", default=str(DB_FILE))
+    parser.add_argument("--people", default=str(people.PEOPLE_FILE), help="the person pull, loaded when it exists")
     args = parser.parse_args(argv)
 
     start = time.monotonic()
-    report = build(Path(args.raw), Path(args.cpi), Path(args.out))
+    people_path = Path(args.people) if Path(args.people).exists() else None
+    report = build(Path(args.raw), Path(args.cpi), Path(args.out), people_path)
     caps = report.pop("currency_caps_2025_usd")
+    details = report.pop("people_details", None)
     print(f"built {args.out} in {time.monotonic() - start:.0f}s")
     for rule, n in report.items():
         print(f"  {rule:28} {n:>8,}")
     if caps:
         print(f"  currency caps (2025 USD): {len(caps)} groups, ${min(caps.values()) / 1e6:.0f}M-${max(caps.values()) / 1e6:.0f}M")
+    if details:
+        print(f"  person details: {json.dumps(details)}")
+    print(f"Database size: {Path(args.out).stat().st_size / 1e6:.0f} MB")
 
 
 if __name__ == "__main__":

@@ -138,7 +138,7 @@ TABLE = """CREATE TABLE IF NOT EXISTS person_details (
 def load(con: sqlite3.Connection, path: Path = PEOPLE_FILE, today: date | None = None,
          bio_max_chars: int | None = None) -> dict[str, Any]:
     """Replace person_details with the pull's records (rerunnable). Ids missing from `people` are skipped and
-    counted. The stats go to meta['people_details']; meta['build'] (built_at, film count) is never touched."""
+    counted. The stats go to meta['people_details']; built_at and the films are never touched."""
     today = today or date.today()
     known = {r[0] for r in con.execute("SELECT id FROM people")}
     newest: dict[int, dict[str, Any]] = {}
