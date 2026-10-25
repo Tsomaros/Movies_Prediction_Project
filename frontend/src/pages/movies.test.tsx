@@ -209,11 +209,13 @@ describe('cast photos on the film page', () => {
 describe('people in browse search', () => {
   const PEOPLE = peopleRowJson as PersonMatch[] // a real answer: actors matching "tom"
   const EMPTY_LIST: MovieList = { items: [], total: 0, page: 1, page_size: 24, pages: 0 }
-  function serveSearch(people: PersonMatch[], list: MovieList = LIST) {
+  function serveSearch(people: PersonMatch[], list: MovieList = LIST, directors: PersonMatch[] = []) {
     return mockFetch({
       '/api/v1/meta/options': { body: options },
       '/api/v1/movies': { body: list },
-      '/api/v1/people': url => ({ body: people.slice(0, Number(url.searchParams.get('limit'))) }),
+      '/api/v1/people': url => ({
+        body: (url.searchParams.get('role') === 'director' ? directors : people).slice(0, Number(url.searchParams.get('limit'))),
+      }),
     })
   }
   const peopleCalls = (calls: ReturnType<typeof serveSearch>['calls']) => calls.filter(c => c.url.pathname === '/api/v1/people')
@@ -226,8 +228,25 @@ describe('people in browse search', () => {
     const hanks = within(row).getByRole('link', { name: /Tom Hanks/ })
     expect(hanks).toHaveAttribute('href', '/people/31')
     expect(hanks).toHaveTextContent('Forrest Gump')
-    expect(Object.fromEntries(peopleCalls(calls)[0].url.searchParams)).toEqual({ role: 'actor', q: 'tom', limit: '6' })
+    expect(peopleCalls(calls).map(c => Object.fromEntries(c.url.searchParams))).toEqual([
+      { role: 'actor', q: 'tom', limit: '6' }, { role: 'director', q: 'tom', limit: '6' }])
     expect(await screen.findByRole('list', { name: 'Films' })).toBeInTheDocument()
+  })
+
+  test('directors join the row, most films first, and someone in both appears once', async () => {
+    const tykwer = { id: 1071, name: 'Tom Tykwer', n_films: 80, thumb: null, known_for: 'Run Lola Run' } // made up: 80 puts him third
+    const hanksDirecting = { ...PEOPLE[1], n_films: 2, known_for: 'That Thing You Do!' }
+    serveSearch(PEOPLE, LIST, [tykwer, hanksDirecting])
+    renderApp('/browse?q=tom')
+    const row = await screen.findByTestId('people-row')
+    const cards = within(row).getAllByTestId('person-card')
+    expect(cards).toHaveLength(6)
+    expect(cards.filter(c => c.getAttribute('href') === '/people/31')).toHaveLength(1) // Tom Hanks once, as an actor
+    const director = within(row).getByRole('link', { name: /Tom Tykwer/ })
+    expect(director).toHaveTextContent('Director')
+    expect(director).toHaveTextContent('Run Lola Run')
+    const counts = [...PEOPLE, tykwer].sort((a, b) => b.n_films - a.n_films).slice(0, 6).map(x => x.id)
+    expect(cards.map(c => Number(c.getAttribute('href')!.split('/').pop()))).toEqual(counts)
   })
 
   test('nothing is asked for one character or no search, and no matches show no row', async () => {

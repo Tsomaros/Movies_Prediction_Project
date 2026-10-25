@@ -6,7 +6,8 @@
 //   myMovies(query), statuses(ids), setEntry(id, body), removeEntry(id),
 //   filmNotes(id), addNote(id, body), allNotes(page), editNote(id, body), deleteNote(id)   -> lists and notes
 //   random(query)                                        -> "Surprise me": one random film, or why there is none
-//   getPerson(id), searchPeople(q, limit)                -> a person page; actors with a photo and known-for film
+//   getPerson(id), searchPeople(q, limit, role)          -> a person page; actors or directors with a photo and
+//                                                           known-for film
 //   ApiError                                             -> every failure, with a `kind` the UI can act on:
 //     validation   422, `fieldErrors` keyed by the API's dotted paths ("actors.2", "budget")
 //     rate_limited 429, `retryAfter` seconds from the Retry-After header
@@ -161,8 +162,8 @@ export const api = {
   editNote: (id: number, body: string) => request<Note>(`/me/notes/${id}`, { method: 'PATCH', body: { body } }),
   deleteNote: (id: number) => request<void>(`/me/notes/${id}`, { method: 'DELETE' }),
   getPerson: (id: number, signal?: AbortSignal) => request<PersonDetail>(`/people/${id}`, { signal }),
-  searchPeople: (q: string, limit: number, signal?: AbortSignal) =>
-    request<PersonMatch[]>('/people', { query: { role: 'actor', q, limit }, signal }),
+  searchPeople: (q: string, limit: number, role: 'actor' | 'director', signal?: AbortSignal) =>
+    request<PersonMatch[]>('/people', { query: { role, q, limit }, signal }),
   random: ({ gems, ...query }: RandomQuery, signal?: AbortSignal) =>
     request<RandomPick>('/random', { query: { ...query, gems: gems ? 'true' : undefined }, signal }),
 }

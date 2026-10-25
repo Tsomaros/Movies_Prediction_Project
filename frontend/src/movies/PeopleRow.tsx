@@ -1,14 +1,15 @@
-// The people row above browse search's films (Day 14.6): up to PEOPLE_ROW actors whose name matches the search
-// (from 2 characters, the same debounced ?q= as the films), each a link to their page with a TMDB photo or an
-// initials avatar, the name and the film they're known for. It scrolls sideways (with snap) on a narrow screen.
+// The people row above browse search's films (Day 14.6; directors Day 14.7): up to PEOPLE_ROW actors and directors
+// whose name matches the search (from 2 characters, the same debounced ?q= as the films), each a link to their
+// page with a TMDB photo or an initials avatar, the name, "Director" for directors, and the film they're known
+// for. It scrolls sideways (with snap) on a narrow screen.
 import { Link } from 'react-router'
 
-import type { PersonMatch } from '@/api/client'
+import type { RowPerson } from '@/api/hooks'
 import { initials, nameHue } from '@/movies/people'
 
 export const PEOPLE_ROW = 6
 
-export function PeopleRow({ people }: { people: PersonMatch[] }) {
+export function PeopleRow({ people }: { people: RowPerson[] }) {
   if (people.length === 0) return null
   return (
     <section aria-labelledby="people-heading" className="grid gap-2" data-testid="people-row">
@@ -27,6 +28,7 @@ export function PeopleRow({ people }: { people: PersonMatch[] }) {
                 </span>
               )}
               <span className="line-clamp-2 text-sm font-medium leading-tight group-hover:underline">{p.name}</span>
+              {p.role === 'director' && <span className="text-xs font-medium">Director</span>}
               {p.known_for && <span className="text-muted-foreground line-clamp-1 text-xs">{p.known_for}</span>}
             </Link>
           </li>
