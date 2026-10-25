@@ -3,11 +3,12 @@
 // always shows the same films. Filters sit in a sidebar from `lg`, in a drawer on smaller screens; the grid
 // size or list view is remembered in this browser. The curated rows have their own page, /movies.
 // Logged in, each poster shows its list badge (one /me/movies/status request per page) and quick list buttons.
+// A search of 2+ characters also shows matching actors above the films (PeopleRow, Day 14.6).
 import { SearchIcon, SlidersHorizontalIcon, XIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
-import { useMetaOptions, useMovies } from '@/api/hooks'
+import { useMetaOptions, useMovies, usePeopleRow } from '@/api/hooks'
 import { SlowNotice } from '@/app/SlowNotice'
 import { useMe } from '@/auth/session'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,7 @@ import {
 import { Filters, FilterSelect } from '@/movies/Filters'
 import { MovieCard, MovieListItem } from '@/movies/MovieCard'
 import { Pager } from '@/movies/Pager'
+import { PEOPLE_ROW, PeopleRow } from '@/movies/PeopleRow'
 import { ViewPicker } from '@/movies/ViewPicker'
 import PageHeading from '@/pages/PageHeading'
 
@@ -65,6 +67,7 @@ export default function Browse() {
   const data = movies.data
   const { user } = useMe()
   const statuses = useStatuses(user && data ? data.items.map(f => f.id) : [])
+  const people = usePeopleRow(state.q, PEOPLE_ROW).data ?? []
 
   return (
     <div className="grid gap-6">
@@ -127,6 +130,7 @@ export default function Browse() {
             </ul>
           )}
 
+          <PeopleRow people={people} />
           <SlowNotice pending={movies.isPending} />
           {movies.isPending && (
             <div className={cn('grid gap-4', view === 'list' ? '' : GRID[view])} aria-busy="true">
@@ -142,7 +146,10 @@ export default function Browse() {
           )}
           {data && data.items.length === 0 && (
             <div className="grid justify-items-start gap-3 rounded-lg border p-6" data-testid="no-results">
-              <p className="font-medium">No films match{state.page > 1 ? ' on this page' : ''}.</p>
+              <p className="font-medium">
+                {state.q.trim().length >= 2 && people.length === 0 && state.page === 1 ? 'No films or people match.'
+                  : `No films match${state.page > 1 ? ' on this page' : ''}.`}
+              </p>
               {active.length > 0 ? (
                 <>
                   <p className="text-muted-foreground text-sm">Try removing a filter:</p>

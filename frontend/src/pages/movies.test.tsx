@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-import type { ModelCard, MovieDetail, MovieList, Options } from '@/api/client'
+import type { ModelCard, MovieDetail, MovieList, Options, PersonMatch } from '@/api/client'
 import { emptyForm } from '@/form/model'
 import { decodeForm, LIKE_PARAM } from '@/form/persist'
 import { browseLink, EMPTY, pageNumbers, readBrowse, VIEW_KEY, writeBrowse } from '@/movies/browse'
@@ -15,6 +15,7 @@ import modelCardJson from '@/test/model_card.json'
 import movieJson from '@/test/movie.json'
 import moviesJson from '@/test/movies.json'
 import optionsJson from '@/test/options.json'
+import peopleRowJson from '@/test/people_row.json'
 import { renderApp } from '@/test/render'
 
 const options = optionsJson as Options
@@ -187,6 +188,57 @@ describe('the browse page', () => {
     mockFetch({ '/api/v1/meta/options': { body: options }, '/api/v1/movies': new TypeError('offline') })
     renderApp('/browse')
     expect(await screen.findByRole('alert')).toHaveTextContent("The films couldn't load")
+  })
+})
+
+describe('people in browse search', () => {
+  const PEOPLE = peopleRowJson as PersonMatch[] // a real answer: actors matching "tom"
+  const EMPTY_LIST: MovieList = { items: [], total: 0, page: 1, page_size: 24, pages: 0 }
+  function serveSearch(people: PersonMatch[], list: MovieList = LIST) {
+    return mockFetch({
+      '/api/v1/meta/options': { body: options },
+      '/api/v1/movies': { body: list },
+      '/api/v1/people': url => ({ body: people.slice(0, Number(url.searchParams.get('limit'))) }),
+    })
+  }
+  const peopleCalls = (calls: ReturnType<typeof serveSearch>['calls']) => calls.filter(c => c.url.pathname === '/api/v1/people')
+
+  test('a search shows up to 6 matching actors above the films, each linking to their page', async () => {
+    const { calls } = serveSearch(PEOPLE)
+    renderApp('/browse?q=tom')
+    const row = await screen.findByTestId('people-row')
+    expect(within(row).getAllByTestId('person-card')).toHaveLength(6)
+    const hanks = within(row).getByRole('link', { name: /Tom Hanks/ })
+    expect(hanks).toHaveAttribute('href', '/people/31')
+    expect(hanks).toHaveTextContent('Forrest Gump')
+    expect(Object.fromEntries(peopleCalls(calls)[0].url.searchParams)).toEqual({ role: 'actor', q: 'tom', limit: '6' })
+    expect(await screen.findByRole('list', { name: 'Films' })).toBeInTheDocument()
+  })
+
+  test('nothing is asked for one character or no search, and no matches show no row', async () => {
+    const { calls } = serveSearch(PEOPLE)
+    renderApp('/browse?q=t')
+    await screen.findByRole('list', { name: 'Films' })
+    expect(screen.queryByTestId('people-row')).toBeNull()
+    expect(peopleCalls(calls)).toHaveLength(0)
+    serveSearch([])
+    renderApp('/browse?q=zzzz')
+    await screen.findAllByRole('list', { name: 'Films' })
+    expect(screen.queryByTestId('people-row')).toBeNull()
+  })
+
+  test('no films and no people say so together', async () => {
+    serveSearch([], EMPTY_LIST)
+    renderApp('/browse?q=zzzz')
+    expect(await screen.findByText('No films or people match.')).toBeInTheDocument()
+  })
+
+  test('a person without a photo gets an initials avatar', async () => {
+    serveSearch([{ ...PEOPLE[1], thumb: null }])
+    renderApp('/browse?q=hanks')
+    const row = await screen.findByTestId('people-row')
+    expect(within(row).getByText('TH')).toBeInTheDocument()
+    expect(row.querySelector('img')).toBeNull()
   })
 })
 
