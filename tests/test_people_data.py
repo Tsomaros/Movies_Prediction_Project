@@ -60,12 +60,16 @@ def test_truncate_bio_cuts_at_a_sentence_end():
     assert len(no_stop) == 1500 and no_stop.endswith("…")
 
 
-def test_person_ids_are_cast_members_with_enough_films_most_films_first():
+def test_person_ids_are_cast_members_with_enough_films_and_every_crew_member():
     con = sqlite3.connect(":memory:")
     con.execute("CREATE TABLE movie_cast (movie_id INTEGER, person_id INTEGER, character TEXT, ord INTEGER)")
     con.executemany("INSERT INTO movie_cast VALUES (?, ?, NULL, 0)",
                     [(1, 100), (2, 100), (3, 100), (1, 101), (2, 101), (1, 102)])
-    assert person_ids(con, 2) == [100, 101] and person_ids(con, 1) == [100, 101, 102]
+    assert person_ids(con, 2, crew=False) == [100, 101] and person_ids(con, 1, crew=False) == [100, 101, 102]
+    con.execute("CREATE TABLE movie_crew (movie_id INTEGER, person_id INTEGER, job TEXT)")
+    con.executemany("INSERT INTO movie_crew VALUES (?, ?, ?)",
+                    [(1, 200, "Director"), (2, 102, "Writer"), (2, 100, "Producer"), (2, 100, "Writer")])
+    assert person_ids(con, 2) == [100, 101, 102, 200]  # every crew member, even with one credit; each id once
 
 
 class FakePeople:

@@ -4,7 +4,7 @@
     slim_person(raw, fetched_at)       -> PERSON_FIELDS plus fetched_at (one JSON line in data/raw/tmdb_people.jsonl)
     clean_person(rec, today)           -> a person_details row: blanks -> None, impossible dates -> None
     truncate_bio(text, max_chars)      -> the biography cut at a sentence end within max_chars
-    person_ids(con, min_films)         -> cast members with at least min_films films, most films first
+    person_ids(con, min_films, crew)   -> cast members with at least min_films films and every crew member
     drop_older_than(path, days, now)   -> rewrites the pull without records older than `days` (they are pulled again)
     summarize(path)                    -> people, with photo / biography / birthday (counts and %)
     load(con, path, today, bio_max_chars)
@@ -43,7 +43,7 @@ PERSON_FIELDS = ["id", "name", "profile_path", "biography", "birthday", "deathda
                  "known_for_department", "imdb_id", "homepage", "popularity"]
 COLUMNS = ["person_id", "profile_path", "biography", "birthday", "deathday", "place_of_birth", "known_for_department",
            "imdb_id", "homepage", "tmdb_popularity", "fetched_at"]
-MIN_FILMS = 2  # 118,245 cast members (Oct 2026): about 1 h 40 min at 20 requests a second; every cast id is 321,259
+MIN_FILMS = 2  # 118,245 cast members (Oct 2026), plus all 130,723 crew (Day 14.7): 239,459 people; every cast id is 321,259
 
 
 def slim_person(raw: dict[str, Any], fetched_at: str | None = None) -> dict[str, Any]:
@@ -90,9 +90,13 @@ def truncate_bio(text: str | None, max_chars: int) -> str | None:
     return cut[:end + 1] if end > 0 else cut[:max_chars - 1].rstrip() + "…"
 
 
-def person_ids(con: sqlite3.Connection, min_films: int = MIN_FILMS) -> list[int]:
-    rows = con.execute("""SELECT person_id FROM movie_cast GROUP BY person_id HAVING COUNT(DISTINCT movie_id) >= ?
-                          ORDER BY COUNT(DISTINCT movie_id) DESC, person_id""", (min_films,))
+def person_ids(con: sqlite3.Connection, min_films: int = MIN_FILMS, crew: bool = True) -> list[int]:
+    """Cast members with min_films+ films and (Day 14.7) every crew member, most credits first, each once."""
+    crew_sql = "UNION ALL SELECT person_id, movie_id, 1 FROM movie_crew" if crew else ""
+    rows = con.execute(f"""SELECT person_id FROM (SELECT person_id, movie_id, 0 AS is_crew FROM movie_cast {crew_sql})
+                           GROUP BY person_id
+                           HAVING MAX(is_crew) = 1 OR COUNT(DISTINCT CASE WHEN is_crew = 0 THEN movie_id END) >= ?
+                           ORDER BY COUNT(DISTINCT movie_id) DESC, person_id""", (min_films,))
     return [r[0] for r in rows]
 
 
@@ -177,7 +181,7 @@ async def _pull(args: argparse.Namespace) -> None:
     if args.refresh_older_than is not None and out.exists():
         dropped = drop_older_than(out, args.refresh_older_than, datetime.now(timezone.utc))
         print(f"people: {dropped} records older than {args.refresh_older_than} days will be pulled again")
-    print(f"people: {len(ids):,} cast members with {args.min_films}+ films")
+    print(f"people: {len(ids):,} cast members with {args.min_films}+ films and crew members")
     async with TMDBClient.from_env(rate=args.rate, max_concurrency=args.workers) as client:
         stats = await run_details(client, ids, out, out.with_name(MISSING_FILE.name), limit=args.limit,
                                   workers=args.workers, endpoint="/person/{}", params={"language": "en-US"},
@@ -190,7 +194,7 @@ async def _pull(args: argparse.Namespace) -> None:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="TMDB person details for the actor pages.")
     sub = parser.add_subparsers(dest="command", required=True)
-    pull = sub.add_parser("pull", help="fetch /person/{id} for cast members (resumable)")
+    pull = sub.add_parser("pull", help="fetch /person/{id} for cast members and crew (resumable)")
     pull.add_argument("--db", default=str(DB_FILE))
     pull.add_argument("--out", default=str(PEOPLE_FILE))
     pull.add_argument("--min-films", type=int, default=MIN_FILMS)

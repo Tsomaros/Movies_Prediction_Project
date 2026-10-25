@@ -1,6 +1,6 @@
 # Movie Prediction App: Detailed Plan, Days 11–16
 
-Oct 22, 2026 · @Dimitris (Day 14 and Day 14.5 inserted Oct 24, Day 14.6 Oct 25, 2026)
+Oct 22, 2026 · @Dimitris (Day 14 and Day 14.5 inserted Oct 24, Day 14.6 and 14.7 Oct 25, 2026)
 
 ## Overview
 
@@ -14,6 +14,7 @@ Week three (Days 11–16) takes the project from a working form to a deployed, d
 - **Day 14:** a one-click demo account with a watched list, a watchlist, ratings and private notes, stored in Neon Postgres.
 - **Day 14.5:** "Surprise me": a random unseen film or a pick from your watchlist, with a poster-shuffle reveal and filters.
 - **Day 14.6:** actor pages: TMDB photo and biography, stats from our data, a sortable filmography, and "Predict a film with this actor"; people in browse search.
+- **Day 14.7:** the same pages for crew (directors, writers, producers and the rest) with a role switch, and cast photos on film pages.
 - **Day 15:** deployment on Render Free (no card), monitoring and an interview-day safety net.
 - **Day 16:** documentation, model card, demo script and interview preparation.
 
@@ -241,6 +242,29 @@ Day 14.6 ends with a page per actor (`/people/:id`): TMDB photo, biography and l
 9. **Wrap-up:** real data load, smoke check, image size, README, `PROGRESS.md`.
 
 **Done when** search → person page → sortable filmography → a pre-filled prediction works on desktop and phone in both themes, and all tests pass.
+
+## Day 14.7: Crew pages and cast photos
+
+Day 14.7 gives every crew member the actor-page treatment and shows TMDB photos for the cast on film pages. Dimitris asked for it after Day 14.6.
+
+### Decisions
+
+| Topic | Decision | Why |
+| --- | --- | --- |
+| Crew pull | Every crew member: 121,214 more people (130,723 crew, 9,509 already pulled as actors), about 1 h 40 min | Every director, writer, producer, composer, cinematographer and editor gets a photo where TMDB has one |
+| Cast photos | From the details we have: 71% of cast slots (687,568 of 968,355); the rest keep initials | No second 2 h 50 min pull for one-film actors |
+| The page | One page with a role switch (Acting, Directing, Writing, Production, Music, Camera, Editing) for the roles a person has, in the URL as `?role=`, defaulting to their main role; the grid, stats and sort follow it | One page per person; a writer-director sees both sides |
+| Predict | Acting: lead actor; Directing: director; no button for other roles | The form has no writer, producer or composer field |
+| Search | The browse row adds directors; writers and producers are reached from film pages | Only actors and directors have an in-memory index; no new index under the memory gate |
+
+### Tasks
+
+1. **Crew pull:** `person_ids` adds every crew member; `make people`, then `make people-db`.
+2. **Cast photos:** `GET /movies/{id}` cast gains `photo`; the film page shows it.
+3. **Roles in the API:** credits and stats per role, `main_role`, collaborators per role.
+4. **Role switch** on the person page; the director predict button.
+5. **People row** with directors.
+6. **Wrap-up:** real data, image and memory, smoke, README, `PROGRESS.md`.
 
 ## Day 15: Deployment
 

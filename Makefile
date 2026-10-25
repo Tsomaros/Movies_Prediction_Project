@@ -18,8 +18,8 @@ data:
 db:
 	uv run python -m ml.data.build_db
 
-# TMDB person details for the actor pages (Day 14.6): cast members with 2+ films -> data/raw/tmdb_people.jsonl
-# (resumable, about 1 h 40 min), then person_details in data/movies.db (rerunnable; `make db` loads it too)
+# TMDB person details for the person pages: cast members with 2+ films (Day 14.6) and every crew member (Day 14.7)
+# -> data/raw/tmdb_people.jsonl (resumable, about 3 h 20 min from scratch), then person_details in data/movies.db (rerunnable; `make db` loads it too)
 people:
 	uv run python -m ml.data.people pull
 
