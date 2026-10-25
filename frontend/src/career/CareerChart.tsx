@@ -1,9 +1,10 @@
-// The Career section's chart (Day 14.8): a dot per dated film with a score, placed by release date, the career
-// line (a rolling mean over rated films) and, when there is a forecast, a "Next film" column after the last year
-// with the 80% band, its middle and a dashed step from the end of the line. "score" plots the score; "year" plots
-// it minus the average of that year's rated films (0 is the middle line; the band moves by the newest year's
-// average). Dots: lead roles filled, supporting hollow, crew filled, under 50 votes faint grey; the best film has
-// a ring and a label. Hover shows a film's details and a click opens it; on touch the first tap shows them and a
+// The Career section's chart (Day 14.8) for the section's view: a dot per dated film with a value, placed by
+// release date, the career line (a rolling mean over films with a value) and, when there is a forecast, a "Next
+// film" column after the last year with the 80% band, its middle and a dashed step from the end of the line.
+// "score" plots the score (dots: lead roles filled, supporting hollow, crew filled, under 50 votes faint grey);
+// "revenue" plots the trusted box office in 2025 $ on a log axis with money() ticks at powers of 10 (only films
+// with a box office, no faint dots). The best film has a ring and a label. Everything comes from
+// `metrics[view]`. Hover shows a film's details and a click opens it; on touch the first tap shows them and a
 // second tap on the same dot opens it. Colours are theme tokens, so both themes work; screen readers get one
 // summary sentence (and the section's table).
 import { memo, useEffect, useMemo, useRef, useState } from 'react'
@@ -11,12 +12,11 @@ import {
   ComposedChart, Line, ReferenceArea, ReferenceLine, ResponsiveContainer, Scatter, XAxis, YAxis,
 } from 'recharts'
 
-import type { CareerFilm, CareerResponse } from '@/api/client'
+import type { CareerFilm, CareerResponse, CareerView } from '@/api/client'
 import { chartSummary } from '@/career/explain'
 import { useMediaQuery } from '@/lib/useReducedMotion'
-import { points, signedPoints } from '@/result/format'
+import { money, moneyAxis, points } from '@/result/format'
 
-export type CareerView = 'score' | 'year'
 type Kind = 'lead' | 'support' | 'crew' | 'faint'
 type Dot = { x: number; y: number; film: CareerFilm; kind: Kind; best: boolean }
 type Tip = { film: CareerFilm; left: number; top: number }
@@ -31,8 +31,11 @@ function position(film: CareerFilm): number {
   return film.year + (Number(m[1]) - 1 + (Number(m[2]) - 1) / 31) / 12
 }
 
-function kind(film: CareerFilm): Kind {
-  if (!film.rated) return 'faint'
+/** The film's value in a view: its score (rated or not), or its trusted box office. */
+const value = (film: CareerFilm, view: CareerView) => (view === 'score' ? film.score : film.revenue)
+
+function kind(film: CareerFilm, view: CareerView): Kind {
+  if (view === 'score' && !film.rated) return 'faint'
   return film.lead === null ? 'crew' : film.lead ? 'lead' : 'support'
 }
 
@@ -47,28 +50,28 @@ type Events = {
  *  every dot under the pointer. */
 const Plot = memo(function Plot({ data, view, height, events }:
   { data: CareerResponse; view: CareerView; height: number; events: Events }) {
-  const shift = (film: CareerFilm) => (view === 'year' ? film.year_avg : 0)
+  const metric = data.metrics[view]
   const dots: Dot[] = data.films.flatMap(film => {
-    const by = shift(film)
-    if (film.score === null || by === null) return []
-    return [{ x: position(film), y: film.score - by, film, kind: kind(film), best: film.movie_id === data.best_film?.movie_id }]
+    const y = value(film, view)
+    return y === null ? [] : [{ x: position(film), y, film, kind: kind(film, view), best: film.movie_id === metric.best_film?.movie_id }]
   })
-  // line[i] belongs to the i-th rated film (both oldest first)
-  const rated = data.films.filter(f => f.rated)
-  const line = data.line.flatMap((p, i) => {
-    const film = rated[i]
-    const by = film ? shift(film) : null
-    return film && by !== null ? [{ x: position(film), y: p.value - by }] : []
-  })
+  // line[i] belongs to the i-th film that counts for the line (both oldest first): rated films for the score,
+  // films with a box office for the revenue
+  const counted = data.films.filter(f => (view === 'score' ? f.rated : f.revenue !== null))
+  const line = metric.line.flatMap((p, i) => (counted[i] ? [{ x: position(counted[i]), y: p.value }] : []))
   const lastYear = data.films.length ? data.films[data.films.length - 1].year : 0
   const next = lastYear + 1
-  const f = data.forecast
-  const bandShift = view === 'year' ? data.latest_year_avg : 0
-  const band = f.status === 'ok' && f.low !== null && f.mid !== null && f.high !== null && bandShift !== null
-    ? { low: f.low - bandShift, mid: f.mid - bandShift, high: f.high - bandShift } : null
+  const f = metric.forecast
+  const band = f.status === 'ok' && f.low !== null && f.mid !== null && f.high !== null
+    ? { low: f.low, mid: f.mid, high: f.high } : null
 
-  const ys = [...dots.map(d => d.y), ...line.map(p => p.y), ...(band ? [band.low, band.high] : []), ...(view === 'year' ? [0] : [])]
-  const yDomain = [Math.floor(Math.min(...ys)), Math.ceil(Math.max(...ys))]
+  const ys = [...dots.map(d => d.y), ...line.map(p => p.y), ...(band ? [band.low, band.high] : [])]
+  // revenue: a log axis padded like the other money charts, ticks at 1, 10, 100… ($1M, $10M…)
+  const log = view === 'revenue'
+  const yDomain = log
+    ? [Math.min(...ys) / 1.6, Math.max(...ys) * 1.6]
+    : [Math.floor(Math.min(...ys)), Math.ceil(Math.max(...ys))]
+  const yTicks = log ? moneyAxis(ys).ticks : undefined
   const firstYear = data.films.length ? data.films[0].year : 0
   const xDomain = [firstYear, band ? next + 0.5 : lastYear + 1]
 
@@ -93,7 +96,7 @@ const Plot = memo(function Plot({ data, view, height, events }:
           <g data-testid="best-marker">
             <circle cx={cx} cy={cy} r={8} fill="none" stroke="var(--foreground)" strokeWidth={1.5} />
             <text x={cx} y={cy - 12} textAnchor="middle" fontSize={11} fill="var(--foreground)">
-              Best: {points(film.score!)}
+              Best: {log ? money(value(film, view)!) : points(film.score!)}
             </text>
           </g>
         )}
@@ -106,9 +109,12 @@ const Plot = memo(function Plot({ data, view, height, events }:
       <ComposedChart margin={{ top: 20, right: 12, bottom: 0, left: -16 }}>
         <XAxis type="number" dataKey="x" domain={xDomain} allowDecimals={false} tick={AXIS}
           stroke="var(--border)" tickFormatter={v => String(Math.floor(v))} />
-        <YAxis type="number" dataKey="y" domain={yDomain} allowDecimals={false} tick={AXIS} stroke="var(--border)"
-          tickFormatter={v => (view === 'year' && v > 0 ? `+${v}` : v < 0 ? `−${-v}` : String(v))} />
-        {view === 'year' && <ReferenceLine y={0} className="career-zero" stroke="var(--muted-foreground)" strokeDasharray="2 3" />}
+        {log ? (
+          <YAxis type="number" dataKey="y" scale="log" domain={yDomain} ticks={yTicks} tick={AXIS}
+            stroke="var(--border)" tickFormatter={v => money(v)} />
+        ) : (
+          <YAxis type="number" dataKey="y" domain={yDomain} allowDecimals={false} tick={AXIS} stroke="var(--border)" />
+        )}
         {band && (
           <>
             <ReferenceArea x1={next - 0.5} x2={next + 0.5} fill="var(--muted)" fillOpacity={0.8}
@@ -157,9 +163,12 @@ export function CareerChart({ data, view, onOpenMovie }:
   }, [])
 
   const film = tip?.film
+  if (!data.films.some(f => value(f, view) !== null)) {
+    return <p className="text-muted-foreground text-sm">{view === 'score' ? 'No films with a score to chart' : 'No films with a known box office to chart'}</p>
+  }
   return (
     <div className="relative">
-      <p className="sr-only">{chartSummary(data)}</p>
+      <p className="sr-only">{chartSummary(data, view)}</p>
       <div aria-hidden>
         <Plot data={data} view={view} height={wide ? 260 : 220} events={events} />
       </div>
@@ -168,8 +177,9 @@ export function CareerChart({ data, view, onOpenMovie }:
           style={{ left: tip.left, top: tip.top + 12 }}>
           <div className="font-medium">{film.title}</div>
           <div className="text-muted-foreground tabular-nums">
-            {film.year}{film.score !== null && ` · ${points(film.score)}`}
-            {view === 'year' && film.score !== null && film.year_avg !== null && ` (${signedPoints(film.score - film.year_avg)} vs its year)`}
+            {film.year}
+            {view === 'score' && film.score !== null && ` · ${points(film.score)}`}
+            {view === 'revenue' && film.revenue !== null && ` · ${money(film.revenue)} box office`}
           </div>
           {film.character && <div>as {film.character}</div>}
           {film.lead !== null && <div className="text-muted-foreground">{film.lead ? 'Lead role' : 'Supporting role'}</div>}

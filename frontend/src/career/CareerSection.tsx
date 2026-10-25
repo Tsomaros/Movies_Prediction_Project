@@ -1,14 +1,14 @@
 // The person page's Career section (Day 14.8), for the role the page shows (acting, directing or writing; the
-// page's own ?role= switch moves it): the chart of their scores over the years ("Score" or "Compared with its
-// year" in ?view=, score by default and then left out of the URL) with "View as table", the track-record forecast
-// of their next film and the score model's two films. The model is asked only once /career says it can answer;
-// writing has none. Loaded on demand with Recharts, so neither the main bundle nor the person page carries them.
+// page's own ?role= switch moves it): "Score" or "Revenue" in ?view= (score by default and then left out of the
+// URL; an unknown value falls back to it), and everything follows the view: the chart of their films over the
+// years with "View as table", the track-record forecast of their next film and the film model's two films. The
+// model is asked only once /career says it can answer (one answer carries both metrics); writing has none. Loaded on demand with Recharts, so neither the main bundle nor the person page carries them.
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 
-import { ApiError, type CareerRole, type Recipe } from '@/api/client'
+import { ApiError, type CareerRole, type CareerView, type Recipe } from '@/api/client'
 import { useCareer, useCareerModel, useMetaOptions } from '@/api/hooks'
-import { CareerChart, type CareerView } from '@/career/CareerChart'
+import { CareerChart } from '@/career/CareerChart'
 import { CareerTable } from '@/career/CareerTable'
 import { ModelCard, type ModelKind } from '@/career/ModelCard'
 import { TrackRecordCard } from '@/career/TrackRecordCard'
@@ -19,9 +19,9 @@ import { cn } from '@/lib/utils'
 import { recipeToForm } from '@/movies/predictLike'
 
 const VIEWS: { value: CareerView; label: string }[] = [
-  { value: 'score', label: 'Score' }, { value: 'year', label: 'Compared with its year' },
+  { value: 'score', label: 'Score' }, { value: 'revenue', label: 'Revenue' },
 ]
-const readView = (value: string | null): CareerView => (value === 'year' ? 'year' : 'score')
+const readView = (value: string | null): CareerView => (value === 'revenue' ? 'revenue' : 'score')
 
 function ViewToggle({ value, onChange }: { value: CareerView; onChange: (v: CareerView) => void }) {
   return (
@@ -89,11 +89,11 @@ export default function CareerSection({ personId, name, role }: { personId: numb
           </>
         ) : noFilms}
         <div className="grid items-start gap-4 md:grid-cols-2">
-          <TrackRecordCard forecast={data.forecast} />
+          <TrackRecordCard forecast={data.metrics[view].forecast} view={view} />
           {role === 'writing' ? (
             <p className="text-muted-foreground text-sm">The film model has no writer input, so only the track record is shown.</p>
           ) : modelOn && (
-            <ModelCard base={base} chip={chip} selected={genre} onChip={setGenre} onEdit={edit} canEdit={options.data !== undefined} />
+            <ModelCard base={base} chip={chip} view={view} selected={genre} onChip={setGenre} onEdit={edit} canEdit={options.data !== undefined} />
           )}
         </div>
       </>

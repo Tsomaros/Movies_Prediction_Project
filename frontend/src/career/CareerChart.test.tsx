@@ -3,10 +3,10 @@ import { cloneElement, isValidElement, type ReactNode } from 'react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { describe, expect, test, vi } from 'vitest'
 
-import type { CareerResponse } from '@/api/client'
-import { CareerChart, type CareerView } from '@/career/CareerChart'
+import type { CareerResponse, CareerView } from '@/api/client'
+import { CareerChart } from '@/career/CareerChart'
 import { CareerTable } from '@/career/CareerTable'
-import { chartSummary } from '@/career/explain'
+import { money } from '@/result/format'
 import fewJson from '@/test/career_few.json'
 import hanksJson from '@/test/career_hanks.json'
 import nolanJson from '@/test/career_nolan.json'
@@ -54,17 +54,38 @@ describe('the career chart', () => {
 
   test('no band without a forecast', () => {
     chart(FEW)
-    expect(FEW.forecast.status).toBe('not_enough_films')
+    expect(FEW.metrics.score.forecast.status).toBe('not_enough_films')
     expect(screen.queryByTestId('forecast-band')).toBeNull()
     expect(screen.getByTestId('best-marker')).toBeInTheDocument()
   })
 
-  test('"Compared with its year" plots the score minus the year average, around a 0 line', () => {
-    chart(HANKS, 'year')
-    const shown = scored(HANKS).filter(f => f.year_avg !== null)
-    expect(screen.getAllByTestId(/^dot-/)).toHaveLength(shown.length)
-    expect(document.querySelector('.career-zero')).not.toBeNull()
+  test('revenue: dots only for films with a box office (none faint), the band, a money best label and log ticks', () => {
+    chart(HANKS, 'revenue')
+    const known = HANKS.films.filter(f => f.revenue !== null)
+    expect(known.length).toBeLessThan(HANKS.films.length)
+    expect(screen.getAllByTestId(/^dot-/)).toHaveLength(known.length)
+    expect(screen.getAllByTestId('dot-lead')).toHaveLength(known.filter(f => f.lead).length)
+    expect(screen.getAllByTestId('dot-support')).toHaveLength(known.filter(f => f.lead === false).length)
+    expect(screen.queryByTestId('dot-faint')).toBeNull()
+    expect(HANKS.metrics.revenue.best_film!.title).toBe('Toy Story 3')
+    expect(within(screen.getByTestId('best-marker')).getByText('Best: $1.6B')).toBeInTheDocument()
     expect(screen.getByTestId('forecast-band')).toBeInTheDocument()
+    for (const tick of ['$10M', '$100M', '$1B']) expect(screen.getByText(tick)).toBeInTheDocument()
+  })
+
+  test('revenue: crew films are filled, and the tooltip shows the box office', () => {
+    chart(NOLAN, 'revenue')
+    expect(screen.getAllByTestId('dot-crew')).toHaveLength(NOLAN.films.filter(f => f.revenue !== null).length)
+    const best = screen.getByTestId('best-marker').parentElement!
+    fireEvent.pointerEnter(best, { pointerType: 'mouse' })
+    const film = NOLAN.films.find(f => f.movie_id === NOLAN.metrics.revenue.best_film!.movie_id)!
+    expect(screen.getByRole('tooltip')).toHaveTextContent(`2012 · ${money(film.revenue!)} box office`)
+  })
+
+  test('a view with no values says so instead of an empty chart', () => {
+    chart({ ...FEW, films: FEW.films.map(f => ({ ...f, revenue: null })) }, 'revenue')
+    expect(screen.getByText('No films with a known box office to chart')).toBeInTheDocument()
+    expect(screen.queryByTestId(/^dot-/)).toBeNull()
   })
 
   test('mouse: hover shows the film, a click opens it', () => {
@@ -78,7 +99,7 @@ describe('the career chart', () => {
     expect(tip).toHaveTextContent('Lead role')
     fireEvent.pointerDown(best, { pointerType: 'mouse' })
     fireEvent.click(best)
-    expect(open).toHaveBeenCalledWith(HANKS.best_film!.movie_id)
+    expect(open).toHaveBeenCalledWith(HANKS.metrics.score.best_film!.movie_id)
   })
 
   test('touch: the first tap shows the film, a second tap on the same dot opens it', () => {
@@ -94,20 +115,18 @@ describe('the career chart', () => {
     const leads = scored(HANKS).filter(f => f.rated && f.lead)
     expect(open).toHaveBeenCalledWith(leads[1].movie_id)
   })
-
-  test('screen readers get one summary sentence', () => {
-    expect(chartSummary(HANKS)).toBe('77 rated films from 1980 to 2025; average 6.8; best film The Green Mile')
-  })
 })
 
 describe('the career table', () => {
-  test('lists every dated film with a link, score, votes and role', () => {
+  test('lists every dated film with a link, score, box office, votes and role', () => {
     const router = createMemoryRouter([{ path: '/', element: <CareerTable films={HANKS.films} /> }])
     render(<RouterProvider router={router} />)
     const table = screen.getByRole('table', { name: 'Career films' })
     expect(within(table).getAllByRole('row')).toHaveLength(HANKS.films.length + 1)
     const green = within(table).getByRole('link', { name: 'The Green Mile' })
-    expect(green).toHaveAttribute('href', `/movies/${HANKS.best_film!.movie_id}`)
-    expect(green.closest('tr')).toHaveTextContent(/1999The Green Mile8\.5[\d,]+as Paul Edgecomb · lead/)
+    expect(green).toHaveAttribute('href', `/movies/${HANKS.metrics.score.best_film!.movie_id}`)
+    expect(green.closest('tr')).toHaveTextContent(/1999The Green Mile8\.5\$[\d.]+[MB][\d,]+as Paul Edgecomb · lead/)
+    const none = HANKS.films.find(f => f.revenue === null)!
+    expect(within(table).getByRole('link', { name: none.title }).closest('tr')).toHaveTextContent(/—/)
   })
 })

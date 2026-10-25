@@ -12,7 +12,7 @@
 //   useSweep(body)                         -> POST /predict/sweep (the release-month sweep), kept for the session
 //   useModelCard()                         -> GET /model-card, cached an hour
 //   useCareer(id, role)                    -> the Career section's chart and track-record forecast, cached an hour
-//   useCareerModel(id, role, genre, on)    -> its score-model films ("Something new" for one genre chip when genre
+//   useCareerModel(id, role, genre, on)    -> the film model's films ("Something new" for one genre chip when genre
 //                                             is set); a new chip keeps the last answer on screen until it arrives
 //   useMovies(query) / useMovie(id)        -> browse and one film, cached an hour like the API says; a new page or
 //                                             filter keeps the last results on screen until the new ones arrive
