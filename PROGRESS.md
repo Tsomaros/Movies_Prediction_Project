@@ -1941,7 +1941,7 @@ The floor lives in `services/random_pick.py` as `FLOOR = (200, 6.0)`. With hidde
 - **Refresh:** the crew details were pulled on Oct 25, 2026, so the six-month refresh is due by April 2027, the same as the actors'.
 - **A frontend test failed under load twice this session:** the `/movies` rows test on Day 14.5, and an unnamed one today, while the Python suites ran alongside. Both passed alone. If it shows up again on Day 15, run the suite on its own and note which test it was.
 
-## Day 14.8: Career chart and forecast (Docker checks pending)
+## Day 14.8: Career chart and forecast (done 2026-10-25)
 
 - [x] 0. Plan document: Day 14.8 inserted after Day 14.7; Dimitris's spec and plan copied to `docs/superpowers/` (`f57f1c1`). His choices:
   - Day 14.8;
@@ -1955,7 +1955,7 @@ The floor lives in `services/random_pick.py` as `FLOOR = (200, 6.0)`. With hidde
 - [x] 6. Frontend hooks, explanation, `recipeToForm` (`ceb5150`)
 - [x] 7. Chart and table (`7d33e4f`)
 - [x] 8. The section on person pages (`faabfef`)
-- [ ] 9. Wrap-up: docs and checks (this commit); Docker image, memory, smoke and Playwright still to run
+- [x] 9. Wrap-up: docs and checks (`89feb7f`); Docker, memory, smoke and Playwright (this commit)
 
 ### The backtest (2019+ next films)
 
@@ -1987,7 +1987,11 @@ Acting is inside the plan's 0.75–0.85 band, and every role beats the database 
 | Frontend tests | 280 (`npm run check`), 26 new |
 | Bundle | the section and Recharts are their own lazy chunk, 351 kB (103 kB gzipped); the main bundle 269 kB, the person page 9.6 kB |
 | Speed (local) | `/career` 6–25 ms; `/career/model` about 400 ms the first time, then about 6 ms |
-| Docker, memory, smoke, Playwright | not run: drive C: is full (about 0.5 GB free), and `slim_db.py`'s VACUUM needs about 1 GB |
+| Image | 1,085 MB unpacked, about 406 MB compressed (no change: the artifact is a few kB, Recharts is in the web image only) |
+| Memory | 381 MiB after 100 predictions and 50 career pages with their model films (gate 450 MB); 4 of the 50 were 404s by design: prolific directors with no film over 50 votes, whose page never asks the model |
+| Speed (Docker) | the career smoke check (Hanks's forecast and both model films, then Nolan's) 663 ms; 50 career pages with model films in 14 s |
+| Smoke | all checks pass, including the new career check |
+| Playwright | both flows pass against Docker |
 
 - **By hand** (the dev servers, real API):
   - **Tom Hanks:**
@@ -2001,4 +2005,4 @@ Acting is inside the plan's 0.75–0.85 band, and every role beats the database 
 - **Something new can score above the usual film.** For Hanks it's 7.46 against 6.96, from new themes and no named co-stars. That's honest model output, not a bug.
 - **A chip that repeats the default pair** (Nolan's Romance gives Romance + Comedy) scores the same as the default but misses the prediction cache, because the genre order differs.
 - **The first `/career/model` call takes about 400 ms locally.** Check it on Render's small CPU against the 3 s target.
-- **Disk:** C: is full. Free about 2 GB before `make docker-build`.
+- **Disk:** `make docker-build` needs about 1 GB free on C: for `slim_db.py`'s VACUUM; it failed at 0.5 GB until space was freed.
