@@ -1853,6 +1853,8 @@ The floor lives in `services/random_pick.py` as `FLOOR = (200, 6.0)`. With hidde
 - **The average score uses `score_ok` (50+ votes),** the app's existing rule, and ties among search hits are broken by name, not TMDB popularity (the co-star and director ties do use popularity).
 - **Director-only people** have no films grid, no stats strip and no predict button; their crew credits are listed ("Directed").
 - **The image budget:** the image was already 984 MB before this day, so the plan's ~700 MB couldn't hold. Measured instead: the image's database grew by 49 MB, and no biography cut was needed.
+- **Review focus 2 holds only in the browse row:** `GET /people?q=a` still answers, because the form's autocomplete searches from one character; the people row asks only from 2.
+- **Accent folding reaches company and franchise search too,** since they share `Lookups` ("pathe" finds Pathé).
 - **No "No dated films" note:** a film without a year shows "Year unknown" on its card, as everywhere else.
 
 ### Checks
@@ -1862,6 +1864,7 @@ The floor lives in `services/random_pick.py` as `FLOOR = (200, 6.0)`. With hidde
 | Python tests | 501 (`make test`), 371 quick; new: 12 person-record and pull, 6 database, 19 API (with the ENDPOINTS entry), plus the real autocomplete test |
 | Frontend tests | 250 (19 new) on real API answers saved in `src/test/person.json`, `person_plain.json`, `people_row.json`; coverage 97.5% of lines, 87.4% of branches (was 97.4% / 86.7%) |
 | Database | +52 MB (261 → 313 MB, biographies 28 MB); the image's copy 220 → 269 MB |
+| Image | 1,061 MB unpacked (sum of `docker history` layers), about 400 MB compressed; was 984 / 370 MB. +49 MB is the database; +48 MB is the Python packages (489 MB), grown on Day 14 (Postgres, argon2) and not re-measured then |
 | Memory | 372 MiB after 100 predictions and 50 person pages (gate 450 MB) |
 | Speed | a person page about 20 ms, a search with extras 7–30 ms (Docker) |
 | Bundle | main +0.6 kB gzipped; the person page a 3.2 kB chunk |
@@ -1878,5 +1881,6 @@ The floor lives in `services/random_pick.py` as `FLOOR = (200, 6.0)`. With hidde
 ### Surprises / inputs for Day 15+
 
 - **Disk:** C: had 1.4 GB free after the image build.
+- **Watch on Render:** `GET /people` now runs the extras query on every keystroke in the form's director and actor fields (7–30 ms in Docker, maybe ten times that on 0.1 CPU). If it is slow, add the extras only when the browse row asks (a query flag).
 - **Refresh:** person details fall under TMDB's six-month rule, like the collages: refresh them by April 2027.
 - **The browse no-results box** says "No films match" even when the people row above found people ("hanks"). Film search covers titles and plots only, so this is correct, but it can read oddly.

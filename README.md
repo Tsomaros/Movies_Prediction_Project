@@ -717,7 +717,7 @@ docker compose down
 **What goes into the backend image:**
 - the runtime dependencies only, 10 packages: `uv sync --no-default-groups`; `optuna`, `matplotlib`, `scikit-learn` and `onnx` are in the `ml` group, and `pytest` and `jupyter` in `dev`;
 - `ml/` and `backend/`;
-- `build/movies.db`: `data/movies.db` without the training-only `features` table, VACUUMed, 309 → 220 MB (`scripts/slim_db.py`);
+- `build/movies.db`: `data/movies.db` without the training-only `features` table, VACUUMed, 313 → 269 MB with the person details (`scripts/slim_db.py`; 220 MB before Day 14.6);
 - `build/context.joblib`: History, Companies and Franchises built once (`python -m ml.features.build prebuilt`), stamped with the database's build time and film count, so a file from another build is refused;
 - the app's models and comparables index, and the 8-bit MiniLM only (23 MB).
 
@@ -739,7 +739,7 @@ That is 19 checks. It exits with status 1 on any failure, the same against local
 
 | | |
 | --- | --- |
-| Backend image | 984 MB unpacked, 370 MB compressed (Docker Desktop's `docker images` shows their sum, 1.36 GB) |
+| Backend image | 1,061 MB unpacked (the layers in `docker history`), about 400 MB compressed (Docker Desktop's `docker images` shows their sum, 1.46 GB); 984 / 370 MB before Day 14's account packages and Day 14.6's person details |
 | Frontend image | 82.5 MB (nginx; the app itself is about 1 MB) |
 | Startup until healthy | 8.3 s (models, prebuilt track records, comparables, lookups) |
 | Memory after startup | 323 MB (it peaks at 489 MB while loading) |
@@ -833,6 +833,7 @@ The money models hold up on new films; the score ranges under-cover, because you
 
 ## Limitations
 
+- **The person-row extras run on every autocomplete keystroke.** `GET /people` adds the photo and known-for film (one SQL query, 7–30 ms in Docker) for the form's director and actor fields too, which never show them; on a slow host that could add up. If it does, send them only when the browse row asks.
 - **Actors with one film have no TMDB photo or biography.** The person pull covers the 118,244 cast members with 2+ films; the other 203,000 get a page from our data only. Biographies are TMDB's English ones, and 59% of the people pulled have none.
 - **The revenue model is mostly an English-language, post-1980 model.** Only 21% of English films have both budget and revenue (32% among the first 700 per year), and most other languages are under 10%. There are only 286 revenue training films from the 1960s and 471 from the 1970s.
 - **Some revenues are incomplete.** 178 training films (2.0%) earned less than 1% of their budget. Some are real flops, but others seem to record only part of the box office, probably the US share (e.g. *Flying Swords of Dragon Gate*, $128k). No rule catches these yet.
@@ -860,7 +861,7 @@ The money models hold up on new films; the score ranges under-cover, because you
 - **Everyone shares the demo account.** Its lists and "private" notes are private to the account, not to a visitor: anyone logged in to it sees and can change them until the nightly reset.
 - **Undo on a deleted note adds it back as a new note,** at the top of the list with today's date.
 - **The examples are dated October 2026 and May 2027,** like the golden forms they send. Once a date has passed, the year list (this year to four years ahead) no longer offers it, though the form still sends it.
-- **The Docker image is 984 MB unpacked, above the ~700 MB aim** (370 MB compressed). The Python packages take 441 MB, scipy alone 143 MB: LightGBM imports `scipy.sparse` when it loads, so scipy can't be left out. The 100 MB of precompiled bytecode stays, so startup doesn't recompile everything.
+- **The Docker image is 1,061 MB unpacked, above the ~700 MB aim** (about 400 MB compressed). The Python packages take 489 MB (441 MB before Day 14's Postgres and argon2 packages), scipy alone 143 MB; the database 269 MB, 49 MB of it the person details (Day 14.6): LightGBM imports `scipy.sparse` when it loads, so scipy can't be left out. The 100 MB of precompiled bytecode stays, so startup doesn't recompile everything.
 - **Startup peaks at 489 MB.** That is under Render Free's 512 MB, but not by much: a bigger database or model would need another look.
 - **The app embeds a synopsis with an 8-bit model, the comparables index holds full-model vectors.** They agree closely (mean cosine 0.993), but for about 1 synopsis in 10 the nearest overview differs, so a comparable can differ from what the full model would pick.
 - **Memory measurements depend on the system.** On Windows the same app keeps more freed memory (639 MB after startup before the cuts); `malloc_trim` works on Linux only. The gate is measured in Docker, like the host.
