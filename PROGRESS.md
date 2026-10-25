@@ -1884,3 +1884,54 @@ The floor lives in `services/random_pick.py` as `FLOOR = (200, 6.0)`. With hidde
 - **Watch on Render:** `GET /people` now runs the extras query on every keystroke in the form's director and actor fields (7–30 ms in Docker, maybe ten times that on 0.1 CPU). If it is slow, add the extras only when the browse row asks (a query flag).
 - **Refresh:** person details fall under TMDB's six-month rule, like the collages: refresh them by April 2027.
 - **The browse no-results box** says "No films match" even when the people row above found people ("hanks"). Film search covers titles and plots only, so this is correct, but it can read oddly.
+
+## Day 14.7: Crew pages and cast photos (done 2026-10-25)
+
+- [x] 0. Plan document: Day 14.7 inserted after Day 14.6. Dimitris asked for the actor-page treatment for every crew member, and photos for the cast. His choices:
+  - pull every crew member;
+  - no new cast pull;
+  - one page with a role switch.
+- [x] 1. The pull covers every crew member (`b076081`)
+- [x] 2. Cast photos on film pages (`ee991ad`)
+- [x] 3. Person pages by role in the API (`dd1fc4a`)
+- [x] 4. The page's role switch and the director button (`7c13c21`)
+- [x] 5. Directors in browse search's people row (`580ddb5`)
+- [x] 6. Real data, checks, docs (this commit)
+
+### The pull
+
+- **121,192 crew members** in 1 h 45 min at 19.2 requests a second; 2 ids are gone from TMDB, and nothing failed. 239,456 people in all (115 MB of JSON lines).
+- **Photos:**
+  - 29% of all crew have one (37,376 of 130,723), and 57% of directors (16,492 of 29,012);
+  - 51% of all people pulled;
+  - cast slots on film pages: 71% (691,762 of 968,355).
+
+### Changes from the plan
+
+- **Role labels follow the role.** The header shows the main role as a noun ("Director", "Actor"); stats read "Directed 16 films", "Most often cast Michael Caine". Each role's collaborators never include the person themself, so a writer-director like Nolan has no "most often directed by" under Writing.
+- **A crew film appears once per role** with its jobs (Screenplay and Writer together under Writing).
+- **The film page screenshot** in the README was retaken to show today's app (lists, notes, the Surprise me button); a new `cast-photos.png` shows the photos, which are below the fold.
+
+### Checks
+
+| | |
+| --- | --- |
+| Python tests | 504 (`make test`), 374 quick, 46 accounts (`pg`); new: crew ids in the pull, cast photos, roles (crew films and jobs, main role from the department and the fallback, a director's top actor, a writer's top director) |
+| Frontend tests | 254 on real answers re-saved for Tom Hanks, Christopher Nolan and a one-film actor; coverage 97.5% of lines, 87.3% of branches. One run failed one test while the Python suites ran at the same time; it passed on two reruns |
+| Database | 313 → 334 MB (+21 MB for the crew; biographies 40 MB in all); the image's copy 269 → 293 MB |
+| Image | 1,085 MB unpacked, about 409 MB compressed (was 1,061 / about 400 MB) |
+| Memory | 379 MiB after 100 predictions and 50 director pages (gate 450 MB) |
+| Speed | a director page about 6 ms, Tom Hanks's about 27 ms (Docker) |
+| Smoke | all checks pass, including Nolan opening on directing |
+| Playwright | both flows pass against Docker |
+
+- **By hand:**
+  - Nolan's page at 375 px in light (the switch wraps to two lines);
+  - The Dark Knight's cast photos in dark, on desktop;
+  - the role switch and the director button on the dev servers.
+
+### Surprises / inputs for Day 15+
+
+- **Crew photos are sparse on TMDB** (29%), so most crew pages show initials. That's expected, not a bug.
+- **The people row now makes two requests per search** (actors and directors). Both are cached for an hour, but on Render that is two hits on each keystroke pause; one combined endpoint would halve it if needed.
+- **Refresh:** the crew details were pulled on Oct 25, 2026, so the six-month refresh is due by April 2027, the same as the actors'.

@@ -34,7 +34,7 @@ A value of `0` in TMDB's `budget` or `revenue` means "unknown", not zero. See [C
 
 - **Source:** our own TMDB API pull. The 1,200 most-voted films per year, 1960–2025, in all languages (79,199 films). The first 700 per year carry almost all the money data; the extra 500 mostly add score data.
 - **Per film:** basic info, genres, overview, runtime, budget, revenue, collection, US certification, keywords, production companies and countries, the top 15 cast, and key crew (director, writers, producers, composer, cinematographer, editor).
-- **Raw output:** `data/raw/tmdb_movies.jsonl`, and the person pull `data/raw/tmdb_people.jsonl` ([Actor pages](#actor-pages-day-146)). Neither is committed to git.
+- **Raw output:** `data/raw/tmdb_movies.jsonl`, and the person pull `data/raw/tmdb_people.jsonl` ([Person pages](#person-pages-days-146147)). Neither is committed to git.
 - **Database:** `data/movies.db` (SQLite), built from the raw pull by `make db`, plus the `features` table from `make features`. Neither it nor the overview embedding cache (`data/overview_embeddings.npz`) is committed to git. It holds the cleaned films, people, genres, companies, keywords and collections, full-text search on titles and overviews, and these views:
   - `v_train_revenue`, `v_train_budget` and `v_train_score` for training
   - `v_directors` and `v_actors` for autocomplete
@@ -433,9 +433,9 @@ A FastAPI backend in `backend/app/`. Every endpoint lives under `/api/v1`, and t
 | POST | `/api/v1/predict/compare` | A base form and 1–3 variants; every prediction plus the differences |
 | POST | `/api/v1/predict/sweep` | One form with one field (`release_month`, `runtime` or `budget`) tried at 2–12 values; the three ranges at each |
 | GET | `/api/v1/movies` | Search (`q`), filters (`genre`, `year_from`, `year_to`, `language`, `score_min`: films with any number of votes), `sort` (popularity, newest, title, score: 50+ votes only, revenue: 2025 $, trusted figures only), `page`, `page_size` (at most 48); each film with its score, votes and revenue in 2025 $ |
-| GET | `/api/v1/movies/{id}` | Facts, themes, cast and crew, money (as reported and in 2025 $), score, posters and 6 similar films |
+| GET | `/api/v1/movies/{id}` | Facts, themes, cast (with TMDB photos where the person pull has them) and crew, money (as reported and in 2025 $), score, posters and 6 similar films |
 | GET | `/api/v1/people?role=director\|actor&q=` | Director and actor autocomplete (any word of the name, accents folded), each with a TMDB photo thumbnail and the film they're known for |
-| GET | `/api/v1/people/{id}` | One person: TMDB photo, biography, life dates and links (where the person pull found them), stats from our data (films, years, top genres, average score over 50+ vote films, trusted box office in 2025 $, top co-star and director with 2+ shared films), their films as cast with characters, and their key crew credits |
+| GET | `/api/v1/people/{id}` | One person: TMDB photo, biography, life dates and links (where the person pull found them), their `main_role`, and per role (acting, directing, writing, production, music, camera, editing) their films (characters, or jobs) and stats from our data (films, years, top genres, average score over 50+ vote films, trusted box office in 2025 $, the actor and director they shared 2+ of those films with) |
 | GET | `/api/v1/companies?q=`, `/api/v1/collections?q=` | Studio and franchise autocomplete |
 | GET | `/api/v1/meta/options` | Every form field and limit from the contract, the 27 themes, common languages and countries, suggested years |
 | GET | `/api/v1/model-card` | The served models' accuracy: the 2019+ test and the 2026 holdout next to the best baseline, training films, the database's size and years, and the "within the uncertainty" thresholds |
@@ -541,30 +541,36 @@ A "Surprise me" button with a dice icon sits in the header of every page. It ope
 
 ![Surprise me: a 1980s science fiction pick from the whole database](docs/images/surprise-me.png)
 
-## Actor pages (Day 14.6)
+## Person pages (Days 14.6–14.7)
 
-Every person in our data has a page at `/people/:id`. Browse search shows matching actors above the films, and cast and crew names on film pages link to these pages.
+Every person in our data has a page at `/people/:id`: actors (Day 14.6) and crew (Day 14.7): directors, writers, producers, composers, cinematographers and editors. Browse search shows matching actors and directors above the films, cast and crew names on film pages link to these pages, and film pages show each cast member's TMDB photo.
 
-- **From TMDB:** the photo, life dates and birthplace, biography and IMDb/website links, from `make people`. That is one `/person/{id}` request for each of the 118,244 cast members with 2+ films: 1 h 40 min at 20 requests a second, 67 MB in `data/raw/tmdb_people.jsonl` (not committed). 78% have a photo, 41% a biography and 68% a birthday; one id was gone from TMDB. Actors with a single film (203,000 more) still get a page from our data, with an initials avatar.
-- **From our data:**
+- **From TMDB:** the photo, life dates and birthplace, biography and IMDb/website links, from `make people`. That is one `/person/{id}` request for each of the 239,456 people: cast members with 2+ films (118,244) and every crew member (121,192 more), 3 h 20 min in all at 20 requests a second, 115 MB in `data/raw/tmdb_people.jsonl` (not committed). 51% have a photo, 29% a biography and 47% a birthday; three ids were gone from TMDB. Crew have photos less often (29% of all crew, 57% of directors) than actors (78%). Actors with a single film (203,000 more) still get a page from our data, with an initials avatar.
+- **Roles:** a person's films and stats are shown one role at a time: Acting, Directing, Writing, Production, Music, Camera, Editing. Only the roles they have appear, as a switch (`?role=`). The page opens on their main role: TMDB's department when they have credits in it, otherwise the role with the most films. Christopher Nolan opens on Directing (16 films), with Acting 8, Writing 14, Production 13, Music 1, Camera 4 and Editing 5 one click away.
+- **From our data, per role:**
   - the films and years;
   - the top three genres;
   - the average score over films with 50+ votes;
   - the box office over trusted figures in 2025 dollars ("from 58 of 85 films");
-  - the actor and the director they shared the most films with (2+ needed, ties by TMDB popularity).
-- **The films grid:** the character under each title, sorted newest first, oldest first, by score or by box office (in the URL as `?sort=`). Films without the sorted value go last. Key crew credits follow ("Also directed", "Also wrote").
-- **"Predict a film with this actor":** opens the form with the actor as the lead.
+  - the actor and the director they shared the most of those films with (2+ needed, never themselves, ties by TMDB popularity; no director for the directing role): "Most often cast Michael Caine (7 films)".
+- **The films grid:** the character under each title (acting) or the writing credit (Screenplay, Writer), sorted newest first, oldest first, by score or by box office (in the URL as `?sort=`). Films without the sorted value go last.
+- **"Predict a film with this actor / director":** opens the form with the person as the lead actor or as the director. Other roles have no button, because the form has no writer, producer or composer field.
+- **Cast photos on film pages:** each cast member shows their round w185 photo when the person pull has one (71% of cast slots), and initials otherwise.
 - **Safe text:** the biography is plain text, with blank lines as paragraphs, and is never read as HTML. Homepages count only when they are http(s), and IMDb ids only in their `nm…` form.
-- **Search:** the same in-memory autocomplete the form uses ("tom ha"), now with accents folded both ways ("penelope" finds Penélope Cruz). Each hit adds a w185 photo and the film the person is known for (their most-voted). The row appears from 2 typed characters and shows up to 6 people.
+- **Search:** the same in-memory autocomplete the form uses ("tom ha"), now with accents folded both ways ("penelope" finds Penélope Cruz). Each hit adds a w185 photo and the film the person is known for (their most-voted). The row appears from 2 typed characters and shows up to 6 people, actors and directors merged (someone in both appears once) and labelled. Writers, producers and the other crew have no search index; they are reached from film pages.
 - **How it is stored:** `make people-db` fills a `person_details` table in the existing `data/movies.db`. There is no re-pull or rebuild, and the models and the build stamp stay untouched; `make db` loads it too when the pull exists.
 - **What it costs:**
-  - **Database:** +52 MB (261 → 313 MB); the image's copy +49 MB (220 → 269 MB). Biographies are 28 MB of that, so none are cut (`--bio-max-chars` exists if a host needs it).
-  - **Memory:** the API stays at 372 MiB after 100 predictions and 50 person pages; nothing new is loaded at startup.
-  - **Speed:** a person page takes about 20 ms locally.
+  - **Database:** +73 MB in all (261 → 334 MB; the crew added 21 MB); the image's copy 220 → 293 MB. Biographies are 40 MB of that, so none are cut (`--bio-max-chars` exists if a host needs it).
+  - **Memory:** the API stays at 379 MiB after 100 predictions and 50 director pages; nothing new is loaded at startup.
+  - **Speed:** a person page takes 6–30 ms in Docker.
   - **Bundle:** the page is a lazy 3 kB chunk.
 - **TMDB's six-month rule:** `uv run python -m ml.data.people pull --refresh-older-than 180`, then `make people-db`.
 
 ![Tom Hanks's page: photo, life dates, stats, biography and his films](docs/images/person-page.png)
+
+![Christopher Nolan's page on Directing, with the role switch](docs/images/director-page.png)
+
+![The cast of Avengers: Infinity War with their TMDB photos](docs/images/cast-photos.png)
 
 ## Frontend
 
@@ -717,7 +723,7 @@ docker compose down
 **What goes into the backend image:**
 - the runtime dependencies only, 10 packages: `uv sync --no-default-groups`; `optuna`, `matplotlib`, `scikit-learn` and `onnx` are in the `ml` group, and `pytest` and `jupyter` in `dev`;
 - `ml/` and `backend/`;
-- `build/movies.db`: `data/movies.db` without the training-only `features` table, VACUUMed, 313 → 269 MB with the person details (`scripts/slim_db.py`; 220 MB before Day 14.6);
+- `build/movies.db`: `data/movies.db` without the training-only `features` table, VACUUMed, 334 → 293 MB with the person details (`scripts/slim_db.py`; 220 MB before Day 14.6);
 - `build/context.joblib`: History, Companies and Franchises built once (`python -m ml.features.build prebuilt`), stamped with the database's build time and film count, so a file from another build is refused;
 - the app's models and comparables index, and the 8-bit MiniLM only (23 MB).
 
@@ -739,7 +745,7 @@ That is 19 checks. It exits with status 1 on any failure, the same against local
 
 | | |
 | --- | --- |
-| Backend image | 1,061 MB unpacked (the layers in `docker history`), about 400 MB compressed (Docker Desktop's `docker images` shows their sum, 1.46 GB); 984 / 370 MB before Day 14's account packages and Day 14.6's person details |
+| Backend image | 1,085 MB unpacked (the layers in `docker history`), about 409 MB compressed (Docker Desktop's `docker images` shows their sum, 1.49 GB); 984 / 370 MB before Day 14's account packages and the person details (Days 14.6–14.7) |
 | Frontend image | 82.5 MB (nginx; the app itself is about 1 MB) |
 | Startup until healthy | 8.3 s (models, prebuilt track records, comparables, lookups) |
 | Memory after startup | 323 MB (it peaks at 489 MB while loading) |
@@ -763,8 +769,8 @@ Every prediction is unchanged: the full features table rebuilt both ways matches
 ## Testing
 
 ```bash
-make test        # everything: 501 tests, about 2.5 min with the database, the models and the compose Postgres
-make test-fast   # skips the slow, real-data and Postgres tests: 371 tests, about 25 s
+make test        # everything: 504 tests, about 2.5 min with the database, the models and the compose Postgres
+make test-fast   # skips the slow, real-data and Postgres tests: 374 tests, about 25 s
 make test-pg     # starts the compose Postgres, then the 46 accounts tests
 make coverage    # everything, with line and branch coverage of ml/ and backend/
 ```
@@ -787,7 +793,7 @@ Three markers (`pyproject.toml`) sort the tests:
 | Actor pages | `tests/test_people_data.py`, `tests/test_people_db.py`, `tests/test_people_api.py` | slimming and cleaning a TMDB person (blanks, future and reversed dates, only http(s) homepages and `nm…` IMDb ids), the biography cut at a sentence end, which ids are pulled, the pull asking `/person/{id}` in English, resuming and recording 404s, the six-month refresh leaving one line per id; `person_details` in every build, the load skipping unknown ids and keeping the newest record and the build stamp; a person page's details, stats (the 50-vote rule, unknown and doubted money left out, co-star and director with 2+ shared films), films newest first with characters, a director-only page, bad ids as 404 or 422, search hits with a photo and known-for film, accents folded both ways, search text with SQL or FTS syntax |
 | The demo flow | `frontend/e2e/demo.spec.ts` (Playwright, Edge; `npm run e2e`, default against :8080) | in a real browser: a logged-out click, the demo login in the dialog, 8/10 by keyboard, a note with Ctrl+Enter, both in My movies after a reload, then it cleans up; then a "Surprise me" spin, a second spin with a different film, and its page |
 | The model card | `tests/test_model_card.py` | the committed `model_card.json` equals one built from the reports now, belongs to the served models, and copies the reports' numbers exactly, the uncertainty thresholds included |
-| The frontend | `frontend/src/**/*.test.ts(x)` (Vitest, Testing Library) | the rules against the API's real limits, invalid input blocked, the autocomplete (Enter waits for the suggestions), the examples sending exactly the golden forms, the URL and draft round trips, every API error kind, routes and the theme; the results page on the three golden answers saved from the real API (cards, badges, break-even, notes, comparables, drivers, the accuracy numbers equal to the model card), form → results with one request, the actions, and each failure state; compare and the sweep on real answers saved from the API (every preset changes one field or says why not, the `?v=` round trip and broken variants, "within the uncertainty" on both sides of each threshold, the drivers that moved, a variant the API refuses, 12 months with the best and "about as good"); the edge cases (the waking-up notice after 3 s, the API down, 429, links edited by hand on four pages, a crashing page keeping the navigation); the browse state in the URL, search writing `?q=` once after typing, filters, chips, the no-results buttons, the remembered view, the film page (money toggle, few votes, no poster, 404), "Predict a film like this", the curated rows from their config, and TMDB's logo and notice on every route; the start page's panels and their reduced-motion switch, `/series`, the header's links, `/movies` against `/browse` and old `/movies?…` links reaching `/browse`; the accounts (a logged-out click completing after the login in the dialog, the password form: success back to `?next=`, a wrong password, empty and blank fields, a failing demo login; `?next=` only to a path on this site, an optimistic change rolling back with a toast, "Rating removed · Undo", the watched date, the stars by keyboard saving once, notes added with Ctrl+Enter, edited in place, deleted with Undo or rolled back, `/my-movies`' URL state, tabs, empty tab and retry, the browse badges from one request and the quick buttons, logout leaving nothing private); "Surprise me" (the shuffle then the film, at once with reduce motion, Spin again excluding every earlier pick, the login dialog before a watchlist spin, the three empty states and their buttons, the filters sent and remembered, a broken saved choice, the dialog on wide screens, the list buttons, a 429, reopening without a replay); the actor pages (photo, life dates, stats with links, the biography as plain text with Read more, IMDb and TMDB links, films with characters and every sort in the URL, crew credits, an initials avatar without TMDB details, a director-only page, the predict button's form, not found, a bad id never asked, Try again; the people row: 6 actors, nothing under 2 characters, "No films or people match", initials without a photo; cast and crew names linking from film pages; `formatLife` around a birthday); 250 tests, 97.5% of lines and 87.4% of branches (`npm run coverage`) |
+| The frontend | `frontend/src/**/*.test.ts(x)` (Vitest, Testing Library) | the rules against the API's real limits, invalid input blocked, the autocomplete (Enter waits for the suggestions), the examples sending exactly the golden forms, the URL and draft round trips, every API error kind, routes and the theme; the results page on the three golden answers saved from the real API (cards, badges, break-even, notes, comparables, drivers, the accuracy numbers equal to the model card), form → results with one request, the actions, and each failure state; compare and the sweep on real answers saved from the API (every preset changes one field or says why not, the `?v=` round trip and broken variants, "within the uncertainty" on both sides of each threshold, the drivers that moved, a variant the API refuses, 12 months with the best and "about as good"); the edge cases (the waking-up notice after 3 s, the API down, 429, links edited by hand on four pages, a crashing page keeping the navigation); the browse state in the URL, search writing `?q=` once after typing, filters, chips, the no-results buttons, the remembered view, the film page (money toggle, few votes, no poster, 404), "Predict a film like this", the curated rows from their config, and TMDB's logo and notice on every route; the start page's panels and their reduced-motion switch, `/series`, the header's links, `/movies` against `/browse` and old `/movies?…` links reaching `/browse`; the accounts (a logged-out click completing after the login in the dialog, the password form: success back to `?next=`, a wrong password, empty and blank fields, a failing demo login; `?next=` only to a path on this site, an optimistic change rolling back with a toast, "Rating removed · Undo", the watched date, the stars by keyboard saving once, notes added with Ctrl+Enter, edited in place, deleted with Undo or rolled back, `/my-movies`' URL state, tabs, empty tab and retry, the browse badges from one request and the quick buttons, logout leaving nothing private); "Surprise me" (the shuffle then the film, at once with reduce motion, Spin again excluding every earlier pick, the login dialog before a watchlist spin, the three empty states and their buttons, the filters sent and remembered, a broken saved choice, the dialog on wide screens, the list buttons, a 429, reopening without a replay); the actor pages (photo, life dates, stats with links, the biography as plain text with Read more, IMDb and TMDB links, films with characters and every sort in the URL, crew credits, an initials avatar without TMDB details, a director-only page, the predict button's form, not found, a bad id never asked, Try again; the people row: 6 actors, nothing under 2 characters, "No films or people match", initials without a photo; cast and crew names linking from film pages; `formatLife` around a birthday); the person page by role (opening on the main role, the switch in `?role=` with the sort, an odd role falling back, the writing credit, the director's predict button, no button for writing); directors in the people row, merged and labelled; cast photos with initials as the fallback); 254 tests, 97.5% of lines and 87.3% of branches (`npm run coverage`) |
 
 **Fuzzing found one real bug.** A whole-number field (year, month or runtime) sent as NaN or Infinity crashed the contract check with an `OverflowError`, and the API answered 500. JSON parsers, the server's included, accept those values. They now get the usual 422 "must be a number" (`ml/features/contract.py`, with 12 new tests).
 
@@ -834,7 +840,8 @@ The money models hold up on new films; the score ranges under-cover, because you
 ## Limitations
 
 - **The person-row extras run on every autocomplete keystroke.** `GET /people` adds the photo and known-for film (one SQL query, 7–30 ms in Docker) for the form's director and actor fields too, which never show them; on a slow host that could add up. If it does, send them only when the browse row asks.
-- **Actors with one film have no TMDB photo or biography.** The person pull covers the 118,244 cast members with 2+ films; the other 203,000 get a page from our data only. Biographies are TMDB's English ones, and 59% of the people pulled have none.
+- **Actors with one film have no TMDB photo or biography,** and TMDB has photos for few crew. The person pull covers the 118,244 cast members with 2+ films and every crew member; the other 203,000 actors get a page from our data only, and 29% of cast slots on film pages show initials. Only 29% of crew (57% of directors) have a photo. Biographies are TMDB's English ones, and 71% of the people pulled have none.
+- **Only actors and directors can be searched.** Writers, producers, composers, cinematographers and editors have pages but no search index (a new one would cost memory under the 450 MB gate); they are reached from film pages.
 - **The revenue model is mostly an English-language, post-1980 model.** Only 21% of English films have both budget and revenue (32% among the first 700 per year), and most other languages are under 10%. There are only 286 revenue training films from the 1960s and 471 from the 1970s.
 - **Some revenues are incomplete.** 178 training films (2.0%) earned less than 1% of their budget. Some are real flops, but others seem to record only part of the box office, probably the US share (e.g. *Flying Swords of Dragon Gate*, $128k). No rule catches these yet.
 - **Local-currency budgets are only caught when they're extreme.** The currency rule flags budgets far above their language's norm. Smaller mistakes sit near the cap: a budget entered in Brazilian reais (about 3.5 to the dollar in 2016) is only around 3.5× too high, and *The Ten Commandments: The Movie* was flagged only narrowly.
@@ -861,7 +868,7 @@ The money models hold up on new films; the score ranges under-cover, because you
 - **Everyone shares the demo account.** Its lists and "private" notes are private to the account, not to a visitor: anyone logged in to it sees and can change them until the nightly reset.
 - **Undo on a deleted note adds it back as a new note,** at the top of the list with today's date.
 - **The examples are dated October 2026 and May 2027,** like the golden forms they send. Once a date has passed, the year list (this year to four years ahead) no longer offers it, though the form still sends it.
-- **The Docker image is 1,061 MB unpacked, above the ~700 MB aim** (about 400 MB compressed). The Python packages take 489 MB (441 MB before Day 14's Postgres and argon2 packages), scipy alone 143 MB; the database 269 MB, 49 MB of it the person details (Day 14.6): LightGBM imports `scipy.sparse` when it loads, so scipy can't be left out. The 100 MB of precompiled bytecode stays, so startup doesn't recompile everything.
+- **The Docker image is 1,085 MB unpacked, above the ~700 MB aim** (about 409 MB compressed). The Python packages take 489 MB (441 MB before Day 14's Postgres and argon2 packages), scipy alone 143 MB; the database 293 MB, 73 MB of it the person details (Days 14.6–14.7): LightGBM imports `scipy.sparse` when it loads, so scipy can't be left out. The 100 MB of precompiled bytecode stays, so startup doesn't recompile everything.
 - **Startup peaks at 489 MB.** That is under Render Free's 512 MB, but not by much: a bigger database or model would need another look.
 - **The app embeds a synopsis with an 8-bit model, the comparables index holds full-model vectors.** They agree closely (mean cosine 0.993), but for about 1 synopsis in 10 the nearest overview differs, so a comparable can differ from what the full model would pick.
 - **Memory measurements depend on the system.** On Windows the same app keeps more freed memory (639 MB after startup before the cuts); `malloc_trim` works on Linux only. The gate is measured in Docker, like the host.
