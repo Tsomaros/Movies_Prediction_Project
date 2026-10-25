@@ -1,6 +1,6 @@
 # Movie Prediction App: Detailed Plan, Days 11–16
 
-Oct 22, 2026 · @Dimitris (Day 14 and Day 14.5 inserted Oct 24, 2026)
+Oct 22, 2026 · @Dimitris (Day 14 and Day 14.5 inserted Oct 24, Day 14.6 Oct 25, 2026)
 
 ## Overview
 
@@ -13,6 +13,7 @@ Week three (Days 11–16) takes the project from a working form to a deployed, d
 - **Day 13:** compare with up to 3 variants, a release-month sweep, every error state, and a quality pass.
 - **Day 14:** a one-click demo account with a watched list, a watchlist, ratings and private notes, stored in Neon Postgres.
 - **Day 14.5:** "Surprise me": a random unseen film or a pick from your watchlist, with a poster-shuffle reveal and filters.
+- **Day 14.6:** actor pages: TMDB photo and biography, stats from our data, a sortable filmography, and "Predict a film with this actor"; people in browse search.
 - **Day 15:** deployment on Render Free (no card), monitoring and an interview-day safety net.
 - **Day 16:** documentation, model card, demo script and interview preparation.
 
@@ -211,6 +212,35 @@ Day 14.5 ends with a "Surprise me" button in the header that picks a random film
 **Time:** about 5 hours.
 
 **Done when** a visitor can spin a random unseen film with or without filters, a logged-in user can spin from their watchlist, re-spins never repeat, every empty state shows a helpful message, and it works on desktop and phone in both themes.
+
+## Day 14.6: Actor pages
+
+Day 14.6 ends with a page per actor (`/people/:id`): TMDB photo, biography and life dates when TMDB has them, a stats strip from our own data, a sortable poster grid of their films, and "Predict a film with this actor". Browse search shows matching people above the films, and cast and director names on film pages link to these pages. It was planned in `2026-10-25-actor-pages.md` (Dimitris's document) and adapted to the code before the build.
+
+### Decisions
+
+| Topic | Decision | Why |
+| --- | --- | --- |
+| Pull scope | Cast members with 2+ films: 118,245 people, about 1 h 40 min at 20 requests a second (every cast id is 321,259, about 4.5 h) | Everyone still gets a page from our data; one-film actors just have no photo or biography |
+| Into the database | An add-on step, `make people-db` (`python -m ml.data.people load`), fills `person_details` in the existing `data/movies.db`; `build_db` runs it too when the pull file exists | No re-pull, no features rebuild; `meta.build` (built_at, films) and the models stay untouched |
+| Search | Keep the in-memory autocomplete behind `GET /people` (already word-prefix, "tom ha"), now folding accents ("penelope" finds Penélope), and add `thumb` and `known_for` to its hits from one SQL query; no `people_fts` table | The form's autocomplete keeps working as it is; no bigger database |
+| Image size | Measure what the details add and report it; cut biographies to 1,500 characters only if they add more than about 50 MB | The image is already 984 MB, above the old ~700 MB aim |
+| Popularity | `tmdb_popularity` only for display and ordering ties, never a model input | Pre-release inputs only |
+| Commits | One commit per task | Dimitris's choice |
+
+### Tasks
+
+1. **Person records:** `ml/data/people.py` slims and cleans one TMDB `/person/{id}` record (blanks and impossible dates become empty; only http(s) homepages and `nm…` IMDb ids).
+2. **Resumable pull:** `make people`, reusing the film pull's runner; `--refresh-older-than 180` for TMDB's six-month rule.
+3. **`person_details` table** and the load step, with coverage stats in `meta`.
+4. **Queries:** person, credits (cast and crew), stats (films, years, top genres, average score over films with 50+ votes, box office over trusted 2025 $, top co-star and director with 2+ shared films).
+5. **API:** `GET /api/v1/people/{id}`; `GET /people` hits gain `thumb` and `known_for`.
+6. **Frontend helpers:** `usePerson`, `formatLife`, the person → form mapping.
+7. **Person page** (`/people/:id`, lazy): header, stats chips, sortable grid with characters, crew credits, predict button.
+8. **People row** in browse search, and links from cast and crew names on film pages.
+9. **Wrap-up:** real data load, smoke check, image size, README, `PROGRESS.md`.
+
+**Done when** search → person page → sortable filmography → a pre-filled prediction works on desktop and phone in both themes, and all tests pass.
 
 ## Day 15: Deployment
 

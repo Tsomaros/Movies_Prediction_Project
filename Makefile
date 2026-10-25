@@ -1,4 +1,4 @@
-.PHONY: setup model data db features tune train evaluate test test-fast test-pg coverage api userdb docker-build docker-run smoke web-setup web web-test gen-api collages
+.PHONY: setup model data db people people-db features tune train evaluate test test-fast test-pg coverage api userdb docker-build docker-run smoke web-setup web web-test gen-api collages
 
 # Create .venv and install the locked dependencies (then `make model` for the text model)
 setup:
@@ -17,6 +17,14 @@ data:
 # Rebuild data/movies.db from the raw pull only (this drops the features table: run `make features` after)
 db:
 	uv run python -m ml.data.build_db
+
+# TMDB person details for the actor pages (Day 14.6): cast members with 2+ films -> data/raw/tmdb_people.jsonl
+# (resumable, about 1 h 40 min), then person_details in data/movies.db (rerunnable; `make db` loads it too)
+people:
+	uv run python -m ml.data.people pull
+
+people-db:
+	uv run python -m ml.data.people load
 
 # Build the features table in data/movies.db (needs `make model`; new overviews are embedded, the rest is cached)
 features:

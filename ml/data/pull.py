@@ -21,7 +21,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from ml.data.tmdb_client import TMDBClient, TMDBError
 
@@ -214,8 +214,12 @@ async def run_details(
     limit: int | None = None,
     workers: int = 10,
     progress_every: float = 15.0,
+    endpoint: str = "/movie/{}",
+    params: dict[str, Any] | None = DETAILS_PARAMS,
+    trim: Callable[[dict[str, Any]], dict[str, Any]] = trim_movie,
 ) -> dict[str, int]:
-    """Fetch details for every id not yet saved, appending one JSON line per film."""
+    """Fetch details for every id not yet saved, appending one JSON line per record (a film by default; the
+    person pull in ml/data/people.py passes its own endpoint, params and trim)."""
     repair_jsonl(movies_path)
     done = saved_ids(movies_path, missing_path)
     todo = [i for i in ids if i not in done]
@@ -257,7 +261,7 @@ async def run_details(
                 except asyncio.QueueEmpty:
                     return
                 try:
-                    raw = await client.get(f"/movie/{movie_id}", DETAILS_PARAMS)
+                    raw = await client.get(endpoint.format(movie_id), params)
                 except TMDBError as exc:
                     stats["failed"] += 1  # left unsaved, so the next run retries it
                     print(f"details: {movie_id} failed: {exc}", file=sys.stderr)
@@ -268,7 +272,7 @@ async def run_details(
                     missing_out.flush()
                     stats["missing"] += 1
                 else:
-                    movies_out.write(json.dumps(trim_movie(raw), ensure_ascii=False) + "\n")
+                    movies_out.write(json.dumps(trim(raw), ensure_ascii=False) + "\n")
                     movies_out.flush()
                     stats["saved"] += 1
                 if time.monotonic() - last_report >= progress_every:
