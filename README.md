@@ -34,7 +34,7 @@ A value of `0` in TMDB's `budget` or `revenue` means "unknown", not zero. See [C
 
 - **Source:** our own TMDB API pull. The 1,200 most-voted films per year, 1960–2025, in all languages (79,199 films). The first 700 per year carry almost all the money data; the extra 500 mostly add score data.
 - **Per film:** basic info, genres, overview, runtime, budget, revenue, collection, US certification, keywords, production companies and countries, the top 15 cast, and key crew (director, writers, producers, composer, cinematographer, editor).
-- **Raw output:** `data/raw/tmdb_movies.jsonl`. It is not committed to git.
+- **Raw output:** `data/raw/tmdb_movies.jsonl`, and the person pull `data/raw/tmdb_people.jsonl` ([Actor pages](#actor-pages-day-146)). Neither is committed to git.
 - **Database:** `data/movies.db` (SQLite), built from the raw pull by `make db`, plus the `features` table from `make features`. Neither it nor the overview embedding cache (`data/overview_embeddings.npz`) is committed to git. It holds the cleaned films, people, genres, companies, keywords and collections, full-text search on titles and overviews, and these views:
   - `v_train_revenue`, `v_train_budget` and `v_train_score` for training
   - `v_directors` and `v_actors` for autocomplete
@@ -43,7 +43,7 @@ A value of `0` in TMDB's `budget` or `revenue` means "unknown", not zero. See [C
 ### TMDB terms
 
 - Free for non-commercial use with attribution. Every page carries TMDB's "Primary short" logo (in the footer, or under the start page's cards) (`frontend/public/tmdb-logo.svg`, byte for byte their file: its SHA-256 equals the checksum in TMDB's own file name), smaller than our own brand, with the notice below and a link to TMDB. Film pages also link to the film on TMDB.
-- Data is not cached for more than six months. That includes the start page's two poster collages (`make collages`): rebuild them at least every six months.
+- Data is not cached for more than six months. That includes the start page's two poster collages (`make collages`) and the person details (`ml.data.people pull --refresh-older-than 180`): refresh them at least every six months.
 - The client stays at about 20 requests/second, well under TMDB's per-IP limit.
 
 > This product uses the TMDB API but is not endorsed or certified by TMDB.
@@ -541,6 +541,31 @@ A "Surprise me" button with a dice icon sits in the header of every page. It ope
 
 ![Surprise me: a 1980s science fiction pick from the whole database](docs/images/surprise-me.png)
 
+## Actor pages (Day 14.6)
+
+Every person in our data has a page at `/people/:id`. Browse search shows matching actors above the films, and cast and crew names on film pages link to these pages.
+
+- **From TMDB:** the photo, life dates and birthplace, biography and IMDb/website links, from `make people`. That is one `/person/{id}` request for each of the 118,244 cast members with 2+ films: 1 h 40 min at 20 requests a second, 67 MB in `data/raw/tmdb_people.jsonl` (not committed). 78% have a photo, 41% a biography and 68% a birthday; one id was gone from TMDB. Actors with a single film (203,000 more) still get a page from our data, with an initials avatar.
+- **From our data:**
+  - the films and years;
+  - the top three genres;
+  - the average score over films with 50+ votes;
+  - the box office over trusted figures in 2025 dollars ("from 58 of 85 films");
+  - the actor and the director they shared the most films with (2+ needed, ties by TMDB popularity).
+- **The films grid:** the character under each title, sorted newest first, oldest first, by score or by box office (in the URL as `?sort=`). Films without the sorted value go last. Key crew credits follow ("Also directed", "Also wrote").
+- **"Predict a film with this actor":** opens the form with the actor as the lead.
+- **Safe text:** the biography is plain text, with blank lines as paragraphs, and is never read as HTML. Homepages count only when they are http(s), and IMDb ids only in their `nm…` form.
+- **Search:** the same in-memory autocomplete the form uses ("tom ha"), now with accents folded both ways ("penelope" finds Penélope Cruz). Each hit adds a w185 photo and the film the person is known for (their most-voted). The row appears from 2 typed characters and shows up to 6 people.
+- **How it is stored:** `make people-db` fills a `person_details` table in the existing `data/movies.db`. There is no re-pull or rebuild, and the models and the build stamp stay untouched; `make db` loads it too when the pull exists.
+- **What it costs:**
+  - **Database:** +52 MB (261 → 313 MB); the image's copy +49 MB (220 → 269 MB). Biographies are 28 MB of that, so none are cut (`--bio-max-chars` exists if a host needs it).
+  - **Memory:** the API stays at 372 MiB after 100 predictions and 50 person pages; nothing new is loaded at startup.
+  - **Speed:** a person page takes about 20 ms locally.
+  - **Bundle:** the page is a lazy 3 kB chunk.
+- **TMDB's six-month rule:** `uv run python -m ml.data.people pull --refresh-older-than 180`, then `make people-db`.
+
+![Tom Hanks's page: photo, life dates, stats, biography and his films](docs/images/person-page.png)
+
 ## Frontend
 
 A React app in `frontend/` (Vite 8, React 19, TypeScript 6, Tailwind 4 with shadcn/ui, React Router 8, TanStack Query 5, React Hook Form + Zod 4). It needs Node 24.
@@ -738,8 +763,8 @@ Every prediction is unchanged: the full features table rebuilt both ways matches
 ## Testing
 
 ```bash
-make test        # everything: 465 tests, about 3 min with the database, the models and the compose Postgres
-make test-fast   # skips the slow, real-data and Postgres tests: 335 tests, about 20 s
+make test        # everything: 501 tests, about 2.5 min with the database, the models and the compose Postgres
+make test-fast   # skips the slow, real-data and Postgres tests: 371 tests, about 25 s
 make test-pg     # starts the compose Postgres, then the 46 accounts tests
 make coverage    # everything, with line and branch coverage of ml/ and backend/
 ```
@@ -759,9 +784,10 @@ Three markers (`pyproject.toml`) sort the tests:
 | The API | `tests/test_api.py` | every endpoint, the cache, the rate limit, errors, read-only connections, parallel requests, and that the app refuses to start on a model file that doesn't match its manifest; the OpenAPI schema's error shapes and field specs |
 | Accounts | `tests/test_accounts.py` (`pg`) | 401 on every `/me` route when logged out, a wrong password, the 6th login and 11th demo login in a minute, the cookie's flags (Secure on https only), only the token's hash stored, an old cookie after logout, an expired session, writes from another site or without JSON; lists created, switched and removed, a field left out keeping its value, the database refusing a rating on a watchlist film, unknown films, the 48-film status limit, tabs, sorts and pages; notes newest first, edit and delete, someone else's note as a 404, the 2,000-character limit, the Notes tab's pages; the 501st entry, 201st note and 31st write; the reset at 23:59:59 and 00:00:01 Athens time restoring the seed exactly, and four simultaneous demo logins resetting once |
 | Surprise me | `tests/test_random.py`; the logged-in cases in `tests/test_accounts.py` (`pg`) | the pick never returns a watched or already shown film; spinning again until nothing is left gives exactly the films above the floor, each once; hidden gems remove the floor but keep the poster rule; each filter, and a film with no runtime left out under a runtime limit; `no_match`, `all_seen` and `watchlist_empty`; watchlist mode only from the watchlist, with no floor, 401 logged out and 503 without accounts; 422s for a bad decade or more than 200 excluded ids; the 429 |
+| Actor pages | `tests/test_people_data.py`, `tests/test_people_db.py`, `tests/test_people_api.py` | slimming and cleaning a TMDB person (blanks, future and reversed dates, only http(s) homepages and `nm…` IMDb ids), the biography cut at a sentence end, which ids are pulled, the pull asking `/person/{id}` in English, resuming and recording 404s, the six-month refresh leaving one line per id; `person_details` in every build, the load skipping unknown ids and keeping the newest record and the build stamp; a person page's details, stats (the 50-vote rule, unknown and doubted money left out, co-star and director with 2+ shared films), films newest first with characters, a director-only page, bad ids as 404 or 422, search hits with a photo and known-for film, accents folded both ways, search text with SQL or FTS syntax |
 | The demo flow | `frontend/e2e/demo.spec.ts` (Playwright, Edge; `npm run e2e`, default against :8080) | in a real browser: a logged-out click, the demo login in the dialog, 8/10 by keyboard, a note with Ctrl+Enter, both in My movies after a reload, then it cleans up; then a "Surprise me" spin, a second spin with a different film, and its page |
 | The model card | `tests/test_model_card.py` | the committed `model_card.json` equals one built from the reports now, belongs to the served models, and copies the reports' numbers exactly, the uncertainty thresholds included |
-| The frontend | `frontend/src/**/*.test.ts(x)` (Vitest, Testing Library) | the rules against the API's real limits, invalid input blocked, the autocomplete (Enter waits for the suggestions), the examples sending exactly the golden forms, the URL and draft round trips, every API error kind, routes and the theme; the results page on the three golden answers saved from the real API (cards, badges, break-even, notes, comparables, drivers, the accuracy numbers equal to the model card), form → results with one request, the actions, and each failure state; compare and the sweep on real answers saved from the API (every preset changes one field or says why not, the `?v=` round trip and broken variants, "within the uncertainty" on both sides of each threshold, the drivers that moved, a variant the API refuses, 12 months with the best and "about as good"); the edge cases (the waking-up notice after 3 s, the API down, 429, links edited by hand on four pages, a crashing page keeping the navigation); the browse state in the URL, search writing `?q=` once after typing, filters, chips, the no-results buttons, the remembered view, the film page (money toggle, few votes, no poster, 404), "Predict a film like this", the curated rows from their config, and TMDB's logo and notice on every route; the start page's panels and their reduced-motion switch, `/series`, the header's links, `/movies` against `/browse` and old `/movies?…` links reaching `/browse`; the accounts (a logged-out click completing after the login in the dialog, the password form: success back to `?next=`, a wrong password, empty and blank fields, a failing demo login; `?next=` only to a path on this site, an optimistic change rolling back with a toast, "Rating removed · Undo", the watched date, the stars by keyboard saving once, notes added with Ctrl+Enter, edited in place, deleted with Undo or rolled back, `/my-movies`' URL state, tabs, empty tab and retry, the browse badges from one request and the quick buttons, logout leaving nothing private); "Surprise me" (the shuffle then the film, at once with reduce motion, Spin again excluding every earlier pick, the login dialog before a watchlist spin, the three empty states and their buttons, the filters sent and remembered, a broken saved choice, the dialog on wide screens, the list buttons, a 429); 231 tests, 97.4% of lines and 86.7% of branches (`npm run coverage`) |
+| The frontend | `frontend/src/**/*.test.ts(x)` (Vitest, Testing Library) | the rules against the API's real limits, invalid input blocked, the autocomplete (Enter waits for the suggestions), the examples sending exactly the golden forms, the URL and draft round trips, every API error kind, routes and the theme; the results page on the three golden answers saved from the real API (cards, badges, break-even, notes, comparables, drivers, the accuracy numbers equal to the model card), form → results with one request, the actions, and each failure state; compare and the sweep on real answers saved from the API (every preset changes one field or says why not, the `?v=` round trip and broken variants, "within the uncertainty" on both sides of each threshold, the drivers that moved, a variant the API refuses, 12 months with the best and "about as good"); the edge cases (the waking-up notice after 3 s, the API down, 429, links edited by hand on four pages, a crashing page keeping the navigation); the browse state in the URL, search writing `?q=` once after typing, filters, chips, the no-results buttons, the remembered view, the film page (money toggle, few votes, no poster, 404), "Predict a film like this", the curated rows from their config, and TMDB's logo and notice on every route; the start page's panels and their reduced-motion switch, `/series`, the header's links, `/movies` against `/browse` and old `/movies?…` links reaching `/browse`; the accounts (a logged-out click completing after the login in the dialog, the password form: success back to `?next=`, a wrong password, empty and blank fields, a failing demo login; `?next=` only to a path on this site, an optimistic change rolling back with a toast, "Rating removed · Undo", the watched date, the stars by keyboard saving once, notes added with Ctrl+Enter, edited in place, deleted with Undo or rolled back, `/my-movies`' URL state, tabs, empty tab and retry, the browse badges from one request and the quick buttons, logout leaving nothing private); "Surprise me" (the shuffle then the film, at once with reduce motion, Spin again excluding every earlier pick, the login dialog before a watchlist spin, the three empty states and their buttons, the filters sent and remembered, a broken saved choice, the dialog on wide screens, the list buttons, a 429, reopening without a replay); the actor pages (photo, life dates, stats with links, the biography as plain text with Read more, IMDb and TMDB links, films with characters and every sort in the URL, crew credits, an initials avatar without TMDB details, a director-only page, the predict button's form, not found, a bad id never asked, Try again; the people row: 6 actors, nothing under 2 characters, "No films or people match", initials without a photo; cast and crew names linking from film pages; `formatLife` around a birthday); 250 tests, 97.5% of lines and 87.4% of branches (`npm run coverage`) |
 
 **Fuzzing found one real bug.** A whole-number field (year, month or runtime) sent as NaN or Infinity crashed the contract check with an `OverflowError`, and the API answered 500. JSON parsers, the server's included, accept those values. They now get the usual 422 "must be a number" (`ml/features/contract.py`, with 12 new tests).
 
@@ -807,6 +833,7 @@ The money models hold up on new films; the score ranges under-cover, because you
 
 ## Limitations
 
+- **Actors with one film have no TMDB photo or biography.** The person pull covers the 118,244 cast members with 2+ films; the other 203,000 get a page from our data only. Biographies are TMDB's English ones, and 59% of the people pulled have none.
 - **The revenue model is mostly an English-language, post-1980 model.** Only 21% of English films have both budget and revenue (32% among the first 700 per year), and most other languages are under 10%. There are only 286 revenue training films from the 1960s and 471 from the 1970s.
 - **Some revenues are incomplete.** 178 training films (2.0%) earned less than 1% of their budget. Some are real flops, but others seem to record only part of the box office, probably the US share (e.g. *Flying Swords of Dragon Gate*, $128k). No rule catches these yet.
 - **Local-currency budgets are only caught when they're extreme.** The currency rule flags budgets far above their language's norm. Smaller mistakes sit near the cap: a budget entered in Brazilian reais (about 3.5 to the dollar in 2016) is only around 3.5× too high, and *The Ten Commandments: The Movie* was flagged only narrowly.

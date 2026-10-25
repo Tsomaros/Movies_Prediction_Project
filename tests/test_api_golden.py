@@ -83,7 +83,9 @@ def test_compare_on_the_real_models(api):
 
 def test_real_autocomplete(api):
     tom = api.get(f"{API_PREFIX}/people", params={"role": "actor", "q": "tom ha"}).json()
-    assert tom[0] == {"id": 31, "name": "Tom Hanks", "n_films": tom[0]["n_films"]} and tom[0]["n_films"] > 50
+    assert {k: tom[0][k] for k in ("id", "name", "known_for")} == {"id": 31, "name": "Tom Hanks", "known_for": "Forrest Gump"}
+    assert tom[0]["n_films"] > 50 and tom[0]["thumb"].startswith("https://image.tmdb.org/t/p/w185/")  # after make people-db
+    assert api.get(f"{API_PREFIX}/people", params={"role": "actor", "q": "penelope cr"}).json()[0]["name"] == "Penélope Cruz"
     assert api.get(f"{API_PREFIX}/people", params={"role": "director", "q": "gerwig"}).json()[0]["id"] == 45400
     assert api.get(f"{API_PREFIX}/companies", params={"q": "marvel"}).json()[0]["name"] == "Marvel Studios"
     assert api.get(f"{API_PREFIX}/collections", params={"q": "harry pot"}).json()[0]["name"] == "Harry Potter Collection"

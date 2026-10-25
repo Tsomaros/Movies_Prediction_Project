@@ -12,9 +12,10 @@ Checks, each printed as one line with its time:
 - POST /predict/compare with two variants, the 12-month POST /predict/sweep, and a bad form that must get
   the readable 422;
 - search, the box-office sort and the score filter, a movie page, autocomplete and /meta/options on the real data;
+- a person page (Day 14.6): the first actor found for "hanks", with films and a TMDB photo;
 - /model-card belongs to the served models and has the 2019+ test and the 2026 holdout;
 - with --web-url, the frontend: the start page, its two poster collages, its script bundle (cached for a year), a deep link served
-  as the app (/predict/...), and /api/v1/health and /meta/options through the frontend's proxy.
+  as the app (/predict/... and /people/31), and /api/v1/health and /meta/options through the frontend's proxy.
 
 It waits up to --wait seconds for /health first (a container starting, or a free host waking up), and
 exits with status 1 if any check fails. Only the standard library and httpx are needed.
@@ -119,6 +120,14 @@ def web_checks(s: Smoke, web_url: str, expected_version: str | None) -> None:
         return "served the app"
 
     s.check("GET /predict/result (client-side route)", deep_link)
+
+    def person_page() -> str:
+        r = web.get("/people/31")
+        r.raise_for_status()
+        assert '<div id="root">' in r.text, "the person route didn't get the app"
+        return "served the app"
+
+    s.check("GET /people/31 (client-side route)", person_page)
 
     def proxied() -> str:
         h = web.get(API + "/health").json()
@@ -229,6 +238,15 @@ def main() -> None:
         return ", ".join(f"{p['name']} ({p['n_films']})" for p in found[:3])
 
     s.check("GET /people?role=actor&q=tom ha", people)
+
+    def person() -> str:
+        first = s.get("/people", role="actor", q="hanks")[0]
+        p = s.get(f"/people/{first['id']}")
+        assert p["name"] == "Tom Hanks" and p["cast_credits"] and p["photo"], (p["name"], p["photo"])
+        assert p["stats"]["film_count"] == len(p["cast_credits"]), p["stats"]
+        return f"{p['name']}: {len(p['cast_credits'])} films, known for {first['known_for']}"
+
+    s.check("GET /people/{id} (the first actor for hanks)", person)
 
     def options() -> str:
         o = s.get("/meta/options")

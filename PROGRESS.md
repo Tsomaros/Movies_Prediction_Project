@@ -1815,3 +1815,68 @@ The floor lives in `services/random_pick.py` as `FLOOR = (200, 6.0)`. With hidde
   - `/random` needs the real client IP for its per-IP limit, the same as login.
 - **Disk:** C: had 1.2 GB free during the Docker build; the next image build may need the Docker cache pruned again.
 - **The local demo watchlist** had 7 films, not 8: earlier manual tests changed it. The nightly reset restores it.
+
+## Day 14.6: Actor pages (done 2026-10-25)
+
+- [x] 0. Plan document: Day 14.6 inserted into `Days 11–16`, from Dimitris's `2026-10-25-actor-pages.md`, adapted to the code. The spec file it named (`docs/superpowers/specs/…`) didn't exist, so the plan alone was the source. Dimitris's choices before the build:
+  - pull cast members with 2+ films;
+  - an add-on load step instead of a full rebuild;
+  - keep the in-memory search and add accent folding;
+  - measure the image size rather than force a biography cut;
+  - one commit per task;
+  - this entry.
+- [x] 1–2. Person records and the resumable pull (`6b1c084`)
+- [x] 3. `person_details` and its load step (`9d3ba81`)
+- [x] 4–5. Queries and `GET /people/{id}` (`d3487c2`)
+- [x] 6. Hooks and helpers; cast and crew names link to people (`62d1457`)
+- [x] 7. The person page (`af9a928`)
+- [x] 8. People in browse search (`806e070`)
+- [x] 9. Real data, smoke check, docs (this commit)
+
+### The pull
+
+- 118,244 people in 1 h 40 min at 19.9 requests a second. One id is gone from TMDB, and nothing failed.
+- 67 MB of JSON lines. 78.1% have a photo, 40.9% a biography and 68.4% a birthday.
+- The 321,259 cast ids would have taken about 4.5 h; the plan estimated 2 h for them.
+
+### Changes from the plan
+
+- **No `people_fts` table.** `GET /people` keeps the Day 8 in-memory matching, which was already word-prefix. It now folds accents, and its hits gain `thumb` and `known_for` from one SQL query. The form's autocomplete works as before, and the test that said accents are kept was changed on purpose.
+- **An add-on step instead of `make data`.** `make data` would pull every film again, and `make db` drops the features table.
+  - `make people-db` loads into the existing database and leaves `built_at` alone, so the image's prebuilt context still matches.
+  - `build_db` always creates the empty table and loads it when the pull exists.
+- **Paths:**
+  - the records, pull and load are one module, `ml/data/people.py`, and the pull reuses `pull.run_details` (now given the endpoint, params and trim);
+  - the queries are in `repo/people.py`, photos in `services/posters.profile`;
+  - the helpers are in `movies/people.ts` and `movies/predictLike.ts`, the page is `pages/Person.tsx`, and the row is `movies/PeopleRow.tsx`.
+- **404s are recorded and skipped on the next run,** like the film pull, rather than retried every run.
+- **The average score uses `score_ok` (50+ votes),** the app's existing rule, and ties among search hits are broken by name, not TMDB popularity (the co-star and director ties do use popularity).
+- **Director-only people** have no films grid, no stats strip and no predict button; their crew credits are listed ("Directed").
+- **The image budget:** the image was already 984 MB before this day, so the plan's ~700 MB couldn't hold. Measured instead: the image's database grew by 49 MB, and no biography cut was needed.
+- **No "No dated films" note:** a film without a year shows "Year unknown" on its card, as everywhere else.
+
+### Checks
+
+| | |
+| --- | --- |
+| Python tests | 501 (`make test`), 371 quick; new: 12 person-record and pull, 6 database, 19 API (with the ENDPOINTS entry), plus the real autocomplete test |
+| Frontend tests | 250 (19 new) on real API answers saved in `src/test/person.json`, `person_plain.json`, `people_row.json`; coverage 97.5% of lines, 87.4% of branches (was 97.4% / 86.7%) |
+| Database | +52 MB (261 → 313 MB, biographies 28 MB); the image's copy 220 → 269 MB |
+| Memory | 372 MiB after 100 predictions and 50 person pages (gate 450 MB) |
+| Speed | a person page about 20 ms, a search with extras 7–30 ms (Docker) |
+| Bundle | main +0.6 kB gzipped; the person page a 3.2 kB chunk |
+| Smoke | all checks pass, 3 new (people extras, a person page, the `/people/31` route) |
+| Playwright | both flows pass against Docker |
+
+- **By hand:**
+  - search "tom ha" and "hanks" with the row;
+  - Tom Hanks's page with sorts, co-star and director links, Read more and the predict button;
+  - Eric Roth (no TMDB details, crew credits);
+  - bad ids;
+  - 375 px and desktop, light and dark.
+
+### Surprises / inputs for Day 15+
+
+- **Disk:** C: had 1.4 GB free after the image build.
+- **Refresh:** person details fall under TMDB's six-month rule, like the collages: refresh them by April 2027.
+- **The browse no-results box** says "No films match" even when the people row above found people ("hanks"). Film search covers titles and plots only, so this is correct, but it can read oddly.
