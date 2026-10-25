@@ -1,12 +1,13 @@
 """Response models for the person pages (Day 14.6).
 
     PersonMatch   -> GET /people: an autocomplete hit plus a photo thumbnail and the film they're known for
-    PersonDetail  -> GET /people/{id}: TMDB details (None where TMDB had none), stats from our data, and films
+    PersonDetail  -> GET /people/{id}: TMDB details (None where TMDB had none), and per role (acting, directing,
+                     writing...) their films and stats from our data (Day 14.7)
 """
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -39,22 +40,34 @@ class AvgScore(BaseModel):
 class BoxOffice(BaseModel):
     total: float = Field(description="Worldwide revenue in 2025 dollars, trusted figures only")
     films: int = Field(description="Films with a trusted revenue")
-    of: int = Field(description="All their films as cast")
+    of: int = Field(description="All their films in this role")
+
+
+RoleName = Literal["acting", "directing", "writing", "production", "music", "camera", "editing"]
 
 
 class PersonStats(BaseModel):
-    film_count: int = Field(description="Films as cast in our data")
+    film_count: int = Field(description="Films in this role in our data")
     first_year: Optional[int]
     last_year: Optional[int]
     top_genres: list[GenreCount]
     avg_score: Optional[AvgScore]
     box_office_2025: Optional[BoxOffice]
-    top_costar: Optional[PersonRef] = Field(description="2+ shared films; ties by TMDB popularity, then name")
-    top_director: Optional[PersonRef] = Field(description="Directed 2+ of their films")
+    top_actor: Optional[PersonRef] = Field(description="In 2+ of these films (never the person); ties by TMDB "
+                                                       "popularity, then name")
+    top_director: Optional[PersonRef] = Field(description="Directed 2+ of these films; None for the directing role")
 
 
-class CastCredit(MovieSummary):
-    character: Optional[str]
+class Credit(MovieSummary):
+    character: Optional[str] = Field(description="Acting: who they played")
+    jobs: list[str] = Field(description="Crew roles: their jobs on the film (writing: Screenplay and/or Writer)")
+
+
+class Role(BaseModel):
+    role: RoleName
+    label: str = Field(description="Acting, Directing, Writing, Production, Music, Camera, Editing")
+    films: list[Credit] = Field(description="Newest first")
+    stats: PersonStats
 
 
 class PersonDetail(BaseModel):
@@ -69,6 +82,6 @@ class PersonDetail(BaseModel):
     imdb_url: Optional[str]
     homepage: Optional[str] = Field(description="http(s) only")
     tmdb_url: str
-    stats: PersonStats
-    cast_credits: list[CastCredit] = Field(description="Newest first")
-    crew_credits: dict[str, list[MovieSummary]] = Field(description="Key crew jobs (Director, Writer...), newest first")
+    main_role: Optional[RoleName] = Field(description="The role the page opens on: TMDB's department when they have "
+                                                     "credits in it, else the role with the most films")
+    roles: list[Role] = Field(description="Only roles with films, in a fixed order")

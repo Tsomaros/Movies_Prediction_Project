@@ -3,8 +3,8 @@ GET /people/{id}: one person's page (Day 14.6).
 
 A match is a word of the name starting with q ("hanks", "tom ha"; accents folded). n_films counts films in
 that role; each hit also has a photo thumbnail and the film they're known for, from one query.
-The person page has TMDB's details where the person pull found them (photo, biography, life dates, links),
-stats from our own data and their films; cacheable for an hour, like the film pages.
+The person page has TMDB's details where the person pull found them (photo, biography, life dates, links), and
+per role (acting, directing, writing...) their films and stats from our own data; cacheable for an hour.
 """
 
 import sqlite3
@@ -45,14 +45,15 @@ def get_person(person_id: int, response: Response, con: sqlite3.Connection = Dep
     found = repo.person(con, person_id) if 0 < person_id <= MAX_ID else None
     if found is None:
         raise HTTPException(status_code=404, detail="Person not found")
-    cast, crew = repo.credits(con, person_id)
+    by_role = repo.credits(con, person_id)
     response.headers["Cache-Control"] = CACHE
     return {
         **found,
         "photo": profile(found["profile_path"]),
         "imdb_url": f"https://www.imdb.com/name/{found['imdb_id']}/" if found["imdb_id"] else None,
         "tmdb_url": f"https://www.themoviedb.org/person/{person_id}",
-        "stats": repo.stats(con, person_id, cast),
-        "cast_credits": [{**_summary(f), "character": f["character"]} for f in cast],
-        "crew_credits": {job: [_summary(f) for f in films] for job, films in crew.items()},
+        "main_role": repo.main_role(found["known_for_department"], by_role),
+        "roles": [{"role": role, "label": label, "films": [_summary(f) for f in by_role[role]],
+                   "stats": repo.stats(con, person_id, role, by_role[role])}
+                  for role, label, _ in repo.ROLES if role in by_role],
     }

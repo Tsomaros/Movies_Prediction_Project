@@ -12,7 +12,8 @@ Checks, each printed as one line with its time:
 - POST /predict/compare with two variants, the 12-month POST /predict/sweep, and a bad form that must get
   the readable 422;
 - search, the box-office sort and the score filter, a movie page, autocomplete and /meta/options on the real data;
-- a person page (Day 14.6): the first actor found for "hanks", with films and a TMDB photo;
+- a person page (Day 14.6): the first actor found for "hanks", with films and a TMDB photo, and a director's
+  page opening on directing (Day 14.7);
 - /model-card belongs to the served models and has the 2019+ test and the 2026 holdout;
 - with --web-url, the frontend: the start page, its two poster collages, its script bundle (cached for a year), a deep link served
   as the app (/predict/... and /people/31), and /api/v1/health and /meta/options through the frontend's proxy.
@@ -242,9 +243,12 @@ def main() -> None:
     def person() -> str:
         first = s.get("/people", role="actor", q="hanks")[0]
         p = s.get(f"/people/{first['id']}")
-        assert p["name"] == "Tom Hanks" and p["cast_credits"] and p["photo"], (p["name"], p["photo"])
-        assert p["stats"]["film_count"] == len(p["cast_credits"]), p["stats"]
-        return f"{p['name']}: {len(p['cast_credits'])} films, known for {first['known_for']}"
+        acting = next(r for r in p["roles"] if r["role"] == "acting")
+        assert p["name"] == "Tom Hanks" and p["main_role"] == "acting" and p["photo"], (p["name"], p["photo"])
+        assert acting["films"] and acting["stats"]["film_count"] == len(acting["films"]), acting["stats"]
+        nolan = s.get("/people/525")
+        assert nolan["main_role"] == "directing" and nolan["photo"], (nolan["main_role"], nolan["photo"])
+        return f"{p['name']}: {len(acting['films'])} films, known for {first['known_for']}; Nolan opens on directing"
 
     s.check("GET /people/{id} (the first actor for hanks)", person)
 
