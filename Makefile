@@ -1,4 +1,4 @@
-.PHONY: setup model data db people people-db features tune train evaluate test test-fast test-pg coverage api userdb docker-build docker-run smoke web-setup web web-test gen-api collages
+.PHONY: setup model data db people people-db features career tune train evaluate test test-fast test-pg coverage api userdb docker-build docker-run smoke web-setup web web-test gen-api collages
 
 # Create .venv and install the locked dependencies (then `make model` for the text model)
 setup:
@@ -29,6 +29,12 @@ people-db:
 # Build the features table in data/movies.db (needs `make model`; new overviews are embedded, the rest is cached)
 features:
 	uv run python -m ml.features.build
+
+# The career forecast's backtest (Day 14.8): h, k, q per role, tuned before 2019, tested 2019+ (a few seconds)
+career: ml/artifacts/career_forecast.json
+
+ml/artifacts/career_forecast.json: data/movies.db
+	uv run python -m ml.career.backtest
 
 # Tune the LightGBM settings on backtest folds 1-2 (15 minutes per target); writes ml/artifacts/*_params.json
 tune:
@@ -71,7 +77,7 @@ userdb:
 	uv run python -m backend.app.userdb.seed
 
 # The images: the slim database copy, the prebuilt track records (build/), then the backend and frontend (needs Docker)
-docker-build:
+docker-build: ml/artifacts/career_forecast.json
 	uv run python scripts/slim_db.py
 	uv run python -m ml.features.build prebuilt
 	docker compose build

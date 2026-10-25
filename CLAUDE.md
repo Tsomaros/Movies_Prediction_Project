@@ -25,6 +25,7 @@ make db           # rebuild data/movies.db from data/raw/ (DROPS the features ta
 make features     # features table + ml/features/feature_list.json
 make people       # TMDB /person/{id} for cast members with 2+ films and all crew -> data/raw/tmdb_people.jsonl (resumable, ~3 h 20 min from scratch)
 make people-db    # person_details in data/movies.db from that pull, in place (rerunnable; build_db also loads it when the file exists)
+make career       # ml.career.backtest -> ml/artifacts/career_forecast.json (the career forecast's h, k, q per role; commit it)
 make tune         # Optuna, 15 min per target -> ml/artifacts/*_params.json, reports/experiments.csv
 make train        # ml.models.calibrate then ml.models.train -> ml/artifacts/
 make evaluate     # validation + breakdowns + backtest -> reports/ (never touches test)
