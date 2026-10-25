@@ -1,6 +1,8 @@
-// "Surprise me" (Day 14.5): the header's dice button. It keeps the state (useSurprise: the choices, the films
-// already picked in this tab, the last pick), so closing the dialog loses nothing, and loads the dialog itself
-// (SurpriseDialog.tsx, with its menus) on the first click, so every page's bundle stays as it was.
+// "Surprise me" (Day 14.5): the header's dice button. It keeps the state (useSurprise: the choices and the films
+// already picked in this tab), so a spin after reopening never repeats a film. Opening the dialog forgets the last
+// pick, so it starts fresh at Spin (on open, not on close, so the card doesn't vanish while the dialog fades out).
+// It loads the dialog itself (SurpriseDialog.tsx, with its menus) on the first click, so every page's bundle
+// stays as it was.
 import { DicesIcon } from 'lucide-react'
 import { lazy, Suspense, useState } from 'react'
 
@@ -16,7 +18,7 @@ export function SurpriseButton() {
   const surprise = useSurprise()
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => { setLoaded(true); setOpen(true) }} aria-label={TITLE} title={TITLE}>
+      <Button variant="ghost" size="sm" onClick={() => { surprise.clearPick(); setLoaded(true); setOpen(true) }} aria-label={TITLE} title={TITLE}>
         <DicesIcon aria-hidden />
         <span className="hidden sm:inline">{TITLE}</span>
       </Button>

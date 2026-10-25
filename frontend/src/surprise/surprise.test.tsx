@@ -70,6 +70,22 @@ describe('Surprise me', () => {
     expect(randomCalls(calls)).toEqual([{ source: 'all' }])
   })
 
+  test('reopening starts fresh at Spin, not a replay of the last pick, and still never repeats it', async () => {
+    const { calls } = serve([PICK, OTHER])
+    let dialog = await open()
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Spin' }))
+    await within(dialog).findByRole('heading', { name: 'Blade Runner' }, { timeout: 3000 })
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await userEvent.click(screen.getByRole('button', { name: 'Surprise me' }))
+    dialog = await screen.findByRole('dialog', { name: 'Surprise me' })
+    expect(within(dialog).queryByTestId('reveal')).not.toBeInTheDocument()
+    expect(within(dialog).queryByRole('heading', { name: 'Blade Runner' })).not.toBeInTheDocument()
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Spin' }))
+    await within(dialog).findByRole('heading', { name: 'Another Film' }, { timeout: 3000 })
+    expect(randomCalls(calls).map(q => q.exclude)).toEqual([undefined, '78'])
+  })
+
   test('with reduce motion on, the film shows at once', async () => {
     reduceMotion()
     serve([PICK])
