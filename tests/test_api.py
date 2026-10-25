@@ -16,6 +16,7 @@ from backend.app.services.ratelimit import RateLimiter
 from backend.app.settings import API_PREFIX, Settings
 from tests import test_accounts as accounts  # the module, not its tests: they run there, against Postgres
 from tests import test_random as surprise  # the same: the "Surprise me" tests run in their own module
+from tests import test_people_api as person_api  # and the person pages' tests
 from tests.test_eval import db  # noqa: F401 (fixture: a small movies.db with a features table, 2008-2022)
 from tests.test_models import (budget_model, budget_rows, revenue_model, revenue_rows,  # noqa: F401 (fixtures)
                                score_model, score_rows)
@@ -126,10 +127,11 @@ def test_any_word_can_start_the_match_and_the_query_can_run_on():
     assert ids(NAMES.search("hank")) == [1, 5, 2, 7]  # "Hank Azaria" and every "Hanks"
 
 
-def test_matching_ignores_case_and_extra_spaces_but_not_accents():
+def test_matching_ignores_case_extra_spaces_and_accents():
     assert ids(NAMES.search("  TOM   HA ")) == [1, 3, 7]
     assert ids(NAMES.search("élodie")) == [6] and ids(NAMES.search("ÉLO")) == [6]
-    assert NAMES.search("elodie") == []  # accents are kept, as TMDB spells the name
+    assert ids(NAMES.search("elodie")) == [6]  # folded on both sides since Day 14.6; the name shows as TMDB spells it
+    assert NAMES.search("elodie")[0]["name"].startswith("Élodie")
 
 
 def test_most_films_first_and_at_most_the_limit():
@@ -474,7 +476,7 @@ def test_people_autocomplete_by_role_most_films_first(api):
     r = api.get(f"{API_PREFIX}/people", params={"role": "director", "q": "director"})
     found = r.json()
     assert r.status_code == 200 and r.headers["cache-control"] == "public, max-age=3600"
-    assert len(found) == 7 and all(set(m) == {"id", "name", "n_films"} for m in found)
+    assert len(found) == 7 and all(set(m) == {"id", "name", "n_films", "thumb", "known_for"} for m in found)
     assert [m["n_films"] for m in found] == sorted((m["n_films"] for m in found), reverse=True)
     assert sum(m["n_films"] for m in found) == 300
     actors = api.get(f"{API_PREFIX}/people", params={"role": "actor", "q": "actor 1", "limit": 3}).json()
@@ -581,6 +583,7 @@ ENDPOINTS = {  # every endpoint and the test above that covers it; a new endpoin
     ("GET", "/model-card"): test_the_model_card_has_the_test_results_and_the_database,
     ("GET", "/health"): test_health_reports_the_models_the_database_and_the_cache,
     ("GET", "/random"): surprise.test_spin_again_never_repeats_and_covers_exactly_the_films_above_the_floor,
+    ("GET", "/people/{person_id}"): person_api.test_a_person_page_has_details_stats_and_films,
     # the demo account (Day 14), tested against Postgres in tests/test_accounts.py
     ("POST", "/auth/login"): accounts.test_password_login_works_and_any_wrong_detail_gets_the_same_answer,
     ("POST", "/auth/demo"): accounts.test_me_is_quiet_when_logged_out_and_names_the_user_after_a_demo_login,

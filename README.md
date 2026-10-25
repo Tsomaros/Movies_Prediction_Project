@@ -434,7 +434,8 @@ A FastAPI backend in `backend/app/`. Every endpoint lives under `/api/v1`, and t
 | POST | `/api/v1/predict/sweep` | One form with one field (`release_month`, `runtime` or `budget`) tried at 2–12 values; the three ranges at each |
 | GET | `/api/v1/movies` | Search (`q`), filters (`genre`, `year_from`, `year_to`, `language`, `score_min`: films with any number of votes), `sort` (popularity, newest, title, score: 50+ votes only, revenue: 2025 $, trusted figures only), `page`, `page_size` (at most 48); each film with its score, votes and revenue in 2025 $ |
 | GET | `/api/v1/movies/{id}` | Facts, themes, cast and crew, money (as reported and in 2025 $), score, posters and 6 similar films |
-| GET | `/api/v1/people?role=director\|actor&q=` | Director and actor autocomplete |
+| GET | `/api/v1/people?role=director\|actor&q=` | Director and actor autocomplete (any word of the name, accents folded), each with a TMDB photo thumbnail and the film they're known for |
+| GET | `/api/v1/people/{id}` | One person: TMDB photo, biography, life dates and links (where the person pull found them), stats from our data (films, years, top genres, average score over 50+ vote films, trusted box office in 2025 $, top co-star and director with 2+ shared films), their films as cast with characters, and their key crew credits |
 | GET | `/api/v1/companies?q=`, `/api/v1/collections?q=` | Studio and franchise autocomplete |
 | GET | `/api/v1/meta/options` | Every form field and limit from the contract, the 27 themes, common languages and countries, suggested years |
 | GET | `/api/v1/model-card` | The served models' accuracy: the 2019+ test and the 2026 holdout next to the best baseline, training films, the database's size and years, and the "within the uncertainty" thresholds |

@@ -5,7 +5,8 @@
     Lookups.from_db(con)           -> one NameIndex per kind (KINDS), built once at startup (about 3 s)
 
 Any word of a name can start the match, and the query can run on into later words: "hanks", "tom ha" and
-"tom hanks" all find Tom Hanks. Matching is case-insensitive (str.casefold) on whitespace-separated words.
+"tom hanks" all find Tom Hanks. Matching is case-insensitive (str.casefold) on whitespace-separated words, and
+accents are folded on both sides (Day 14.6): "penelope" finds Penélope Cruz, and so does "penélope".
 
 A plain list of Python strings for the 350k people and their 730k word keys took about 207 MB; here every
 name and key lives in one bytes blob with int32 offsets, so the whole index is about 25 MB. A search
@@ -15,6 +16,7 @@ binary-searches the sorted keys for the range starting with the query, then keep
 from __future__ import annotations
 
 import sqlite3
+import unicodedata
 from dataclasses import dataclass
 from typing import Any, Iterable
 
@@ -36,7 +38,8 @@ _END = b"\xff"  # never appears in UTF-8, so key + _END sorts after every key st
 
 
 def _normalise(text: str) -> str:
-    return " ".join(text.casefold().split())
+    folded = "".join(c for c in unicodedata.normalize("NFKD", text.casefold()) if not unicodedata.combining(c))
+    return " ".join(folded.split())
 
 
 def _pack(items: list[bytes]) -> tuple[bytes, np.ndarray]:

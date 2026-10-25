@@ -106,6 +106,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/people/{person_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One person: TMDB details, stats from our data, and their films */
+        get: operations["get_person_api_v1_people__person_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/companies": {
         parameters: {
             query?: never;
@@ -385,6 +402,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AvgScore */
+        AvgScore: {
+            /** Value */
+            value: number;
+            /**
+             * Films
+             * @description Films with a usable score (50+ votes) it averages
+             */
+            films: number;
+        };
         /** Baseline */
         Baseline: {
             /**
@@ -419,6 +446,24 @@ export interface components {
             width: number;
             /** Name */
             name: string;
+        };
+        /** BoxOffice */
+        BoxOffice: {
+            /**
+             * Total
+             * @description Worldwide revenue in 2025 dollars, trusted figures only
+             */
+            total: number;
+            /**
+             * Films
+             * @description Films with a trusted revenue
+             */
+            films: number;
+            /**
+             * Of
+             * @description All their films as cast
+             */
+            of: number;
         };
         /** BudgetComparison */
         BudgetComparison: {
@@ -471,6 +516,46 @@ export interface components {
              */
             given: number | null;
             comparison: components["schemas"]["BudgetComparison"];
+        };
+        /** CastCredit */
+        CastCredit: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Year */
+            year: number | null;
+            /** Release Date */
+            release_date: string | null;
+            /** Genres */
+            genres: string[];
+            /** Original Language */
+            original_language: string | null;
+            /**
+             * Score
+             * @description TMDB vote average (0-10); None when nobody voted
+             */
+            score: number | null;
+            /** Votes */
+            votes: number;
+            /**
+             * Score Ok
+             * @description At least 50 votes: the score is used by our models
+             */
+            score_ok: boolean;
+            /**
+             * Popularity
+             * @description TMDB popularity when pulled (display and sorting only)
+             */
+            popularity: number | null;
+            /**
+             * Revenue 2025
+             * @description Worldwide revenue in 2025 dollars; None when unknown or doubted
+             */
+            revenue_2025: number | null;
+            poster: components["schemas"]["Poster"] | null;
+            /** Character */
+            character: string | null;
         };
         /** CastMember */
         CastMember: {
@@ -815,6 +900,13 @@ export interface components {
              * @description Planned budget in 2025 US dollars
              */
             budget?: number | null;
+        };
+        /** GenreCount */
+        GenreCount: {
+            /** Name */
+            name: string;
+            /** Films */
+            films: number;
         };
         /** Health */
         Health: {
@@ -1214,6 +1306,101 @@ export interface components {
             release_years: number[];
             /** Months */
             months: number[];
+        };
+        /** PersonDetail */
+        PersonDetail: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string | null;
+            /** @description small: w185, large: h632 */
+            photo: components["schemas"]["Poster"] | null;
+            /**
+             * Biography
+             * @description Plain text; paragraphs separated by blank lines
+             */
+            biography: string | null;
+            /** Birthday */
+            birthday: string | null;
+            /** Deathday */
+            deathday: string | null;
+            /** Place Of Birth */
+            place_of_birth: string | null;
+            /** Known For Department */
+            known_for_department: string | null;
+            /** Imdb Url */
+            imdb_url: string | null;
+            /**
+             * Homepage
+             * @description http(s) only
+             */
+            homepage: string | null;
+            /** Tmdb Url */
+            tmdb_url: string;
+            stats: components["schemas"]["PersonStats"];
+            /**
+             * Cast Credits
+             * @description Newest first
+             */
+            cast_credits: components["schemas"]["CastCredit"][];
+            /**
+             * Crew Credits
+             * @description Key crew jobs (Director, Writer...), newest first
+             */
+            crew_credits: {
+                [key: string]: components["schemas"]["MovieSummary"][];
+            };
+        };
+        /** PersonMatch */
+        PersonMatch: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /**
+             * N Films
+             * @description Films in our data in this role (directed, acted in, produced, in the franchise)
+             */
+            n_films: number;
+            /**
+             * Thumb
+             * @description A small TMDB photo (w185), when TMDB has one
+             */
+            thumb?: string | null;
+            /**
+             * Known For
+             * @description Title of their most-voted film in this role
+             */
+            known_for?: string | null;
+        };
+        /** PersonRef */
+        PersonRef: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string | null;
+            /** Shared Films */
+            shared_films: number;
+        };
+        /** PersonStats */
+        PersonStats: {
+            /**
+             * Film Count
+             * @description Films as cast in our data
+             */
+            film_count: number;
+            /** First Year */
+            first_year: number | null;
+            /** Last Year */
+            last_year: number | null;
+            /** Top Genres */
+            top_genres: components["schemas"]["GenreCount"][];
+            avg_score: components["schemas"]["AvgScore"] | null;
+            box_office_2025: components["schemas"]["BoxOffice"] | null;
+            /** @description 2+ shared films; ties by TMDB popularity, then name */
+            top_costar: components["schemas"]["PersonRef"] | null;
+            /** @description Directed 2+ of their films */
+            top_director: components["schemas"]["PersonRef"] | null;
         };
         /** Poster */
         Poster: {
@@ -1883,7 +2070,47 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Match"][];
+                    "application/json": components["schemas"]["PersonMatch"][];
+                };
+            };
+            /** @description Some fields need fixing */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FieldErrors"];
+                };
+            };
+        };
+    };
+    get_person_api_v1_people__person_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                person_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetail"];
+                };
+            };
+            /** @description No such person */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"];
                 };
             };
             /** @description Some fields need fixing */
