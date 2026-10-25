@@ -1,0 +1,1453 @@
+{
+ "person_id": 31,
+ "role": "acting",
+ "roles_available": [
+  {
+   "role": "acting",
+   "film_count": 85,
+   "rated_count": 77
+  }
+ ],
+ "films": [
+  {
+   "movie_id": 65262,
+   "title": "He Knows You're Alone",
+   "year": 1980,
+   "release_date": "1980-08-29",
+   "score": 5.165,
+   "vote_count": 79,
+   "rated": true,
+   "lead": false,
+   "character": "Elliot",
+   "poster_small": "https://image.tmdb.org/t/p/w342/90rdztFCRAxQsEfy35cxH9qt3N1.jpg",
+   "year_avg": 6.2675
+  },
+  {
+   "movie_id": 27348,
+   "title": "Mazes and Monsters",
+   "year": 1982,
+   "release_date": "1982-12-27",
+   "score": 4.234,
+   "vote_count": 109,
+   "rated": true,
+   "lead": true,
+   "character": "Robbie Wheeling",
+   "poster_small": "https://image.tmdb.org/t/p/w342/4i0ISVGGZczwl3RaTIAa8BMu6Df.jpg",
+   "year_avg": 6.3114
+  },
+  {
+   "movie_id": 2619,
+   "title": "Splash",
+   "year": 1984,
+   "release_date": "1984-03-09",
+   "score": 6.262,
+   "vote_count": 1547,
+   "rated": true,
+   "lead": true,
+   "character": "Allen Bauer",
+   "poster_small": "https://image.tmdb.org/t/p/w342/7FutTsMWBwVhjk1Ujf1wtndUVZh.jpg",
+   "year_avg": 6.3254
+  },
+  {
+   "movie_id": 12309,
+   "title": "Bachelor Party",
+   "year": 1984,
+   "release_date": "1984-06-29",
+   "score": 6.326,
+   "vote_count": 749,
+   "rated": true,
+   "lead": true,
+   "character": "Rick Gassko",
+   "poster_small": "https://image.tmdb.org/t/p/w342/dZf3UpPZDvJYTODSUJQy7wYEop.jpg",
+   "year_avg": 6.3254
+  },
+  {
+   "movie_id": 10905,
+   "title": "The Man with One Red Shoe",
+   "year": 1985,
+   "release_date": "1985-07-18",
+   "score": 5.739,
+   "vote_count": 324,
+   "rated": true,
+   "lead": true,
+   "character": "Richard",
+   "poster_small": "https://image.tmdb.org/t/p/w342/lD44uiCKnLVCKiEnB0urtqIR0nE.jpg",
+   "year_avg": 6.3845
+  },
+  {
+   "movie_id": 19259,
+   "title": "Volunteers",
+   "year": 1985,
+   "release_date": "1985-08-16",
+   "score": 5.5,
+   "vote_count": 189,
+   "rated": true,
+   "lead": true,
+   "character": "Lawrence Whatley Bourne III",
+   "poster_small": "https://image.tmdb.org/t/p/w342/tua28Wyv9uGBtPTBGCP7GsN3Znu.jpg",
+   "year_avg": 6.3845
+  },
+  {
+   "movie_id": 10466,
+   "title": "The Money Pit",
+   "year": 1986,
+   "release_date": "1986-03-26",
+   "score": 6.521,
+   "vote_count": 1293,
+   "rated": true,
+   "lead": true,
+   "character": "Walter Fielding, Jr.",
+   "poster_small": "https://image.tmdb.org/t/p/w342/bohhidIi1WWU5NNYF9l5wLQu3Ii.jpg",
+   "year_avg": 6.334
+  },
+  {
+   "movie_id": 29968,
+   "title": "Nothing in Common",
+   "year": 1986,
+   "release_date": "1986-07-29",
+   "score": 5.93,
+   "vote_count": 142,
+   "rated": true,
+   "lead": true,
+   "character": "David Basner",
+   "poster_small": "https://image.tmdb.org/t/p/w342/m2G6Idl1CKJwOt8aFsnJk08sfDP.jpg",
+   "year_avg": 6.334
+  },
+  {
+   "movie_id": 35866,
+   "title": "Every Time We Say Goodbye",
+   "year": 1986,
+   "release_date": "1986-11-14",
+   "score": 6.0,
+   "vote_count": 58,
+   "rated": true,
+   "lead": true,
+   "character": "David",
+   "poster_small": "https://image.tmdb.org/t/p/w342/fMiWlS4jNZysUquP6CZfKswukMo.jpg",
+   "year_avg": 6.334
+  },
+  {
+   "movie_id": 10023,
+   "title": "Dragnet",
+   "year": 1987,
+   "release_date": "1987-06-26",
+   "score": 5.99,
+   "vote_count": 569,
+   "rated": true,
+   "lead": true,
+   "character": "Pep Streebeck",
+   "poster_small": "https://image.tmdb.org/t/p/w342/77H17YDeHoJCHebpfGF1rY3Dfof.jpg",
+   "year_avg": 6.2887
+  },
+  {
+   "movie_id": 2280,
+   "title": "Big",
+   "year": 1988,
+   "release_date": "1988-06-03",
+   "score": 7.192,
+   "vote_count": 4221,
+   "rated": true,
+   "lead": true,
+   "character": "Josh",
+   "poster_small": "https://image.tmdb.org/t/p/w342/eWhCDJiwxvx3YXkAFRiHjimnF0j.jpg",
+   "year_avg": 6.2101
+  },
+  {
+   "movie_id": 40820,
+   "title": "Punchline",
+   "year": 1988,
+   "release_date": "1988-10-07",
+   "score": 5.54,
+   "vote_count": 161,
+   "rated": true,
+   "lead": true,
+   "character": "Steven Gold",
+   "poster_small": "https://image.tmdb.org/t/p/w342/dgbLnnEJIGldXOMt6OWy3X1l0AC.jpg",
+   "year_avg": 6.2101
+  },
+  {
+   "movie_id": 11974,
+   "title": "The 'Burbs",
+   "year": 1989,
+   "release_date": "1989-02-17",
+   "score": 6.763,
+   "vote_count": 1446,
+   "rated": true,
+   "lead": true,
+   "character": "Ray Peterson",
+   "poster_small": "https://image.tmdb.org/t/p/w342/jwYKzJS0C3A711hmg1G4ptI0InF.jpg",
+   "year_avg": 6.2996
+  },
+  {
+   "movie_id": 6951,
+   "title": "Turner & Hooch",
+   "year": 1989,
+   "release_date": "1989-07-28",
+   "score": 6.325,
+   "vote_count": 1497,
+   "rated": true,
+   "lead": true,
+   "character": "Scott Turner",
+   "poster_small": "https://image.tmdb.org/t/p/w342/nllMNbjgvUpw378czm5vBYzZqg1.jpg",
+   "year_avg": 6.2996
+  },
+  {
+   "movie_id": 2565,
+   "title": "Joe Versus the Volcano",
+   "year": 1990,
+   "release_date": "1990-03-09",
+   "score": 5.829,
+   "vote_count": 610,
+   "rated": true,
+   "lead": true,
+   "character": "Joe Banks",
+   "poster_small": "https://image.tmdb.org/t/p/w342/fwjMUuDZUxedfsUpVQKQN8cYfzB.jpg",
+   "year_avg": 6.2383
+  },
+  {
+   "movie_id": 9586,
+   "title": "The Bonfire of the Vanities",
+   "year": 1990,
+   "release_date": "1990-12-21",
+   "score": 5.6,
+   "vote_count": 560,
+   "rated": true,
+   "lead": true,
+   "character": "Sherman McCoy",
+   "poster_small": "https://image.tmdb.org/t/p/w342/pdrPrygZ5dVKi8UxrUXMmq1k2iO.jpg",
+   "year_avg": 6.2383
+  },
+  {
+   "movie_id": 966435,
+   "title": "The Best of Disney: 50 Years of Magic",
+   "year": 1991,
+   "release_date": "1991-05-20",
+   "score": 7.7,
+   "vote_count": 6,
+   "rated": false,
+   "lead": false,
+   "character": "Self",
+   "poster_small": "https://image.tmdb.org/t/p/w342/awOHdjvajTSpReWpxFNmgwOcooz.jpg",
+   "year_avg": 6.3137
+  },
+  {
+   "movie_id": 11287,
+   "title": "A League of Their Own",
+   "year": 1992,
+   "release_date": "1992-07-01",
+   "score": 7.21,
+   "vote_count": 1607,
+   "rated": true,
+   "lead": true,
+   "character": "Jimmy Dugan",
+   "poster_small": "https://image.tmdb.org/t/p/w342/f9BtX6wYOwJUyfUr4vyeT3COz6m.jpg",
+   "year_avg": 6.4147
+  },
+  {
+   "movie_id": 858,
+   "title": "Sleepless in Seattle",
+   "year": 1993,
+   "release_date": "1993-06-24",
+   "score": 6.744,
+   "vote_count": 2733,
+   "rated": true,
+   "lead": true,
+   "character": "Sam Baldwin",
+   "poster_small": "https://image.tmdb.org/t/p/w342/jAXfku1u1uaLGh4cUmK0ESf1pPu.jpg",
+   "year_avg": 6.3856
+  },
+  {
+   "movie_id": 9800,
+   "title": "Philadelphia",
+   "year": 1993,
+   "release_date": "1993-12-22",
+   "score": 7.702,
+   "vote_count": 4795,
+   "rated": true,
+   "lead": true,
+   "character": "Andrew Beckett",
+   "poster_small": "https://image.tmdb.org/t/p/w342/tFe5Yoo5zT495okA49bq1vPPkiV.jpg",
+   "year_avg": 6.3856
+  },
+  {
+   "movie_id": 13,
+   "title": "Forrest Gump",
+   "year": 1994,
+   "release_date": "1994-06-23",
+   "score": 8.462,
+   "vote_count": 30703,
+   "rated": true,
+   "lead": true,
+   "character": "Forrest Gump",
+   "poster_small": "https://image.tmdb.org/t/p/w342/saHP97rTPS5eLmrLQEcANmKrsFl.jpg",
+   "year_avg": 6.2275
+  },
+  {
+   "movie_id": 237353,
+   "title": "Through the Eyes of Forrest Gump",
+   "year": 1994,
+   "release_date": "1994-07-03",
+   "score": 7.5,
+   "vote_count": 23,
+   "rated": false,
+   "lead": true,
+   "character": "Self",
+   "poster_small": "https://image.tmdb.org/t/p/w342/dfjLE1HjdR9XhEpN04elCGUOJfA.jpg",
+   "year_avg": 6.2275
+  },
+  {
+   "movie_id": 568,
+   "title": "Apollo 13",
+   "year": 1995,
+   "release_date": "1995-06-30",
+   "score": 7.463,
+   "vote_count": 6174,
+   "rated": true,
+   "lead": true,
+   "character": "Jim Lovell",
+   "poster_small": "https://image.tmdb.org/t/p/w342/tVeKscCm2fY1xDXZk8PgnZ87h9S.jpg",
+   "year_avg": 6.3436
+  },
+  {
+   "movie_id": 862,
+   "title": "Toy Story",
+   "year": 1995,
+   "release_date": "1995-11-22",
+   "score": 7.99,
+   "vote_count": 20702,
+   "rated": true,
+   "lead": true,
+   "character": "Woody (voice)",
+   "poster_small": "https://image.tmdb.org/t/p/w342/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg",
+   "year_avg": 6.3436
+  },
+  {
+   "movie_id": 711704,
+   "title": "The Making of Toy Story",
+   "year": 1995,
+   "release_date": "1995-12-02",
+   "score": 6.3,
+   "vote_count": 11,
+   "rated": false,
+   "lead": false,
+   "character": "Self",
+   "poster_small": "https://image.tmdb.org/t/p/w342/s2vPOYtuOY3DMYTduRx0cOzDcWm.jpg",
+   "year_avg": 6.3436
+  },
+  {
+   "movie_id": 32562,
+   "title": "The Celluloid Closet",
+   "year": 1996,
+   "release_date": "1996-03-15",
+   "score": 7.252,
+   "vote_count": 123,
+   "rated": true,
+   "lead": false,
+   "character": "Self",
+   "poster_small": "https://image.tmdb.org/t/p/w342/x0DSh3uMeQk6EG1DHjGJUywN7C0.jpg",
+   "year_avg": 6.2432
+  },
+  {
+   "movie_id": 9591,
+   "title": "That Thing You Do!",
+   "year": 1996,
+   "release_date": "1996-10-04",
+   "score": 6.886,
+   "vote_count": 957,
+   "rated": true,
+   "lead": true,
+   "character": "Mr. White",
+   "poster_small": "https://image.tmdb.org/t/p/w342/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg",
+   "year_avg": 6.2432
+  },
+  {
+   "movie_id": 464729,
+   "title": "The Story Behind 'Toy Story'",
+   "year": 1996,
+   "release_date": "1996-12-18",
+   "score": 7.5,
+   "vote_count": 23,
+   "rated": false,
+   "lead": true,
+   "character": "Self",
+   "poster_small": "https://image.tmdb.org/t/p/w342/ul7sy0m9GPifIgMaEXX8ivENqHP.jpg",
+   "year_avg": 6.2432
+  },
+  {
+   "movie_id": 43714,
+   "title": "The Harryhausen Chronicles",
+   "year": 1997,
+   "release_date": "1997-01-01",
+   "score": 7.0,
+   "vote_count": 14,
+   "rated": false,
+   "lead": false,
+   "character": "Self (archive footage) (uncredited)",
+   "poster_small": "https://image.tmdb.org/t/p/w342/xP4CR20quD3iNi0qKxyhpjs0YNr.jpg",
+   "year_avg": 6.3582
+  },
+  {
+   "movie_id": 857,
+   "title": "Saving Private Ryan",
+   "year": 1998,
+   "release_date": "1998-07-24",
+   "score": 8.234,
+   "vote_count": 17957,
+   "rated": true,
+   "lead": true,
+   "character": "Captain Miller",
+   "poster_small": "https://image.tmdb.org/t/p/w342/uqx37cS8cpHg8U35f9U5IBlrCV3.jpg",
+   "year_avg": 6.3321
+  },
+  {
+   "movie_id": 9489,
+   "title": "You've Got Mail",
+   "year": 1998,
+   "release_date": "1998-12-18",
+   "score": 6.713,
+   "vote_count": 3798,
+   "rated": true,
+   "lead": true,
+   "character": "Joe Fox",
+   "poster_small": "https://image.tmdb.org/t/p/w342/rJLUSpmdxSMqqEsyzeCni3vy1ca.jpg",
+   "year_avg": 6.3321
+  },
+  {
+   "movie_id": 56235,
+   "title": "Return with Honor",
+   "year": 1999,
+   "release_date": "1999-06-11",
+   "score": 7.1,
+   "vote_count": 11,
+   "rated": false,
+   "lead": false,
+   "character": "Narrator",
+   "poster_small": "https://image.tmdb.org/t/p/w342/89289dPlOMOIWTZtIhy4qHhBQpb.jpg",
+   "year_avg": 6.3753
+  },
+  {
+   "movie_id": 173458,
+   "title": "Stephen King: Shining in the Dark",
+   "year": 1999,
+   "release_date": "1999-09-09",
+   "score": 6.8,
+   "vote_count": 11,
+   "rated": false,
+   "lead": true,
+   "character": "Self",
+   "poster_small": "https://image.tmdb.org/t/p/w342/1F0bQ77FBIEk0PbS3vV8mbLgZSj.jpg",
+   "year_avg": 6.3753
+  },
+  {
+   "movie_id": 863,
+   "title": "Toy Story 2",
+   "year": 1999,
+   "release_date": "1999-10-30",
+   "score": 7.624,
+   "vote_count": 15500,
+   "rated": true,
+   "lead": true,
+   "character": "Woody (voice)",
+   "poster_small": "https://image.tmdb.org/t/p/w342/4rbcp3ng8n1MKHjpeqW0L7Fnpzz.jpg",
+   "year_avg": 6.3753
+  },
+  {
+   "movie_id": 497,
+   "title": "The Green Mile",
+   "year": 1999,
+   "release_date": "1999-12-10",
+   "score": 8.506,
+   "vote_count": 20001,
+   "rated": true,
+   "lead": true,
+   "character": "Paul Edgecomb",
+   "poster_small": "https://image.tmdb.org/t/p/w342/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg",
+   "year_avg": 6.3753
+  },
+  {
+   "movie_id": 8358,
+   "title": "Cast Away",
+   "year": 2000,
+   "release_date": "2000-12-22",
+   "score": 7.668,
+   "vote_count": 12662,
+   "rated": true,
+   "lead": true,
+   "character": "Chuck Noland",
+   "poster_small": "https://image.tmdb.org/t/p/w342/7lLJgKnAicAcR5UEuo8xhSMj18w.jpg",
+   "year_avg": 6.2762
+  },
+  {
+   "movie_id": 4147,
+   "title": "Road to Perdition",
+   "year": 2002,
+   "release_date": "2002-07-12",
+   "score": 7.367,
+   "vote_count": 4167,
+   "rated": true,
+   "lead": true,
+   "character": "Michael Sullivan",
+   "poster_small": "https://image.tmdb.org/t/p/w342/loSpBeirRfTPJ3cMIqpQArstGhh.jpg",
+   "year_avg": 6.2735
+  },
+  {
+   "movie_id": 640,
+   "title": "Catch Me If You Can",
+   "year": 2002,
+   "release_date": "2002-12-16",
+   "score": 7.979,
+   "vote_count": 17747,
+   "rated": true,
+   "lead": true,
+   "character": "Carl Hanratty",
+   "poster_small": "https://image.tmdb.org/t/p/w342/ctjEj2xM32OvBXCq8zAdK3ZrsAj.jpg",
+   "year_avg": 6.2735
+  },
+  {
+   "movie_id": 459682,
+   "title": "Catch Me If You Can: Behind the Camera",
+   "year": 2003,
+   "release_date": "2003-05-06",
+   "score": 7.882,
+   "vote_count": 38,
+   "rated": false,
+   "lead": false,
+   "character": "Self",
+   "poster_small": "https://image.tmdb.org/t/p/w342/dW0ufGS32gimuicgzvf7P0YTSHf.jpg",
+   "year_avg": 6.3285
+  },
+  {
+   "movie_id": 5516,
+   "title": "The Ladykillers",
+   "year": 2004,
+   "release_date": "2004-03-25",
+   "score": 6.117,
+   "vote_count": 1820,
+   "rated": true,
+   "lead": true,
+   "character": "Professor G.H. Dorr",
+   "poster_small": "https://image.tmdb.org/t/p/w342/l4g9R39NCp6VaYFrw6q8JwKNW9x.jpg",
+   "year_avg": 6.306
+  },
+  {
+   "movie_id": 594,
+   "title": "The Terminal",
+   "year": 2004,
+   "release_date": "2004-06-17",
+   "score": 7.356,
+   "vote_count": 9050,
+   "rated": true,
+   "lead": true,
+   "character": "Viktor Navorski",
+   "poster_small": "https://image.tmdb.org/t/p/w342/cPB3ZMM4UdsSAhNdS4c7ps5nypY.jpg",
+   "year_avg": 6.306
+  },
+  {
+   "movie_id": 37641,
+   "title": "Elvis Has Left the Building",
+   "year": 2004,
+   "release_date": "2004-08-27",
+   "score": 5.258,
+   "vote_count": 60,
+   "rated": true,
+   "lead": false,
+   "character": "Mailbox-Elvis",
+   "poster_small": "https://image.tmdb.org/t/p/w342/yfIRJpLwR0yGAj6PmWMHZVU8mB1.jpg",
+   "year_avg": 6.306
+  },
+  {
+   "movie_id": 5255,
+   "title": "The Polar Express",
+   "year": 2004,
+   "release_date": "2004-11-10",
+   "score": 6.728,
+   "vote_count": 7093,
+   "rated": true,
+   "lead": true,
+   "character": "Hero Boy (Adult)/ Father / Conductor / Hobo / Scrooge / Santa Claus",
+   "poster_small": "https://image.tmdb.org/t/p/w342/eOoCzH0MqeGr2taUZO4SwG416PF.jpg",
+   "year_avg": 6.306
+  },
+  {
+   "movie_id": 591,
+   "title": "The Da Vinci Code",
+   "year": 2006,
+   "release_date": "2006-05-17",
+   "score": 6.736,
+   "vote_count": 10402,
+   "rated": true,
+   "lead": true,
+   "character": "Robert Langdon",
+   "poster_small": "https://image.tmdb.org/t/p/w342/9ejKfNk0LBhSI9AahH4f9NJNZNM.jpg",
+   "year_avg": 6.2103
+  },
+  {
+   "movie_id": 13508,
+   "title": "Who Killed the Electric Car?",
+   "year": 2006,
+   "release_date": "2006-08-04",
+   "score": 7.243,
+   "vote_count": 208,
+   "rated": true,
+   "lead": false,
+   "character": "Self (archive footage)",
+   "poster_small": "https://image.tmdb.org/t/p/w342/uMamC9o5zNU9wn8fyuAo2gUCMiD.jpg",
+   "year_avg": 6.2103
+  },
+  {
+   "movie_id": 6538,
+   "title": "Charlie Wilson's War",
+   "year": 2007,
+   "release_date": "2007-12-19",
+   "score": 6.548,
+   "vote_count": 1737,
+   "rated": true,
+   "lead": true,
+   "character": "Charlie Wilson",
+   "poster_small": "https://image.tmdb.org/t/p/w342/45FghqcdSYRWK7PsHUInaFPNd8l.jpg",
+   "year_avg": 6.2374
+  },
+  {
+   "movie_id": 16279,
+   "title": "The Great Buck Howard",
+   "year": 2008,
+   "release_date": "2008-01-18",
+   "score": 6.014,
+   "vote_count": 284,
+   "rated": true,
+   "lead": false,
+   "character": "Mr. Gable",
+   "poster_small": "https://image.tmdb.org/t/p/w342/iglKvmA7sq6Pnd6KWFnT6WW9Vpn.jpg",
+   "year_avg": 6.1694
+  },
+  {
+   "movie_id": 13448,
+   "title": "Angels & Demons",
+   "year": 2009,
+   "release_date": "2009-04-20",
+   "score": 6.731,
+   "vote_count": 7572,
+   "rated": true,
+   "lead": true,
+   "character": "Robert Langdon",
+   "poster_small": "https://image.tmdb.org/t/p/w342/tFZQAuulEOtFTp0gHbVdEXwGrYe.jpg",
+   "year_avg": 6.0928
+  },
+  {
+   "movie_id": 10193,
+   "title": "Toy Story 3",
+   "year": 2010,
+   "release_date": "2010-06-16",
+   "score": 7.819,
+   "vote_count": 16375,
+   "rated": true,
+   "lead": true,
+   "character": "Woody (voice)",
+   "poster_small": "https://image.tmdb.org/t/p/w342/AbbXspMOwdvwWZgVN0nabZq03Ec.jpg",
+   "year_avg": 6.2086
+  },
+  {
+   "movie_id": 77887,
+   "title": "Hawaiian Vacation",
+   "year": 2011,
+   "release_date": "2011-06-16",
+   "score": 6.989,
+   "vote_count": 746,
+   "rated": true,
+   "lead": true,
+   "character": "Woody (voice)",
+   "poster_small": "https://image.tmdb.org/t/p/w342/iLFYR0HRLmPfXzQdvGvlJhfwtH1.jpg",
+   "year_avg": 6.1968
+  },
+  {
+   "movie_id": 59861,
+   "title": "Larry Crowne",
+   "year": 2011,
+   "release_date": "2011-06-30",
+   "score": 5.996,
+   "vote_count": 1464,
+   "rated": true,
+   "lead": true,
+   "character": "Larry Crowne",
+   "poster_small": "https://image.tmdb.org/t/p/w342/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg",
+   "year_avg": 6.1968
+  },
+  {
+   "movie_id": 82424,
+   "title": "Small Fry",
+   "year": 2011,
+   "release_date": "2011-11-23",
+   "score": 6.85,
+   "vote_count": 617,
+   "rated": true,
+   "lead": true,
+   "character": "Woody (voice)",
+   "poster_small": "https://image.tmdb.org/t/p/w342/8siICxMft0JSWZDq9YrXh5U5PZx.jpg",
+   "year_avg": 6.1968
+  },
+  {
+   "movie_id": 87061,
+   "title": "The Extraordinary Voyage",
+   "year": 2011,
+   "release_date": "2011-12-08",
+   "score": 7.7,
+   "vote_count": 58,
+   "rated": true,
+   "lead": false,
+   "character": "Self - Filmmaker (archive footage)",
+   "poster_small": "https://image.tmdb.org/t/p/w342/37dXuUl9Jv6NXFihaLsWbiYVBdv.jpg",
+   "year_avg": 6.1968
+  },
+  {
+   "movie_id": 64685,
+   "title": "Extremely Loud & Incredibly Close",
+   "year": 2011,
+   "release_date": "2011-12-25",
+   "score": 6.991,
+   "vote_count": 2195,
+   "rated": true,
+   "lead": true,
+   "character": "Thomas Schell",
+   "poster_small": "https://image.tmdb.org/t/p/w342/6pszViNvKr1r31pP7gJNYDHEx5P.jpg",
+   "year_avg": 6.1968
+  },
+  {
+   "movie_id": 130925,
+   "title": "Partysaurus Rex",
+   "year": 2012,
+   "release_date": "2012-09-14",
+   "score": 7.15,
+   "vote_count": 549,
+   "rated": true,
+   "lead": true,
+   "character": "Woody (voice)",
+   "poster_small": "https://image.tmdb.org/t/p/w342/eRxHdAPoXLPHOUvbNc49C4dw15k.jpg",
+   "year_avg": 6.1309
+  },
+  {
+   "movie_id": 83542,
+   "title": "Cloud Atlas",
+   "year": 2012,
+   "release_date": "2012-10-26",
+   "score": 6.899,
+   "vote_count": 7738,
+   "rated": true,
+   "lead": true,
+   "character": "Dr. Henry Goose / Hotel Manager / Isaac Sachs / Dermot Hoggins / Cavendish Look-a-Like Actor / Zachry",
+   "poster_small": "https://image.tmdb.org/t/p/w342/8naVv2Xu3rWI5JKHz0vCujx6GaJ.jpg",
+   "year_avg": 6.1309
+  },
+  {
+   "movie_id": 170039,
+   "title": "Killing Lincoln",
+   "year": 2013,
+   "release_date": "2013-02-16",
+   "score": 6.0,
+   "vote_count": 59,
+   "rated": true,
+   "lead": true,
+   "character": "Self - Narrator",
+   "poster_small": "https://image.tmdb.org/t/p/w342/zqlOXMsJ0sSyForOe93BSfNW3Pi.jpg",
+   "year_avg": 6.214
+  },
+  {
+   "movie_id": 109424,
+   "title": "Captain Phillips",
+   "year": 2013,
+   "release_date": "2013-10-10",
+   "score": 7.536,
+   "vote_count": 7749,
+   "rated": true,
+   "lead": true,
+   "character": "Captain Richard Phillips",
+   "poster_small": "https://image.tmdb.org/t/p/w342/8Td0kkocW6sD3uRpzwfMfkqMWhx.jpg",
+   "year_avg": 6.214
+  },
+  {
+   "movie_id": 213121,
+   "title": "Toy Story of Terror!",
+   "year": 2013,
+   "release_date": "2013-10-16",
+   "score": 7.263,
+   "vote_count": 1082,
+   "rated": true,
+   "lead": true,
+   "character": "Woody (Voice)",
+   "poster_small": "https://image.tmdb.org/t/p/w342/oPBEnNP4Fg4gv9c0KBhchmtoG4H.jpg",
+   "year_avg": 6.214
+  },
+  {
+   "movie_id": 140823,
+   "title": "Saving Mr. Banks",
+   "year": 2013,
+   "release_date": "2013-11-29",
+   "score": 7.336,
+   "vote_count": 3586,
+   "rated": true,
+   "lead": true,
+   "character": "Walt Disney",
+   "poster_small": "https://image.tmdb.org/t/p/w342/4RkcUe5PKnYvrCwMjk8giUAoID7.jpg",
+   "year_avg": 6.214
+  },
+  {
+   "movie_id": 256835,
+   "title": "Toy Story That Time Forgot",
+   "year": 2014,
+   "release_date": "2014-12-02",
+   "score": 7.1,
+   "vote_count": 1193,
+   "rated": true,
+   "lead": true,
+   "character": "Woody (voice)",
+   "poster_small": "https://image.tmdb.org/t/p/w342/kVOaFo8RaYQceHfTqbZGmV9R80q.jpg",
+   "year_avg": 6.2021
+  },
+  {
+   "movie_id": 296098,
+   "title": "Bridge of Spies",
+   "year": 2015,
+   "release_date": "2015-10-15",
+   "score": 7.243,
+   "vote_count": 7479,
+   "rated": true,
+   "lead": true,
+   "character": "James B. Donovan",
+   "poster_small": "https://image.tmdb.org/t/p/w342/fmOOjHAQzxr0c1sfcY4qkiSRBH6.jpg",
+   "year_avg": 6.2013
+  },
+  {
+   "movie_id": 305642,
+   "title": "Ithaca",
+   "year": 2015,
+   "release_date": "2015-10-29",
+   "score": 5.2,
+   "vote_count": 111,
+   "rated": true,
+   "lead": false,
+   "character": "Mr. Macauley",
+   "poster_small": "https://image.tmdb.org/t/p/w342/4g4siEftWGiIkGfvaPyyizmx61f.jpg",
+   "year_avg": 6.2013
+  },
+  {
+   "movie_id": 270010,
+   "title": "A Hologram for the King",
+   "year": 2016,
+   "release_date": "2016-04-22",
+   "score": 5.846,
+   "vote_count": 1260,
+   "rated": true,
+   "lead": true,
+   "character": "Alan Clay",
+   "poster_small": "https://image.tmdb.org/t/p/w342/wmjWGb2tqtOA4XPnK1tpIfzRtSQ.jpg",
+   "year_avg": 6.2397
+  },
+  {
+   "movie_id": 363676,
+   "title": "Sully",
+   "year": 2016,
+   "release_date": "2016-09-07",
+   "score": 7.207,
+   "vote_count": 7959,
+   "rated": true,
+   "lead": true,
+   "character": "Chesley 'Sully' Sullenberger",
+   "poster_small": "https://image.tmdb.org/t/p/w342/4vs83YcJ8TsabADDtaeCJ6ZTjYY.jpg",
+   "year_avg": 6.2397
+  },
+  {
+   "movie_id": 207932,
+   "title": "Inferno",
+   "year": 2016,
+   "release_date": "2016-10-13",
+   "score": 6.105,
+   "vote_count": 6835,
+   "rated": true,
+   "lead": true,
+   "character": "Robert Langdon",
+   "poster_small": "https://image.tmdb.org/t/p/w342/5T6iVetK5AB1kgwAEKbDM2hTZJU.jpg",
+   "year_avg": 6.2397
+  },
+  {
+   "movie_id": 339988,
+   "title": "The Circle",
+   "year": 2017,
+   "release_date": "2017-04-27",
+   "score": 5.525,
+   "vote_count": 4671,
+   "rated": true,
+   "lead": true,
+   "character": "Eamon Bailey",
+   "poster_small": "https://image.tmdb.org/t/p/w342/bQVqd5rWrx5GbXhJNuvKy4Viz6j.jpg",
+   "year_avg": 6.3277
+  },
+  {
+   "movie_id": 467062,
+   "title": "Spielberg",
+   "year": 2017,
+   "release_date": "2017-10-05",
+   "score": 7.538,
+   "vote_count": 317,
+   "rated": true,
+   "lead": false,
+   "character": "Self",
+   "poster_small": "https://image.tmdb.org/t/p/w342/2AAvIR2PHoxNITgLDOkXXlWLlua.jpg",
+   "year_avg": 6.3277
+  },
+  {
+   "movie_id": 446354,
+   "title": "The Post",
+   "year": 2017,
+   "release_date": "2017-12-22",
+   "score": 7.006,
+   "vote_count": 5063,
+   "rated": true,
+   "lead": true,
+   "character": "Ben Bradlee",
+   "poster_small": "https://image.tmdb.org/t/p/w342/h4XG3g6uMMPIBPjAoQhC2QIMdkl.jpg",
+   "year_avg": 6.3277
+  },
+  {
+   "movie_id": 504561,
+   "title": "Quincy",
+   "year": 2018,
+   "release_date": "2018-09-09",
+   "score": 7.288,
+   "vote_count": 118,
+   "rated": true,
+   "lead": true,
+   "character": "Self",
+   "poster_small": "https://image.tmdb.org/t/p/w342/yYtY9CRLyz4dXqTOiimdMF7Nt4e.jpg",
+   "year_avg": 6.3963
+  },
+  {
+   "movie_id": 301528,
+   "title": "Toy Story 4",
+   "year": 2019,
+   "release_date": "2019-06-19",
+   "score": 7.463,
+   "vote_count": 11100,
+   "rated": true,
+   "lead": true,
+   "character": "Woody (voice)",
+   "poster_small": "https://image.tmdb.org/t/p/w342/w9kR8qbmQ01HwnvK4alvnQ2ca0L.jpg",
+   "year_avg": 6.4709
+  },
+  {
+   "movie_id": 501907,
+   "title": "A Beautiful Day in the Neighborhood",
+   "year": 2019,
+   "release_date": "2019-09-07",
+   "score": 6.967,
+   "vote_count": 1826,
+   "rated": true,
+   "lead": true,
+   "character": "Fred Rogers",
+   "poster_small": "https://image.tmdb.org/t/p/w342/pgxn1siPnWbSOKUeovfC86OwhWU.jpg",
+   "year_avg": 6.4709
+  },
+  {
+   "movie_id": 516486,
+   "title": "Greyhound",
+   "year": 2020,
+   "release_date": "2020-07-09",
+   "score": 7.416,
+   "vote_count": 3510,
+   "rated": true,
+   "lead": true,
+   "character": "Commander Krause",
+   "poster_small": "https://image.tmdb.org/t/p/w342/kjMbDciooTbJPofVXgAoFjfX8Of.jpg",
+   "year_avg": 6.4213
+  },
+  {
+   "movie_id": 740985,
+   "title": "Borat Subsequent Moviefilm: Delivery of Prodigious Bribe to American Regime for Make Benefit Once Glorious Nation of Kazakhstan",
+   "year": 2020,
+   "release_date": "2020-10-23",
+   "score": 6.433,
+   "vote_count": 3004,
+   "rated": true,
+   "lead": true,
+   "character": "Self",
+   "poster_small": "https://image.tmdb.org/t/p/w342/3L1Ml5RWjFVfVq3rQENvgFymT0U.jpg",
+   "year_avg": 6.4213
+  },
+  {
+   "movie_id": 581032,
+   "title": "News of the World",
+   "year": 2020,
+   "release_date": "2020-12-25",
+   "score": 6.901,
+   "vote_count": 2011,
+   "rated": true,
+   "lead": true,
+   "character": "Captain Jefferson Kyle Kidd",
+   "poster_small": "https://image.tmdb.org/t/p/w342/fYQCgVRsQTEfUrP7cW5iAFVYOlh.jpg",
+   "year_avg": 6.4213
+  },
+  {
+   "movie_id": 522402,
+   "title": "Finch",
+   "year": 2021,
+   "release_date": "2021-11-04",
+   "score": 7.816,
+   "vote_count": 4245,
+   "rated": true,
+   "lead": true,
+   "character": "Finch",
+   "poster_small": "https://image.tmdb.org/t/p/w342/eEJtzD1F05xDipFEDY98CTH5yZn.jpg",
+   "year_avg": 6.4797
+  },
+  {
+   "movie_id": 962192,
+   "title": "Halftime",
+   "year": 2022,
+   "release_date": "2022-06-08",
+   "score": 6.766,
+   "vote_count": 160,
+   "rated": true,
+   "lead": false,
+   "character": "Self",
+   "poster_small": "https://image.tmdb.org/t/p/w342/jUVglxBw7KSkcVEhvfJs1eipPnk.jpg",
+   "year_avg": 6.416
+  },
+  {
+   "movie_id": 614934,
+   "title": "Elvis",
+   "year": 2022,
+   "release_date": "2022-06-22",
+   "score": 7.436,
+   "vote_count": 4076,
+   "rated": true,
+   "lead": true,
+   "character": "Colonel Tom Parker",
+   "poster_small": "https://image.tmdb.org/t/p/w342/qBOKWqAFbveZ4ryjJJwbie6tXkQ.jpg",
+   "year_avg": 6.416
+  },
+  {
+   "movie_id": 532639,
+   "title": "Pinocchio",
+   "year": 2022,
+   "release_date": "2022-09-07",
+   "score": 6.241,
+   "vote_count": 1796,
+   "rated": true,
+   "lead": true,
+   "character": "Geppetto",
+   "poster_small": "https://image.tmdb.org/t/p/w342/zaZhjKrJeWczQ3AotKoQObppEbH.jpg",
+   "year_avg": 6.416
+  },
+  {
+   "movie_id": 937278,
+   "title": "A Man Called Otto",
+   "year": 2022,
+   "release_date": "2022-12-28",
+   "score": 7.747,
+   "vote_count": 3826,
+   "rated": true,
+   "lead": true,
+   "character": "Otto Anderson",
+   "poster_small": "https://image.tmdb.org/t/p/w342/130H1gap9lFfiTF9iDrqNIkFvC9.jpg",
+   "year_avg": 6.416
+  },
+  {
+   "movie_id": 747188,
+   "title": "Asteroid City",
+   "year": 2023,
+   "release_date": "2023-06-08",
+   "score": 6.456,
+   "vote_count": 2680,
+   "rated": true,
+   "lead": true,
+   "character": "Stanley Zak",
+   "poster_small": "https://image.tmdb.org/t/p/w342/hfo7pvL9Fys7rocfL4VOzw9qDEQ.jpg",
+   "year_avg": 6.4751
+  },
+  {
+   "movie_id": 1251636,
+   "title": "The Bloody Hundredth",
+   "year": 2024,
+   "release_date": "2024-03-14",
+   "score": 7.2,
+   "vote_count": 52,
+   "rated": true,
+   "lead": true,
+   "character": "Self - Narrator (voice)",
+   "poster_small": "https://image.tmdb.org/t/p/w342/5GnpAw5BaQBNqYd4wE1IptYEVKd.jpg",
+   "year_avg": 6.4941
+  },
+  {
+   "movie_id": 940139,
+   "title": "Here",
+   "year": 2024,
+   "release_date": "2024-10-30",
+   "score": 6.5,
+   "vote_count": 734,
+   "rated": true,
+   "lead": true,
+   "character": "Richard",
+   "poster_small": "https://image.tmdb.org/t/p/w342/79euHUJJtfgeGU63ef38KtNjXEn.jpg",
+   "year_avg": 6.4941
+  },
+  {
+   "movie_id": 1137350,
+   "title": "The Phoenician Scheme",
+   "year": 2025,
+   "release_date": "2025-05-23",
+   "score": 6.531,
+   "vote_count": 1092,
+   "rated": true,
+   "lead": false,
+   "character": "Leland",
+   "poster_small": "https://image.tmdb.org/t/p/w342/iXxIUVqpQAlyy98UjUlzjkMYuj6.jpg",
+   "year_avg": 6.5725
+  },
+  {
+   "movie_id": 1492608,
+   "title": "John Candy: I Like Me",
+   "year": 2025,
+   "release_date": "2025-09-04",
+   "score": 7.9,
+   "vote_count": 125,
+   "rated": true,
+   "lead": true,
+   "character": "Self - Actor, Splash",
+   "poster_small": "https://image.tmdb.org/t/p/w342/mNEJdx9WSXeyMmkuQfTeY4zouNx.jpg",
+   "year_avg": 6.5725
+  }
+ ],
+ "line": [
+  {
+   "year": 1980,
+   "value": 5.22
+  },
+  {
+   "year": 1982,
+   "value": 5.497
+  },
+  {
+   "year": 1984,
+   "value": 5.545
+  },
+  {
+   "year": 1984,
+   "value": 5.612
+  },
+  {
+   "year": 1985,
+   "value": 6.07
+  },
+  {
+   "year": 1985,
+   "value": 6.003
+  },
+  {
+   "year": 1986,
+   "value": 5.938
+  },
+  {
+   "year": 1986,
+   "value": 5.988
+  },
+  {
+   "year": 1986,
+   "value": 6.327
+  },
+  {
+   "year": 1987,
+   "value": 6.13
+  },
+  {
+   "year": 1988,
+   "value": 6.297
+  },
+  {
+   "year": 1988,
+   "value": 6.362
+  },
+  {
+   "year": 1989,
+   "value": 6.33
+  },
+  {
+   "year": 1989,
+   "value": 6.011
+  },
+  {
+   "year": 1990,
+   "value": 6.345
+  },
+  {
+   "year": 1990,
+   "value": 6.342
+  },
+  {
+   "year": 1992,
+   "value": 6.617
+  },
+  {
+   "year": 1993,
+   "value": 7.144
+  },
+  {
+   "year": 1993,
+   "value": 7.516
+  },
+  {
+   "year": 1994,
+   "value": 7.672
+  },
+  {
+   "year": 1995,
+   "value": 7.774
+  },
+  {
+   "year": 1995,
+   "value": 7.611
+  },
+  {
+   "year": 1996,
+   "value": 7.565
+  },
+  {
+   "year": 1996,
+   "value": 7.415
+  },
+  {
+   "year": 1998,
+   "value": 7.342
+  },
+  {
+   "year": 1998,
+   "value": 7.593
+  },
+  {
+   "year": 1999,
+   "value": 7.749
+  },
+  {
+   "year": 1999,
+   "value": 7.576
+  },
+  {
+   "year": 2000,
+   "value": 7.829
+  },
+  {
+   "year": 2002,
+   "value": 7.527
+  },
+  {
+   "year": 2002,
+   "value": 7.297
+  },
+  {
+   "year": 2004,
+   "value": 6.815
+  },
+  {
+   "year": 2004,
+   "value": 6.688
+  },
+  {
+   "year": 2004,
+   "value": 6.439
+  },
+  {
+   "year": 2004,
+   "value": 6.664
+  },
+  {
+   "year": 2006,
+   "value": 6.503
+  },
+  {
+   "year": 2006,
+   "value": 6.654
+  },
+  {
+   "year": 2007,
+   "value": 6.654
+  },
+  {
+   "year": 2008,
+   "value": 6.871
+  },
+  {
+   "year": 2009,
+   "value": 6.82
+  },
+  {
+   "year": 2010,
+   "value": 6.71
+  },
+  {
+   "year": 2011,
+   "value": 6.877
+  },
+  {
+   "year": 2011,
+   "value": 7.071
+  },
+  {
+   "year": 2011,
+   "value": 6.905
+  },
+  {
+   "year": 2011,
+   "value": 6.937
+  },
+  {
+   "year": 2011,
+   "value": 7.118
+  },
+  {
+   "year": 2012,
+   "value": 6.948
+  },
+  {
+   "year": 2012,
+   "value": 6.915
+  },
+  {
+   "year": 2013,
+   "value": 6.97
+  },
+  {
+   "year": 2013,
+   "value": 7.007
+  },
+  {
+   "year": 2013,
+   "value": 7.047
+  },
+  {
+   "year": 2013,
+   "value": 7.296
+  },
+  {
+   "year": 2014,
+   "value": 6.828
+  },
+  {
+   "year": 2015,
+   "value": 6.545
+  },
+  {
+   "year": 2015,
+   "value": 6.519
+  },
+  {
+   "year": 2016,
+   "value": 6.32
+  },
+  {
+   "year": 2016,
+   "value": 5.977
+  },
+  {
+   "year": 2016,
+   "value": 6.444
+  },
+  {
+   "year": 2017,
+   "value": 6.676
+  },
+  {
+   "year": 2017,
+   "value": 6.692
+  },
+  {
+   "year": 2017,
+   "value": 6.964
+  },
+  {
+   "year": 2018,
+   "value": 7.252
+  },
+  {
+   "year": 2019,
+   "value": 7.228
+  },
+  {
+   "year": 2019,
+   "value": 7.113
+  },
+  {
+   "year": 2020,
+   "value": 7.036
+  },
+  {
+   "year": 2020,
+   "value": 7.107
+  },
+  {
+   "year": 2020,
+   "value": 7.066
+  },
+  {
+   "year": 2021,
+   "value": 7.07
+  },
+  {
+   "year": 2022,
+   "value": 7.032
+  },
+  {
+   "year": 2022,
+   "value": 7.201
+  },
+  {
+   "year": 2022,
+   "value": 6.929
+  },
+  {
+   "year": 2022,
+   "value": 7.016
+  },
+  {
+   "year": 2023,
+   "value": 6.829
+  },
+  {
+   "year": 2024,
+   "value": 6.887
+  },
+  {
+   "year": 2024,
+   "value": 6.917
+  },
+  {
+   "year": 2025,
+   "value": 7.033
+  },
+  {
+   "year": 2025,
+   "value": 6.977
+  }
+ ],
+ "best_film": {
+  "movie_id": 497,
+  "title": "The Green Mile",
+  "year": 1999,
+  "score": 8.506
+ },
+ "latest_year_avg": 6.5725,
+ "forecast": {
+  "status": "ok",
+  "low": 6.006,
+  "mid": 6.903,
+  "high": 7.8,
+  "explain": {
+   "n_rated": 77,
+   "half_life": 5.0,
+   "own_share": 0.909,
+   "own_avg": 6.951,
+   "db_avg": 6.4197
+  },
+  "test": {
+   "coverage": 0.8163,
+   "n_people": 9594
+  }
+ },
+ "model_available": true
+}

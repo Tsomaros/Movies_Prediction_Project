@@ -6,10 +6,13 @@
 //                                         fresh form has them (it is a new film, not a remake of this one)
 //   personToForm(person, as?, today?)  -> a fresh form with this person as the lead actor or as the director
 //                                         ("Predict a film with this actor / director", the person page)
+//   recipeToForm(recipe, options, today?) -> FormValues: a Career section model film ("Their usual film",
+//                                         "Something new") as scored, plus its median budget; "new" people slots
+//                                         are left empty for the creator to name
 //
 // Every limit comes from GET /meta/options, like the form's own rules: values the form wouldn't accept (a
 // genre outside the 19, a rating outside the list, a runtime out of range) are left out or reset to the default.
-import type { MovieDetail, Options } from '@/api/client'
+import type { MovieDetail, Options, Recipe } from '@/api/client'
 import { DEFAULTS, emptyForm, type FormValues, type NameRef } from '@/form/model'
 
 function spec(options: Options, name: string) {
@@ -53,4 +56,34 @@ export function personToForm(person: { id: number; name: string }, as: 'actor' |
   today = new Date()): FormValues {
   const ref = { id: person.id, name: person.name }
   return as === 'director' ? { ...emptyForm(today), director: ref } : { ...emptyForm(today), actors: [ref] }
+}
+
+/** "Edit in predictor" (the person page's Career section): the recipe the score model was given. Named people
+ *  keep their ids; a "new" slot (and a person without a name) is left out, so the form asks for a real name. */
+export function recipeToForm(recipe: Recipe, options: Options, today = new Date()): FormValues {
+  const field = (name: string) => spec(options, name)
+  const max = (name: string) => field(name)?.max_items ?? Infinity
+  const within = (name: string, n: number | null | undefined) => {
+    const f = field(name)
+    return n != null && (f?.min == null || n >= f.min) && (f?.max == null || n <= f.max)
+  }
+  const named = (slot: Recipe['director']): NameRef | null =>
+    slot !== 'new' && slot.name ? { id: slot.id, name: slot.name } : null
+  const country = new RegExp(field('countries')?.pattern ?? '^[A-Z]{2}$')
+  const fresh = emptyForm(today)
+
+  return {
+    ...fresh,
+    genres: recipe.labels.genres.filter(g => options.genres.includes(g)).slice(0, max('genres')),
+    themes: recipe.themes.filter(t => options.themes.includes(t)).slice(0, max('themes')),
+    runtime: within('runtime', recipe.runtime) ? recipe.runtime : DEFAULTS.runtime,
+    language: /^[a-z]{2}$/.test(recipe.language) ? recipe.language : DEFAULTS.language,
+    certification: certification(recipe.certification, field('certification')?.choices ?? options.certifications),
+    release_year: within('release_year', recipe.release_year) ? recipe.release_year : fresh.release_year,
+    release_month: within('release_month', recipe.release_month) ? recipe.release_month : fresh.release_month,
+    director: named(recipe.director),
+    actors: recipe.actors.map(named).filter((a): a is NameRef => a !== null).slice(0, max('actors')),
+    countries: recipe.country && country.test(recipe.country) ? [recipe.country] : [],
+    budget: within('budget', recipe.budget_2025) ? recipe.budget_2025 : null,
+  }
 }

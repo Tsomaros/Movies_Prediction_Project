@@ -11,12 +11,15 @@
 //   useCompare(body)                       -> POST /predict/compare as a query (the compare page), kept for the session
 //   useSweep(body)                         -> POST /predict/sweep (the release-month sweep), kept for the session
 //   useModelCard()                         -> GET /model-card, cached an hour
+//   useCareer(id, role)                    -> the Career section's chart and track-record forecast, cached an hour
+//   useCareerModel(id, role, genre, on)    -> its score-model films ("Something new" for one genre chip when genre
+//                                             is set); a new chip keeps the last answer on screen until it arrives
 //   useMovies(query) / useMovie(id)        -> browse and one film, cached an hour like the API says; a new page or
 //                                             filter keeps the last results on screen until the new ones arrive
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
-  ApiError, api, type CompareRequest, type MovieQuery, type NameKind, type PersonMatch, type PredictForm, type SweepRequest,
+  ApiError, api, type CareerRole, type CompareRequest, type MovieQuery, type NameKind, type PersonMatch, type PredictForm, type SweepRequest,
 } from '@/api/client'
 import { notifyError } from '@/api/errors'
 import { useDebounced } from '@/lib/useDebounced'
@@ -114,6 +117,28 @@ export function usePerson(id: number | null) {
     queryFn: ({ signal }) => api.getPerson(id!, signal),
     enabled: id !== null,
     staleTime: HOUR,
+    retry: (count, error) => !(error instanceof ApiError && error.kind === 'not_found') && count < 1,
+  })
+}
+
+export function useCareer(id: number, role: CareerRole) {
+  return useQuery({
+    queryKey: ['career', id, role],
+    queryFn: ({ signal }) => api.getCareer(id, role, signal),
+    staleTime: HOUR,
+    retry: (count, error) => !(error instanceof ApiError && error.kind === 'not_found') && count < 1,
+  })
+}
+
+/** Each genre is its own query, so a slow answer for an earlier chip lands in its own cache entry and never
+ *  replaces the chip chosen since. */
+export function useCareerModel(id: number, role: CareerRole, genre: number | null, enabled: boolean) {
+  return useQuery({
+    queryKey: ['career-model', id, role, genre],
+    queryFn: ({ signal }) => api.getCareerModel(id, role, genre, signal),
+    enabled,
+    staleTime: HOUR,
+    placeholderData: keepPreviousData,
     retry: (count, error) => !(error instanceof ApiError && error.kind === 'not_found') && count < 1,
   })
 }

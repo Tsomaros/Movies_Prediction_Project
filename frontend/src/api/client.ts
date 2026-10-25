@@ -8,6 +8,8 @@
 //   random(query)                                        -> "Surprise me": one random film, or why there is none
 //   getPerson(id), searchPeople(q, limit, role)          -> a person page; actors or directors with a photo and
 //                                                           known-for film
+//   getCareer(id, role), getCareerModel(id, role, genre) -> the person page's Career section: the chart and the
+//                                                           track-record forecast; the score model's two films
 //   ApiError                                             -> every failure, with a `kind` the UI can act on:
 //     validation   422, `fieldErrors` keyed by the API's dotted paths ("actors.2", "budget")
 //     rate_limited 429, `retryAfter` seconds from the Retry-After header
@@ -51,6 +53,13 @@ export type RandomPick = Schemas['RandomPick']
 export type PersonDetail = Schemas['PersonDetail']
 export type PersonMatch = Schemas['PersonMatch']
 export type RandomMovie = Schemas['RandomMovie']
+export type CareerRole = Schemas['CareerResponse']['role']
+export type CareerResponse = Schemas['CareerResponse']
+export type CareerFilm = Schemas['CareerFilmOut']
+export type TrackForecast = Schemas['TrackForecast']
+export type CareerModelResponse = Schemas['CareerModelResponse']
+export type Recipe = Schemas['RecipeOut']
+export type Chip = Schemas['Chip']
 type RandomQueryAll = NonNullable<operations['random_film_api_v1_random_get']['parameters']['query']>
 export type RandomQuery = { [K in keyof RandomQueryAll]?: NonNullable<RandomQueryAll[K]> }
 /** GET /movies's query (every filter optional), from the generated schema; null is left out. */
@@ -164,6 +173,10 @@ export const api = {
   getPerson: (id: number, signal?: AbortSignal) => request<PersonDetail>(`/people/${id}`, { signal }),
   searchPeople: (q: string, limit: number, role: 'actor' | 'director', signal?: AbortSignal) =>
     request<PersonMatch[]>('/people', { query: { role, q, limit }, signal }),
+  getCareer: (id: number, role: CareerRole, signal?: AbortSignal) =>
+    request<CareerResponse>(`/people/${id}/career`, { query: { role }, signal }),
+  getCareerModel: (id: number, role: CareerRole, genre: number | null, signal?: AbortSignal) =>
+    request<CareerModelResponse>(`/people/${id}/career/model`, { query: { role, genre: genre ?? undefined }, signal }),
   random: ({ gems, ...query }: RandomQuery, signal?: AbortSignal) =>
     request<RandomPick>('/random', { query: { ...query, gems: gems ? 'true' : undefined }, signal }),
 }

@@ -1,0 +1,130 @@
+{
+ "usual": {
+  "recipe": {
+   "genres": [
+    28,
+    18
+   ],
+   "themes": [
+    "based on a book",
+    "murder and revenge",
+    "history and war"
+   ],
+   "language": "en",
+   "runtime": 149,
+   "release_month": 7,
+   "release_year": 2027,
+   "certification": "PG-13",
+   "country": "GB",
+   "director": {
+    "id": 525,
+    "name": "Christopher Nolan"
+   },
+   "actors": [
+    {
+     "id": 3895,
+     "name": "Michael Caine"
+    },
+    {
+     "id": 2037,
+     "name": "Cillian Murphy"
+    },
+    {
+     "id": 3894,
+     "name": "Christian Bale"
+    }
+   ],
+   "budget_2025": 236381847,
+   "labels": {
+    "genres": [
+     "Action",
+     "Drama"
+    ],
+    "themes": [
+     "based on a book",
+     "murder and revenge",
+     "history and war"
+    ],
+    "collaborators": [
+     "Michael Caine",
+     "Cillian Murphy",
+     "Christian Bale"
+    ]
+   }
+  },
+  "prediction": {
+   "low": 6.586296959240409,
+   "mid": 7.5667112123645595,
+   "high": 8.143726379927214
+  }
+ },
+ "new": {
+  "recipe": {
+   "genres": [
+    35,
+    10749
+   ],
+   "themes": [
+    "love and marriage",
+    "christmas and holidays",
+    "based on a book"
+   ],
+   "language": "en",
+   "runtime": 149,
+   "release_month": 7,
+   "release_year": 2027,
+   "certification": "PG-13",
+   "country": "GB",
+   "director": {
+    "id": 525,
+    "name": "Christopher Nolan"
+   },
+   "actors": [
+    "new",
+    "new",
+    "new"
+   ],
+   "budget_2025": 236381847,
+   "labels": {
+    "genres": [
+     "Comedy",
+     "Romance"
+    ],
+    "themes": [
+     "love and marriage",
+     "christmas and holidays",
+     "based on a book"
+    ],
+    "collaborators": []
+   }
+  },
+  "prediction": {
+   "low": 6.414777919045057,
+   "mid": 7.4373836722016655,
+   "high": 8.057516216511338
+  },
+  "note": null
+ },
+ "chips": [
+  {
+   "genre_id": 35,
+   "name": "Comedy",
+   "default": true
+  },
+  {
+   "genre_id": 10749,
+   "name": "Romance",
+   "default": false
+  },
+  {
+   "genre_id": 14,
+   "name": "Fantasy",
+   "default": false
+  },
+  {
+   "genre_id": 16,
+   "name": "Animation",
+   "default": false
+  }
+ ]
+}

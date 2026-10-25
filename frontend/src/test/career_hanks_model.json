@@ -1,0 +1,109 @@
+{
+ "usual": {
+  "recipe": {
+   "genres": [
+    18,
+    99
+   ],
+   "themes": [
+    "history and war",
+    "true story",
+    "science fiction"
+   ],
+   "language": "en",
+   "runtime": 105,
+   "release_month": 6,
+   "release_year": 2027,
+   "certification": "PG-13",
+   "country": "US",
+   "director": {
+    "id": 24,
+    "name": "Robert Zemeckis"
+   },
+   "actors": [
+    {
+     "id": 31,
+     "name": "Tom Hanks"
+    },
+    {
+     "id": 12898,
+     "name": "Tim Allen"
+    },
+    {
+     "id": 12900,
+     "name": "Wallace Shawn"
+    }
+   ],
+   "budget_2025": 41079286,
+   "labels": {
+    "genres": [
+     "Drama",
+     "Documentary"
+    ],
+    "themes": [
+     "history and war",
+     "true story",
+     "science fiction"
+    ],
+    "collaborators": [
+     "Robert Zemeckis",
+     "Tim Allen",
+     "Wallace Shawn"
+    ]
+   }
+  },
+  "prediction": {
+   "low": 6.300402809043583,
+   "mid": 6.95677494262185,
+   "high": 7.640797269453631
+  }
+ },
+ "new": {
+  "recipe": {
+   "genres": [
+    18,
+    99
+   ],
+   "themes": [
+    "survival and adventure",
+    "true story",
+    "coming of age and school"
+   ],
+   "language": "en",
+   "runtime": 105,
+   "release_month": 6,
+   "release_year": 2027,
+   "certification": "PG-13",
+   "country": "US",
+   "director": "new",
+   "actors": [
+    {
+     "id": 31,
+     "name": "Tom Hanks"
+    },
+    "new",
+    "new"
+   ],
+   "budget_2025": 41079286,
+   "labels": {
+    "genres": [
+     "Drama",
+     "Documentary"
+    ],
+    "themes": [
+     "survival and adventure",
+     "true story",
+     "coming of age and school"
+    ],
+    "collaborators": []
+   }
+  },
+  "prediction": {
+   "low": 6.417921334140809,
+   "mid": 7.461210821504076,
+   "high": 7.986567626060081
+  },
+  "note": "They've already worked in every genre."
+ },
+ "chips": []
+}

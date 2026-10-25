@@ -2,14 +2,16 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-import type { ModelCard, MovieDetail, MovieList, Options, PersonMatch } from '@/api/client'
+import type { CareerModelResponse, ModelCard, MovieDetail, MovieList, Options, PersonMatch, Recipe } from '@/api/client'
 import { emptyForm } from '@/form/model'
 import { decodeForm, LIKE_PARAM } from '@/form/persist'
 import { browseLink, EMPTY, pageNumbers, readBrowse, VIEW_KEY, writeBrowse } from '@/movies/browse'
 import { crewByJob, formatLife, initials, nameHue, runtimeText } from '@/movies/people'
-import { filmToForm, personToForm } from '@/movies/predictLike'
+import { filmToForm, personToForm, recipeToForm } from '@/movies/predictLike'
 import { ROWS } from '@/movies/rows'
 import { SEARCH_MS } from '@/pages/Browse'
+import hanksModelJson from '@/test/career_hanks_model.json'
+import nolanModelJson from '@/test/career_nolan_model.json'
 import { mockFetch } from '@/test/fetch'
 import modelCardJson from '@/test/model_card.json'
 import movieJson from '@/test/movie.json'
@@ -121,6 +123,41 @@ describe('"Predict a film like this"', () => {
     expect(params.get(LIKE_PARAM)).toBe('Avengers: Infinity War')
     expect(decodeForm(params.get('f'))).toEqual(filmToForm(FILM, options))
     expect(screen.getByRole('button', { name: 'Remove Anthony Russo' })).toBeInTheDocument()
+  })
+})
+
+describe('"Edit in predictor" (the Career section model films)', () => {
+  // Real answers: Tom Hanks's usual film (named director and co-stars) and Christopher Nolan's "Something new"
+  // (every actor slot "new")
+  const HANKS = hanksModelJson as CareerModelResponse
+  const NOLAN = nolanModelJson as CareerModelResponse
+  const today = new Date(2026, 9, 25)
+
+  test('the usual film carries every recipe field, named people with their ids and the median budget', () => {
+    const form = recipeToForm(HANKS.usual!.recipe, options, today)
+    expect(form).toEqual({
+      ...emptyForm(today),
+      genres: ['Drama', 'Documentary'], themes: ['history and war', 'true story', 'science fiction'],
+      runtime: 105, language: 'en', certification: 'PG-13', release_year: 2027, release_month: 6,
+      director: { id: 24, name: 'Robert Zemeckis' },
+      actors: [{ id: 31, name: 'Tom Hanks' }, { id: 12898, name: 'Tim Allen' }, { id: 12900, name: 'Wallace Shawn' }],
+      countries: ['US'], budget: 41079286,
+    })
+  })
+
+  test('"new" slots are left empty for the creator to name', () => {
+    const form = recipeToForm(NOLAN.new.recipe, options, today)
+    expect([form.genres, form.director, form.actors]).toEqual([['Comedy', 'Romance'], { id: 525, name: 'Christopher Nolan' }, []])
+    expect(recipeToForm(HANKS.new.recipe, options, today).director).toBeNull()
+  })
+
+  test('values the form would refuse are left out or reset', () => {
+    const odd: Recipe = { ...HANKS.usual!.recipe, runtime: 12, certification: 'XX', country: null, budget_2025: null,
+      themes: ['history and war', 'not a theme'], director: { id: 24, name: null },
+      labels: { ...HANKS.usual!.recipe.labels, genres: ['Drama', 'Cartoon'] } }
+    const form = recipeToForm(odd, options, today)
+    expect([form.genres, form.themes, form.runtime, form.certification, form.countries, form.budget, form.director])
+      .toEqual([['Drama'], ['history and war'], 110, '', [], null, null])
   })
 })
 
