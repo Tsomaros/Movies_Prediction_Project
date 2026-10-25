@@ -5,8 +5,13 @@
 //   runtimeText(minutes)  -> 149 -> "2 h 29 min", 90 -> "1 h 30 min", 45 -> "45 min"
 //   crewByJob(crew, jobs) -> [{job, people: [{id, name}]}] in the order of `jobs`, each person once
 //   votes(n)              -> 1 -> "1 vote", 1203 -> "1,203 votes"
+//   FILM_SORTS, readFilmSort(value), sortFilms(films, sort) -> the person page's film order (?sort=): newest
+//                            first (the API's order), oldest, highest score or biggest box office; a film without
+//                            the sorted value goes last
 //   formatLife(born, died, today) -> "Born 9 Jul 1956 · 70", "1920–1990", "Died 1990", or null (dates are
 //                            "YYYY-MM-DD", read as calendar dates: no time zone can move them a day)
+
+import type { PersonDetail } from '@/api/client'
 
 const SUFFIXES = new Set(['jr', 'jr.', 'sr', 'sr.', 'ii', 'iii', 'iv'])
 
@@ -58,3 +63,25 @@ export function formatLife(born: string | null | undefined, died: string | null 
   const age = ty - b.y - (tm < b.m || (tm === b.m && td < b.d) ? 1 : 0)
   return `Born ${b.d} ${MONTHS[b.m - 1]} ${b.y} · ${age}`
 }
+
+type Film = PersonDetail['cast_credits'][number]
+export type FilmSort = 'newest' | 'oldest' | 'score' | 'box_office'
+export const FILM_SORTS: { value: FilmSort; label: string }[] = [
+  { value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' },
+  { value: 'score', label: 'Highest score' }, { value: 'box_office', label: 'Biggest box office' },
+]
+export const readFilmSort = (value: string | null): FilmSort =>
+  FILM_SORTS.some(s => s.value === value) ? value as FilmSort : 'newest'
+
+/** Films sorted for the grid; a film without the sorted value (no year, score or trusted revenue) goes last. */
+export function sortFilms(films: Film[], sort: FilmSort): Film[] {
+  if (sort === 'newest') return films // the API's order
+  const key = (f: Film) => sort === 'oldest' ? (f.release_date ? -Date.parse(f.release_date) : null)
+    : sort === 'score' ? (f.votes > 0 ? f.score : null) : f.revenue_2025
+  return [...films].sort((a, b) => {
+    const ka = key(a), kb = key(b)
+    if (ka == null || kb == null) return ka == null ? (kb == null ? 0 : 1) : -1
+    return kb - ka
+  })
+}
+

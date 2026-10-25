@@ -1,7 +1,8 @@
 // One film in a grid, a row of the home page or the list view: poster, title, year and the score with its
 // vote count ("7.4 (1,203 votes)"), so a high score from a handful of votes is visible as such.
 // For a logged-in visitor a card can also show its list status (`entry`: a badge on the poster) and the quick
-// list buttons (`quick`), which sit beside the link, never inside it.
+// list buttons (`quick`), which sit beside the link, never inside it. `subtitle` adds a line under the title (the
+// person page's "as Forrest").
 import { StarIcon } from 'lucide-react'
 import { Link } from 'react-router'
 
@@ -22,8 +23,8 @@ export function ScoreText({ score, votes: n }: { score: number | null | undefine
   )
 }
 
-export function MovieCard({ film, showRevenue = false, eager = false, entry, quick = false }: {
-  film: MovieSummary; showRevenue?: boolean; eager?: boolean; entry?: Entry; quick?: boolean
+export function MovieCard({ film, showRevenue = false, eager = false, entry, quick = false, subtitle }: {
+  film: MovieSummary; showRevenue?: boolean; eager?: boolean; entry?: Entry; quick?: boolean; subtitle?: string
 }) {
   return (
     <div className="group/card relative">
@@ -35,6 +36,7 @@ export function MovieCard({ film, showRevenue = false, eager = false, entry, qui
       </span>
       <span className="grid gap-0.5">
         <span className="line-clamp-2 text-sm font-medium leading-tight group-hover:underline">{film.title}</span>
+        {subtitle && <span className="text-muted-foreground line-clamp-2 text-xs italic">{subtitle}</span>}
         <span className="text-muted-foreground text-xs">{film.year ?? 'Year unknown'}</span>
         <span className="text-xs"><ScoreText score={film.score} votes={film.votes} /></span>
         {showRevenue && film.revenue_2025 != null && (
