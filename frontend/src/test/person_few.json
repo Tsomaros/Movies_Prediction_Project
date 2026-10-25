@@ -1,0 +1,166 @@
+{
+ "id": 204997,
+ "name": "Hanna Hall",
+ "photo": {
+  "small": "https://image.tmdb.org/t/p/w185/xkZ2Hwz1QLXvQCgGlWgVgx00Rtd.jpg",
+  "large": "https://image.tmdb.org/t/p/h632/xkZ2Hwz1QLXvQCgGlWgVgx00Rtd.jpg"
+ },
+ "biography": "Hanna Rose Hall (born July 9, 1984) is an American actress and assistant director, known for her roles as Young Jenny in Forrest Gump (1994), Cecilia Lisbon in The Virgin Suicides (1999), and Judith Myers in Rob Zombie's Halloween (2007).",
+ "birthday": "1984-07-09",
+ "deathday": null,
+ "place_of_birth": "Denver, Colorado, USA",
+ "known_for_department": "Acting",
+ "imdb_url": "https://www.imdb.com/name/nm0355632/",
+ "homepage": null,
+ "tmdb_url": "https://www.themoviedb.org/person/204997",
+ "main_role": "acting",
+ "roles": [
+  {
+   "role": "acting",
+   "label": "Acting",
+   "films": [
+    {
+     "id": 544023,
+     "title": "Text",
+     "year": 2008,
+     "release_date": "2008-10-19",
+     "genres": [
+      "Horror",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 5.99,
+     "votes": 52,
+     "score_ok": true,
+     "popularity": 1.0976,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/1jLDp7fmQz6TkOjdHJtQMXvMR0I.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/1jLDp7fmQz6TkOjdHJtQMXvMR0I.jpg"
+     },
+     "character": "Sarah",
+     "jobs": []
+    },
+    {
+     "id": 1443,
+     "title": "The Virgin Suicides",
+     "year": 2000,
+     "release_date": "2000-04-21",
+     "genres": [
+      "Drama",
+      "Romance"
+     ],
+     "original_language": "en",
+     "score": 7.138,
+     "votes": 3732,
+     "score_ok": true,
+     "popularity": 8.9387,
+     "revenue_2025": 19473937.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/1NCQtXPQnaHRjOZVmktA9BSM35F.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/1NCQtXPQnaHRjOZVmktA9BSM35F.jpg"
+     },
+     "character": "Cecilia Lisbon",
+     "jobs": []
+    },
+    {
+     "id": 221459,
+     "title": "Her Desperate Choice",
+     "year": 1996,
+     "release_date": "1996-09-14",
+     "genres": [
+      "Drama",
+      "TV Movie"
+     ],
+     "original_language": "en",
+     "score": 6.1,
+     "votes": 8,
+     "score_ok": false,
+     "popularity": 1.7634,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/Au25lTsOchxflSWF8cxHCJh3CTb.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/Au25lTsOchxflSWF8cxHCJh3CTb.jpg"
+     },
+     "character": "Samantha / Sammy",
+     "jobs": []
+    },
+    {
+     "id": 113850,
+     "title": "Homecoming",
+     "year": 1996,
+     "release_date": "1996-04-14",
+     "genres": [
+      "Drama",
+      "TV Movie"
+     ],
+     "original_language": "en",
+     "score": 7.1,
+     "votes": 14,
+     "score_ok": false,
+     "popularity": 1.9611,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/nP2yQ98bzQUhL7AL1dggXDbu4zC.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/nP2yQ98bzQUhL7AL1dggXDbu4zC.jpg"
+     },
+     "character": "Maybeth Tillerman",
+     "jobs": []
+    },
+    {
+     "id": 13,
+     "title": "Forrest Gump",
+     "year": 1994,
+     "release_date": "1994-06-23",
+     "genres": [
+      "Comedy",
+      "Drama",
+      "Romance"
+     ],
+     "original_language": "en",
+     "score": 8.462,
+     "votes": 30703,
+     "score_ok": true,
+     "popularity": 37.8699,
+     "revenue_2025": 1472238049.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/saHP97rTPS5eLmrLQEcANmKrsFl.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/saHP97rTPS5eLmrLQEcANmKrsFl.jpg"
+     },
+     "character": "Young Jenny Curran",
+     "jobs": []
+    }
+   ],
+   "stats": {
+    "film_count": 5,
+    "first_year": 1994,
+    "last_year": 2008,
+    "top_genres": [
+     {
+      "name": "Drama",
+      "films": 4
+     },
+     {
+      "name": "Romance",
+      "films": 2
+     },
+     {
+      "name": "TV Movie",
+      "films": 2
+     }
+    ],
+    "avg_score": {
+     "value": 7.2,
+     "films": 3
+    },
+    "box_office_2025": {
+     "total": 1491711986.0,
+     "films": 2,
+     "of": 5
+    },
+    "top_actor": null,
+    "top_director": null
+   }
+  }
+ ]
+}

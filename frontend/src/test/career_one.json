@@ -1,0 +1,51 @@
+{
+ "person_id": 55,
+ "role": "acting",
+ "roles_available": [
+  {
+   "role": "acting",
+   "film_count": 1,
+   "rated_count": 1
+  }
+ ],
+ "films": [
+  {
+   "movie_id": 17,
+   "title": "The Dark",
+   "year": 2005,
+   "release_date": "2005-09-28",
+   "score": 5.667,
+   "vote_count": 300,
+   "rated": true,
+   "lead": true,
+   "character": "Ebrill",
+   "poster_small": "https://image.tmdb.org/t/p/w342/h6gCVAzjFLhzkffv2VZO1RgVCBt.jpg",
+   "year_avg": 6.2235
+  }
+ ],
+ "line": [
+  {
+   "year": 2005,
+   "value": 5.667
+  }
+ ],
+ "best_film": {
+  "movie_id": 17,
+  "title": "The Dark",
+  "year": 2005,
+  "score": 5.667
+ },
+ "latest_year_avg": 6.5725,
+ "forecast": {
+  "status": "not_enough_films",
+  "low": null,
+  "mid": null,
+  "high": null,
+  "explain": null,
+  "test": {
+   "coverage": 0.8163,
+   "n_people": 9594
+  }
+ },
+ "model_available": true
+}

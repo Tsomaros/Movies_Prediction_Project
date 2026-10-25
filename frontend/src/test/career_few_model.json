@@ -1,0 +1,117 @@
+{
+ "usual": {
+  "recipe": {
+   "genres": [
+    18,
+    10749
+   ],
+   "themes": [
+    "based on a book",
+    "history and war",
+    "family"
+   ],
+   "language": "en",
+   "runtime": 97,
+   "release_month": 10,
+   "release_year": 2027,
+   "certification": "unrated/unknown",
+   "country": "US",
+   "director": "new",
+   "actors": [
+    {
+     "id": 204997,
+     "name": "Hanna Hall"
+    },
+    "new",
+    "new"
+   ],
+   "budget_2025": 11224843,
+   "labels": {
+    "genres": [
+     "Drama",
+     "Romance"
+    ],
+    "themes": [
+     "based on a book",
+     "history and war",
+     "family"
+    ],
+    "collaborators": []
+   }
+  },
+  "prediction": {
+   "low": 5.8689362231131,
+   "mid": 6.8485410287910975,
+   "high": 7.76489964829465
+  }
+ },
+ "new": {
+  "recipe": {
+   "genres": [
+    28,
+    80
+   ],
+   "themes": [
+    "crime and police",
+    "murder and revenge",
+    "sequel or remake"
+   ],
+   "language": "en",
+   "runtime": 97,
+   "release_month": 10,
+   "release_year": 2027,
+   "certification": "unrated/unknown",
+   "country": "US",
+   "director": "new",
+   "actors": [
+    {
+     "id": 204997,
+     "name": "Hanna Hall"
+    },
+    "new",
+    "new"
+   ],
+   "budget_2025": 11224843,
+   "labels": {
+    "genres": [
+     "Action",
+     "Crime"
+    ],
+    "themes": [
+     "crime and police",
+     "murder and revenge",
+     "sequel or remake"
+    ],
+    "collaborators": []
+   }
+  },
+  "prediction": {
+   "low": 5.646830469781376,
+   "mid": 6.4268684905229225,
+   "high": 7.560257453558135
+  },
+  "note": null
+ },
+ "chips": [
+  {
+   "genre_id": 28,
+   "name": "Action",
+   "default": true
+  },
+  {
+   "genre_id": 80,
+   "name": "Crime",
+   "default": false
+  },
+  {
+   "genre_id": 12,
+   "name": "Adventure",
+   "default": false
+  },
+  {
+   "genre_id": 14,
+   "name": "Fantasy",
+   "default": false
+  }
+ ]
+}

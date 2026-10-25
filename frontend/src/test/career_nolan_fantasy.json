@@ -1,0 +1,49 @@
+{
+ "new": {
+  "recipe": {
+   "genres": [
+    14,
+    35
+   ],
+   "themes": [
+    "based on a book",
+    "family",
+    "sequel or remake"
+   ],
+   "language": "en",
+   "runtime": 149,
+   "release_month": 7,
+   "release_year": 2027,
+   "certification": "PG-13",
+   "country": "GB",
+   "director": {
+    "id": 525,
+    "name": "Christopher Nolan"
+   },
+   "actors": [
+    "new",
+    "new",
+    "new"
+   ],
+   "budget_2025": 236381847,
+   "labels": {
+    "genres": [
+     "Fantasy",
+     "Comedy"
+    ],
+    "themes": [
+     "based on a book",
+     "family",
+     "sequel or remake"
+    ],
+    "collaborators": []
+   }
+  },
+  "prediction": {
+   "low": 6.506511456469609,
+   "mid": 7.496546995949477,
+   "high": 8.08487443566964
+  },
+  "note": null
+ }
+}

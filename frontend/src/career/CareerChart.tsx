@@ -107,12 +107,12 @@ const Plot = memo(function Plot({ data, view, height, events }:
         <XAxis type="number" dataKey="x" domain={xDomain} allowDecimals={false} tick={AXIS}
           stroke="var(--border)" tickFormatter={v => String(Math.floor(v))} />
         <YAxis type="number" dataKey="y" domain={yDomain} allowDecimals={false} tick={AXIS} stroke="var(--border)"
-          tickFormatter={v => (view === 'year' && v > 0 ? `+${v}` : String(v))} />
+          tickFormatter={v => (view === 'year' && v > 0 ? `+${v}` : v < 0 ? `−${-v}` : String(v))} />
         {view === 'year' && <ReferenceLine y={0} className="career-zero" stroke="var(--muted-foreground)" strokeDasharray="2 3" />}
         {band && (
           <>
             <ReferenceArea x1={next - 0.5} x2={next + 0.5} fill="var(--muted)" fillOpacity={0.8}
-              label={{ value: 'Next film', position: 'insideTop', fill: 'var(--muted-foreground)', fontSize: 11, dy: -18 }} />
+              label={{ value: 'Next film', position: 'insideTopRight', fill: 'var(--muted-foreground)', fontSize: 11, dy: -18 }} />
             <ReferenceArea x1={next - 0.3} x2={next + 0.3} y1={band.low} y2={band.high}
               shape={(p: { x?: number; y?: number; width?: number; height?: number }) => (
                 <rect data-testid="forecast-band" x={p.x} y={p.y} width={p.width} height={p.height} rx={3}

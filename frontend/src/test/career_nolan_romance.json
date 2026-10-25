@@ -1,0 +1,49 @@
+{
+ "new": {
+  "recipe": {
+   "genres": [
+    10749,
+    35
+   ],
+   "themes": [
+    "love and marriage",
+    "christmas and holidays",
+    "based on a book"
+   ],
+   "language": "en",
+   "runtime": 149,
+   "release_month": 7,
+   "release_year": 2027,
+   "certification": "PG-13",
+   "country": "GB",
+   "director": {
+    "id": 525,
+    "name": "Christopher Nolan"
+   },
+   "actors": [
+    "new",
+    "new",
+    "new"
+   ],
+   "budget_2025": 236381847,
+   "labels": {
+    "genres": [
+     "Romance",
+     "Comedy"
+    ],
+    "themes": [
+     "love and marriage",
+     "christmas and holidays",
+     "based on a book"
+    ],
+    "collaborators": []
+   }
+  },
+  "prediction": {
+   "low": 6.414777919045057,
+   "mid": 7.4373836722016655,
+   "high": 8.057516216511338
+  },
+  "note": null
+ }
+}

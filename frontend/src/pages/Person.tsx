@@ -1,14 +1,15 @@
 // /people/:id: one person (Day 14.6; crew roles Day 14.7). TMDB's photo, life dates, birthplace and biography when
 // the person pull found them (otherwise an initials avatar), then, for one role at a time (acting, directing,
 // writing, production, music, camera, editing; a switch in ?role= when they have several, opening on their main
-// role): a stats strip from our own data and their films as a poster grid (the character they played, or their
-// writing credit), sorted by ?sort=. "Predict a film with this actor / director" starts a fresh form with them in
+// role): a stats strip from our own data, the Career section (acting, directing and writing: a chart and two
+// forecasts, loaded on demand with its chart library) and their films as a poster grid (the character they
+// played, or their writing credit), sorted by ?sort=. "Predict a film with this actor / director" starts a fresh form with them in
 // that slot; other roles have no form field. The biography is plain text: blank lines make paragraphs, never HTML.
 import { ArrowLeftIcon, ExternalLinkIcon, SparklesIcon } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { lazy, Suspense, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 
-import { ApiError, type PersonDetail } from '@/api/client'
+import { ApiError, type CareerRole, type PersonDetail } from '@/api/client'
 import { usePerson } from '@/api/hooks'
 import { SlowNotice } from '@/app/SlowNotice'
 import { Button } from '@/components/ui/button'
@@ -33,6 +34,8 @@ const ROLE_TEXT: Record<RoleName, { noun: string; verb?: string; cast: string }>
   camera: { noun: 'Cinematographer', verb: 'Shot', cast: 'Most often with' },
   editing: { noun: 'Editor', verb: 'Edited', cast: 'Most often with' },
 }
+const CareerSection = lazy(() => import('@/career/CareerSection'))
+const CAREER_ROLES: readonly string[] = ['acting', 'directing', 'writing'] satisfies CareerRole[]
 const PREDICT_AS: Partial<Record<RoleName, 'actor' | 'director'>> = { acting: 'actor', directing: 'director' }
 const LONG_BIO = 600 // characters: longer biographies start clamped to 4 lines, with "Read more"
 
@@ -211,6 +214,14 @@ export default function Person() {
           )}
         </div>
       </div>
+
+      {role && (CAREER_ROLES.includes(role.role) ? (
+        <Suspense fallback={<Skeleton className="h-72" />}>
+          <CareerSection key={`${p.id}-${role.role}`} personId={p.id} name={name} role={role.role as CareerRole} />
+        </Suspense>
+      ) : (
+        <p className="text-muted-foreground text-sm">The career chart covers acting, directing and writing.</p>
+      ))}
 
       {role && (
         <section aria-labelledby="films-heading" className="grid gap-3">
