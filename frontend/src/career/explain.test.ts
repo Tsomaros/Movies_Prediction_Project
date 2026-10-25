@@ -32,8 +32,8 @@ describe('the "How is this calculated?" paragraph', () => {
   test('a real answer (Tom Hanks as an actor) reads as a sentence', () => {
     const { forecast } = HANKS.metrics.score
     const text = explainText({ ...forecast.explain!, mid: forecast.mid! }, forecast.test, forecast.explain!.half_life, 'score')
-    expect(text).toContain('Based on 77 rated films. Recent films count more: a film from 5 years before the latest counts half.')
-    expect(text).toContain('Their weighted average is 7.0; with this many films we trust it 91% and the database average (6.4) 9%, giving 6.9.')
+    expect(text).toContain('Based on 72 rated films. Recent films count more: a film from 8 years before the latest counts half.')
+    expect(text).toContain('Their weighted average is 6.9; with this many films we trust it 93% and the database average (6.4) 7%, giving 6.9.')
     expect(text).toContain('8 out of 10 real next films')
   })
 
@@ -63,7 +63,7 @@ describe('the revenue line under the range', () => {
 
 describe('the chart summary for screen readers', () => {
   test('one sentence per view', () => {
-    expect(chartSummary(HANKS, 'score')).toBe('77 rated films from 1980 to 2025; average 6.8; best film The Green Mile')
+    expect(chartSummary(HANKS, 'score')).toBe('72 rated films from 1980 to 2025; average 6.8; best film The Green Mile')
     expect(chartSummary(HANKS, 'revenue')).toMatch(/^58 films with a known box office from \d{4} to \d{4}; typical \$[\d.]+[MB]; best film Toy Story 3$/)
   })
 })

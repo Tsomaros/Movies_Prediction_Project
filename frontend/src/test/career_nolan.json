@@ -4,60 +4,21 @@
  "roles_available": [
   {
    "role": "acting",
-   "film_count": 8,
-   "rated_count": 7
+   "film_count": 6,
+   "rated_count": 5
   },
   {
    "role": "directing",
-   "film_count": 16,
-   "rated_count": 15
+   "film_count": 12,
+   "rated_count": 12
   },
   {
    "role": "writing",
-   "film_count": 14,
-   "rated_count": 13
+   "film_count": 11,
+   "rated_count": 11
   }
  ],
  "films": [
-  {
-   "movie_id": 804706,
-   "title": "Tarantella",
-   "year": 1990,
-   "release_date": "1990-09-12",
-   "score": 5.1,
-   "revenue": null,
-   "vote_count": 56,
-   "rated": true,
-   "lead": null,
-   "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg"
-  },
-  {
-   "movie_id": 456684,
-   "title": "Larceny",
-   "year": 1996,
-   "release_date": "1996-07-14",
-   "score": 5.8,
-   "revenue": null,
-   "vote_count": 8,
-   "rated": false,
-   "lead": null,
-   "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/jBWtTViwpr9xN6PWuzp8WlxTSXB.jpg"
-  },
-  {
-   "movie_id": 43629,
-   "title": "Doodlebug",
-   "year": 1997,
-   "release_date": "1997-01-01",
-   "score": 6.5,
-   "revenue": null,
-   "vote_count": 510,
-   "rated": true,
-   "lead": null,
-   "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/cXDFFv6yZNW3vUHOKKUPJNnL0So.jpg"
-  },
   {
    "movie_id": 11660,
    "title": "Following",
@@ -176,19 +137,6 @@
    "poster_small": "https://image.tmdb.org/t/p/w342/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg"
   },
   {
-   "movie_id": 352114,
-   "title": "Quay",
-   "year": 2015,
-   "release_date": "2015-08-19",
-   "score": 6.0,
-   "revenue": 70485.0,
-   "vote_count": 73,
-   "rated": true,
-   "lead": null,
-   "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/uluMeKfYFVvfZlmHgFBXqbnHXE2.jpg"
-  },
-  {
    "movie_id": 374720,
    "title": "Dunkirk",
    "year": 2017,
@@ -232,20 +180,12 @@
   "score": {
    "line": [
     {
-     "year": 1990,
-     "value": 6.239
-    },
-    {
-     "year": 1997,
-     "value": 6.723
-    },
-    {
      "year": 1999,
-     "value": 6.769
+     "value": 7.416
     },
     {
      "year": 2000,
-     "value": 7.296
+     "value": 7.495
     },
     {
      "year": 2002,
@@ -269,23 +209,19 @@
     },
     {
      "year": 2012,
-     "value": 7.84
+     "value": 8.13
     },
     {
      "year": 2014,
-     "value": 7.623
-    },
-    {
-     "year": 2015,
-     "value": 7.382
+     "value": 7.857
     },
     {
      "year": 2017,
-     "value": 7.427
+     "value": 7.787
     },
     {
      "year": 2020,
-     "value": 7.161
+     "value": 7.784
     },
     {
      "year": 2023,
@@ -300,19 +236,19 @@
    },
    "forecast": {
     "status": "ok",
-    "low": 6.39,
-    "mid": 7.391,
-    "high": 8.392,
+    "low": 6.633,
+    "mid": 7.458,
+    "high": 8.283,
     "explain": {
-     "n_films": 15,
+     "n_films": 12,
      "half_life": 3.0,
-     "own_share": 0.787,
-     "own_avg": 7.653,
-     "db_avg": 6.421
+     "own_share": 0.765,
+     "own_avg": 7.78,
+     "db_avg": 6.411
     },
     "test": {
-     "coverage": 0.842,
-     "n_people": 764,
+     "coverage": 0.8437,
+     "n_people": 734,
      "within_2x": null
     }
    }
@@ -349,23 +285,19 @@
     },
     {
      "year": 2012,
-     "value": 182631797.0
+     "value": 1157790116.0
     },
     {
      "year": 2014,
-     "value": 157584412.0
-    },
-    {
-     "year": 2015,
-     "value": 128945344.0
+     "value": 910837106.0
     },
     {
      "year": 2017,
-     "value": 118790482.0
+     "value": 873677374.0
     },
     {
      "year": 2020,
-     "value": 69463173.0
+     "value": 761119553.0
     },
     {
      "year": 2023,
@@ -380,20 +312,20 @@
    },
    "forecast": {
     "status": "ok",
-    "low": 1268134.0,
-    "mid": 96561582.0,
-    "high": 7352644993.0,
+    "low": 9359414.0,
+    "mid": 171699324.0,
+    "high": 3149839976.0,
     "explain": {
-     "n_films": 13,
+     "n_films": 12,
      "half_life": 12.0,
-     "own_share": 0.786,
-     "own_avg": 211379023.0,
-     "db_avg": 5461314.0
+     "own_share": 0.769,
+     "own_avg": 482881371.0,
+     "db_avg": 5468418.0
     },
     "test": {
-     "coverage": 0.8679,
-     "n_people": 298,
-     "within_2x": 0.3121
+     "coverage": 0.8672,
+     "n_people": 297,
+     "within_2x": 0.3145
     }
    }
   }

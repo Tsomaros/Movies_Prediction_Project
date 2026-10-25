@@ -2021,9 +2021,28 @@ Dimitris asked to replace "Compared with its year" with box office, built the sa
   - Docker: smoke passes (the career line now includes Hanks's box office $7M–$1,320M); memory 380 MiB; Playwright 2/2.
   - By hand: Nolan's Revenue view in Docker, with the log axis, band, hard-to-call line and the model rows "with their median budget of $240M".
 
+### Shorts left out (follow-up)
+
+- **The problem:** Nolan's 8-minute *Quay* (2015, $70K) was a dot that pulled his revenue line and forecast down.
+- **The fix (Dimitris's choice):** films under the form's 40-minute minimum are now left out of the chart, both forecasts, the population averages, the backtest and the recipes. One rule in `repo/career.DATED`; an unknown runtime still counts.
+- **Backtest rerun.** The score settings moved a little for acting (h 5 → 8, q 1.35 → 1.40) and writing (q 1.60 → 1.55); revenue barely moved, because few shorts have a trusted box office. On 2019+ next films:
+
+  | Role | Score h, k, q | Score coverage | Score MAE (base) | Revenue coverage | Within 2× | Revenue log error (base) |
+  | --- | --- | --- | --- | --- | --- | --- |
+  | Acting | 8, 3, 1.40 | 82.9% | 0.589 (0.638) | 84.6% | 23% | 1.96 (2.09) |
+  | Directing | 3, 1, 1.50 | 84.4% | 0.507 (0.610) | 86.7% (acting's settings) | 31% | 1.57 (2.13) |
+  | Writing | 3, 1, 1.55 | 83.4% | 0.538 (0.625) | 87.1% | 32% | 1.35 (2.26) |
+
+- **Nolan:**
+  - Directing drops from 15 rated films to 12 (*Doodlebug*, *Quay* and other shorts are out).
+  - Revenue range $1.3M–$7.4B becomes $9.4M–$3.1B, and the middle rises from $97M to $172M.
+  - Score range 6.4–8.4 becomes 6.6–8.3.
+  - His fourth chip is Family instead of Animation, because recent animated shorts left the genre counts.
+- **Tom Hanks:** 77 rated films become 72; the score range is now 5.9–7.9.
+- **Checks:** Python 466 fast and 188 career/API/e2e; frontend 289 on re-saved real answers; Docker smoke passes.
+
 ### Surprises / inputs for Day 15+
 
-- **Shorts count in the box office.** Nolan's 8-minute *Quay* (2015, $70K) is a dot and pulls his revenue line and forecast down. Leaving out films under the form's 40-minute minimum would fix it.
 - **Tom Hanks's usual film is Drama + Documentary**, because recent films include documentaries where he appears as himself. He has credits in every genre (low-vote films included), so he gets no chips, only "They've already worked in every genre."
 - **Something new can score above the usual film.** For Hanks it's 7.46 against 6.96, from new themes and no named co-stars. That's honest model output, not a bug.
 - **A chip that repeats the default pair** (Nolan's Romance gives Romance + Comedy) scores the same as the default but misses the prediction cache, because the genre order differs.

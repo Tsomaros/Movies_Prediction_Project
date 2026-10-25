@@ -6,8 +6,8 @@
     18
    ],
    "themes": [
-    "based on a book",
     "murder and revenge",
+    "based on a book",
     "history and war"
    ],
    "language": "en",
@@ -15,7 +15,7 @@
    "release_month": 7,
    "release_year": 2027,
    "certification": "PG-13",
-   "country": "GB",
+   "country": "US",
    "director": {
     "id": 525,
     "name": "Christopher Nolan"
@@ -34,15 +34,15 @@
      "name": "Christian Bale"
     }
    ],
-   "budget_2025": 236381847,
+   "budget_2025": 230457848,
    "labels": {
     "genres": [
      "Action",
      "Drama"
     ],
     "themes": [
-     "based on a book",
      "murder and revenge",
+     "based on a book",
      "history and war"
     ],
     "collaborators": [
@@ -54,14 +54,14 @@
   },
   "prediction": {
    "score": {
-    "low": 6.586296959240409,
-    "mid": 7.5667112123645595,
-    "high": 8.143726379927214
+    "low": 6.598923704866314,
+    "mid": 7.55920698812013,
+    "high": 8.115743083835412
    },
    "revenue": {
-    "low": 8936810.0,
-    "mid": 181023879.0,
-    "high": 1076109290.0,
+    "low": 8264873.0,
+    "mid": 176265107.0,
+    "high": 974565357.0,
     "mode": "given"
    }
   }
@@ -82,7 +82,7 @@
    "release_month": 7,
    "release_year": 2027,
    "certification": "PG-13",
-   "country": "GB",
+   "country": "US",
    "director": {
     "id": 525,
     "name": "Christopher Nolan"
@@ -92,7 +92,7 @@
     "new",
     "new"
    ],
-   "budget_2025": 236381847,
+   "budget_2025": 230457848,
    "labels": {
     "genres": [
      "Comedy",
@@ -108,14 +108,14 @@
   },
   "prediction": {
    "score": {
-    "low": 6.414777919045057,
-    "mid": 7.4373836722016655,
-    "high": 8.057516216511338
+    "low": 6.434804576301396,
+    "mid": 7.411532463081576,
+    "high": 8.049492640558835
    },
    "revenue": {
-    "low": 13006221.0,
-    "mid": 163158930.0,
-    "high": 733003344.0,
+    "low": 12922261.0,
+    "mid": 162912085.0,
+    "high": 688994383.0,
     "mode": "given"
    }
   },
@@ -138,8 +138,8 @@
    "default": false
   },
   {
-   "genre_id": 16,
-   "name": "Animation",
+   "genre_id": 10751,
+   "name": "Family",
    "default": false
   }
  ]

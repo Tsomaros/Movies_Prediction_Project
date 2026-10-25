@@ -27,7 +27,8 @@ Acting is movie_cast, directing and writing the crew jobs in repo/people.ROLES. 
 min_votes+ votes (callers pass ml.data.clean.MIN_VOTES) and a score; a lead is an acting credit with ord <= 2. A
 film's revenue is trusted (TRUSTED_REVENUE) when revenue_2025 is known and neither money_suspect nor
 revenue_incomplete; a CareerFilm's revenue is None otherwise.
-Films without a year are left out; a film with a year but no date sorts as 1 July of that year, ties by id.
+Films without a year, and shorts (a runtime under the form's MIN_RUNTIME, 40 minutes), are left out (DATED); an
+unknown runtime counts. A film with a year but no date sorts as 1 July of that year, ties by id.
 Recent = rated films from the 5 latest release years in the database.
 """
 
@@ -39,6 +40,7 @@ import statistics
 from typing import Any, Literal, TypedDict
 
 from backend.app.repo.people import MIN_SHARED, ROLES
+from ml.features.contract import MIN_RUNTIME
 
 Role = Literal["acting", "directing", "writing"]
 CAREER_ROLES: tuple[Role, ...] = ("acting", "directing", "writing")
@@ -47,9 +49,9 @@ LEAD_MAX_ORD = 2
 ORDER = "COALESCE(m.release_date, m.year || '-07-01'), m.id"
 Metric = Literal["score", "revenue"]
 CAREER_METRICS: tuple[Metric, ...] = ("score", "revenue")
-RATED = "m.year IS NOT NULL AND m.vote_count >= ? AND m.vote_average IS NOT NULL"
-TRUSTED_REVENUE = ("m.year IS NOT NULL AND m.revenue_2025 IS NOT NULL AND NOT m.money_suspect "
-                   "AND NOT m.revenue_incomplete")
+DATED = f"m.year IS NOT NULL AND (m.runtime IS NULL OR m.runtime >= {MIN_RUNTIME})"  # charted: a year, no shorts
+RATED = f"{DATED} AND m.vote_count >= ? AND m.vote_average IS NOT NULL"
+TRUSTED_REVENUE = f"{DATED} AND m.revenue_2025 IS NOT NULL AND NOT m.money_suspect AND NOT m.revenue_incomplete"
 REVENUE = ("CASE WHEN m.revenue_2025 IS NOT NULL AND NOT m.money_suspect AND NOT m.revenue_incomplete "
            "THEN m.revenue_2025 END")  # the trusted revenue_2025 of a film, else NULL
 
@@ -81,13 +83,13 @@ def career_films(con: sqlite3.Connection, person_id: int, role: Role, min_votes:
         rows = con.execute(f"""SELECT m.id, m.title, m.year, m.release_date, m.vote_average, m.vote_count,
                                       {REVENUE} AS revenue, m.poster_path, c.ord, c.character
                                FROM movie_cast c JOIN movies m ON m.id = c.movie_id
-                               WHERE c.person_id = ? AND m.year IS NOT NULL ORDER BY {ORDER}""",
+                               WHERE c.person_id = ? AND {DATED} ORDER BY {ORDER}""",
                            (person_id,)).fetchall()
     else:
         sql, jobs = _credited(role)
         rows = con.execute(f"""SELECT m.id, m.title, m.year, m.release_date, m.vote_average, m.vote_count,
                                       {REVENUE} AS revenue, m.poster_path, NULL AS ord, NULL AS character
-                               FROM movies m WHERE m.id IN ({sql} AND person_id = ?) AND m.year IS NOT NULL
+                               FROM movies m WHERE m.id IN ({sql} AND person_id = ?) AND {DATED}
                                ORDER BY {ORDER}""", (*jobs, person_id)).fetchall()
     return [_film(r, role, min_votes) for r in rows]
 

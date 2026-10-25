@@ -578,7 +578,7 @@ Every person in our data has a page at `/people/:id`: actors (Day 14.6) and crew
 
 Each person page has a Career section between the stats and the films, for the role the page shows: acting, directing or writing. Other roles show a one-line note.
 
-- **The chart:** one dot per dated film, filled for leads (cast order 0–2) and crew, hollow for supporting roles, and faint grey under 50 votes. A line shows the centred average of 5 rated films, and a ring marks the best film. "Score / Revenue" (`?view=`) switches the whole section to box office: a log axis in 2025 dollars, a dot for every film with a trusted revenue (known, not doubted, not still in cinemas), a line of the typical (geometric mean) box office of 5 neighbouring films, and the best earner. Hover shows the film, a click opens it; on touch the first tap shows it, the second opens it. "View as table" lists every dated film.
+- **The chart:** one dot per dated film (shorts under the form's 40 minutes are left out of the chart, the forecasts and the recipes; an unknown runtime counts), filled for leads (cast order 0–2) and crew, hollow for supporting roles, and faint grey under 50 votes. A line shows the centred average of 5 rated films, and a ring marks the best film. "Score / Revenue" (`?view=`) switches the whole section to box office: a log axis in 2025 dollars, a dot for every film with a trusted revenue (known, not doubted, not still in cinemas), a line of the typical (geometric mean) box office of 5 neighbouring films, and the best earner. Hover shows the film, a click opens it; on touch the first tap shows it, the second opens it. "View as table" lists every dated film.
 - **Their next film, from their track record:** an 80% range from their rated films (5+ needed). Recent films count more: a film h years older than their latest counts half. Their weighted average is trusted n_eff / (n_eff + k), and the role's average over the last 10 years the rest. The range is that middle ± q × the spread, with their own spread blended with the role's the same way. "How is this calculated?" fills in their numbers and the test result.
 - **The settings come from a backtest** (`make career`, a few seconds, `ml/artifacts/career_forecast.json`):
   - Every rated film after a person's 5th is a "next film", forecast from strictly earlier films only, and each person weighs the same.
@@ -587,18 +587,18 @@ Each person page has a Career section between the stats and the films, for the r
 
   | Role | h (years) | k | q | Coverage | MAE | Database average MAE | Width | People | Films |
   | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-  | Acting | 5 | 3 | 1.35 | 81.6% | 0.59 | 0.64 | 1.99 | 9,594 | 31,498 |
-  | Directing | 3 | 1 | 1.50 | 84.2% | 0.51 | 0.61 | 1.79 | 764 | 1,524 |
-  | Writing | 3 | 1 | 1.60 | 85.0% | 0.54 | 0.62 | 1.92 | 1,015 | 2,102 |
+  | Acting | 8 | 3 | 1.40 | 82.9% | 0.59 | 0.64 | 2.06 | 9,498 | 30,979 |
+  | Directing | 3 | 1 | 1.50 | 84.4% | 0.51 | 0.61 | 1.79 | 734 | 1,456 |
+  | Writing | 3 | 1 | 1.55 | 83.4% | 0.54 | 0.63 | 1.86 | 991 | 2,030 |
 
   Unlike the Day 5 models, this small forecast is tuned on 2016–18 too: it is separate and has only three numbers per role.
 - **The same forecast for box office:** on log 2025 dollars, from films with a trusted revenue (5+ needed), with its own backtest. Box office is much harder to call than the score: the ranges are wide, and the card says so with the test numbers.
 
   | Role | h (years) | k | q | Coverage | Within 2× | Log error | Database average | People | Films |
   | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-  | Acting | 12 | 3 | 1.45 | 84.6% | 23% | 1.96 | 2.09 | 4,007 | 10,224 |
-  | Directing (acting's settings: 298 people) | 12 | 3 | 1.45 | 86.8% | 31% | 1.59 | 2.14 | 298 | 499 |
-  | Writing | 8 | 1 | 1.40 | 87.0% | 32% | 1.35 | 2.26 | 351 | 602 |
+  | Acting | 12 | 3 | 1.45 | 84.6% | 23% | 1.96 | 2.09 | 4,006 | 10,216 |
+  | Directing (acting's settings: 297 people) | 12 | 3 | 1.45 | 86.7% | 31% | 1.57 | 2.13 | 297 | 496 |
+  | Writing | 8 | 1 | 1.40 | 87.1% | 32% | 1.35 | 2.26 | 351 | 600 |
 
 - **The film model:** the Day 5 score model on two made-up films. Each shows the recipe it was given, its score and box office (the revenue model given their median budget when one is known, else estimating it), and has "Edit in predictor", which opens the form pre-filled with the named people and the median budget.
   - **Their usual film:** built from their last 10 rated films in the role: the 2 most common genres and 3 themes, language, month, US rating, country, the median runtime and budget, next year's date. The cast and director are people they made 2+ films with.

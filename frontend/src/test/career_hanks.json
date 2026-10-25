@@ -4,8 +4,8 @@
  "roles_available": [
   {
    "role": "acting",
-   "film_count": 85,
-   "rated_count": 77
+   "film_count": 76,
+   "rated_count": 72
   }
  ],
  "films": [
@@ -283,19 +283,6 @@
    "poster_small": "https://image.tmdb.org/t/p/w342/saHP97rTPS5eLmrLQEcANmKrsFl.jpg"
   },
   {
-   "movie_id": 237353,
-   "title": "Through the Eyes of Forrest Gump",
-   "year": 1994,
-   "release_date": "1994-07-03",
-   "score": 7.5,
-   "revenue": null,
-   "vote_count": 23,
-   "rated": false,
-   "lead": true,
-   "character": "Self",
-   "poster_small": "https://image.tmdb.org/t/p/w342/dfjLE1HjdR9XhEpN04elCGUOJfA.jpg"
-  },
-  {
    "movie_id": 568,
    "title": "Apollo 13",
    "year": 1995,
@@ -322,19 +309,6 @@
    "poster_small": "https://image.tmdb.org/t/p/w342/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg"
   },
   {
-   "movie_id": 711704,
-   "title": "The Making of Toy Story",
-   "year": 1995,
-   "release_date": "1995-12-02",
-   "score": 6.3,
-   "revenue": null,
-   "vote_count": 11,
-   "rated": false,
-   "lead": false,
-   "character": "Self",
-   "poster_small": "https://image.tmdb.org/t/p/w342/s2vPOYtuOY3DMYTduRx0cOzDcWm.jpg"
-  },
-  {
    "movie_id": 32562,
    "title": "The Celluloid Closet",
    "year": 1996,
@@ -359,19 +333,6 @@
    "lead": true,
    "character": "Mr. White",
    "poster_small": "https://image.tmdb.org/t/p/w342/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg"
-  },
-  {
-   "movie_id": 464729,
-   "title": "The Story Behind 'Toy Story'",
-   "year": 1996,
-   "release_date": "1996-12-18",
-   "score": 7.5,
-   "revenue": null,
-   "vote_count": 23,
-   "rated": false,
-   "lead": true,
-   "character": "Self",
-   "poster_small": "https://image.tmdb.org/t/p/w342/ul7sy0m9GPifIgMaEXX8ivENqHP.jpg"
   },
   {
    "movie_id": 43714,
@@ -504,19 +465,6 @@
    "poster_small": "https://image.tmdb.org/t/p/w342/ctjEj2xM32OvBXCq8zAdK3ZrsAj.jpg"
   },
   {
-   "movie_id": 459682,
-   "title": "Catch Me If You Can: Behind the Camera",
-   "year": 2003,
-   "release_date": "2003-05-06",
-   "score": 7.882,
-   "revenue": null,
-   "vote_count": 38,
-   "rated": false,
-   "lead": false,
-   "character": "Self",
-   "poster_small": "https://image.tmdb.org/t/p/w342/dW0ufGS32gimuicgzvf7P0YTSHf.jpg"
-  },
-  {
    "movie_id": 5516,
    "title": "The Ladykillers",
    "year": 2004,
@@ -647,19 +595,6 @@
    "poster_small": "https://image.tmdb.org/t/p/w342/AbbXspMOwdvwWZgVN0nabZq03Ec.jpg"
   },
   {
-   "movie_id": 77887,
-   "title": "Hawaiian Vacation",
-   "year": 2011,
-   "release_date": "2011-06-16",
-   "score": 6.989,
-   "revenue": null,
-   "vote_count": 746,
-   "rated": true,
-   "lead": true,
-   "character": "Woody (voice)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/iLFYR0HRLmPfXzQdvGvlJhfwtH1.jpg"
-  },
-  {
    "movie_id": 59861,
    "title": "Larry Crowne",
    "year": 2011,
@@ -671,19 +606,6 @@
    "lead": true,
    "character": "Larry Crowne",
    "poster_small": "https://image.tmdb.org/t/p/w342/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg"
-  },
-  {
-   "movie_id": 82424,
-   "title": "Small Fry",
-   "year": 2011,
-   "release_date": "2011-11-23",
-   "score": 6.85,
-   "revenue": null,
-   "vote_count": 617,
-   "rated": true,
-   "lead": true,
-   "character": "Woody (voice)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/8siICxMft0JSWZDq9YrXh5U5PZx.jpg"
   },
   {
    "movie_id": 87061,
@@ -710,19 +632,6 @@
    "lead": true,
    "character": "Thomas Schell",
    "poster_small": "https://image.tmdb.org/t/p/w342/6pszViNvKr1r31pP7gJNYDHEx5P.jpg"
-  },
-  {
-   "movie_id": 130925,
-   "title": "Partysaurus Rex",
-   "year": 2012,
-   "release_date": "2012-09-14",
-   "score": 7.15,
-   "revenue": null,
-   "vote_count": 549,
-   "rated": true,
-   "lead": true,
-   "character": "Woody (voice)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/eRxHdAPoXLPHOUvbNc49C4dw15k.jpg"
   },
   {
    "movie_id": 83542,
@@ -764,19 +673,6 @@
    "poster_small": "https://image.tmdb.org/t/p/w342/8Td0kkocW6sD3uRpzwfMfkqMWhx.jpg"
   },
   {
-   "movie_id": 213121,
-   "title": "Toy Story of Terror!",
-   "year": 2013,
-   "release_date": "2013-10-16",
-   "score": 7.263,
-   "revenue": null,
-   "vote_count": 1082,
-   "rated": true,
-   "lead": true,
-   "character": "Woody (Voice)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/oPBEnNP4Fg4gv9c0KBhchmtoG4H.jpg"
-  },
-  {
    "movie_id": 140823,
    "title": "Saving Mr. Banks",
    "year": 2013,
@@ -788,19 +684,6 @@
    "lead": true,
    "character": "Walt Disney",
    "poster_small": "https://image.tmdb.org/t/p/w342/4RkcUe5PKnYvrCwMjk8giUAoID7.jpg"
-  },
-  {
-   "movie_id": 256835,
-   "title": "Toy Story That Time Forgot",
-   "year": 2014,
-   "release_date": "2014-12-02",
-   "score": 7.1,
-   "revenue": null,
-   "vote_count": 1193,
-   "rated": true,
-   "lead": true,
-   "character": "Woody (voice)",
-   "poster_small": "https://image.tmdb.org/t/p/w342/kVOaFo8RaYQceHfTqbZGmV9R80q.jpg"
   },
   {
    "movie_id": 296098,
@@ -1276,67 +1159,47 @@
     },
     {
      "year": 2009,
-     "value": 6.82
+     "value": 6.622
     },
     {
      "year": 2010,
-     "value": 6.71
+     "value": 6.852
     },
     {
      "year": 2011,
-     "value": 6.877
-    },
-    {
-     "year": 2011,
-     "value": 7.071
-    },
-    {
-     "year": 2011,
-     "value": 6.905
-    },
-    {
-     "year": 2011,
-     "value": 6.937
-    },
-    {
-     "year": 2011,
-     "value": 7.118
-    },
-    {
-     "year": 2012,
-     "value": 6.948
-    },
-    {
-     "year": 2012,
-     "value": 6.915
-    },
-    {
-     "year": 2013,
-     "value": 6.97
-    },
-    {
-     "year": 2013,
-     "value": 7.007
-    },
-    {
-     "year": 2013,
      "value": 7.047
     },
     {
+     "year": 2011,
+     "value": 7.081
+    },
+    {
+     "year": 2011,
+     "value": 6.717
+    },
+    {
+     "year": 2012,
+     "value": 7.025
+    },
+    {
      "year": 2013,
-     "value": 7.296
+     "value": 6.952
     },
     {
-     "year": 2014,
-     "value": 6.828
+     "year": 2013,
+     "value": 7.003
+    },
+    {
+     "year": 2013,
+     "value": 6.663
     },
     {
      "year": 2015,
-     "value": 6.545
+     "value": 6.632
     },
     {
      "year": 2015,
-     "value": 6.519
+     "value": 6.566
     },
     {
      "year": 2016,
@@ -1435,19 +1298,19 @@
    },
    "forecast": {
     "status": "ok",
-    "low": 6.006,
-    "mid": 6.903,
-    "high": 7.8,
+    "low": 5.887,
+    "mid": 6.883,
+    "high": 7.879,
     "explain": {
-     "n_films": 77,
-     "half_life": 5.0,
-     "own_share": 0.909,
-     "own_avg": 6.951,
-     "db_avg": 6.42
+     "n_films": 72,
+     "half_life": 8.0,
+     "own_share": 0.928,
+     "own_avg": 6.919,
+     "db_avg": 6.411
     },
     "test": {
-     "coverage": 0.8163,
-     "n_people": 9594,
+     "coverage": 0.8292,
+     "n_people": 9498,
      "within_2x": null
     }
    }
@@ -1695,20 +1558,20 @@
    },
    "forecast": {
     "status": "ok",
-    "low": 6855090.0,
-    "mid": 95123185.0,
-    "high": 1319956447.0,
+    "low": 6855461.0,
+    "mid": 95132747.0,
+    "high": 1320150474.0,
     "explain": {
      "n_films": 58,
      "half_life": 12.0,
      "own_share": 0.928,
      "own_avg": 118623657.0,
-     "db_avg": 5478270.0
+     "db_avg": 5485945.0
     },
     "test": {
-     "coverage": 0.8462,
-     "n_people": 4007,
-     "within_2x": 0.2323
+     "coverage": 0.8461,
+     "n_people": 4006,
+     "within_2x": 0.2327
     }
    }
   }

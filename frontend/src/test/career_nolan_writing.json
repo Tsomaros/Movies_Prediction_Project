@@ -4,60 +4,21 @@
  "roles_available": [
   {
    "role": "acting",
-   "film_count": 8,
-   "rated_count": 7
+   "film_count": 6,
+   "rated_count": 5
   },
   {
    "role": "directing",
-   "film_count": 16,
-   "rated_count": 15
+   "film_count": 12,
+   "rated_count": 12
   },
   {
    "role": "writing",
-   "film_count": 14,
-   "rated_count": 13
+   "film_count": 11,
+   "rated_count": 11
   }
  ],
  "films": [
-  {
-   "movie_id": 804706,
-   "title": "Tarantella",
-   "year": 1990,
-   "release_date": "1990-09-12",
-   "score": 5.1,
-   "revenue": null,
-   "vote_count": 56,
-   "rated": true,
-   "lead": null,
-   "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg"
-  },
-  {
-   "movie_id": 456684,
-   "title": "Larceny",
-   "year": 1996,
-   "release_date": "1996-07-14",
-   "score": 5.8,
-   "revenue": null,
-   "vote_count": 8,
-   "rated": false,
-   "lead": null,
-   "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/jBWtTViwpr9xN6PWuzp8WlxTSXB.jpg"
-  },
-  {
-   "movie_id": 43629,
-   "title": "Doodlebug",
-   "year": 1997,
-   "release_date": "1997-01-01",
-   "score": 6.5,
-   "revenue": null,
-   "vote_count": 510,
-   "rated": true,
-   "lead": null,
-   "character": null,
-   "poster_small": "https://image.tmdb.org/t/p/w342/cXDFFv6yZNW3vUHOKKUPJNnL0So.jpg"
-  },
   {
    "movie_id": 11660,
    "title": "Following",
@@ -206,20 +167,12 @@
   "score": {
    "line": [
     {
-     "year": 1990,
-     "value": 6.239
-    },
-    {
-     "year": 1997,
-     "value": 6.723
-    },
-    {
      "year": 1999,
-     "value": 6.924
+     "value": 7.674
     },
     {
      "year": 2000,
-     "value": 7.547
+     "value": 7.808
     },
     {
      "year": 2005,
@@ -266,19 +219,19 @@
    },
    "forecast": {
     "status": "ok",
-    "low": 6.576,
-    "mid": 7.454,
-    "high": 8.332,
+    "low": 6.606,
+    "mid": 7.453,
+    "high": 8.3,
     "explain": {
-     "n_films": 13,
+     "n_films": 11,
      "half_life": 3.0,
      "own_share": 0.764,
-     "own_avg": 7.781,
-     "db_avg": 6.397
+     "own_avg": 7.783,
+     "db_avg": 6.388
     },
     "test": {
-     "coverage": 0.85,
-     "n_people": 1015,
+     "coverage": 0.8341,
+     "n_people": 991,
      "within_2x": null
     }
    }
@@ -338,20 +291,20 @@
    },
    "forecast": {
     "status": "ok",
-    "low": 34200405.0,
-    "mid": 348948783.0,
-    "high": 3560345350.0,
+    "low": 34202310.0,
+    "mid": 349004543.0,
+    "high": 3561284891.0,
     "explain": {
      "n_films": 11,
      "half_life": 8.0,
      "own_share": 0.886,
      "own_avg": 595140419.0,
-     "db_avg": 5534435.0
+     "db_avg": 5542188.0
     },
     "test": {
-     "coverage": 0.8704,
+     "coverage": 0.8707,
      "n_people": 351,
-     "within_2x": 0.3241
+     "within_2x": 0.3247
     }
    }
   }

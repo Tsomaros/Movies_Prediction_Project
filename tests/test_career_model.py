@@ -253,6 +253,7 @@ def test_both_recipes_pass_the_contract(con, person, role):
         assert errors == {}
 
 
-def test_a_short_film_career_gets_the_shortest_runtime_the_form_allows(con):
-    con.execute("UPDATE movies SET runtime = 7 WHERE id IN (601, 602)")  # 2,360 real people have a median under 40
-    assert usual(con, SPARSE_ACTOR)["runtime"] == 40
+def test_shorts_are_left_out_so_a_career_of_shorts_has_no_usual_film(con):
+    con.execute("UPDATE movies SET runtime = 7 WHERE id IN (601, 602)")  # under the form's 40 minutes
+    with pytest.raises(ValueError, match="no rated acting films"):
+        usual(con, SPARSE_ACTOR)

@@ -15,7 +15,7 @@
    "release_month": 7,
    "release_year": 2027,
    "certification": "PG-13",
-   "country": "GB",
+   "country": "US",
    "director": {
     "id": 525,
     "name": "Christopher Nolan"
@@ -25,7 +25,7 @@
     "new",
     "new"
    ],
-   "budget_2025": 236381847,
+   "budget_2025": 230457848,
    "labels": {
     "genres": [
      "Fantasy",
@@ -41,14 +41,14 @@
   },
   "prediction": {
    "score": {
-    "low": 6.506511456469609,
-    "mid": 7.496546995949477,
-    "high": 8.08487443566964
+    "low": 6.5275928793486555,
+    "mid": 7.465176318465425,
+    "high": 8.086207146874642
    },
    "revenue": {
-    "low": 11022325.0,
-    "mid": 134157698.0,
-    "high": 583085085.0,
+    "low": 10423123.0,
+    "mid": 133941456.0,
+    "high": 548048345.0,
     "mode": "given"
    }
   },

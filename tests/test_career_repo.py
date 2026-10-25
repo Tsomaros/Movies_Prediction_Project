@@ -124,3 +124,16 @@ def test_population_stats_without_films_raises(con):
 
 def test_latest_year(con):
     assert latest_year(con) == 2018
+
+
+def test_shorts_are_left_out_of_the_films_and_the_population(con):
+    before = population_stats(con, "acting", MIN_VOTES, 2015), population_stats(con, "acting", MIN_VOTES, 2015, "revenue")
+    con.execute("""INSERT INTO movies (id, title, release_date, year, runtime, vote_count, vote_average, score_ok,
+                                       revenue_2025, money_suspect, revenue_incomplete, covid_period)
+                   VALUES (120, 'Short', '2012-05-05', 2012, 8, 900, 9.5, 1, 70e3, 0, 0, 0)""")
+    con.execute("INSERT INTO movie_cast VALUES (120, ?, 'Himself', 0)", (ACTOR,))
+    assert 120 not in {f["movie_id"] for f in career_films(con, ACTOR, "acting", MIN_VOTES)}
+    after = population_stats(con, "acting", MIN_VOTES, 2015), population_stats(con, "acting", MIN_VOTES, 2015, "revenue")
+    assert after == before
+    con.execute("UPDATE movies SET runtime = 40 WHERE id = 120")  # the form's minimum is a feature film
+    assert 120 in {f["movie_id"] for f in career_films(con, ACTOR, "acting", MIN_VOTES)}
