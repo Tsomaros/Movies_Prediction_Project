@@ -13,2302 +13,2588 @@
  "imdb_url": "https://www.imdb.com/name/nm0000158/",
  "homepage": null,
  "tmdb_url": "https://www.themoviedb.org/person/31",
- "stats": {
-  "film_count": 85,
-  "first_year": 1980,
-  "last_year": 2025,
-  "top_genres": [
-   {
-    "name": "Comedy",
-    "films": 39
-   },
-   {
-    "name": "Drama",
-    "films": 39
-   },
-   {
-    "name": "Documentary",
-    "films": 17
+ "main_role": "acting",
+ "roles": [
+  {
+   "role": "acting",
+   "label": "Acting",
+   "films": [
+    {
+     "id": 1492608,
+     "title": "John Candy: I Like Me",
+     "year": 2025,
+     "release_date": "2025-09-04",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 7.9,
+     "votes": 125,
+     "score_ok": true,
+     "popularity": 9.7419,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/mNEJdx9WSXeyMmkuQfTeY4zouNx.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/mNEJdx9WSXeyMmkuQfTeY4zouNx.jpg"
+     },
+     "character": "Self - Actor, Splash",
+     "jobs": []
+    },
+    {
+     "id": 1137350,
+     "title": "The Phoenician Scheme",
+     "year": 2025,
+     "release_date": "2025-05-23",
+     "genres": [
+      "Comedy",
+      "Adventure"
+     ],
+     "original_language": "en",
+     "score": 6.531,
+     "votes": 1092,
+     "score_ok": true,
+     "popularity": 21.3873,
+     "revenue_2025": 40566381.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/iXxIUVqpQAlyy98UjUlzjkMYuj6.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/iXxIUVqpQAlyy98UjUlzjkMYuj6.jpg"
+     },
+     "character": "Leland",
+     "jobs": []
+    },
+    {
+     "id": 940139,
+     "title": "Here",
+     "year": 2024,
+     "release_date": "2024-10-30",
+     "genres": [
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 6.5,
+     "votes": 734,
+     "score_ok": true,
+     "popularity": 7.427,
+     "revenue_2025": 15812721.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/79euHUJJtfgeGU63ef38KtNjXEn.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/79euHUJJtfgeGU63ef38KtNjXEn.jpg"
+     },
+     "character": "Richard",
+     "jobs": []
+    },
+    {
+     "id": 1251636,
+     "title": "The Bloody Hundredth",
+     "year": 2024,
+     "release_date": "2024-03-14",
+     "genres": [
+      "War",
+      "Documentary",
+      "History"
+     ],
+     "original_language": "en",
+     "score": 7.2,
+     "votes": 52,
+     "score_ok": true,
+     "popularity": 12.1644,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/5GnpAw5BaQBNqYd4wE1IptYEVKd.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/5GnpAw5BaQBNqYd4wE1IptYEVKd.jpg"
+     },
+     "character": "Self - Narrator (voice)",
+     "jobs": []
+    },
+    {
+     "id": 747188,
+     "title": "Asteroid City",
+     "year": 2023,
+     "release_date": "2023-06-08",
+     "genres": [
+      "Comedy",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 6.456,
+     "votes": 2680,
+     "score_ok": true,
+     "popularity": 15.6095,
+     "revenue_2025": 56942303.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/hfo7pvL9Fys7rocfL4VOzw9qDEQ.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/hfo7pvL9Fys7rocfL4VOzw9qDEQ.jpg"
+     },
+     "character": "Stanley Zak",
+     "jobs": []
+    },
+    {
+     "id": 937278,
+     "title": "A Man Called Otto",
+     "year": 2022,
+     "release_date": "2022-12-28",
+     "genres": [
+      "Comedy",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 7.747,
+     "votes": 3826,
+     "score_ok": true,
+     "popularity": 24.0902,
+     "revenue_2025": 124786153.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/130H1gap9lFfiTF9iDrqNIkFvC9.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/130H1gap9lFfiTF9iDrqNIkFvC9.jpg"
+     },
+     "character": "Otto Anderson",
+     "jobs": []
+    },
+    {
+     "id": 532639,
+     "title": "Pinocchio",
+     "year": 2022,
+     "release_date": "2022-09-07",
+     "genres": [
+      "Fantasy",
+      "Adventure",
+      "Family"
+     ],
+     "original_language": "en",
+     "score": 6.241,
+     "votes": 1796,
+     "score_ok": true,
+     "popularity": 10.4766,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/zaZhjKrJeWczQ3AotKoQObppEbH.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/zaZhjKrJeWczQ3AotKoQObppEbH.jpg"
+     },
+     "character": "Geppetto",
+     "jobs": []
+    },
+    {
+     "id": 614934,
+     "title": "Elvis",
+     "year": 2022,
+     "release_date": "2022-06-22",
+     "genres": [
+      "Music",
+      "History",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 7.436,
+     "votes": 4076,
+     "score_ok": true,
+     "popularity": 13.2511,
+     "revenue_2025": 317766647.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/qBOKWqAFbveZ4ryjJJwbie6tXkQ.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/qBOKWqAFbveZ4ryjJJwbie6tXkQ.jpg"
+     },
+     "character": "Colonel Tom Parker",
+     "jobs": []
+    },
+    {
+     "id": 962192,
+     "title": "Halftime",
+     "year": 2022,
+     "release_date": "2022-06-08",
+     "genres": [
+      "Documentary",
+      "Music"
+     ],
+     "original_language": "en",
+     "score": 6.766,
+     "votes": 160,
+     "score_ok": true,
+     "popularity": 2.9144,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/jUVglxBw7KSkcVEhvfJs1eipPnk.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/jUVglxBw7KSkcVEhvfJs1eipPnk.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 522402,
+     "title": "Finch",
+     "year": 2021,
+     "release_date": "2021-11-04",
+     "genres": [
+      "Science Fiction",
+      "Drama",
+      "Adventure"
+     ],
+     "original_language": "en",
+     "score": 7.816,
+     "votes": 4245,
+     "score_ok": true,
+     "popularity": 8.9436,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/eEJtzD1F05xDipFEDY98CTH5yZn.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/eEJtzD1F05xDipFEDY98CTH5yZn.jpg"
+     },
+     "character": "Finch",
+     "jobs": []
+    },
+    {
+     "id": 581032,
+     "title": "News of the World",
+     "year": 2020,
+     "release_date": "2020-12-25",
+     "genres": [
+      "Drama",
+      "Western",
+      "Adventure"
+     ],
+     "original_language": "en",
+     "score": 6.901,
+     "votes": 2011,
+     "score_ok": true,
+     "popularity": 10.978,
+     "revenue_2025": 15808227.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/fYQCgVRsQTEfUrP7cW5iAFVYOlh.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/fYQCgVRsQTEfUrP7cW5iAFVYOlh.jpg"
+     },
+     "character": "Captain Jefferson Kyle Kidd",
+     "jobs": []
+    },
+    {
+     "id": 740985,
+     "title": "Borat Subsequent Moviefilm: Delivery of Prodigious Bribe to American Regime for Make Benefit Once Glorious Nation of Kazakhstan",
+     "year": 2020,
+     "release_date": "2020-10-23",
+     "genres": [
+      "Comedy"
+     ],
+     "original_language": "en",
+     "score": 6.433,
+     "votes": 3004,
+     "score_ok": true,
+     "popularity": 7.7575,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/3L1Ml5RWjFVfVq3rQENvgFymT0U.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/3L1Ml5RWjFVfVq3rQENvgFymT0U.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 516486,
+     "title": "Greyhound",
+     "year": 2020,
+     "release_date": "2020-07-09",
+     "genres": [
+      "War",
+      "Action",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 7.416,
+     "votes": 3510,
+     "score_ok": true,
+     "popularity": 12.4585,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/kjMbDciooTbJPofVXgAoFjfX8Of.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/kjMbDciooTbJPofVXgAoFjfX8Of.jpg"
+     },
+     "character": "Commander Krause",
+     "jobs": []
+    },
+    {
+     "id": 501907,
+     "title": "A Beautiful Day in the Neighborhood",
+     "year": 2019,
+     "release_date": "2019-09-07",
+     "genres": [
+      "History",
+      "Family",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 6.967,
+     "votes": 1826,
+     "score_ok": true,
+     "popularity": 10.6653,
+     "revenue_2025": 85560688.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/pgxn1siPnWbSOKUeovfC86OwhWU.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/pgxn1siPnWbSOKUeovfC86OwhWU.jpg"
+     },
+     "character": "Fred Rogers",
+     "jobs": []
+    },
+    {
+     "id": 301528,
+     "title": "Toy Story 4",
+     "year": 2019,
+     "release_date": "2019-06-19",
+     "genres": [
+      "Family",
+      "Comedy",
+      "Animation",
+      "Adventure"
+     ],
+     "original_language": "en",
+     "score": 7.463,
+     "votes": 11100,
+     "score_ok": true,
+     "popularity": 28.5111,
+     "revenue_2025": 1353145921.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/w9kR8qbmQ01HwnvK4alvnQ2ca0L.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/w9kR8qbmQ01HwnvK4alvnQ2ca0L.jpg"
+     },
+     "character": "Woody (voice)",
+     "jobs": []
+    },
+    {
+     "id": 504561,
+     "title": "Quincy",
+     "year": 2018,
+     "release_date": "2018-09-09",
+     "genres": [
+      "Documentary",
+      "Music"
+     ],
+     "original_language": "en",
+     "score": 7.288,
+     "votes": 118,
+     "score_ok": true,
+     "popularity": 2.3837,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/yYtY9CRLyz4dXqTOiimdMF7Nt4e.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/yYtY9CRLyz4dXqTOiimdMF7Nt4e.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 446354,
+     "title": "The Post",
+     "year": 2017,
+     "release_date": "2017-12-22",
+     "genres": [
+      "Drama",
+      "History"
+     ],
+     "original_language": "en",
+     "score": 7.006,
+     "votes": 5063,
+     "score_ok": true,
+     "popularity": 9.8352,
+     "revenue_2025": 236264985.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/h4XG3g6uMMPIBPjAoQhC2QIMdkl.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/h4XG3g6uMMPIBPjAoQhC2QIMdkl.jpg"
+     },
+     "character": "Ben Bradlee",
+     "jobs": []
+    },
+    {
+     "id": 467062,
+     "title": "Spielberg",
+     "year": 2017,
+     "release_date": "2017-10-05",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 7.538,
+     "votes": 317,
+     "score_ok": true,
+     "popularity": 4.2078,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/2AAvIR2PHoxNITgLDOkXXlWLlua.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/2AAvIR2PHoxNITgLDOkXXlWLlua.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 339988,
+     "title": "The Circle",
+     "year": 2017,
+     "release_date": "2017-04-27",
+     "genres": [
+      "Drama",
+      "Thriller",
+      "Science Fiction"
+     ],
+     "original_language": "en",
+     "score": 5.525,
+     "votes": 4671,
+     "score_ok": true,
+     "popularity": 7.8858,
+     "revenue_2025": 53427382.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/bQVqd5rWrx5GbXhJNuvKy4Viz6j.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/bQVqd5rWrx5GbXhJNuvKy4Viz6j.jpg"
+     },
+     "character": "Eamon Bailey",
+     "jobs": []
+    },
+    {
+     "id": 207932,
+     "title": "Inferno",
+     "year": 2016,
+     "release_date": "2016-10-13",
+     "genres": [
+      "Mystery",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 6.105,
+     "votes": 6835,
+     "score_ok": true,
+     "popularity": 12.7314,
+     "revenue_2025": 295326839.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/5T6iVetK5AB1kgwAEKbDM2hTZJU.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/5T6iVetK5AB1kgwAEKbDM2hTZJU.jpg"
+     },
+     "character": "Robert Langdon",
+     "jobs": []
+    },
+    {
+     "id": 363676,
+     "title": "Sully",
+     "year": 2016,
+     "release_date": "2016-09-07",
+     "genres": [
+      "Drama",
+      "History"
+     ],
+     "original_language": "en",
+     "score": 7.207,
+     "votes": 7959,
+     "score_ok": true,
+     "popularity": 13.3877,
+     "revenue_2025": 323217416.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/4vs83YcJ8TsabADDtaeCJ6ZTjYY.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/4vs83YcJ8TsabADDtaeCJ6ZTjYY.jpg"
+     },
+     "character": "Chesley 'Sully' Sullenberger",
+     "jobs": []
+    },
+    {
+     "id": 270010,
+     "title": "A Hologram for the King",
+     "year": 2016,
+     "release_date": "2016-04-22",
+     "genres": [
+      "Comedy",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 5.846,
+     "votes": 1260,
+     "score_ok": true,
+     "popularity": 11.8257,
+     "revenue_2025": 12307908.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/wmjWGb2tqtOA4XPnK1tpIfzRtSQ.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/wmjWGb2tqtOA4XPnK1tpIfzRtSQ.jpg"
+     },
+     "character": "Alan Clay",
+     "jobs": []
+    },
+    {
+     "id": 305642,
+     "title": "Ithaca",
+     "year": 2015,
+     "release_date": "2015-10-29",
+     "genres": [
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 5.2,
+     "votes": 111,
+     "score_ok": true,
+     "popularity": 2.3204,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/4g4siEftWGiIkGfvaPyyizmx61f.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/4g4siEftWGiIkGfvaPyyizmx61f.jpg"
+     },
+     "character": "Mr. Macauley",
+     "jobs": []
+    },
+    {
+     "id": 296098,
+     "title": "Bridge of Spies",
+     "year": 2015,
+     "release_date": "2015-10-15",
+     "genres": [
+      "Thriller",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 7.243,
+     "votes": 7479,
+     "score_ok": true,
+     "popularity": 17.9167,
+     "revenue_2025": 224917817.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/fmOOjHAQzxr0c1sfcY4qkiSRBH6.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/fmOOjHAQzxr0c1sfcY4qkiSRBH6.jpg"
+     },
+     "character": "James B. Donovan",
+     "jobs": []
+    },
+    {
+     "id": 256835,
+     "title": "Toy Story That Time Forgot",
+     "year": 2014,
+     "release_date": "2014-12-02",
+     "genres": [
+      "Animation",
+      "Family",
+      "Adventure",
+      "Comedy"
+     ],
+     "original_language": "en",
+     "score": 7.1,
+     "votes": 1193,
+     "score_ok": true,
+     "popularity": 7.3331,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/kVOaFo8RaYQceHfTqbZGmV9R80q.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/kVOaFo8RaYQceHfTqbZGmV9R80q.jpg"
+     },
+     "character": "Woody (voice)",
+     "jobs": []
+    },
+    {
+     "id": 140823,
+     "title": "Saving Mr. Banks",
+     "year": 2013,
+     "release_date": "2013-11-29",
+     "genres": [
+      "Comedy",
+      "Drama",
+      "History"
+     ],
+     "original_language": "en",
+     "score": 7.336,
+     "votes": 3586,
+     "score_ok": true,
+     "popularity": 10.5085,
+     "revenue_2025": 155636337.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/4RkcUe5PKnYvrCwMjk8giUAoID7.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/4RkcUe5PKnYvrCwMjk8giUAoID7.jpg"
+     },
+     "character": "Walt Disney",
+     "jobs": []
+    },
+    {
+     "id": 213121,
+     "title": "Toy Story of Terror!",
+     "year": 2013,
+     "release_date": "2013-10-16",
+     "genres": [
+      "Adventure",
+      "Animation",
+      "Comedy",
+      "Family"
+     ],
+     "original_language": "en",
+     "score": 7.263,
+     "votes": 1082,
+     "score_ok": true,
+     "popularity": 0.6837,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/oPBEnNP4Fg4gv9c0KBhchmtoG4H.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/oPBEnNP4Fg4gv9c0KBhchmtoG4H.jpg"
+     },
+     "character": "Woody (Voice)",
+     "jobs": []
+    },
+    {
+     "id": 109424,
+     "title": "Captain Phillips",
+     "year": 2013,
+     "release_date": "2013-10-10",
+     "genres": [
+      "Action",
+      "Drama",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 7.536,
+     "votes": 7749,
+     "score_ok": true,
+     "popularity": 14.1713,
+     "revenue_2025": 302564157.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/8Td0kkocW6sD3uRpzwfMfkqMWhx.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/8Td0kkocW6sD3uRpzwfMfkqMWhx.jpg"
+     },
+     "character": "Captain Richard Phillips",
+     "jobs": []
+    },
+    {
+     "id": 170039,
+     "title": "Killing Lincoln",
+     "year": 2013,
+     "release_date": "2013-02-16",
+     "genres": [
+      "Documentary",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 6.0,
+     "votes": 59,
+     "score_ok": true,
+     "popularity": 2.5316,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/zqlOXMsJ0sSyForOe93BSfNW3Pi.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/zqlOXMsJ0sSyForOe93BSfNW3Pi.jpg"
+     },
+     "character": "Self - Narrator",
+     "jobs": []
+    },
+    {
+     "id": 83542,
+     "title": "Cloud Atlas",
+     "year": 2012,
+     "release_date": "2012-10-26",
+     "genres": [
+      "Drama",
+      "Science Fiction"
+     ],
+     "original_language": "en",
+     "score": 6.899,
+     "votes": 7738,
+     "score_ok": true,
+     "popularity": 16.804,
+     "revenue_2025": 183086001.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/8naVv2Xu3rWI5JKHz0vCujx6GaJ.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/8naVv2Xu3rWI5JKHz0vCujx6GaJ.jpg"
+     },
+     "character": "Dr. Henry Goose / Hotel Manager / Isaac Sachs / Dermot Hoggins / Cavendish Look-a-Like Actor / Zachry",
+     "jobs": []
+    },
+    {
+     "id": 130925,
+     "title": "Partysaurus Rex",
+     "year": 2012,
+     "release_date": "2012-09-14",
+     "genres": [
+      "Family",
+      "Animation",
+      "Comedy"
+     ],
+     "original_language": "en",
+     "score": 7.15,
+     "votes": 549,
+     "score_ok": true,
+     "popularity": 4.4776,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/eRxHdAPoXLPHOUvbNc49C4dw15k.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/eRxHdAPoXLPHOUvbNc49C4dw15k.jpg"
+     },
+     "character": "Woody (voice)",
+     "jobs": []
+    },
+    {
+     "id": 64685,
+     "title": "Extremely Loud & Incredibly Close",
+     "year": 2011,
+     "release_date": "2011-12-25",
+     "genres": [
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 6.991,
+     "votes": 2195,
+     "score_ok": true,
+     "popularity": 7.6745,
+     "revenue_2025": 79056302.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/6pszViNvKr1r31pP7gJNYDHEx5P.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/6pszViNvKr1r31pP7gJNYDHEx5P.jpg"
+     },
+     "character": "Thomas Schell",
+     "jobs": []
+    },
+    {
+     "id": 87061,
+     "title": "The Extraordinary Voyage",
+     "year": 2011,
+     "release_date": "2011-12-08",
+     "genres": [
+      "Documentary",
+      "History"
+     ],
+     "original_language": "fr",
+     "score": 7.7,
+     "votes": 58,
+     "score_ok": true,
+     "popularity": 2.4286,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/37dXuUl9Jv6NXFihaLsWbiYVBdv.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/37dXuUl9Jv6NXFihaLsWbiYVBdv.jpg"
+     },
+     "character": "Self - Filmmaker (archive footage)",
+     "jobs": []
+    },
+    {
+     "id": 82424,
+     "title": "Small Fry",
+     "year": 2011,
+     "release_date": "2011-11-23",
+     "genres": [
+      "Animation",
+      "Comedy",
+      "Family",
+      "Adventure"
+     ],
+     "original_language": "en",
+     "score": 6.85,
+     "votes": 617,
+     "score_ok": true,
+     "popularity": 4.5718,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/8siICxMft0JSWZDq9YrXh5U5PZx.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/8siICxMft0JSWZDq9YrXh5U5PZx.jpg"
+     },
+     "character": "Woody (voice)",
+     "jobs": []
+    },
+    {
+     "id": 59861,
+     "title": "Larry Crowne",
+     "year": 2011,
+     "release_date": "2011-06-30",
+     "genres": [
+      "Comedy",
+      "Romance",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 5.996,
+     "votes": 1464,
+     "score_ok": true,
+     "popularity": 6.8576,
+     "revenue_2025": 107492324.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg"
+     },
+     "character": "Larry Crowne",
+     "jobs": []
+    },
+    {
+     "id": 77887,
+     "title": "Hawaiian Vacation",
+     "year": 2011,
+     "release_date": "2011-06-16",
+     "genres": [
+      "Animation",
+      "Family",
+      "Comedy"
+     ],
+     "original_language": "en",
+     "score": 6.989,
+     "votes": 746,
+     "score_ok": true,
+     "popularity": 9.6647,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/iLFYR0HRLmPfXzQdvGvlJhfwtH1.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/iLFYR0HRLmPfXzQdvGvlJhfwtH1.jpg"
+     },
+     "character": "Woody (voice)",
+     "jobs": []
+    },
+    {
+     "id": 10193,
+     "title": "Toy Story 3",
+     "year": 2010,
+     "release_date": "2010-06-16",
+     "genres": [
+      "Animation",
+      "Family",
+      "Comedy"
+     ],
+     "original_language": "en",
+     "score": 7.819,
+     "votes": 16375,
+     "score_ok": true,
+     "popularity": 30.3097,
+     "revenue_2025": 1576838445.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/AbbXspMOwdvwWZgVN0nabZq03Ec.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/AbbXspMOwdvwWZgVN0nabZq03Ec.jpg"
+     },
+     "character": "Woody (voice)",
+     "jobs": []
+    },
+    {
+     "id": 13448,
+     "title": "Angels & Demons",
+     "year": 2009,
+     "release_date": "2009-04-20",
+     "genres": [
+      "Thriller",
+      "Mystery"
+     ],
+     "original_language": "en",
+     "score": 6.731,
+     "votes": 7572,
+     "score_ok": true,
+     "popularity": 18.8874,
+     "revenue_2025": 729683319.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/tFZQAuulEOtFTp0gHbVdEXwGrYe.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/tFZQAuulEOtFTp0gHbVdEXwGrYe.jpg"
+     },
+     "character": "Robert Langdon",
+     "jobs": []
+    },
+    {
+     "id": 16279,
+     "title": "The Great Buck Howard",
+     "year": 2008,
+     "release_date": "2008-01-18",
+     "genres": [
+      "Comedy"
+     ],
+     "original_language": "en",
+     "score": 6.014,
+     "votes": 284,
+     "score_ok": true,
+     "popularity": 4.7644,
+     "revenue_2025": 1347681.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/iglKvmA7sq6Pnd6KWFnT6WW9Vpn.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/iglKvmA7sq6Pnd6KWFnT6WW9Vpn.jpg"
+     },
+     "character": "Mr. Gable",
+     "jobs": []
+    },
+    {
+     "id": 6538,
+     "title": "Charlie Wilson's War",
+     "year": 2007,
+     "release_date": "2007-12-19",
+     "genres": [
+      "Comedy",
+      "Drama",
+      "History"
+     ],
+     "original_language": "en",
+     "score": 6.548,
+     "votes": 1737,
+     "score_ok": true,
+     "popularity": 8.3034,
+     "revenue_2025": 185644735.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/45FghqcdSYRWK7PsHUInaFPNd8l.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/45FghqcdSYRWK7PsHUInaFPNd8l.jpg"
+     },
+     "character": "Charlie Wilson",
+     "jobs": []
+    },
+    {
+     "id": 13508,
+     "title": "Who Killed the Electric Car?",
+     "year": 2006,
+     "release_date": "2006-08-04",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 7.243,
+     "votes": 208,
+     "score_ok": true,
+     "popularity": 3.0818,
+     "revenue_2025": 2682915.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/uMamC9o5zNU9wn8fyuAo2gUCMiD.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/uMamC9o5zNU9wn8fyuAo2gUCMiD.jpg"
+     },
+     "character": "Self (archive footage)",
+     "jobs": []
+    },
+    {
+     "id": 591,
+     "title": "The Da Vinci Code",
+     "year": 2006,
+     "release_date": "2006-05-17",
+     "genres": [
+      "Thriller",
+      "Mystery"
+     ],
+     "original_language": "en",
+     "score": 6.736,
+     "votes": 10402,
+     "score_ok": true,
+     "popularity": 23.1623,
+     "revenue_2025": 1214524968.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/9ejKfNk0LBhSI9AahH4f9NJNZNM.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/9ejKfNk0LBhSI9AahH4f9NJNZNM.jpg"
+     },
+     "character": "Robert Langdon",
+     "jobs": []
+    },
+    {
+     "id": 5255,
+     "title": "The Polar Express",
+     "year": 2004,
+     "release_date": "2004-11-10",
+     "genres": [
+      "Adventure",
+      "Animation",
+      "Family",
+      "Fantasy"
+     ],
+     "original_language": "en",
+     "score": 6.728,
+     "votes": 7093,
+     "score_ok": true,
+     "popularity": 22.0753,
+     "revenue_2025": 543108502.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/eOoCzH0MqeGr2taUZO4SwG416PF.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/eOoCzH0MqeGr2taUZO4SwG416PF.jpg"
+     },
+     "character": "Hero Boy (Adult)/ Father / Conductor / Hobo / Scrooge / Santa Claus",
+     "jobs": []
+    },
+    {
+     "id": 37641,
+     "title": "Elvis Has Left the Building",
+     "year": 2004,
+     "release_date": "2004-08-27",
+     "genres": [
+      "Comedy",
+      "Family"
+     ],
+     "original_language": "en",
+     "score": 5.258,
+     "votes": 60,
+     "score_ok": true,
+     "popularity": 3.384,
+     "revenue_2025": 260179.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/yfIRJpLwR0yGAj6PmWMHZVU8mB1.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/yfIRJpLwR0yGAj6PmWMHZVU8mB1.jpg"
+     },
+     "character": "Mailbox-Elvis",
+     "jobs": []
+    },
+    {
+     "id": 594,
+     "title": "The Terminal",
+     "year": 2004,
+     "release_date": "2004-06-17",
+     "genres": [
+      "Comedy",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 7.356,
+     "votes": 9050,
+     "score_ok": true,
+     "popularity": 14.3055,
+     "revenue_2025": 374231280.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/cPB3ZMM4UdsSAhNdS4c7ps5nypY.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/cPB3ZMM4UdsSAhNdS4c7ps5nypY.jpg"
+     },
+     "character": "Viktor Navorski",
+     "jobs": []
+    },
+    {
+     "id": 5516,
+     "title": "The Ladykillers",
+     "year": 2004,
+     "release_date": "2004-03-25",
+     "genres": [
+      "Comedy",
+      "Crime",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 6.117,
+     "votes": 1820,
+     "score_ok": true,
+     "popularity": 12.0533,
+     "revenue_2025": 130817147.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/l4g9R39NCp6VaYFrw6q8JwKNW9x.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/l4g9R39NCp6VaYFrw6q8JwKNW9x.jpg"
+     },
+     "character": "Professor G.H. Dorr",
+     "jobs": []
+    },
+    {
+     "id": 459682,
+     "title": "Catch Me If You Can: Behind the Camera",
+     "year": 2003,
+     "release_date": "2003-05-06",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 7.882,
+     "votes": 38,
+     "score_ok": false,
+     "popularity": 1.8143,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/dW0ufGS32gimuicgzvf7P0YTSHf.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/dW0ufGS32gimuicgzvf7P0YTSHf.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 640,
+     "title": "Catch Me If You Can",
+     "year": 2002,
+     "release_date": "2002-12-16",
+     "genres": [
+      "Drama",
+      "Crime"
+     ],
+     "original_language": "en",
+     "score": 7.979,
+     "votes": 17747,
+     "score_ok": true,
+     "popularity": 29.2156,
+     "revenue_2025": 630630615.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/ctjEj2xM32OvBXCq8zAdK3ZrsAj.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/ctjEj2xM32OvBXCq8zAdK3ZrsAj.jpg"
+     },
+     "character": "Carl Hanratty",
+     "jobs": []
+    },
+    {
+     "id": 4147,
+     "title": "Road to Perdition",
+     "year": 2002,
+     "release_date": "2002-07-12",
+     "genres": [
+      "Crime",
+      "Drama",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 7.367,
+     "votes": 4167,
+     "score_ok": true,
+     "popularity": 14.8413,
+     "revenue_2025": 324170503.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/loSpBeirRfTPJ3cMIqpQArstGhh.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/loSpBeirRfTPJ3cMIqpQArstGhh.jpg"
+     },
+     "character": "Michael Sullivan",
+     "jobs": []
+    },
+    {
+     "id": 8358,
+     "title": "Cast Away",
+     "year": 2000,
+     "release_date": "2000-12-22",
+     "genres": [
+      "Adventure",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 7.668,
+     "votes": 12662,
+     "score_ok": true,
+     "popularity": 21.476,
+     "revenue_2025": 803758905.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/7lLJgKnAicAcR5UEuo8xhSMj18w.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/7lLJgKnAicAcR5UEuo8xhSMj18w.jpg"
+     },
+     "character": "Chuck Noland",
+     "jobs": []
+    },
+    {
+     "id": 497,
+     "title": "The Green Mile",
+     "year": 1999,
+     "release_date": "1999-12-10",
+     "genres": [
+      "Fantasy",
+      "Drama",
+      "Crime"
+     ],
+     "original_language": "en",
+     "score": 8.506,
+     "votes": 20001,
+     "score_ok": true,
+     "popularity": 36.8828,
+     "revenue_2025": 554668606.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg"
+     },
+     "character": "Paul Edgecomb",
+     "jobs": []
+    },
+    {
+     "id": 863,
+     "title": "Toy Story 2",
+     "year": 1999,
+     "release_date": "1999-10-30",
+     "genres": [
+      "Animation",
+      "Comedy",
+      "Family"
+     ],
+     "original_language": "en",
+     "score": 7.624,
+     "votes": 15500,
+     "score_ok": true,
+     "popularity": 37.3252,
+     "revenue_2025": 961914924.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/4rbcp3ng8n1MKHjpeqW0L7Fnpzz.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/4rbcp3ng8n1MKHjpeqW0L7Fnpzz.jpg"
+     },
+     "character": "Woody (voice)",
+     "jobs": []
+    },
+    {
+     "id": 173458,
+     "title": "Stephen King: Shining in the Dark",
+     "year": 1999,
+     "release_date": "1999-09-09",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 6.8,
+     "votes": 11,
+     "score_ok": false,
+     "popularity": 1.6856,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/1F0bQ77FBIEk0PbS3vV8mbLgZSj.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/1F0bQ77FBIEk0PbS3vV8mbLgZSj.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 56235,
+     "title": "Return with Honor",
+     "year": 1999,
+     "release_date": "1999-06-11",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 7.1,
+     "votes": 11,
+     "score_ok": false,
+     "popularity": 1.475,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/89289dPlOMOIWTZtIhy4qHhBQpb.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/89289dPlOMOIWTZtIhy4qHhBQpb.jpg"
+     },
+     "character": "Narrator",
+     "jobs": []
+    },
+    {
+     "id": 9489,
+     "title": "You've Got Mail",
+     "year": 1998,
+     "release_date": "1998-12-18",
+     "genres": [
+      "Comedy",
+      "Romance"
+     ],
+     "original_language": "en",
+     "score": 6.713,
+     "votes": 3798,
+     "score_ok": true,
+     "popularity": 23.6203,
+     "revenue_2025": 495656486.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/rJLUSpmdxSMqqEsyzeCni3vy1ca.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/rJLUSpmdxSMqqEsyzeCni3vy1ca.jpg"
+     },
+     "character": "Joe Fox",
+     "jobs": []
+    },
+    {
+     "id": 857,
+     "title": "Saving Private Ryan",
+     "year": 1998,
+     "release_date": "1998-07-24",
+     "genres": [
+      "War",
+      "Drama",
+      "History"
+     ],
+     "original_language": "en",
+     "score": 8.234,
+     "votes": 17957,
+     "score_ok": true,
+     "popularity": 30.495,
+     "revenue_2025": 952263044.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/uqx37cS8cpHg8U35f9U5IBlrCV3.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/uqx37cS8cpHg8U35f9U5IBlrCV3.jpg"
+     },
+     "character": "Captain Miller",
+     "jobs": []
+    },
+    {
+     "id": 43714,
+     "title": "The Harryhausen Chronicles",
+     "year": 1997,
+     "release_date": "1997-01-01",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 7.0,
+     "votes": 14,
+     "score_ok": false,
+     "popularity": 1.4748,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/xP4CR20quD3iNi0qKxyhpjs0YNr.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/xP4CR20quD3iNi0qKxyhpjs0YNr.jpg"
+     },
+     "character": "Self (archive footage) (uncredited)",
+     "jobs": []
+    },
+    {
+     "id": 464729,
+     "title": "The Story Behind 'Toy Story'",
+     "year": 1996,
+     "release_date": "1996-12-18",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 7.5,
+     "votes": 23,
+     "score_ok": false,
+     "popularity": 2.038,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/ul7sy0m9GPifIgMaEXX8ivENqHP.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/ul7sy0m9GPifIgMaEXX8ivENqHP.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 9591,
+     "title": "That Thing You Do!",
+     "year": 1996,
+     "release_date": "1996-10-04",
+     "genres": [
+      "Comedy",
+      "Drama",
+      "Music"
+     ],
+     "original_language": "en",
+     "score": 6.886,
+     "votes": 957,
+     "score_ok": true,
+     "popularity": 16.343,
+     "revenue_2025": 71034718.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg"
+     },
+     "character": "Mr. White",
+     "jobs": []
+    },
+    {
+     "id": 32562,
+     "title": "The Celluloid Closet",
+     "year": 1996,
+     "release_date": "1996-03-15",
+     "genres": [
+      "Documentary",
+      "History"
+     ],
+     "original_language": "en",
+     "score": 7.252,
+     "votes": 123,
+     "score_ok": true,
+     "popularity": 2.4899,
+     "revenue_2025": 2876663.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/x0DSh3uMeQk6EG1DHjGJUywN7C0.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/x0DSh3uMeQk6EG1DHjGJUywN7C0.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 711704,
+     "title": "The Making of Toy Story",
+     "year": 1995,
+     "release_date": "1995-12-02",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 6.3,
+     "votes": 11,
+     "score_ok": false,
+     "popularity": 2.6839,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/s2vPOYtuOY3DMYTduRx0cOzDcWm.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/s2vPOYtuOY3DMYTduRx0cOzDcWm.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 862,
+     "title": "Toy Story",
+     "year": 1995,
+     "release_date": "1995-11-22",
+     "genres": [
+      "Family",
+      "Comedy",
+      "Animation",
+      "Adventure"
+     ],
+     "original_language": "en",
+     "score": 7.99,
+     "votes": 20702,
+     "score_ok": true,
+     "popularity": 40.2749,
+     "revenue_2025": 848088325.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg"
+     },
+     "character": "Woody (voice)",
+     "jobs": []
+    },
+    {
+     "id": 568,
+     "title": "Apollo 13",
+     "year": 1995,
+     "release_date": "1995-06-30",
+     "genres": [
+      "Drama",
+      "History"
+     ],
+     "original_language": "en",
+     "score": 7.463,
+     "votes": 6174,
+     "score_ok": true,
+     "popularity": 14.3666,
+     "revenue_2025": 751008747.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/tVeKscCm2fY1xDXZk8PgnZ87h9S.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/tVeKscCm2fY1xDXZk8PgnZ87h9S.jpg"
+     },
+     "character": "Jim Lovell",
+     "jobs": []
+    },
+    {
+     "id": 237353,
+     "title": "Through the Eyes of Forrest Gump",
+     "year": 1994,
+     "release_date": "1994-07-03",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 7.5,
+     "votes": 23,
+     "score_ok": false,
+     "popularity": 1.7305,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/dfjLE1HjdR9XhEpN04elCGUOJfA.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/dfjLE1HjdR9XhEpN04elCGUOJfA.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 13,
+     "title": "Forrest Gump",
+     "year": 1994,
+     "release_date": "1994-06-23",
+     "genres": [
+      "Comedy",
+      "Drama",
+      "Romance"
+     ],
+     "original_language": "en",
+     "score": 8.462,
+     "votes": 30703,
+     "score_ok": true,
+     "popularity": 37.8699,
+     "revenue_2025": 1472238049.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/saHP97rTPS5eLmrLQEcANmKrsFl.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/saHP97rTPS5eLmrLQEcANmKrsFl.jpg"
+     },
+     "character": "Forrest Gump",
+     "jobs": []
+    },
+    {
+     "id": 9800,
+     "title": "Philadelphia",
+     "year": 1993,
+     "release_date": "1993-12-22",
+     "genres": [
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 7.702,
+     "votes": 4795,
+     "score_ok": true,
+     "popularity": 10.8229,
+     "revenue_2025": 460909603.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/tFe5Yoo5zT495okA49bq1vPPkiV.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/tFe5Yoo5zT495okA49bq1vPPkiV.jpg"
+     },
+     "character": "Andrew Beckett",
+     "jobs": []
+    },
+    {
+     "id": 858,
+     "title": "Sleepless in Seattle",
+     "year": 1993,
+     "release_date": "1993-06-24",
+     "genres": [
+      "Comedy",
+      "Drama",
+      "Romance"
+     ],
+     "original_language": "en",
+     "score": 6.744,
+     "votes": 2733,
+     "score_ok": true,
+     "popularity": 17.949,
+     "revenue_2025": 508012128.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/jAXfku1u1uaLGh4cUmK0ESf1pPu.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/jAXfku1u1uaLGh4cUmK0ESf1pPu.jpg"
+     },
+     "character": "Sam Baldwin",
+     "jobs": []
+    },
+    {
+     "id": 11287,
+     "title": "A League of Their Own",
+     "year": 1992,
+     "release_date": "1992-07-01",
+     "genres": [
+      "Comedy",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 7.21,
+     "votes": 1607,
+     "score_ok": true,
+     "popularity": 7.5168,
+     "revenue_2025": 304068399.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/f9BtX6wYOwJUyfUr4vyeT3COz6m.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/f9BtX6wYOwJUyfUr4vyeT3COz6m.jpg"
+     },
+     "character": "Jimmy Dugan",
+     "jobs": []
+    },
+    {
+     "id": 966435,
+     "title": "The Best of Disney: 50 Years of Magic",
+     "year": 1991,
+     "release_date": "1991-05-20",
+     "genres": [
+      "Documentary",
+      "Animation",
+      "Family"
+     ],
+     "original_language": "en",
+     "score": 7.7,
+     "votes": 6,
+     "score_ok": false,
+     "popularity": 1.3162,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/awOHdjvajTSpReWpxFNmgwOcooz.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/awOHdjvajTSpReWpxFNmgwOcooz.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 9586,
+     "title": "The Bonfire of the Vanities",
+     "year": 1990,
+     "release_date": "1990-12-21",
+     "genres": [
+      "Comedy",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 5.6,
+     "votes": 560,
+     "score_ok": true,
+     "popularity": 6.7653,
+     "revenue_2025": 38688519.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/pdrPrygZ5dVKi8UxrUXMmq1k2iO.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/pdrPrygZ5dVKi8UxrUXMmq1k2iO.jpg"
+     },
+     "character": "Sherman McCoy",
+     "jobs": []
+    },
+    {
+     "id": 2565,
+     "title": "Joe Versus the Volcano",
+     "year": 1990,
+     "release_date": "1990-03-09",
+     "genres": [
+      "Comedy",
+      "Romance",
+      "Adventure"
+     ],
+     "original_language": "en",
+     "score": 5.829,
+     "votes": 610,
+     "score_ok": true,
+     "popularity": 6.5689,
+     "revenue_2025": 97145435.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/fwjMUuDZUxedfsUpVQKQN8cYfzB.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/fwjMUuDZUxedfsUpVQKQN8cYfzB.jpg"
+     },
+     "character": "Joe Banks",
+     "jobs": []
+    },
+    {
+     "id": 6951,
+     "title": "Turner & Hooch",
+     "year": 1989,
+     "release_date": "1989-07-28",
+     "genres": [
+      "Action",
+      "Comedy",
+      "Thriller",
+      "Crime",
+      "Family"
+     ],
+     "original_language": "en",
+     "score": 6.325,
+     "votes": 1497,
+     "score_ok": true,
+     "popularity": 4.9854,
+     "revenue_2025": 184715351.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/nllMNbjgvUpw378czm5vBYzZqg1.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/nllMNbjgvUpw378czm5vBYzZqg1.jpg"
+     },
+     "character": "Scott Turner",
+     "jobs": []
+    },
+    {
+     "id": 11974,
+     "title": "The 'Burbs",
+     "year": 1989,
+     "release_date": "1989-02-17",
+     "genres": [
+      "Comedy",
+      "Horror",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 6.763,
+     "votes": 1446,
+     "score_ok": true,
+     "popularity": 12.204,
+     "revenue_2025": 127601332.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/jwYKzJS0C3A711hmg1G4ptI0InF.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/jwYKzJS0C3A711hmg1G4ptI0InF.jpg"
+     },
+     "character": "Ray Peterson",
+     "jobs": []
+    },
+    {
+     "id": 40820,
+     "title": "Punchline",
+     "year": 1988,
+     "release_date": "1988-10-07",
+     "genres": [
+      "Comedy",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 5.54,
+     "votes": 161,
+     "score_ok": true,
+     "popularity": 5.1956,
+     "revenue_2025": 57295134.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/dgbLnnEJIGldXOMt6OWy3X1l0AC.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/dgbLnnEJIGldXOMt6OWy3X1l0AC.jpg"
+     },
+     "character": "Steven Gold",
+     "jobs": []
+    },
+    {
+     "id": 2280,
+     "title": "Big",
+     "year": 1988,
+     "release_date": "1988-06-03",
+     "genres": [
+      "Fantasy",
+      "Drama",
+      "Comedy"
+     ],
+     "original_language": "en",
+     "score": 7.192,
+     "votes": 4221,
+     "score_ok": true,
+     "popularity": 10.6232,
+     "revenue_2025": 413873305.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/eWhCDJiwxvx3YXkAFRiHjimnF0j.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/eWhCDJiwxvx3YXkAFRiHjimnF0j.jpg"
+     },
+     "character": "Josh",
+     "jobs": []
+    },
+    {
+     "id": 10023,
+     "title": "Dragnet",
+     "year": 1987,
+     "release_date": "1987-06-26",
+     "genres": [
+      "Action",
+      "Comedy",
+      "Crime"
+     ],
+     "original_language": "en",
+     "score": 5.99,
+     "votes": 569,
+     "score_ok": true,
+     "popularity": 4.1107,
+     "revenue_2025": 189109836.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/77H17YDeHoJCHebpfGF1rY3Dfof.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/77H17YDeHoJCHebpfGF1rY3Dfof.jpg"
+     },
+     "character": "Pep Streebeck",
+     "jobs": []
+    },
+    {
+     "id": 35866,
+     "title": "Every Time We Say Goodbye",
+     "year": 1986,
+     "release_date": "1986-11-14",
+     "genres": [
+      "War",
+      "Drama",
+      "Romance"
+     ],
+     "original_language": "en",
+     "score": 6.0,
+     "votes": 58,
+     "score_ok": true,
+     "popularity": 3.3578,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/fMiWlS4jNZysUquP6CZfKswukMo.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/fMiWlS4jNZysUquP6CZfKswukMo.jpg"
+     },
+     "character": "David",
+     "jobs": []
+    },
+    {
+     "id": 29968,
+     "title": "Nothing in Common",
+     "year": 1986,
+     "release_date": "1986-07-29",
+     "genres": [
+      "Drama",
+      "Comedy"
+     ],
+     "original_language": "en",
+     "score": 5.93,
+     "votes": 142,
+     "score_ok": true,
+     "popularity": 4.3042,
+     "revenue_2025": 95006323.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/m2G6Idl1CKJwOt8aFsnJk08sfDP.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/m2G6Idl1CKJwOt8aFsnJk08sfDP.jpg"
+     },
+     "character": "David Basner",
+     "jobs": []
+    },
+    {
+     "id": 10466,
+     "title": "The Money Pit",
+     "year": 1986,
+     "release_date": "1986-03-26",
+     "genres": [
+      "Comedy",
+      "Romance"
+     ],
+     "original_language": "en",
+     "score": 6.521,
+     "votes": 1293,
+     "score_ok": true,
+     "popularity": 7.6858,
+     "revenue_2025": 161651545.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/bohhidIi1WWU5NNYF9l5wLQu3Ii.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/bohhidIi1WWU5NNYF9l5wLQu3Ii.jpg"
+     },
+     "character": "Walter Fielding, Jr.",
+     "jobs": []
+    },
+    {
+     "id": 19259,
+     "title": "Volunteers",
+     "year": 1985,
+     "release_date": "1985-08-16",
+     "genres": [
+      "Comedy"
+     ],
+     "original_language": "en",
+     "score": 5.5,
+     "votes": 189,
+     "score_ok": true,
+     "popularity": 3.73,
+     "revenue_2025": 59525963.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/tua28Wyv9uGBtPTBGCP7GsN3Znu.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/tua28Wyv9uGBtPTBGCP7GsN3Znu.jpg"
+     },
+     "character": "Lawrence Whatley Bourne III",
+     "jobs": []
+    },
+    {
+     "id": 10905,
+     "title": "The Man with One Red Shoe",
+     "year": 1985,
+     "release_date": "1985-07-18",
+     "genres": [
+      "Action",
+      "Comedy"
+     ],
+     "original_language": "en",
+     "score": 5.739,
+     "votes": 324,
+     "score_ok": true,
+     "popularity": 6.2169,
+     "revenue_2025": 25892189.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/lD44uiCKnLVCKiEnB0urtqIR0nE.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/lD44uiCKnLVCKiEnB0urtqIR0nE.jpg"
+     },
+     "character": "Richard",
+     "jobs": []
+    },
+    {
+     "id": 12309,
+     "title": "Bachelor Party",
+     "year": 1984,
+     "release_date": "1984-06-29",
+     "genres": [
+      "Comedy"
+     ],
+     "original_language": "en",
+     "score": 6.326,
+     "votes": 749,
+     "score_ok": true,
+     "popularity": 6.5545,
+     "revenue_2025": 119194244.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/dZf3UpPZDvJYTODSUJQy7wYEop.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/dZf3UpPZDvJYTODSUJQy7wYEop.jpg"
+     },
+     "character": "Rick Gassko",
+     "jobs": []
+    },
+    {
+     "id": 2619,
+     "title": "Splash",
+     "year": 1984,
+     "release_date": "1984-03-09",
+     "genres": [
+      "Comedy",
+      "Romance",
+      "Fantasy"
+     ],
+     "original_language": "en",
+     "score": 6.262,
+     "votes": 1547,
+     "score_ok": true,
+     "popularity": 7.0216,
+     "revenue_2025": 216457740.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/7FutTsMWBwVhjk1Ujf1wtndUVZh.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/7FutTsMWBwVhjk1Ujf1wtndUVZh.jpg"
+     },
+     "character": "Allen Bauer",
+     "jobs": []
+    },
+    {
+     "id": 27348,
+     "title": "Mazes and Monsters",
+     "year": 1982,
+     "release_date": "1982-12-27",
+     "genres": [
+      "Fantasy",
+      "Drama",
+      "TV Movie"
+     ],
+     "original_language": "en",
+     "score": 4.234,
+     "votes": 109,
+     "score_ok": true,
+     "popularity": 3.6527,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/4i0ISVGGZczwl3RaTIAa8BMu6Df.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/4i0ISVGGZczwl3RaTIAa8BMu6Df.jpg"
+     },
+     "character": "Robbie Wheeling",
+     "jobs": []
+    },
+    {
+     "id": 65262,
+     "title": "He Knows You're Alone",
+     "year": 1980,
+     "release_date": "1980-08-29",
+     "genres": [
+      "Horror",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 5.165,
+     "votes": 79,
+     "score_ok": true,
+     "popularity": 3.2788,
+     "revenue_2025": 19155297.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/90rdztFCRAxQsEfy35cxH9qt3N1.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/90rdztFCRAxQsEfy35cxH9qt3N1.jpg"
+     },
+     "character": "Elliot",
+     "jobs": []
+    }
+   ],
+   "stats": {
+    "film_count": 85,
+    "first_year": 1980,
+    "last_year": 2025,
+    "top_genres": [
+     {
+      "name": "Comedy",
+      "films": 39
+     },
+     {
+      "name": "Drama",
+      "films": 39
+     },
+     {
+      "name": "Documentary",
+      "films": 17
+     }
+    ],
+    "avg_score": {
+     "value": 6.8,
+     "films": 77
+    },
+    "box_office_2025": {
+     "total": 19689437608.0,
+     "films": 58,
+     "of": 85
+    },
+    "top_actor": {
+     "id": 12898,
+     "name": "Tim Allen",
+     "shared_films": 11
+    },
+    "top_director": {
+     "id": 488,
+     "name": "Steven Spielberg",
+     "shared_films": 5
+    }
    }
-  ],
-  "avg_score": {
-   "value": 6.8,
-   "films": 77
   },
-  "box_office_2025": {
-   "total": 19689437608.0,
-   "films": 58,
-   "of": 85
+  {
+   "role": "directing",
+   "label": "Directing",
+   "films": [
+    {
+     "id": 59861,
+     "title": "Larry Crowne",
+     "year": 2011,
+     "release_date": "2011-06-30",
+     "genres": [
+      "Comedy",
+      "Romance",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 5.996,
+     "votes": 1464,
+     "score_ok": true,
+     "popularity": 6.8576,
+     "revenue_2025": 107492324.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 9591,
+     "title": "That Thing You Do!",
+     "year": 1996,
+     "release_date": "1996-10-04",
+     "genres": [
+      "Comedy",
+      "Drama",
+      "Music"
+     ],
+     "original_language": "en",
+     "score": 6.886,
+     "votes": 957,
+     "score_ok": true,
+     "popularity": 16.343,
+     "revenue_2025": 71034718.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    }
+   ],
+   "stats": {
+    "film_count": 2,
+    "first_year": 1996,
+    "last_year": 2011,
+    "top_genres": [
+     {
+      "name": "Comedy",
+      "films": 2
+     },
+     {
+      "name": "Drama",
+      "films": 2
+     },
+     {
+      "name": "Music",
+      "films": 1
+     }
+    ],
+    "avg_score": {
+     "value": 6.4,
+     "films": 2
+    },
+    "box_office_2025": {
+     "total": 178527042.0,
+     "films": 2,
+     "of": 2
+    },
+    "top_actor": {
+     "id": 12931,
+     "name": "Rita Wilson",
+     "shared_films": 2
+    },
+    "top_director": null
+   }
   },
-  "top_costar": {
-   "id": 12898,
-   "name": "Tim Allen",
-   "shared_films": 11
+  {
+   "role": "writing",
+   "label": "Writing",
+   "films": [
+    {
+     "id": 516486,
+     "title": "Greyhound",
+     "year": 2020,
+     "release_date": "2020-07-09",
+     "genres": [
+      "War",
+      "Action",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 7.416,
+     "votes": 3510,
+     "score_ok": true,
+     "popularity": 12.4585,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/kjMbDciooTbJPofVXgAoFjfX8Of.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/kjMbDciooTbJPofVXgAoFjfX8Of.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Screenplay"
+     ]
+    },
+    {
+     "id": 59861,
+     "title": "Larry Crowne",
+     "year": 2011,
+     "release_date": "2011-06-30",
+     "genres": [
+      "Comedy",
+      "Romance",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 5.996,
+     "votes": 1464,
+     "score_ok": true,
+     "popularity": 6.8576,
+     "revenue_2025": 107492324.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Writer"
+     ]
+    },
+    {
+     "id": 9591,
+     "title": "That Thing You Do!",
+     "year": 1996,
+     "release_date": "1996-10-04",
+     "genres": [
+      "Comedy",
+      "Drama",
+      "Music"
+     ],
+     "original_language": "en",
+     "score": 6.886,
+     "votes": 957,
+     "score_ok": true,
+     "popularity": 16.343,
+     "revenue_2025": 71034718.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Screenplay"
+     ]
+    }
+   ],
+   "stats": {
+    "film_count": 3,
+    "first_year": 1996,
+    "last_year": 2020,
+    "top_genres": [
+     {
+      "name": "Drama",
+      "films": 3
+     },
+     {
+      "name": "Comedy",
+      "films": 2
+     },
+     {
+      "name": "Action",
+      "films": 1
+     }
+    ],
+    "avg_score": {
+     "value": 6.8,
+     "films": 3
+    },
+    "box_office_2025": {
+     "total": 178527042.0,
+     "films": 2,
+     "of": 3
+    },
+    "top_actor": {
+     "id": 12931,
+     "name": "Rita Wilson",
+     "shared_films": 2
+    },
+    "top_director": null
+   }
   },
-  "top_director": {
-   "id": 488,
-   "name": "Steven Spielberg",
-   "shared_films": 5
+  {
+   "role": "production",
+   "label": "Production",
+   "films": [
+    {
+     "id": 1001811,
+     "title": "My Big Fat Greek Wedding 3",
+     "year": 2023,
+     "release_date": "2023-09-07",
+     "genres": [
+      "Comedy",
+      "Romance"
+     ],
+     "original_language": "en",
+     "score": 5.903,
+     "votes": 243,
+     "score_ok": true,
+     "popularity": 9.2561,
+     "revenue_2025": 36898805.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/8yO8okCs9iohJ0iDVls6QYfu6l6.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/8yO8okCs9iohJ0iDVls6QYfu6l6.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 937278,
+     "title": "A Man Called Otto",
+     "year": 2022,
+     "release_date": "2022-12-28",
+     "genres": [
+      "Comedy",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 7.747,
+     "votes": 3826,
+     "score_ok": true,
+     "popularity": 24.0902,
+     "revenue_2025": 124786153.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/130H1gap9lFfiTF9iDrqNIkFvC9.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/130H1gap9lFfiTF9iDrqNIkFvC9.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 339988,
+     "title": "The Circle",
+     "year": 2017,
+     "release_date": "2017-04-27",
+     "genres": [
+      "Drama",
+      "Thriller",
+      "Science Fiction"
+     ],
+     "original_language": "en",
+     "score": 5.525,
+     "votes": 4671,
+     "score_ok": true,
+     "popularity": 7.8858,
+     "revenue_2025": 53427382.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/bQVqd5rWrx5GbXhJNuvKy4Viz6j.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/bQVqd5rWrx5GbXhJNuvKy4Viz6j.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 302688,
+     "title": "My Big Fat Greek Wedding 2",
+     "year": 2016,
+     "release_date": "2016-03-23",
+     "genres": [
+      "Comedy",
+      "Romance"
+     ],
+     "original_language": "en",
+     "score": 5.985,
+     "votes": 1101,
+     "score_ok": true,
+     "popularity": 7.4283,
+     "revenue_2025": 121653023.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/lfPqApnLVPsYfdbpSHNnHIxTdmd.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/lfPqApnLVPsYfdbpSHNnHIxTdmd.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 209262,
+     "title": "Parkland",
+     "year": 2013,
+     "release_date": "2013-10-02",
+     "genres": [
+      "History",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 6.247,
+     "votes": 401,
+     "score_ok": true,
+     "popularity": 3.4945,
+     "revenue_2025": 1952885.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/23jc1Hclf1FFxpyYs9A4SxfRbK3.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/23jc1Hclf1FFxpyYs9A4SxfRbK3.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 59861,
+     "title": "Larry Crowne",
+     "year": 2011,
+     "release_date": "2011-06-30",
+     "genres": [
+      "Comedy",
+      "Romance",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 5.996,
+     "votes": 1464,
+     "score_ok": true,
+     "popularity": 6.8576,
+     "revenue_2025": 107492324.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 16523,
+     "title": "Where the Wild Things Are",
+     "year": 2009,
+     "release_date": "2009-10-16",
+     "genres": [
+      "Adventure",
+      "Drama",
+      "Fantasy"
+     ],
+     "original_language": "en",
+     "score": 6.5,
+     "votes": 2089,
+     "score_ok": true,
+     "popularity": 7.5864,
+     "revenue_2025": 150373579.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/pzVqDpSzOg32IpXghHGSGAAArl6.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/pzVqDpSzOg32IpXghHGSGAAArl6.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 13600,
+     "title": "City of Ember",
+     "year": 2008,
+     "release_date": "2008-10-07",
+     "genres": [
+      "Adventure",
+      "Family",
+      "Fantasy"
+     ],
+     "original_language": "en",
+     "score": 6.376,
+     "votes": 1974,
+     "score_ok": true,
+     "popularity": 12.8107,
+     "revenue_2025": 26737052.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/xHYxFNsl8KuT4tHai8d1Y5gJI0F.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/xHYxFNsl8KuT4tHai8d1Y5gJI0F.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 16279,
+     "title": "The Great Buck Howard",
+     "year": 2008,
+     "release_date": "2008-01-18",
+     "genres": [
+      "Comedy"
+     ],
+     "original_language": "en",
+     "score": 6.014,
+     "votes": 284,
+     "score_ok": true,
+     "popularity": 4.7644,
+     "revenue_2025": 1347681.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/iglKvmA7sq6Pnd6KWFnT6WW9Vpn.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/iglKvmA7sq6Pnd6KWFnT6WW9Vpn.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 6538,
+     "title": "Charlie Wilson's War",
+     "year": 2007,
+     "release_date": "2007-12-19",
+     "genres": [
+      "Comedy",
+      "Drama",
+      "History"
+     ],
+     "original_language": "en",
+     "score": 6.548,
+     "votes": 1737,
+     "score_ok": true,
+     "popularity": 8.3034,
+     "revenue_2025": 185644735.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/45FghqcdSYRWK7PsHUInaFPNd8l.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/45FghqcdSYRWK7PsHUInaFPNd8l.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 14055,
+     "title": "Starter for 10",
+     "year": 2006,
+     "release_date": "2006-11-10",
+     "genres": [
+      "Drama",
+      "Comedy",
+      "Romance"
+     ],
+     "original_language": "en",
+     "score": 6.398,
+     "votes": 467,
+     "score_ok": true,
+     "popularity": 4.2096,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/m0NU3kgn87iNffUUDeItUXZKUKl.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/m0NU3kgn87iNffUUDeItUXZKUKl.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 9906,
+     "title": "The Ant Bully",
+     "year": 2006,
+     "release_date": "2006-07-28",
+     "genres": [
+      "Fantasy",
+      "Adventure",
+      "Animation",
+      "Comedy",
+      "Family"
+     ],
+     "original_language": "en",
+     "score": 5.805,
+     "votes": 1514,
+     "score_ok": true,
+     "popularity": 10.5966,
+     "revenue_2025": 88212060.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/oFuqX0inTvbA1XAFv2x3CQnI65m.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/oFuqX0inTvbA1XAFv2x3CQnI65m.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 15675,
+     "title": "Neil Young: Heart of Gold",
+     "year": 2006,
+     "release_date": "2006-02-17",
+     "genres": [
+      "Documentary",
+      "Music"
+     ],
+     "original_language": "en",
+     "score": 7.5,
+     "votes": 43,
+     "score_ok": false,
+     "popularity": 1.7366,
+     "revenue_2025": 3515698.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/c7DPRQN44hihnaijY69OWOVGqNZ.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/c7DPRQN44hihnaijY69OWOVGqNZ.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 15673,
+     "title": "Connie and Carla",
+     "year": 2004,
+     "release_date": "2004-04-16",
+     "genres": [
+      "Comedy",
+      "Crime",
+      "Music"
+     ],
+     "original_language": "en",
+     "score": 5.912,
+     "votes": 97,
+     "score_ok": true,
+     "popularity": 3.5469,
+     "revenue_2025": 19342886.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/mR0K8S5s2c5uxpcevnVam17HFrh.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/mR0K8S5s2c5uxpcevnVam17HFrh.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 8346,
+     "title": "My Big Fat Greek Wedding",
+     "year": 2002,
+     "release_date": "2002-04-19",
+     "genres": [
+      "Comedy",
+      "Drama",
+      "Romance"
+     ],
+     "original_language": "en",
+     "score": 6.495,
+     "votes": 2363,
+     "score_ok": true,
+     "popularity": 10.9635,
+     "revenue_2025": 660414177.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/ztc05ym0T3stnBpRHdxEs3Zwsmp.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/ztc05ym0T3stnBpRHdxEs3Zwsmp.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 8358,
+     "title": "Cast Away",
+     "year": 2000,
+     "release_date": "2000-12-22",
+     "genres": [
+      "Adventure",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 7.668,
+     "votes": 12662,
+     "score_ok": true,
+     "popularity": 21.476,
+     "revenue_2025": 803758905.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/7lLJgKnAicAcR5UEuo8xhSMj18w.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/7lLJgKnAicAcR5UEuo8xhSMj18w.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    }
+   ],
+   "stats": {
+    "film_count": 16,
+    "first_year": 2000,
+    "last_year": 2023,
+    "top_genres": [
+     {
+      "name": "Comedy",
+      "films": 10
+     },
+     {
+      "name": "Drama",
+      "films": 9
+     },
+     {
+      "name": "Romance",
+      "films": 5
+     }
+    ],
+    "avg_score": {
+     "value": 6.3,
+     "films": 15
+    },
+    "box_office_2025": {
+     "total": 2385557345.0,
+     "films": 15,
+     "of": 16
+    },
+    "top_actor": {
+     "id": 54645,
+     "name": "Nia Vardalos",
+     "shared_films": 4
+    },
+    "top_director": null
+   }
   }
- },
- "cast_credits": [
-  {
-   "id": 1492608,
-   "title": "John Candy: I Like Me",
-   "year": 2025,
-   "release_date": "2025-09-04",
-   "genres": [
-    "Documentary"
-   ],
-   "original_language": "en",
-   "score": 7.9,
-   "votes": 125,
-   "score_ok": true,
-   "popularity": 9.7419,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/mNEJdx9WSXeyMmkuQfTeY4zouNx.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/mNEJdx9WSXeyMmkuQfTeY4zouNx.jpg"
-   },
-   "character": "Self - Actor, Splash"
-  },
-  {
-   "id": 1137350,
-   "title": "The Phoenician Scheme",
-   "year": 2025,
-   "release_date": "2025-05-23",
-   "genres": [
-    "Comedy",
-    "Adventure"
-   ],
-   "original_language": "en",
-   "score": 6.531,
-   "votes": 1092,
-   "score_ok": true,
-   "popularity": 21.3873,
-   "revenue_2025": 40566381.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/iXxIUVqpQAlyy98UjUlzjkMYuj6.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/iXxIUVqpQAlyy98UjUlzjkMYuj6.jpg"
-   },
-   "character": "Leland"
-  },
-  {
-   "id": 940139,
-   "title": "Here",
-   "year": 2024,
-   "release_date": "2024-10-30",
-   "genres": [
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 6.5,
-   "votes": 734,
-   "score_ok": true,
-   "popularity": 7.427,
-   "revenue_2025": 15812721.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/79euHUJJtfgeGU63ef38KtNjXEn.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/79euHUJJtfgeGU63ef38KtNjXEn.jpg"
-   },
-   "character": "Richard"
-  },
-  {
-   "id": 1251636,
-   "title": "The Bloody Hundredth",
-   "year": 2024,
-   "release_date": "2024-03-14",
-   "genres": [
-    "War",
-    "Documentary",
-    "History"
-   ],
-   "original_language": "en",
-   "score": 7.2,
-   "votes": 52,
-   "score_ok": true,
-   "popularity": 12.1644,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/5GnpAw5BaQBNqYd4wE1IptYEVKd.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/5GnpAw5BaQBNqYd4wE1IptYEVKd.jpg"
-   },
-   "character": "Self - Narrator (voice)"
-  },
-  {
-   "id": 747188,
-   "title": "Asteroid City",
-   "year": 2023,
-   "release_date": "2023-06-08",
-   "genres": [
-    "Comedy",
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 6.456,
-   "votes": 2680,
-   "score_ok": true,
-   "popularity": 15.6095,
-   "revenue_2025": 56942303.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/hfo7pvL9Fys7rocfL4VOzw9qDEQ.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/hfo7pvL9Fys7rocfL4VOzw9qDEQ.jpg"
-   },
-   "character": "Stanley Zak"
-  },
-  {
-   "id": 937278,
-   "title": "A Man Called Otto",
-   "year": 2022,
-   "release_date": "2022-12-28",
-   "genres": [
-    "Comedy",
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 7.747,
-   "votes": 3826,
-   "score_ok": true,
-   "popularity": 24.0902,
-   "revenue_2025": 124786153.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/130H1gap9lFfiTF9iDrqNIkFvC9.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/130H1gap9lFfiTF9iDrqNIkFvC9.jpg"
-   },
-   "character": "Otto Anderson"
-  },
-  {
-   "id": 532639,
-   "title": "Pinocchio",
-   "year": 2022,
-   "release_date": "2022-09-07",
-   "genres": [
-    "Fantasy",
-    "Adventure",
-    "Family"
-   ],
-   "original_language": "en",
-   "score": 6.241,
-   "votes": 1796,
-   "score_ok": true,
-   "popularity": 10.4766,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/zaZhjKrJeWczQ3AotKoQObppEbH.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/zaZhjKrJeWczQ3AotKoQObppEbH.jpg"
-   },
-   "character": "Geppetto"
-  },
-  {
-   "id": 614934,
-   "title": "Elvis",
-   "year": 2022,
-   "release_date": "2022-06-22",
-   "genres": [
-    "Music",
-    "History",
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 7.436,
-   "votes": 4076,
-   "score_ok": true,
-   "popularity": 13.2511,
-   "revenue_2025": 317766647.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/qBOKWqAFbveZ4ryjJJwbie6tXkQ.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/qBOKWqAFbveZ4ryjJJwbie6tXkQ.jpg"
-   },
-   "character": "Colonel Tom Parker"
-  },
-  {
-   "id": 962192,
-   "title": "Halftime",
-   "year": 2022,
-   "release_date": "2022-06-08",
-   "genres": [
-    "Documentary",
-    "Music"
-   ],
-   "original_language": "en",
-   "score": 6.766,
-   "votes": 160,
-   "score_ok": true,
-   "popularity": 2.9144,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/jUVglxBw7KSkcVEhvfJs1eipPnk.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/jUVglxBw7KSkcVEhvfJs1eipPnk.jpg"
-   },
-   "character": "Self"
-  },
-  {
-   "id": 522402,
-   "title": "Finch",
-   "year": 2021,
-   "release_date": "2021-11-04",
-   "genres": [
-    "Science Fiction",
-    "Drama",
-    "Adventure"
-   ],
-   "original_language": "en",
-   "score": 7.816,
-   "votes": 4245,
-   "score_ok": true,
-   "popularity": 8.9436,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/eEJtzD1F05xDipFEDY98CTH5yZn.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/eEJtzD1F05xDipFEDY98CTH5yZn.jpg"
-   },
-   "character": "Finch"
-  },
-  {
-   "id": 581032,
-   "title": "News of the World",
-   "year": 2020,
-   "release_date": "2020-12-25",
-   "genres": [
-    "Drama",
-    "Western",
-    "Adventure"
-   ],
-   "original_language": "en",
-   "score": 6.901,
-   "votes": 2011,
-   "score_ok": true,
-   "popularity": 10.978,
-   "revenue_2025": 15808227.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/fYQCgVRsQTEfUrP7cW5iAFVYOlh.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/fYQCgVRsQTEfUrP7cW5iAFVYOlh.jpg"
-   },
-   "character": "Captain Jefferson Kyle Kidd"
-  },
-  {
-   "id": 740985,
-   "title": "Borat Subsequent Moviefilm: Delivery of Prodigious Bribe to American Regime for Make Benefit Once Glorious Nation of Kazakhstan",
-   "year": 2020,
-   "release_date": "2020-10-23",
-   "genres": [
-    "Comedy"
-   ],
-   "original_language": "en",
-   "score": 6.433,
-   "votes": 3004,
-   "score_ok": true,
-   "popularity": 7.7575,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/3L1Ml5RWjFVfVq3rQENvgFymT0U.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/3L1Ml5RWjFVfVq3rQENvgFymT0U.jpg"
-   },
-   "character": "Self"
-  },
-  {
-   "id": 516486,
-   "title": "Greyhound",
-   "year": 2020,
-   "release_date": "2020-07-09",
-   "genres": [
-    "War",
-    "Action",
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 7.416,
-   "votes": 3510,
-   "score_ok": true,
-   "popularity": 12.4585,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/kjMbDciooTbJPofVXgAoFjfX8Of.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/kjMbDciooTbJPofVXgAoFjfX8Of.jpg"
-   },
-   "character": "Commander Krause"
-  },
-  {
-   "id": 501907,
-   "title": "A Beautiful Day in the Neighborhood",
-   "year": 2019,
-   "release_date": "2019-09-07",
-   "genres": [
-    "History",
-    "Family",
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 6.967,
-   "votes": 1826,
-   "score_ok": true,
-   "popularity": 10.6653,
-   "revenue_2025": 85560688.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/pgxn1siPnWbSOKUeovfC86OwhWU.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/pgxn1siPnWbSOKUeovfC86OwhWU.jpg"
-   },
-   "character": "Fred Rogers"
-  },
-  {
-   "id": 301528,
-   "title": "Toy Story 4",
-   "year": 2019,
-   "release_date": "2019-06-19",
-   "genres": [
-    "Family",
-    "Comedy",
-    "Animation",
-    "Adventure"
-   ],
-   "original_language": "en",
-   "score": 7.463,
-   "votes": 11100,
-   "score_ok": true,
-   "popularity": 28.5111,
-   "revenue_2025": 1353145921.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/w9kR8qbmQ01HwnvK4alvnQ2ca0L.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/w9kR8qbmQ01HwnvK4alvnQ2ca0L.jpg"
-   },
-   "character": "Woody (voice)"
-  },
-  {
-   "id": 504561,
-   "title": "Quincy",
-   "year": 2018,
-   "release_date": "2018-09-09",
-   "genres": [
-    "Documentary",
-    "Music"
-   ],
-   "original_language": "en",
-   "score": 7.288,
-   "votes": 118,
-   "score_ok": true,
-   "popularity": 2.3837,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/yYtY9CRLyz4dXqTOiimdMF7Nt4e.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/yYtY9CRLyz4dXqTOiimdMF7Nt4e.jpg"
-   },
-   "character": "Self"
-  },
-  {
-   "id": 446354,
-   "title": "The Post",
-   "year": 2017,
-   "release_date": "2017-12-22",
-   "genres": [
-    "Drama",
-    "History"
-   ],
-   "original_language": "en",
-   "score": 7.006,
-   "votes": 5063,
-   "score_ok": true,
-   "popularity": 9.8352,
-   "revenue_2025": 236264985.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/h4XG3g6uMMPIBPjAoQhC2QIMdkl.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/h4XG3g6uMMPIBPjAoQhC2QIMdkl.jpg"
-   },
-   "character": "Ben Bradlee"
-  },
-  {
-   "id": 467062,
-   "title": "Spielberg",
-   "year": 2017,
-   "release_date": "2017-10-05",
-   "genres": [
-    "Documentary"
-   ],
-   "original_language": "en",
-   "score": 7.538,
-   "votes": 317,
-   "score_ok": true,
-   "popularity": 4.2078,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/2AAvIR2PHoxNITgLDOkXXlWLlua.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/2AAvIR2PHoxNITgLDOkXXlWLlua.jpg"
-   },
-   "character": "Self"
-  },
-  {
-   "id": 339988,
-   "title": "The Circle",
-   "year": 2017,
-   "release_date": "2017-04-27",
-   "genres": [
-    "Drama",
-    "Thriller",
-    "Science Fiction"
-   ],
-   "original_language": "en",
-   "score": 5.525,
-   "votes": 4671,
-   "score_ok": true,
-   "popularity": 7.8858,
-   "revenue_2025": 53427382.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/bQVqd5rWrx5GbXhJNuvKy4Viz6j.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/bQVqd5rWrx5GbXhJNuvKy4Viz6j.jpg"
-   },
-   "character": "Eamon Bailey"
-  },
-  {
-   "id": 207932,
-   "title": "Inferno",
-   "year": 2016,
-   "release_date": "2016-10-13",
-   "genres": [
-    "Mystery",
-    "Thriller"
-   ],
-   "original_language": "en",
-   "score": 6.105,
-   "votes": 6835,
-   "score_ok": true,
-   "popularity": 12.7314,
-   "revenue_2025": 295326839.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/5T6iVetK5AB1kgwAEKbDM2hTZJU.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/5T6iVetK5AB1kgwAEKbDM2hTZJU.jpg"
-   },
-   "character": "Robert Langdon"
-  },
-  {
-   "id": 363676,
-   "title": "Sully",
-   "year": 2016,
-   "release_date": "2016-09-07",
-   "genres": [
-    "Drama",
-    "History"
-   ],
-   "original_language": "en",
-   "score": 7.207,
-   "votes": 7959,
-   "score_ok": true,
-   "popularity": 13.3877,
-   "revenue_2025": 323217416.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/4vs83YcJ8TsabADDtaeCJ6ZTjYY.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/4vs83YcJ8TsabADDtaeCJ6ZTjYY.jpg"
-   },
-   "character": "Chesley 'Sully' Sullenberger"
-  },
-  {
-   "id": 270010,
-   "title": "A Hologram for the King",
-   "year": 2016,
-   "release_date": "2016-04-22",
-   "genres": [
-    "Comedy",
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 5.846,
-   "votes": 1260,
-   "score_ok": true,
-   "popularity": 11.8257,
-   "revenue_2025": 12307908.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/wmjWGb2tqtOA4XPnK1tpIfzRtSQ.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/wmjWGb2tqtOA4XPnK1tpIfzRtSQ.jpg"
-   },
-   "character": "Alan Clay"
-  },
-  {
-   "id": 305642,
-   "title": "Ithaca",
-   "year": 2015,
-   "release_date": "2015-10-29",
-   "genres": [
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 5.2,
-   "votes": 111,
-   "score_ok": true,
-   "popularity": 2.3204,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/4g4siEftWGiIkGfvaPyyizmx61f.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/4g4siEftWGiIkGfvaPyyizmx61f.jpg"
-   },
-   "character": "Mr. Macauley"
-  },
-  {
-   "id": 296098,
-   "title": "Bridge of Spies",
-   "year": 2015,
-   "release_date": "2015-10-15",
-   "genres": [
-    "Thriller",
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 7.243,
-   "votes": 7479,
-   "score_ok": true,
-   "popularity": 17.9167,
-   "revenue_2025": 224917817.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/fmOOjHAQzxr0c1sfcY4qkiSRBH6.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/fmOOjHAQzxr0c1sfcY4qkiSRBH6.jpg"
-   },
-   "character": "James B. Donovan"
-  },
-  {
-   "id": 256835,
-   "title": "Toy Story That Time Forgot",
-   "year": 2014,
-   "release_date": "2014-12-02",
-   "genres": [
-    "Animation",
-    "Family",
-    "Adventure",
-    "Comedy"
-   ],
-   "original_language": "en",
-   "score": 7.1,
-   "votes": 1193,
-   "score_ok": true,
-   "popularity": 7.3331,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/kVOaFo8RaYQceHfTqbZGmV9R80q.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/kVOaFo8RaYQceHfTqbZGmV9R80q.jpg"
-   },
-   "character": "Woody (voice)"
-  },
-  {
-   "id": 140823,
-   "title": "Saving Mr. Banks",
-   "year": 2013,
-   "release_date": "2013-11-29",
-   "genres": [
-    "Comedy",
-    "Drama",
-    "History"
-   ],
-   "original_language": "en",
-   "score": 7.336,
-   "votes": 3586,
-   "score_ok": true,
-   "popularity": 10.5085,
-   "revenue_2025": 155636337.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/4RkcUe5PKnYvrCwMjk8giUAoID7.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/4RkcUe5PKnYvrCwMjk8giUAoID7.jpg"
-   },
-   "character": "Walt Disney"
-  },
-  {
-   "id": 213121,
-   "title": "Toy Story of Terror!",
-   "year": 2013,
-   "release_date": "2013-10-16",
-   "genres": [
-    "Adventure",
-    "Animation",
-    "Comedy",
-    "Family"
-   ],
-   "original_language": "en",
-   "score": 7.263,
-   "votes": 1082,
-   "score_ok": true,
-   "popularity": 0.6837,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/oPBEnNP4Fg4gv9c0KBhchmtoG4H.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/oPBEnNP4Fg4gv9c0KBhchmtoG4H.jpg"
-   },
-   "character": "Woody (Voice)"
-  },
-  {
-   "id": 109424,
-   "title": "Captain Phillips",
-   "year": 2013,
-   "release_date": "2013-10-10",
-   "genres": [
-    "Action",
-    "Drama",
-    "Thriller"
-   ],
-   "original_language": "en",
-   "score": 7.536,
-   "votes": 7749,
-   "score_ok": true,
-   "popularity": 14.1713,
-   "revenue_2025": 302564157.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/8Td0kkocW6sD3uRpzwfMfkqMWhx.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/8Td0kkocW6sD3uRpzwfMfkqMWhx.jpg"
-   },
-   "character": "Captain Richard Phillips"
-  },
-  {
-   "id": 170039,
-   "title": "Killing Lincoln",
-   "year": 2013,
-   "release_date": "2013-02-16",
-   "genres": [
-    "Documentary",
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 6.0,
-   "votes": 59,
-   "score_ok": true,
-   "popularity": 2.5316,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/zqlOXMsJ0sSyForOe93BSfNW3Pi.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/zqlOXMsJ0sSyForOe93BSfNW3Pi.jpg"
-   },
-   "character": "Self - Narrator"
-  },
-  {
-   "id": 83542,
-   "title": "Cloud Atlas",
-   "year": 2012,
-   "release_date": "2012-10-26",
-   "genres": [
-    "Drama",
-    "Science Fiction"
-   ],
-   "original_language": "en",
-   "score": 6.899,
-   "votes": 7738,
-   "score_ok": true,
-   "popularity": 16.804,
-   "revenue_2025": 183086001.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/8naVv2Xu3rWI5JKHz0vCujx6GaJ.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/8naVv2Xu3rWI5JKHz0vCujx6GaJ.jpg"
-   },
-   "character": "Dr. Henry Goose / Hotel Manager / Isaac Sachs / Dermot Hoggins / Cavendish Look-a-Like Actor / Zachry"
-  },
-  {
-   "id": 130925,
-   "title": "Partysaurus Rex",
-   "year": 2012,
-   "release_date": "2012-09-14",
-   "genres": [
-    "Family",
-    "Animation",
-    "Comedy"
-   ],
-   "original_language": "en",
-   "score": 7.15,
-   "votes": 549,
-   "score_ok": true,
-   "popularity": 4.4776,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/eRxHdAPoXLPHOUvbNc49C4dw15k.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/eRxHdAPoXLPHOUvbNc49C4dw15k.jpg"
-   },
-   "character": "Woody (voice)"
-  },
-  {
-   "id": 64685,
-   "title": "Extremely Loud & Incredibly Close",
-   "year": 2011,
-   "release_date": "2011-12-25",
-   "genres": [
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 6.991,
-   "votes": 2195,
-   "score_ok": true,
-   "popularity": 7.6745,
-   "revenue_2025": 79056302.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/6pszViNvKr1r31pP7gJNYDHEx5P.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/6pszViNvKr1r31pP7gJNYDHEx5P.jpg"
-   },
-   "character": "Thomas Schell"
-  },
-  {
-   "id": 87061,
-   "title": "The Extraordinary Voyage",
-   "year": 2011,
-   "release_date": "2011-12-08",
-   "genres": [
-    "Documentary",
-    "History"
-   ],
-   "original_language": "fr",
-   "score": 7.7,
-   "votes": 58,
-   "score_ok": true,
-   "popularity": 2.4286,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/37dXuUl9Jv6NXFihaLsWbiYVBdv.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/37dXuUl9Jv6NXFihaLsWbiYVBdv.jpg"
-   },
-   "character": "Self - Filmmaker (archive footage)"
-  },
-  {
-   "id": 82424,
-   "title": "Small Fry",
-   "year": 2011,
-   "release_date": "2011-11-23",
-   "genres": [
-    "Animation",
-    "Comedy",
-    "Family",
-    "Adventure"
-   ],
-   "original_language": "en",
-   "score": 6.85,
-   "votes": 617,
-   "score_ok": true,
-   "popularity": 4.5718,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/8siICxMft0JSWZDq9YrXh5U5PZx.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/8siICxMft0JSWZDq9YrXh5U5PZx.jpg"
-   },
-   "character": "Woody (voice)"
-  },
-  {
-   "id": 59861,
-   "title": "Larry Crowne",
-   "year": 2011,
-   "release_date": "2011-06-30",
-   "genres": [
-    "Comedy",
-    "Romance",
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 5.996,
-   "votes": 1464,
-   "score_ok": true,
-   "popularity": 6.8576,
-   "revenue_2025": 107492324.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg"
-   },
-   "character": "Larry Crowne"
-  },
-  {
-   "id": 77887,
-   "title": "Hawaiian Vacation",
-   "year": 2011,
-   "release_date": "2011-06-16",
-   "genres": [
-    "Animation",
-    "Family",
-    "Comedy"
-   ],
-   "original_language": "en",
-   "score": 6.989,
-   "votes": 746,
-   "score_ok": true,
-   "popularity": 9.6647,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/iLFYR0HRLmPfXzQdvGvlJhfwtH1.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/iLFYR0HRLmPfXzQdvGvlJhfwtH1.jpg"
-   },
-   "character": "Woody (voice)"
-  },
-  {
-   "id": 10193,
-   "title": "Toy Story 3",
-   "year": 2010,
-   "release_date": "2010-06-16",
-   "genres": [
-    "Animation",
-    "Family",
-    "Comedy"
-   ],
-   "original_language": "en",
-   "score": 7.819,
-   "votes": 16375,
-   "score_ok": true,
-   "popularity": 30.3097,
-   "revenue_2025": 1576838445.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/AbbXspMOwdvwWZgVN0nabZq03Ec.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/AbbXspMOwdvwWZgVN0nabZq03Ec.jpg"
-   },
-   "character": "Woody (voice)"
-  },
-  {
-   "id": 13448,
-   "title": "Angels & Demons",
-   "year": 2009,
-   "release_date": "2009-04-20",
-   "genres": [
-    "Thriller",
-    "Mystery"
-   ],
-   "original_language": "en",
-   "score": 6.731,
-   "votes": 7572,
-   "score_ok": true,
-   "popularity": 18.8874,
-   "revenue_2025": 729683319.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/tFZQAuulEOtFTp0gHbVdEXwGrYe.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/tFZQAuulEOtFTp0gHbVdEXwGrYe.jpg"
-   },
-   "character": "Robert Langdon"
-  },
-  {
-   "id": 16279,
-   "title": "The Great Buck Howard",
-   "year": 2008,
-   "release_date": "2008-01-18",
-   "genres": [
-    "Comedy"
-   ],
-   "original_language": "en",
-   "score": 6.014,
-   "votes": 284,
-   "score_ok": true,
-   "popularity": 4.7644,
-   "revenue_2025": 1347681.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/iglKvmA7sq6Pnd6KWFnT6WW9Vpn.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/iglKvmA7sq6Pnd6KWFnT6WW9Vpn.jpg"
-   },
-   "character": "Mr. Gable"
-  },
-  {
-   "id": 6538,
-   "title": "Charlie Wilson's War",
-   "year": 2007,
-   "release_date": "2007-12-19",
-   "genres": [
-    "Comedy",
-    "Drama",
-    "History"
-   ],
-   "original_language": "en",
-   "score": 6.548,
-   "votes": 1737,
-   "score_ok": true,
-   "popularity": 8.3034,
-   "revenue_2025": 185644735.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/45FghqcdSYRWK7PsHUInaFPNd8l.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/45FghqcdSYRWK7PsHUInaFPNd8l.jpg"
-   },
-   "character": "Charlie Wilson"
-  },
-  {
-   "id": 13508,
-   "title": "Who Killed the Electric Car?",
-   "year": 2006,
-   "release_date": "2006-08-04",
-   "genres": [
-    "Documentary"
-   ],
-   "original_language": "en",
-   "score": 7.243,
-   "votes": 208,
-   "score_ok": true,
-   "popularity": 3.0818,
-   "revenue_2025": 2682915.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/uMamC9o5zNU9wn8fyuAo2gUCMiD.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/uMamC9o5zNU9wn8fyuAo2gUCMiD.jpg"
-   },
-   "character": "Self (archive footage)"
-  },
-  {
-   "id": 591,
-   "title": "The Da Vinci Code",
-   "year": 2006,
-   "release_date": "2006-05-17",
-   "genres": [
-    "Thriller",
-    "Mystery"
-   ],
-   "original_language": "en",
-   "score": 6.736,
-   "votes": 10402,
-   "score_ok": true,
-   "popularity": 23.1623,
-   "revenue_2025": 1214524968.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/9ejKfNk0LBhSI9AahH4f9NJNZNM.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/9ejKfNk0LBhSI9AahH4f9NJNZNM.jpg"
-   },
-   "character": "Robert Langdon"
-  },
-  {
-   "id": 5255,
-   "title": "The Polar Express",
-   "year": 2004,
-   "release_date": "2004-11-10",
-   "genres": [
-    "Adventure",
-    "Animation",
-    "Family",
-    "Fantasy"
-   ],
-   "original_language": "en",
-   "score": 6.728,
-   "votes": 7093,
-   "score_ok": true,
-   "popularity": 22.0753,
-   "revenue_2025": 543108502.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/eOoCzH0MqeGr2taUZO4SwG416PF.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/eOoCzH0MqeGr2taUZO4SwG416PF.jpg"
-   },
-   "character": "Hero Boy (Adult)/ Father / Conductor / Hobo / Scrooge / Santa Claus"
-  },
-  {
-   "id": 37641,
-   "title": "Elvis Has Left the Building",
-   "year": 2004,
-   "release_date": "2004-08-27",
-   "genres": [
-    "Comedy",
-    "Family"
-   ],
-   "original_language": "en",
-   "score": 5.258,
-   "votes": 60,
-   "score_ok": true,
-   "popularity": 3.384,
-   "revenue_2025": 260179.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/yfIRJpLwR0yGAj6PmWMHZVU8mB1.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/yfIRJpLwR0yGAj6PmWMHZVU8mB1.jpg"
-   },
-   "character": "Mailbox-Elvis"
-  },
-  {
-   "id": 594,
-   "title": "The Terminal",
-   "year": 2004,
-   "release_date": "2004-06-17",
-   "genres": [
-    "Comedy",
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 7.356,
-   "votes": 9050,
-   "score_ok": true,
-   "popularity": 14.3055,
-   "revenue_2025": 374231280.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/cPB3ZMM4UdsSAhNdS4c7ps5nypY.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/cPB3ZMM4UdsSAhNdS4c7ps5nypY.jpg"
-   },
-   "character": "Viktor Navorski"
-  },
-  {
-   "id": 5516,
-   "title": "The Ladykillers",
-   "year": 2004,
-   "release_date": "2004-03-25",
-   "genres": [
-    "Comedy",
-    "Crime",
-    "Thriller"
-   ],
-   "original_language": "en",
-   "score": 6.117,
-   "votes": 1820,
-   "score_ok": true,
-   "popularity": 12.0533,
-   "revenue_2025": 130817147.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/l4g9R39NCp6VaYFrw6q8JwKNW9x.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/l4g9R39NCp6VaYFrw6q8JwKNW9x.jpg"
-   },
-   "character": "Professor G.H. Dorr"
-  },
-  {
-   "id": 459682,
-   "title": "Catch Me If You Can: Behind the Camera",
-   "year": 2003,
-   "release_date": "2003-05-06",
-   "genres": [
-    "Documentary"
-   ],
-   "original_language": "en",
-   "score": 7.882,
-   "votes": 38,
-   "score_ok": false,
-   "popularity": 1.8143,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/dW0ufGS32gimuicgzvf7P0YTSHf.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/dW0ufGS32gimuicgzvf7P0YTSHf.jpg"
-   },
-   "character": "Self"
-  },
-  {
-   "id": 640,
-   "title": "Catch Me If You Can",
-   "year": 2002,
-   "release_date": "2002-12-16",
-   "genres": [
-    "Drama",
-    "Crime"
-   ],
-   "original_language": "en",
-   "score": 7.979,
-   "votes": 17747,
-   "score_ok": true,
-   "popularity": 29.2156,
-   "revenue_2025": 630630615.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/ctjEj2xM32OvBXCq8zAdK3ZrsAj.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/ctjEj2xM32OvBXCq8zAdK3ZrsAj.jpg"
-   },
-   "character": "Carl Hanratty"
-  },
-  {
-   "id": 4147,
-   "title": "Road to Perdition",
-   "year": 2002,
-   "release_date": "2002-07-12",
-   "genres": [
-    "Crime",
-    "Drama",
-    "Thriller"
-   ],
-   "original_language": "en",
-   "score": 7.367,
-   "votes": 4167,
-   "score_ok": true,
-   "popularity": 14.8413,
-   "revenue_2025": 324170503.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/loSpBeirRfTPJ3cMIqpQArstGhh.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/loSpBeirRfTPJ3cMIqpQArstGhh.jpg"
-   },
-   "character": "Michael Sullivan"
-  },
-  {
-   "id": 8358,
-   "title": "Cast Away",
-   "year": 2000,
-   "release_date": "2000-12-22",
-   "genres": [
-    "Adventure",
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 7.668,
-   "votes": 12662,
-   "score_ok": true,
-   "popularity": 21.476,
-   "revenue_2025": 803758905.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/7lLJgKnAicAcR5UEuo8xhSMj18w.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/7lLJgKnAicAcR5UEuo8xhSMj18w.jpg"
-   },
-   "character": "Chuck Noland"
-  },
-  {
-   "id": 497,
-   "title": "The Green Mile",
-   "year": 1999,
-   "release_date": "1999-12-10",
-   "genres": [
-    "Fantasy",
-    "Drama",
-    "Crime"
-   ],
-   "original_language": "en",
-   "score": 8.506,
-   "votes": 20001,
-   "score_ok": true,
-   "popularity": 36.8828,
-   "revenue_2025": 554668606.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg"
-   },
-   "character": "Paul Edgecomb"
-  },
-  {
-   "id": 863,
-   "title": "Toy Story 2",
-   "year": 1999,
-   "release_date": "1999-10-30",
-   "genres": [
-    "Animation",
-    "Comedy",
-    "Family"
-   ],
-   "original_language": "en",
-   "score": 7.624,
-   "votes": 15500,
-   "score_ok": true,
-   "popularity": 37.3252,
-   "revenue_2025": 961914924.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/4rbcp3ng8n1MKHjpeqW0L7Fnpzz.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/4rbcp3ng8n1MKHjpeqW0L7Fnpzz.jpg"
-   },
-   "character": "Woody (voice)"
-  },
-  {
-   "id": 173458,
-   "title": "Stephen King: Shining in the Dark",
-   "year": 1999,
-   "release_date": "1999-09-09",
-   "genres": [
-    "Documentary"
-   ],
-   "original_language": "en",
-   "score": 6.8,
-   "votes": 11,
-   "score_ok": false,
-   "popularity": 1.6856,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/1F0bQ77FBIEk0PbS3vV8mbLgZSj.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/1F0bQ77FBIEk0PbS3vV8mbLgZSj.jpg"
-   },
-   "character": "Self"
-  },
-  {
-   "id": 56235,
-   "title": "Return with Honor",
-   "year": 1999,
-   "release_date": "1999-06-11",
-   "genres": [
-    "Documentary"
-   ],
-   "original_language": "en",
-   "score": 7.1,
-   "votes": 11,
-   "score_ok": false,
-   "popularity": 1.475,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/89289dPlOMOIWTZtIhy4qHhBQpb.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/89289dPlOMOIWTZtIhy4qHhBQpb.jpg"
-   },
-   "character": "Narrator"
-  },
-  {
-   "id": 9489,
-   "title": "You've Got Mail",
-   "year": 1998,
-   "release_date": "1998-12-18",
-   "genres": [
-    "Comedy",
-    "Romance"
-   ],
-   "original_language": "en",
-   "score": 6.713,
-   "votes": 3798,
-   "score_ok": true,
-   "popularity": 23.6203,
-   "revenue_2025": 495656486.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/rJLUSpmdxSMqqEsyzeCni3vy1ca.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/rJLUSpmdxSMqqEsyzeCni3vy1ca.jpg"
-   },
-   "character": "Joe Fox"
-  },
-  {
-   "id": 857,
-   "title": "Saving Private Ryan",
-   "year": 1998,
-   "release_date": "1998-07-24",
-   "genres": [
-    "War",
-    "Drama",
-    "History"
-   ],
-   "original_language": "en",
-   "score": 8.234,
-   "votes": 17957,
-   "score_ok": true,
-   "popularity": 30.495,
-   "revenue_2025": 952263044.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/uqx37cS8cpHg8U35f9U5IBlrCV3.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/uqx37cS8cpHg8U35f9U5IBlrCV3.jpg"
-   },
-   "character": "Captain Miller"
-  },
-  {
-   "id": 43714,
-   "title": "The Harryhausen Chronicles",
-   "year": 1997,
-   "release_date": "1997-01-01",
-   "genres": [
-    "Documentary"
-   ],
-   "original_language": "en",
-   "score": 7.0,
-   "votes": 14,
-   "score_ok": false,
-   "popularity": 1.4748,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/xP4CR20quD3iNi0qKxyhpjs0YNr.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/xP4CR20quD3iNi0qKxyhpjs0YNr.jpg"
-   },
-   "character": "Self (archive footage) (uncredited)"
-  },
-  {
-   "id": 464729,
-   "title": "The Story Behind 'Toy Story'",
-   "year": 1996,
-   "release_date": "1996-12-18",
-   "genres": [
-    "Documentary"
-   ],
-   "original_language": "en",
-   "score": 7.5,
-   "votes": 23,
-   "score_ok": false,
-   "popularity": 2.038,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/ul7sy0m9GPifIgMaEXX8ivENqHP.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/ul7sy0m9GPifIgMaEXX8ivENqHP.jpg"
-   },
-   "character": "Self"
-  },
-  {
-   "id": 9591,
-   "title": "That Thing You Do!",
-   "year": 1996,
-   "release_date": "1996-10-04",
-   "genres": [
-    "Comedy",
-    "Drama",
-    "Music"
-   ],
-   "original_language": "en",
-   "score": 6.886,
-   "votes": 957,
-   "score_ok": true,
-   "popularity": 16.343,
-   "revenue_2025": 71034718.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg"
-   },
-   "character": "Mr. White"
-  },
-  {
-   "id": 32562,
-   "title": "The Celluloid Closet",
-   "year": 1996,
-   "release_date": "1996-03-15",
-   "genres": [
-    "Documentary",
-    "History"
-   ],
-   "original_language": "en",
-   "score": 7.252,
-   "votes": 123,
-   "score_ok": true,
-   "popularity": 2.4899,
-   "revenue_2025": 2876663.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/x0DSh3uMeQk6EG1DHjGJUywN7C0.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/x0DSh3uMeQk6EG1DHjGJUywN7C0.jpg"
-   },
-   "character": "Self"
-  },
-  {
-   "id": 711704,
-   "title": "The Making of Toy Story",
-   "year": 1995,
-   "release_date": "1995-12-02",
-   "genres": [
-    "Documentary"
-   ],
-   "original_language": "en",
-   "score": 6.3,
-   "votes": 11,
-   "score_ok": false,
-   "popularity": 2.6839,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/s2vPOYtuOY3DMYTduRx0cOzDcWm.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/s2vPOYtuOY3DMYTduRx0cOzDcWm.jpg"
-   },
-   "character": "Self"
-  },
-  {
-   "id": 862,
-   "title": "Toy Story",
-   "year": 1995,
-   "release_date": "1995-11-22",
-   "genres": [
-    "Family",
-    "Comedy",
-    "Animation",
-    "Adventure"
-   ],
-   "original_language": "en",
-   "score": 7.99,
-   "votes": 20702,
-   "score_ok": true,
-   "popularity": 40.2749,
-   "revenue_2025": 848088325.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg"
-   },
-   "character": "Woody (voice)"
-  },
-  {
-   "id": 568,
-   "title": "Apollo 13",
-   "year": 1995,
-   "release_date": "1995-06-30",
-   "genres": [
-    "Drama",
-    "History"
-   ],
-   "original_language": "en",
-   "score": 7.463,
-   "votes": 6174,
-   "score_ok": true,
-   "popularity": 14.3666,
-   "revenue_2025": 751008747.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/tVeKscCm2fY1xDXZk8PgnZ87h9S.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/tVeKscCm2fY1xDXZk8PgnZ87h9S.jpg"
-   },
-   "character": "Jim Lovell"
-  },
-  {
-   "id": 237353,
-   "title": "Through the Eyes of Forrest Gump",
-   "year": 1994,
-   "release_date": "1994-07-03",
-   "genres": [
-    "Documentary"
-   ],
-   "original_language": "en",
-   "score": 7.5,
-   "votes": 23,
-   "score_ok": false,
-   "popularity": 1.7305,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/dfjLE1HjdR9XhEpN04elCGUOJfA.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/dfjLE1HjdR9XhEpN04elCGUOJfA.jpg"
-   },
-   "character": "Self"
-  },
-  {
-   "id": 13,
-   "title": "Forrest Gump",
-   "year": 1994,
-   "release_date": "1994-06-23",
-   "genres": [
-    "Comedy",
-    "Drama",
-    "Romance"
-   ],
-   "original_language": "en",
-   "score": 8.462,
-   "votes": 30703,
-   "score_ok": true,
-   "popularity": 37.8699,
-   "revenue_2025": 1472238049.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/saHP97rTPS5eLmrLQEcANmKrsFl.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/saHP97rTPS5eLmrLQEcANmKrsFl.jpg"
-   },
-   "character": "Forrest Gump"
-  },
-  {
-   "id": 9800,
-   "title": "Philadelphia",
-   "year": 1993,
-   "release_date": "1993-12-22",
-   "genres": [
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 7.702,
-   "votes": 4795,
-   "score_ok": true,
-   "popularity": 10.8229,
-   "revenue_2025": 460909603.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/tFe5Yoo5zT495okA49bq1vPPkiV.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/tFe5Yoo5zT495okA49bq1vPPkiV.jpg"
-   },
-   "character": "Andrew Beckett"
-  },
-  {
-   "id": 858,
-   "title": "Sleepless in Seattle",
-   "year": 1993,
-   "release_date": "1993-06-24",
-   "genres": [
-    "Comedy",
-    "Drama",
-    "Romance"
-   ],
-   "original_language": "en",
-   "score": 6.744,
-   "votes": 2733,
-   "score_ok": true,
-   "popularity": 17.949,
-   "revenue_2025": 508012128.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/jAXfku1u1uaLGh4cUmK0ESf1pPu.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/jAXfku1u1uaLGh4cUmK0ESf1pPu.jpg"
-   },
-   "character": "Sam Baldwin"
-  },
-  {
-   "id": 11287,
-   "title": "A League of Their Own",
-   "year": 1992,
-   "release_date": "1992-07-01",
-   "genres": [
-    "Comedy",
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 7.21,
-   "votes": 1607,
-   "score_ok": true,
-   "popularity": 7.5168,
-   "revenue_2025": 304068399.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/f9BtX6wYOwJUyfUr4vyeT3COz6m.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/f9BtX6wYOwJUyfUr4vyeT3COz6m.jpg"
-   },
-   "character": "Jimmy Dugan"
-  },
-  {
-   "id": 966435,
-   "title": "The Best of Disney: 50 Years of Magic",
-   "year": 1991,
-   "release_date": "1991-05-20",
-   "genres": [
-    "Documentary",
-    "Animation",
-    "Family"
-   ],
-   "original_language": "en",
-   "score": 7.7,
-   "votes": 6,
-   "score_ok": false,
-   "popularity": 1.3162,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/awOHdjvajTSpReWpxFNmgwOcooz.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/awOHdjvajTSpReWpxFNmgwOcooz.jpg"
-   },
-   "character": "Self"
-  },
-  {
-   "id": 9586,
-   "title": "The Bonfire of the Vanities",
-   "year": 1990,
-   "release_date": "1990-12-21",
-   "genres": [
-    "Comedy",
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 5.6,
-   "votes": 560,
-   "score_ok": true,
-   "popularity": 6.7653,
-   "revenue_2025": 38688519.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/pdrPrygZ5dVKi8UxrUXMmq1k2iO.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/pdrPrygZ5dVKi8UxrUXMmq1k2iO.jpg"
-   },
-   "character": "Sherman McCoy"
-  },
-  {
-   "id": 2565,
-   "title": "Joe Versus the Volcano",
-   "year": 1990,
-   "release_date": "1990-03-09",
-   "genres": [
-    "Comedy",
-    "Romance",
-    "Adventure"
-   ],
-   "original_language": "en",
-   "score": 5.829,
-   "votes": 610,
-   "score_ok": true,
-   "popularity": 6.5689,
-   "revenue_2025": 97145435.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/fwjMUuDZUxedfsUpVQKQN8cYfzB.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/fwjMUuDZUxedfsUpVQKQN8cYfzB.jpg"
-   },
-   "character": "Joe Banks"
-  },
-  {
-   "id": 6951,
-   "title": "Turner & Hooch",
-   "year": 1989,
-   "release_date": "1989-07-28",
-   "genres": [
-    "Action",
-    "Comedy",
-    "Thriller",
-    "Crime",
-    "Family"
-   ],
-   "original_language": "en",
-   "score": 6.325,
-   "votes": 1497,
-   "score_ok": true,
-   "popularity": 4.9854,
-   "revenue_2025": 184715351.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/nllMNbjgvUpw378czm5vBYzZqg1.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/nllMNbjgvUpw378czm5vBYzZqg1.jpg"
-   },
-   "character": "Scott Turner"
-  },
-  {
-   "id": 11974,
-   "title": "The 'Burbs",
-   "year": 1989,
-   "release_date": "1989-02-17",
-   "genres": [
-    "Comedy",
-    "Horror",
-    "Thriller"
-   ],
-   "original_language": "en",
-   "score": 6.763,
-   "votes": 1446,
-   "score_ok": true,
-   "popularity": 12.204,
-   "revenue_2025": 127601332.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/jwYKzJS0C3A711hmg1G4ptI0InF.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/jwYKzJS0C3A711hmg1G4ptI0InF.jpg"
-   },
-   "character": "Ray Peterson"
-  },
-  {
-   "id": 40820,
-   "title": "Punchline",
-   "year": 1988,
-   "release_date": "1988-10-07",
-   "genres": [
-    "Comedy",
-    "Drama"
-   ],
-   "original_language": "en",
-   "score": 5.54,
-   "votes": 161,
-   "score_ok": true,
-   "popularity": 5.1956,
-   "revenue_2025": 57295134.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/dgbLnnEJIGldXOMt6OWy3X1l0AC.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/dgbLnnEJIGldXOMt6OWy3X1l0AC.jpg"
-   },
-   "character": "Steven Gold"
-  },
-  {
-   "id": 2280,
-   "title": "Big",
-   "year": 1988,
-   "release_date": "1988-06-03",
-   "genres": [
-    "Fantasy",
-    "Drama",
-    "Comedy"
-   ],
-   "original_language": "en",
-   "score": 7.192,
-   "votes": 4221,
-   "score_ok": true,
-   "popularity": 10.6232,
-   "revenue_2025": 413873305.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/eWhCDJiwxvx3YXkAFRiHjimnF0j.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/eWhCDJiwxvx3YXkAFRiHjimnF0j.jpg"
-   },
-   "character": "Josh"
-  },
-  {
-   "id": 10023,
-   "title": "Dragnet",
-   "year": 1987,
-   "release_date": "1987-06-26",
-   "genres": [
-    "Action",
-    "Comedy",
-    "Crime"
-   ],
-   "original_language": "en",
-   "score": 5.99,
-   "votes": 569,
-   "score_ok": true,
-   "popularity": 4.1107,
-   "revenue_2025": 189109836.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/77H17YDeHoJCHebpfGF1rY3Dfof.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/77H17YDeHoJCHebpfGF1rY3Dfof.jpg"
-   },
-   "character": "Pep Streebeck"
-  },
-  {
-   "id": 35866,
-   "title": "Every Time We Say Goodbye",
-   "year": 1986,
-   "release_date": "1986-11-14",
-   "genres": [
-    "War",
-    "Drama",
-    "Romance"
-   ],
-   "original_language": "en",
-   "score": 6.0,
-   "votes": 58,
-   "score_ok": true,
-   "popularity": 3.3578,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/fMiWlS4jNZysUquP6CZfKswukMo.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/fMiWlS4jNZysUquP6CZfKswukMo.jpg"
-   },
-   "character": "David"
-  },
-  {
-   "id": 29968,
-   "title": "Nothing in Common",
-   "year": 1986,
-   "release_date": "1986-07-29",
-   "genres": [
-    "Drama",
-    "Comedy"
-   ],
-   "original_language": "en",
-   "score": 5.93,
-   "votes": 142,
-   "score_ok": true,
-   "popularity": 4.3042,
-   "revenue_2025": 95006323.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/m2G6Idl1CKJwOt8aFsnJk08sfDP.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/m2G6Idl1CKJwOt8aFsnJk08sfDP.jpg"
-   },
-   "character": "David Basner"
-  },
-  {
-   "id": 10466,
-   "title": "The Money Pit",
-   "year": 1986,
-   "release_date": "1986-03-26",
-   "genres": [
-    "Comedy",
-    "Romance"
-   ],
-   "original_language": "en",
-   "score": 6.521,
-   "votes": 1293,
-   "score_ok": true,
-   "popularity": 7.6858,
-   "revenue_2025": 161651545.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/bohhidIi1WWU5NNYF9l5wLQu3Ii.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/bohhidIi1WWU5NNYF9l5wLQu3Ii.jpg"
-   },
-   "character": "Walter Fielding, Jr."
-  },
-  {
-   "id": 19259,
-   "title": "Volunteers",
-   "year": 1985,
-   "release_date": "1985-08-16",
-   "genres": [
-    "Comedy"
-   ],
-   "original_language": "en",
-   "score": 5.5,
-   "votes": 189,
-   "score_ok": true,
-   "popularity": 3.73,
-   "revenue_2025": 59525963.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/tua28Wyv9uGBtPTBGCP7GsN3Znu.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/tua28Wyv9uGBtPTBGCP7GsN3Znu.jpg"
-   },
-   "character": "Lawrence Whatley Bourne III"
-  },
-  {
-   "id": 10905,
-   "title": "The Man with One Red Shoe",
-   "year": 1985,
-   "release_date": "1985-07-18",
-   "genres": [
-    "Action",
-    "Comedy"
-   ],
-   "original_language": "en",
-   "score": 5.739,
-   "votes": 324,
-   "score_ok": true,
-   "popularity": 6.2169,
-   "revenue_2025": 25892189.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/lD44uiCKnLVCKiEnB0urtqIR0nE.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/lD44uiCKnLVCKiEnB0urtqIR0nE.jpg"
-   },
-   "character": "Richard"
-  },
-  {
-   "id": 12309,
-   "title": "Bachelor Party",
-   "year": 1984,
-   "release_date": "1984-06-29",
-   "genres": [
-    "Comedy"
-   ],
-   "original_language": "en",
-   "score": 6.326,
-   "votes": 749,
-   "score_ok": true,
-   "popularity": 6.5545,
-   "revenue_2025": 119194244.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/dZf3UpPZDvJYTODSUJQy7wYEop.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/dZf3UpPZDvJYTODSUJQy7wYEop.jpg"
-   },
-   "character": "Rick Gassko"
-  },
-  {
-   "id": 2619,
-   "title": "Splash",
-   "year": 1984,
-   "release_date": "1984-03-09",
-   "genres": [
-    "Comedy",
-    "Romance",
-    "Fantasy"
-   ],
-   "original_language": "en",
-   "score": 6.262,
-   "votes": 1547,
-   "score_ok": true,
-   "popularity": 7.0216,
-   "revenue_2025": 216457740.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/7FutTsMWBwVhjk1Ujf1wtndUVZh.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/7FutTsMWBwVhjk1Ujf1wtndUVZh.jpg"
-   },
-   "character": "Allen Bauer"
-  },
-  {
-   "id": 27348,
-   "title": "Mazes and Monsters",
-   "year": 1982,
-   "release_date": "1982-12-27",
-   "genres": [
-    "Fantasy",
-    "Drama",
-    "TV Movie"
-   ],
-   "original_language": "en",
-   "score": 4.234,
-   "votes": 109,
-   "score_ok": true,
-   "popularity": 3.6527,
-   "revenue_2025": null,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/4i0ISVGGZczwl3RaTIAa8BMu6Df.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/4i0ISVGGZczwl3RaTIAa8BMu6Df.jpg"
-   },
-   "character": "Robbie Wheeling"
-  },
-  {
-   "id": 65262,
-   "title": "He Knows You're Alone",
-   "year": 1980,
-   "release_date": "1980-08-29",
-   "genres": [
-    "Horror",
-    "Thriller"
-   ],
-   "original_language": "en",
-   "score": 5.165,
-   "votes": 79,
-   "score_ok": true,
-   "popularity": 3.2788,
-   "revenue_2025": 19155297.0,
-   "poster": {
-    "small": "https://image.tmdb.org/t/p/w342/90rdztFCRAxQsEfy35cxH9qt3N1.jpg",
-    "large": "https://image.tmdb.org/t/p/w780/90rdztFCRAxQsEfy35cxH9qt3N1.jpg"
-   },
-   "character": "Elliot"
-  }
- ],
- "crew_credits": {
-  "Director": [
-   {
-    "id": 59861,
-    "title": "Larry Crowne",
-    "year": 2011,
-    "release_date": "2011-06-30",
-    "genres": [
-     "Comedy",
-     "Romance",
-     "Drama"
-    ],
-    "original_language": "en",
-    "score": 5.996,
-    "votes": 1464,
-    "score_ok": true,
-    "popularity": 6.8576,
-    "revenue_2025": 107492324.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg"
-    }
-   },
-   {
-    "id": 9591,
-    "title": "That Thing You Do!",
-    "year": 1996,
-    "release_date": "1996-10-04",
-    "genres": [
-     "Comedy",
-     "Drama",
-     "Music"
-    ],
-    "original_language": "en",
-    "score": 6.886,
-    "votes": 957,
-    "score_ok": true,
-    "popularity": 16.343,
-    "revenue_2025": 71034718.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg"
-    }
-   }
-  ],
-  "Producer": [
-   {
-    "id": 1001811,
-    "title": "My Big Fat Greek Wedding 3",
-    "year": 2023,
-    "release_date": "2023-09-07",
-    "genres": [
-     "Comedy",
-     "Romance"
-    ],
-    "original_language": "en",
-    "score": 5.903,
-    "votes": 243,
-    "score_ok": true,
-    "popularity": 9.2561,
-    "revenue_2025": 36898805.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/8yO8okCs9iohJ0iDVls6QYfu6l6.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/8yO8okCs9iohJ0iDVls6QYfu6l6.jpg"
-    }
-   },
-   {
-    "id": 937278,
-    "title": "A Man Called Otto",
-    "year": 2022,
-    "release_date": "2022-12-28",
-    "genres": [
-     "Comedy",
-     "Drama"
-    ],
-    "original_language": "en",
-    "score": 7.747,
-    "votes": 3826,
-    "score_ok": true,
-    "popularity": 24.0902,
-    "revenue_2025": 124786153.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/130H1gap9lFfiTF9iDrqNIkFvC9.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/130H1gap9lFfiTF9iDrqNIkFvC9.jpg"
-    }
-   },
-   {
-    "id": 339988,
-    "title": "The Circle",
-    "year": 2017,
-    "release_date": "2017-04-27",
-    "genres": [
-     "Drama",
-     "Thriller",
-     "Science Fiction"
-    ],
-    "original_language": "en",
-    "score": 5.525,
-    "votes": 4671,
-    "score_ok": true,
-    "popularity": 7.8858,
-    "revenue_2025": 53427382.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/bQVqd5rWrx5GbXhJNuvKy4Viz6j.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/bQVqd5rWrx5GbXhJNuvKy4Viz6j.jpg"
-    }
-   },
-   {
-    "id": 302688,
-    "title": "My Big Fat Greek Wedding 2",
-    "year": 2016,
-    "release_date": "2016-03-23",
-    "genres": [
-     "Comedy",
-     "Romance"
-    ],
-    "original_language": "en",
-    "score": 5.985,
-    "votes": 1101,
-    "score_ok": true,
-    "popularity": 7.4283,
-    "revenue_2025": 121653023.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/lfPqApnLVPsYfdbpSHNnHIxTdmd.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/lfPqApnLVPsYfdbpSHNnHIxTdmd.jpg"
-    }
-   },
-   {
-    "id": 209262,
-    "title": "Parkland",
-    "year": 2013,
-    "release_date": "2013-10-02",
-    "genres": [
-     "History",
-     "Drama"
-    ],
-    "original_language": "en",
-    "score": 6.247,
-    "votes": 401,
-    "score_ok": true,
-    "popularity": 3.4945,
-    "revenue_2025": 1952885.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/23jc1Hclf1FFxpyYs9A4SxfRbK3.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/23jc1Hclf1FFxpyYs9A4SxfRbK3.jpg"
-    }
-   },
-   {
-    "id": 59861,
-    "title": "Larry Crowne",
-    "year": 2011,
-    "release_date": "2011-06-30",
-    "genres": [
-     "Comedy",
-     "Romance",
-     "Drama"
-    ],
-    "original_language": "en",
-    "score": 5.996,
-    "votes": 1464,
-    "score_ok": true,
-    "popularity": 6.8576,
-    "revenue_2025": 107492324.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg"
-    }
-   },
-   {
-    "id": 16523,
-    "title": "Where the Wild Things Are",
-    "year": 2009,
-    "release_date": "2009-10-16",
-    "genres": [
-     "Adventure",
-     "Drama",
-     "Fantasy"
-    ],
-    "original_language": "en",
-    "score": 6.5,
-    "votes": 2089,
-    "score_ok": true,
-    "popularity": 7.5864,
-    "revenue_2025": 150373579.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/pzVqDpSzOg32IpXghHGSGAAArl6.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/pzVqDpSzOg32IpXghHGSGAAArl6.jpg"
-    }
-   },
-   {
-    "id": 13600,
-    "title": "City of Ember",
-    "year": 2008,
-    "release_date": "2008-10-07",
-    "genres": [
-     "Adventure",
-     "Family",
-     "Fantasy"
-    ],
-    "original_language": "en",
-    "score": 6.376,
-    "votes": 1974,
-    "score_ok": true,
-    "popularity": 12.8107,
-    "revenue_2025": 26737052.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/xHYxFNsl8KuT4tHai8d1Y5gJI0F.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/xHYxFNsl8KuT4tHai8d1Y5gJI0F.jpg"
-    }
-   },
-   {
-    "id": 16279,
-    "title": "The Great Buck Howard",
-    "year": 2008,
-    "release_date": "2008-01-18",
-    "genres": [
-     "Comedy"
-    ],
-    "original_language": "en",
-    "score": 6.014,
-    "votes": 284,
-    "score_ok": true,
-    "popularity": 4.7644,
-    "revenue_2025": 1347681.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/iglKvmA7sq6Pnd6KWFnT6WW9Vpn.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/iglKvmA7sq6Pnd6KWFnT6WW9Vpn.jpg"
-    }
-   },
-   {
-    "id": 6538,
-    "title": "Charlie Wilson's War",
-    "year": 2007,
-    "release_date": "2007-12-19",
-    "genres": [
-     "Comedy",
-     "Drama",
-     "History"
-    ],
-    "original_language": "en",
-    "score": 6.548,
-    "votes": 1737,
-    "score_ok": true,
-    "popularity": 8.3034,
-    "revenue_2025": 185644735.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/45FghqcdSYRWK7PsHUInaFPNd8l.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/45FghqcdSYRWK7PsHUInaFPNd8l.jpg"
-    }
-   },
-   {
-    "id": 14055,
-    "title": "Starter for 10",
-    "year": 2006,
-    "release_date": "2006-11-10",
-    "genres": [
-     "Drama",
-     "Comedy",
-     "Romance"
-    ],
-    "original_language": "en",
-    "score": 6.398,
-    "votes": 467,
-    "score_ok": true,
-    "popularity": 4.2096,
-    "revenue_2025": null,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/m0NU3kgn87iNffUUDeItUXZKUKl.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/m0NU3kgn87iNffUUDeItUXZKUKl.jpg"
-    }
-   },
-   {
-    "id": 9906,
-    "title": "The Ant Bully",
-    "year": 2006,
-    "release_date": "2006-07-28",
-    "genres": [
-     "Fantasy",
-     "Adventure",
-     "Animation",
-     "Comedy",
-     "Family"
-    ],
-    "original_language": "en",
-    "score": 5.805,
-    "votes": 1514,
-    "score_ok": true,
-    "popularity": 10.5966,
-    "revenue_2025": 88212060.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/oFuqX0inTvbA1XAFv2x3CQnI65m.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/oFuqX0inTvbA1XAFv2x3CQnI65m.jpg"
-    }
-   },
-   {
-    "id": 15675,
-    "title": "Neil Young: Heart of Gold",
-    "year": 2006,
-    "release_date": "2006-02-17",
-    "genres": [
-     "Documentary",
-     "Music"
-    ],
-    "original_language": "en",
-    "score": 7.5,
-    "votes": 43,
-    "score_ok": false,
-    "popularity": 1.7366,
-    "revenue_2025": 3515698.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/c7DPRQN44hihnaijY69OWOVGqNZ.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/c7DPRQN44hihnaijY69OWOVGqNZ.jpg"
-    }
-   },
-   {
-    "id": 15673,
-    "title": "Connie and Carla",
-    "year": 2004,
-    "release_date": "2004-04-16",
-    "genres": [
-     "Comedy",
-     "Crime",
-     "Music"
-    ],
-    "original_language": "en",
-    "score": 5.912,
-    "votes": 97,
-    "score_ok": true,
-    "popularity": 3.5469,
-    "revenue_2025": 19342886.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/mR0K8S5s2c5uxpcevnVam17HFrh.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/mR0K8S5s2c5uxpcevnVam17HFrh.jpg"
-    }
-   },
-   {
-    "id": 8346,
-    "title": "My Big Fat Greek Wedding",
-    "year": 2002,
-    "release_date": "2002-04-19",
-    "genres": [
-     "Comedy",
-     "Drama",
-     "Romance"
-    ],
-    "original_language": "en",
-    "score": 6.495,
-    "votes": 2363,
-    "score_ok": true,
-    "popularity": 10.9635,
-    "revenue_2025": 660414177.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/ztc05ym0T3stnBpRHdxEs3Zwsmp.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/ztc05ym0T3stnBpRHdxEs3Zwsmp.jpg"
-    }
-   },
-   {
-    "id": 8358,
-    "title": "Cast Away",
-    "year": 2000,
-    "release_date": "2000-12-22",
-    "genres": [
-     "Adventure",
-     "Drama"
-    ],
-    "original_language": "en",
-    "score": 7.668,
-    "votes": 12662,
-    "score_ok": true,
-    "popularity": 21.476,
-    "revenue_2025": 803758905.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/7lLJgKnAicAcR5UEuo8xhSMj18w.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/7lLJgKnAicAcR5UEuo8xhSMj18w.jpg"
-    }
-   }
-  ],
-  "Screenplay": [
-   {
-    "id": 516486,
-    "title": "Greyhound",
-    "year": 2020,
-    "release_date": "2020-07-09",
-    "genres": [
-     "War",
-     "Action",
-     "Drama"
-    ],
-    "original_language": "en",
-    "score": 7.416,
-    "votes": 3510,
-    "score_ok": true,
-    "popularity": 12.4585,
-    "revenue_2025": null,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/kjMbDciooTbJPofVXgAoFjfX8Of.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/kjMbDciooTbJPofVXgAoFjfX8Of.jpg"
-    }
-   },
-   {
-    "id": 9591,
-    "title": "That Thing You Do!",
-    "year": 1996,
-    "release_date": "1996-10-04",
-    "genres": [
-     "Comedy",
-     "Drama",
-     "Music"
-    ],
-    "original_language": "en",
-    "score": 6.886,
-    "votes": 957,
-    "score_ok": true,
-    "popularity": 16.343,
-    "revenue_2025": 71034718.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg"
-    }
-   }
-  ],
-  "Writer": [
-   {
-    "id": 59861,
-    "title": "Larry Crowne",
-    "year": 2011,
-    "release_date": "2011-06-30",
-    "genres": [
-     "Comedy",
-     "Romance",
-     "Drama"
-    ],
-    "original_language": "en",
-    "score": 5.996,
-    "votes": 1464,
-    "score_ok": true,
-    "popularity": 6.8576,
-    "revenue_2025": 107492324.0,
-    "poster": {
-     "small": "https://image.tmdb.org/t/p/w342/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg",
-     "large": "https://image.tmdb.org/t/p/w780/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg"
-    }
-   }
-  ]
- }
+ ]
 }

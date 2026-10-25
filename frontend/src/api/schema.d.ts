@@ -461,7 +461,7 @@ export interface components {
             films: number;
             /**
              * Of
-             * @description All their films as cast
+             * @description All their films in this role
              */
             of: number;
         };
@@ -516,46 +516,6 @@ export interface components {
              */
             given: number | null;
             comparison: components["schemas"]["BudgetComparison"];
-        };
-        /** CastCredit */
-        CastCredit: {
-            /** Id */
-            id: number;
-            /** Title */
-            title: string;
-            /** Year */
-            year: number | null;
-            /** Release Date */
-            release_date: string | null;
-            /** Genres */
-            genres: string[];
-            /** Original Language */
-            original_language: string | null;
-            /**
-             * Score
-             * @description TMDB vote average (0-10); None when nobody voted
-             */
-            score: number | null;
-            /** Votes */
-            votes: number;
-            /**
-             * Score Ok
-             * @description At least 50 votes: the score is used by our models
-             */
-            score_ok: boolean;
-            /**
-             * Popularity
-             * @description TMDB popularity when pulled (display and sorting only)
-             */
-            popularity: number | null;
-            /**
-             * Revenue 2025
-             * @description Worldwide revenue in 2025 dollars; None when unknown or doubted
-             */
-            revenue_2025: number | null;
-            poster: components["schemas"]["Poster"] | null;
-            /** Character */
-            character: string | null;
         };
         /** CastMember */
         CastMember: {
@@ -637,6 +597,54 @@ export interface components {
             plan_to_watch: number;
             /** Notes */
             notes: number;
+        };
+        /** Credit */
+        Credit: {
+            /** Id */
+            id: number;
+            /** Title */
+            title: string;
+            /** Year */
+            year: number | null;
+            /** Release Date */
+            release_date: string | null;
+            /** Genres */
+            genres: string[];
+            /** Original Language */
+            original_language: string | null;
+            /**
+             * Score
+             * @description TMDB vote average (0-10); None when nobody voted
+             */
+            score: number | null;
+            /** Votes */
+            votes: number;
+            /**
+             * Score Ok
+             * @description At least 50 votes: the score is used by our models
+             */
+            score_ok: boolean;
+            /**
+             * Popularity
+             * @description TMDB popularity when pulled (display and sorting only)
+             */
+            popularity: number | null;
+            /**
+             * Revenue 2025
+             * @description Worldwide revenue in 2025 dollars; None when unknown or doubted
+             */
+            revenue_2025: number | null;
+            poster: components["schemas"]["Poster"] | null;
+            /**
+             * Character
+             * @description Acting: who they played
+             */
+            character: string | null;
+            /**
+             * Jobs
+             * @description Crew roles: their jobs on the film (writing: Screenplay and/or Writer)
+             */
+            jobs: string[];
         };
         /** CrewMember */
         CrewMember: {
@@ -1339,19 +1347,16 @@ export interface components {
             homepage: string | null;
             /** Tmdb Url */
             tmdb_url: string;
-            stats: components["schemas"]["PersonStats"];
             /**
-             * Cast Credits
-             * @description Newest first
+             * Main Role
+             * @description The role the page opens on: TMDB's department when they have credits in it, else the role with the most films
              */
-            cast_credits: components["schemas"]["CastCredit"][];
+            main_role: ("acting" | "directing" | "writing" | "production" | "music" | "camera" | "editing") | null;
             /**
-             * Crew Credits
-             * @description Key crew jobs (Director, Writer...), newest first
+             * Roles
+             * @description Only roles with films, in a fixed order
              */
-            crew_credits: {
-                [key: string]: components["schemas"]["MovieSummary"][];
-            };
+            roles: components["schemas"]["Role"][];
         };
         /** PersonMatch */
         PersonMatch: {
@@ -1388,7 +1393,7 @@ export interface components {
         PersonStats: {
             /**
              * Film Count
-             * @description Films as cast in our data
+             * @description Films in this role in our data
              */
             film_count: number;
             /** First Year */
@@ -1399,9 +1404,9 @@ export interface components {
             top_genres: components["schemas"]["GenreCount"][];
             avg_score: components["schemas"]["AvgScore"] | null;
             box_office_2025: components["schemas"]["BoxOffice"] | null;
-            /** @description 2+ shared films; ties by TMDB popularity, then name */
-            top_costar: components["schemas"]["PersonRef"] | null;
-            /** @description Directed 2+ of their films */
+            /** @description In 2+ of these films (never the person); ties by TMDB popularity, then name */
+            top_actor: components["schemas"]["PersonRef"] | null;
+            /** @description Directed 2+ of these films; None for the directing role */
             top_director: components["schemas"]["PersonRef"] | null;
         };
         /** Poster */
@@ -1641,6 +1646,25 @@ export interface components {
             mode: "given" | "estimated";
             /** Budget Used */
             budget_used: number;
+        };
+        /** Role */
+        Role: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "acting" | "directing" | "writing" | "production" | "music" | "camera" | "editing";
+            /**
+             * Label
+             * @description Acting, Directing, Writing, Production, Music, Camera, Editing
+             */
+            label: string;
+            /**
+             * Films
+             * @description Newest first
+             */
+            films: components["schemas"]["Credit"][];
+            stats: components["schemas"]["PersonStats"];
         };
         /** Score */
         Score: {

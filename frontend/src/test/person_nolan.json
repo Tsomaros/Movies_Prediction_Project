@@ -1,0 +1,1749 @@
+{
+ "id": 525,
+ "name": "Christopher Nolan",
+ "photo": {
+  "small": "https://image.tmdb.org/t/p/w185/xuAIuYSmsUzKlUMBFGVZaWsY3DZ.jpg",
+  "large": "https://image.tmdb.org/t/p/h632/xuAIuYSmsUzKlUMBFGVZaWsY3DZ.jpg"
+ },
+ "biography": "Christopher Nolan (born 30 July 1970) is a British and American filmmaker. Known for his Hollywood blockbusters with complex storytelling, Nolan is considered a leading filmmaker of the 21st century. His films have earned over $7.7 billion worldwide, making him the third-highest-grossing film director of all time. Nolan's accolades include two Academy Awards, a Golden Globe Award, and two British Academy Film Awards. He was also appointed a Commander of the British Empire (CBE) in 2019 and was knighted in 2024 for his contributions to film.\n\nNolan developed an interest in filmmaking from a young age. After studying English literature at University College London, he made several short films before his feature film debut with Following (1998). Nolan gained international recognition with his second film, Memento (2000), and transitioned into studio filmmaking with Insomnia (2002). He became a high-profile director with The Dark Knight trilogy (2005–2012) and found further success with The Prestige (2006), Inception (2010), Interstellar (2014) and Dunkirk (2017). After the release of the critically polarising Tenet (2020), Nolan parted ways with longtime distributor Warner Bros. Pictures over their streaming release strategy and signed with Universal Pictures for the highly successful Oppenheimer (2023) and The Odyssey (2026). The former won him Academy Awards for Best Director and Best Picture.\n\nThree of Nolan's films have been inducted into the United States National Film Registry. Additionally, two of his films are among the highest-grossing films of all time. Infused with a metaphysical outlook, his works thematise epistemology, existentialism, ethics, the construction of time and the malleable nature of memory and personal identity. They feature mathematically inspired images and concepts, unconventional narrative structures, practical special effects, experimental soundscapes, large-format film photography and materialistic perspectives. His enthusiasm for the use and preservation of analogue and IMAX film cameras in cinema production, as opposed to digital, has also garnered significant attention. He has co-written several of his films with his brother, Jonathan, and runs the production company Syncopy Inc. with his wife, Emma Thomas. Nolan has also been president of the Directors Guild of America since 2025.\n\nDescription above from the Wikipedia article Christopher Nolan, licensed under CC-BY-SA, full list of contributors on Wikipedia.",
+ "birthday": "1970-07-30",
+ "deathday": null,
+ "place_of_birth": "Westminster, London, England, UK",
+ "known_for_department": "Directing",
+ "imdb_url": "https://www.imdb.com/name/nm0634240/",
+ "homepage": null,
+ "tmdb_url": "https://www.themoviedb.org/person/525",
+ "main_role": "directing",
+ "roles": [
+  {
+   "role": "acting",
+   "label": "Acting",
+   "films": [
+    {
+     "id": 1425725,
+     "title": "Hans Zimmer & Friends: Diamond in the Desert",
+     "year": 2025,
+     "release_date": "2025-02-19",
+     "genres": [
+      "Music",
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 8.2,
+     "votes": 39,
+     "score_ok": false,
+     "popularity": 2.5439,
+     "revenue_2025": 431405.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/aAbU0BuIQa6CUPOqsvUoPK39apD.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/aAbU0BuIQa6CUPOqsvUoPK39apD.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 1149947,
+     "title": "To End All War: Oppenheimer & the Atomic Bomb",
+     "year": 2023,
+     "release_date": "2023-07-09",
+     "genres": [
+      "Documentary",
+      "History"
+     ],
+     "original_language": "en",
+     "score": 7.7,
+     "votes": 234,
+     "score_ok": true,
+     "popularity": 3.5055,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/xwkYWcs8aypUtk3xDRUh0ndo4GA.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/xwkYWcs8aypUtk3xDRUh0ndo4GA.jpg"
+     },
+     "character": "Self - Writer / Director, \"Oppenheimer\"",
+     "jobs": []
+    },
+    {
+     "id": 595841,
+     "title": "Making Waves: The Art of Cinematic Sound",
+     "year": 2019,
+     "release_date": "2019-10-25",
+     "genres": [
+      "Documentary",
+      "History"
+     ],
+     "original_language": "en",
+     "score": 6.9,
+     "votes": 84,
+     "score_ok": true,
+     "popularity": 3.9144,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/jafF7jcl116rzohZydL1VfK1y2e.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/jafF7jcl116rzohZydL1VfK1y2e.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 301959,
+     "title": "Interstellar: Nolan's Odyssey",
+     "year": 2014,
+     "release_date": "2014-11-05",
+     "genres": [
+      "Documentary",
+      "TV Movie"
+     ],
+     "original_language": "en",
+     "score": 7.8,
+     "votes": 188,
+     "score_ok": true,
+     "popularity": 2.0498,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/i4PpBcuLvdcJwIf3hkcV9QDR1iH.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/i4PpBcuLvdcJwIf3hkcV9QDR1iH.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 110354,
+     "title": "Side by Side",
+     "year": 2012,
+     "release_date": "2012-08-19",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 7.255,
+     "votes": 320,
+     "score_ok": true,
+     "popularity": 2.9898,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/qeeQ7rfTAXNYh4EqqdolFLkNwKM.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/qeeQ7rfTAXNYh4EqqdolFLkNwKM.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 80337,
+     "title": "These Amazing Shadows",
+     "year": 2011,
+     "release_date": "2011-01-22",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 7.4,
+     "votes": 75,
+     "score_ok": true,
+     "popularity": 2.387,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/jiby8Ilxlmbhv6elIf0qRMuaDdd.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/jiby8Ilxlmbhv6elIf0qRMuaDdd.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 29751,
+     "title": "Batman Unmasked: The Psychology of The Dark Knight",
+     "year": 2008,
+     "release_date": "2008-07-15",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 7.5,
+     "votes": 54,
+     "score_ok": true,
+     "popularity": 1.7417,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/e15wNHmLX7PJUo8lqzQRhwbX7PL.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/e15wNHmLX7PJUo8lqzQRhwbX7PL.jpg"
+     },
+     "character": "Self",
+     "jobs": []
+    },
+    {
+     "id": 804706,
+     "title": "Tarantella",
+     "year": 1990,
+     "release_date": "1990-09-12",
+     "genres": [
+      "Horror"
+     ],
+     "original_language": "en",
+     "score": 5.1,
+     "votes": 56,
+     "score_ok": true,
+     "popularity": 1.7472,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg"
+     },
+     "character": "Man in Black",
+     "jobs": []
+    }
+   ],
+   "stats": {
+    "film_count": 8,
+    "first_year": 1990,
+    "last_year": 2025,
+    "top_genres": [
+     {
+      "name": "Documentary",
+      "films": 7
+     },
+     {
+      "name": "History",
+      "films": 2
+     },
+     {
+      "name": "Horror",
+      "films": 1
+     }
+    ],
+    "avg_score": {
+     "value": 7.1,
+     "films": 7
+    },
+    "box_office_2025": {
+     "total": 431405.0,
+     "films": 1,
+     "of": 8
+    },
+    "top_actor": {
+     "id": 1,
+     "name": "George Lucas",
+     "shared_films": 2
+    },
+    "top_director": null
+   }
+  },
+  {
+   "role": "directing",
+   "label": "Directing",
+   "films": [
+    {
+     "id": 872585,
+     "title": "Oppenheimer",
+     "year": 2023,
+     "release_date": "2023-07-19",
+     "genres": [
+      "Drama",
+      "History",
+      "War"
+     ],
+     "original_language": "en",
+     "score": 8.022,
+     "votes": 12727,
+     "score_ok": true,
+     "popularity": 66.9746,
+     "revenue_2025": 1006523278.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 577922,
+     "title": "Tenet",
+     "year": 2020,
+     "release_date": "2020-08-22",
+     "genres": [
+      "Action",
+      "Thriller",
+      "Science Fiction"
+     ],
+     "original_language": "en",
+     "score": 7.172,
+     "votes": 11664,
+     "score_ok": true,
+     "popularity": 25.5065,
+     "revenue_2025": 454709473.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/rrKH3VhHssGTCfPuaEQkxvEoElv.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/rrKH3VhHssGTCfPuaEQkxvEoElv.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 374720,
+     "title": "Dunkirk",
+     "year": 2017,
+     "release_date": "2017-07-19",
+     "genres": [
+      "War",
+      "Action",
+      "History"
+     ],
+     "original_language": "en",
+     "score": 7.45,
+     "votes": 18123,
+     "score_ok": true,
+     "popularity": 21.5647,
+     "revenue_2025": 721712007.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/b4Oe15CGLL61Ped0RAS9JpqdmCt.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/b4Oe15CGLL61Ped0RAS9JpqdmCt.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 352114,
+     "title": "Quay",
+     "year": 2015,
+     "release_date": "2015-08-19",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 6.0,
+     "votes": 73,
+     "score_ok": true,
+     "popularity": 1.9713,
+     "revenue_2025": 70485.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/uluMeKfYFVvfZlmHgFBXqbnHXE2.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/uluMeKfYFVvfZlmHgFBXqbnHXE2.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 157336,
+     "title": "Interstellar",
+     "year": 2014,
+     "release_date": "2014-11-04",
+     "genres": [
+      "Adventure",
+      "Drama",
+      "Science Fiction"
+     ],
+     "original_language": "en",
+     "score": 8.491,
+     "votes": 41560,
+     "score_ok": true,
+     "popularity": 65.5537,
+     "revenue_2025": 1015990767.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 49026,
+     "title": "The Dark Knight Rises",
+     "year": 2012,
+     "release_date": "2012-07-17",
+     "genres": [
+      "Action",
+      "Crime",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 7.799,
+     "votes": 25150,
+     "score_ok": true,
+     "popularity": 32.2582,
+     "revenue_2025": 1516854507.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/hr0L2aueqlP2BYUblTTjmtn0hw4.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/hr0L2aueqlP2BYUblTTjmtn0hw4.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 27205,
+     "title": "Inception",
+     "year": 2010,
+     "release_date": "2010-07-15",
+     "genres": [
+      "Action",
+      "Science Fiction",
+      "Crime"
+     ],
+     "original_language": "en",
+     "score": 8.373,
+     "votes": 40486,
+     "score_ok": true,
+     "popularity": 56.3005,
+     "revenue_2025": 1239572562.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 155,
+     "title": "The Dark Knight",
+     "year": 2008,
+     "release_date": "2008-07-16",
+     "genres": [
+      "Action",
+      "Thriller",
+      "Crime"
+     ],
+     "original_language": "en",
+     "score": 8.538,
+     "votes": 37016,
+     "score_ok": true,
+     "popularity": 52.1547,
+     "revenue_2025": 1508966563.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/qJ2tW6WMUDux911r6m7haRef0WH.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 1124,
+     "title": "The Prestige",
+     "year": 2006,
+     "release_date": "2006-10-19",
+     "genres": [
+      "Drama",
+      "Mystery",
+      "Science Fiction"
+     ],
+     "original_language": "en",
+     "score": 8.212,
+     "votes": 18315,
+     "score_ok": true,
+     "popularity": 40.4871,
+     "revenue_2025": 175267633.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/Ag2B2KHKQPukjH7WutmgnnSNurZ.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/Ag2B2KHKQPukjH7WutmgnnSNurZ.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 272,
+     "title": "Batman Begins",
+     "year": 2005,
+     "release_date": "2005-06-10",
+     "genres": [
+      "Drama",
+      "Crime",
+      "Action"
+     ],
+     "original_language": "en",
+     "score": 7.731,
+     "votes": 23370,
+     "score_ok": true,
+     "popularity": 30.3391,
+     "revenue_2025": 617309814.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/sPX89Td70IDDjVr85jdSBb4rWGr.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/sPX89Td70IDDjVr85jdSBb4rWGr.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 320,
+     "title": "Insomnia",
+     "year": 2002,
+     "release_date": "2002-05-24",
+     "genres": [
+      "Thriller",
+      "Crime",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 6.957,
+     "votes": 5602,
+     "score_ok": true,
+     "popularity": 12.0643,
+     "revenue_2025": 203661285.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/riVXh3EimGO0y5dgQxEWPRy5Itg.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/riVXh3EimGO0y5dgQxEWPRy5Itg.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 77,
+     "title": "Memento",
+     "year": 2000,
+     "release_date": "2000-10-11",
+     "genres": [
+      "Mystery",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 8.174,
+     "votes": 16928,
+     "score_ok": true,
+     "popularity": 23.2373,
+     "revenue_2025": 74944739.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/nzlv62aC0octS5AklAiWpXLX9Z0.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/nzlv62aC0octS5AklAiWpXLX9Z0.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 11660,
+     "title": "Following",
+     "year": 1999,
+     "release_date": "1999-04-02",
+     "genres": [
+      "Drama",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 7.116,
+     "votes": 2008,
+     "score_ok": true,
+     "popularity": 14.5747,
+     "revenue_2025": 243782.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/3bX6VVSMf0dvzk5pMT4ALG5A92d.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/3bX6VVSMf0dvzk5pMT4ALG5A92d.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 43629,
+     "title": "Doodlebug",
+     "year": 1997,
+     "release_date": "1997-01-01",
+     "genres": [
+      "Horror",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 6.5,
+     "votes": 510,
+     "score_ok": true,
+     "popularity": 2.1741,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/cXDFFv6yZNW3vUHOKKUPJNnL0So.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/cXDFFv6yZNW3vUHOKKUPJNnL0So.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 456684,
+     "title": "Larceny",
+     "year": 1996,
+     "release_date": "1996-07-14",
+     "genres": [
+      "Crime",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 5.8,
+     "votes": 8,
+     "score_ok": false,
+     "popularity": 2.0529,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/jBWtTViwpr9xN6PWuzp8WlxTSXB.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/jBWtTViwpr9xN6PWuzp8WlxTSXB.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    },
+    {
+     "id": 804706,
+     "title": "Tarantella",
+     "year": 1990,
+     "release_date": "1990-09-12",
+     "genres": [
+      "Horror"
+     ],
+     "original_language": "en",
+     "score": 5.1,
+     "votes": 56,
+     "score_ok": true,
+     "popularity": 1.7472,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director"
+     ]
+    }
+   ],
+   "stats": {
+    "film_count": 16,
+    "first_year": 1990,
+    "last_year": 2023,
+    "top_genres": [
+     {
+      "name": "Drama",
+      "films": 7
+     },
+     {
+      "name": "Thriller",
+      "films": 7
+     },
+     {
+      "name": "Action",
+      "films": 6
+     }
+    ],
+    "avg_score": {
+     "value": 7.4,
+     "films": 15
+    },
+    "box_office_2025": {
+     "total": 8535826895.0,
+     "films": 13,
+     "of": 16
+    },
+    "top_actor": {
+     "id": 3895,
+     "name": "Michael Caine",
+     "shared_films": 7
+    },
+    "top_director": null
+   }
+  },
+  {
+   "role": "writing",
+   "label": "Writing",
+   "films": [
+    {
+     "id": 872585,
+     "title": "Oppenheimer",
+     "year": 2023,
+     "release_date": "2023-07-19",
+     "genres": [
+      "Drama",
+      "History",
+      "War"
+     ],
+     "original_language": "en",
+     "score": 8.022,
+     "votes": 12727,
+     "score_ok": true,
+     "popularity": 66.9746,
+     "revenue_2025": 1006523278.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Writer"
+     ]
+    },
+    {
+     "id": 577922,
+     "title": "Tenet",
+     "year": 2020,
+     "release_date": "2020-08-22",
+     "genres": [
+      "Action",
+      "Thriller",
+      "Science Fiction"
+     ],
+     "original_language": "en",
+     "score": 7.172,
+     "votes": 11664,
+     "score_ok": true,
+     "popularity": 25.5065,
+     "revenue_2025": 454709473.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/rrKH3VhHssGTCfPuaEQkxvEoElv.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/rrKH3VhHssGTCfPuaEQkxvEoElv.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Writer"
+     ]
+    },
+    {
+     "id": 374720,
+     "title": "Dunkirk",
+     "year": 2017,
+     "release_date": "2017-07-19",
+     "genres": [
+      "War",
+      "Action",
+      "History"
+     ],
+     "original_language": "en",
+     "score": 7.45,
+     "votes": 18123,
+     "score_ok": true,
+     "popularity": 21.5647,
+     "revenue_2025": 721712007.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/b4Oe15CGLL61Ped0RAS9JpqdmCt.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/b4Oe15CGLL61Ped0RAS9JpqdmCt.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Writer"
+     ]
+    },
+    {
+     "id": 157336,
+     "title": "Interstellar",
+     "year": 2014,
+     "release_date": "2014-11-04",
+     "genres": [
+      "Adventure",
+      "Drama",
+      "Science Fiction"
+     ],
+     "original_language": "en",
+     "score": 8.491,
+     "votes": 41560,
+     "score_ok": true,
+     "popularity": 65.5537,
+     "revenue_2025": 1015990767.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Writer"
+     ]
+    },
+    {
+     "id": 49026,
+     "title": "The Dark Knight Rises",
+     "year": 2012,
+     "release_date": "2012-07-17",
+     "genres": [
+      "Action",
+      "Crime",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 7.799,
+     "votes": 25150,
+     "score_ok": true,
+     "popularity": 32.2582,
+     "revenue_2025": 1516854507.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/hr0L2aueqlP2BYUblTTjmtn0hw4.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/hr0L2aueqlP2BYUblTTjmtn0hw4.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Screenplay"
+     ]
+    },
+    {
+     "id": 27205,
+     "title": "Inception",
+     "year": 2010,
+     "release_date": "2010-07-15",
+     "genres": [
+      "Action",
+      "Science Fiction",
+      "Crime"
+     ],
+     "original_language": "en",
+     "score": 8.373,
+     "votes": 40486,
+     "score_ok": true,
+     "popularity": 56.3005,
+     "revenue_2025": 1239572562.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Writer"
+     ]
+    },
+    {
+     "id": 155,
+     "title": "The Dark Knight",
+     "year": 2008,
+     "release_date": "2008-07-16",
+     "genres": [
+      "Action",
+      "Thriller",
+      "Crime"
+     ],
+     "original_language": "en",
+     "score": 8.538,
+     "votes": 37016,
+     "score_ok": true,
+     "popularity": 52.1547,
+     "revenue_2025": 1508966563.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/qJ2tW6WMUDux911r6m7haRef0WH.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Screenplay"
+     ]
+    },
+    {
+     "id": 1124,
+     "title": "The Prestige",
+     "year": 2006,
+     "release_date": "2006-10-19",
+     "genres": [
+      "Drama",
+      "Mystery",
+      "Science Fiction"
+     ],
+     "original_language": "en",
+     "score": 8.212,
+     "votes": 18315,
+     "score_ok": true,
+     "popularity": 40.4871,
+     "revenue_2025": 175267633.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/Ag2B2KHKQPukjH7WutmgnnSNurZ.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/Ag2B2KHKQPukjH7WutmgnnSNurZ.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Screenplay"
+     ]
+    },
+    {
+     "id": 272,
+     "title": "Batman Begins",
+     "year": 2005,
+     "release_date": "2005-06-10",
+     "genres": [
+      "Drama",
+      "Crime",
+      "Action"
+     ],
+     "original_language": "en",
+     "score": 7.731,
+     "votes": 23370,
+     "score_ok": true,
+     "popularity": 30.3391,
+     "revenue_2025": 617309814.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/sPX89Td70IDDjVr85jdSBb4rWGr.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/sPX89Td70IDDjVr85jdSBb4rWGr.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Screenplay"
+     ]
+    },
+    {
+     "id": 77,
+     "title": "Memento",
+     "year": 2000,
+     "release_date": "2000-10-11",
+     "genres": [
+      "Mystery",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 8.174,
+     "votes": 16928,
+     "score_ok": true,
+     "popularity": 23.2373,
+     "revenue_2025": 74944739.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/nzlv62aC0octS5AklAiWpXLX9Z0.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/nzlv62aC0octS5AklAiWpXLX9Z0.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Screenplay"
+     ]
+    },
+    {
+     "id": 11660,
+     "title": "Following",
+     "year": 1999,
+     "release_date": "1999-04-02",
+     "genres": [
+      "Drama",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 7.116,
+     "votes": 2008,
+     "score_ok": true,
+     "popularity": 14.5747,
+     "revenue_2025": 243782.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/3bX6VVSMf0dvzk5pMT4ALG5A92d.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/3bX6VVSMf0dvzk5pMT4ALG5A92d.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Writer"
+     ]
+    },
+    {
+     "id": 43629,
+     "title": "Doodlebug",
+     "year": 1997,
+     "release_date": "1997-01-01",
+     "genres": [
+      "Horror",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 6.5,
+     "votes": 510,
+     "score_ok": true,
+     "popularity": 2.1741,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/cXDFFv6yZNW3vUHOKKUPJNnL0So.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/cXDFFv6yZNW3vUHOKKUPJNnL0So.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Writer"
+     ]
+    },
+    {
+     "id": 456684,
+     "title": "Larceny",
+     "year": 1996,
+     "release_date": "1996-07-14",
+     "genres": [
+      "Crime",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 5.8,
+     "votes": 8,
+     "score_ok": false,
+     "popularity": 2.0529,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/jBWtTViwpr9xN6PWuzp8WlxTSXB.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/jBWtTViwpr9xN6PWuzp8WlxTSXB.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Writer"
+     ]
+    },
+    {
+     "id": 804706,
+     "title": "Tarantella",
+     "year": 1990,
+     "release_date": "1990-09-12",
+     "genres": [
+      "Horror"
+     ],
+     "original_language": "en",
+     "score": 5.1,
+     "votes": 56,
+     "score_ok": true,
+     "popularity": 1.7472,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Writer"
+     ]
+    }
+   ],
+   "stats": {
+    "film_count": 14,
+    "first_year": 1990,
+    "last_year": 2023,
+    "top_genres": [
+     {
+      "name": "Action",
+      "films": 6
+     },
+     {
+      "name": "Drama",
+      "films": 6
+     },
+     {
+      "name": "Thriller",
+      "films": 6
+     }
+    ],
+    "avg_score": {
+     "value": 7.6,
+     "films": 13
+    },
+    "box_office_2025": {
+     "total": 8332095125.0,
+     "films": 11,
+     "of": 14
+    },
+    "top_actor": {
+     "id": 3895,
+     "name": "Michael Caine",
+     "shared_films": 7
+    },
+    "top_director": null
+   }
+  },
+  {
+   "role": "production",
+   "label": "Production",
+   "films": [
+    {
+     "id": 872585,
+     "title": "Oppenheimer",
+     "year": 2023,
+     "release_date": "2023-07-19",
+     "genres": [
+      "Drama",
+      "History",
+      "War"
+     ],
+     "original_language": "en",
+     "score": 8.022,
+     "votes": 12727,
+     "score_ok": true,
+     "popularity": 66.9746,
+     "revenue_2025": 1006523278.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 577922,
+     "title": "Tenet",
+     "year": 2020,
+     "release_date": "2020-08-22",
+     "genres": [
+      "Action",
+      "Thriller",
+      "Science Fiction"
+     ],
+     "original_language": "en",
+     "score": 7.172,
+     "votes": 11664,
+     "score_ok": true,
+     "popularity": 25.5065,
+     "revenue_2025": 454709473.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/rrKH3VhHssGTCfPuaEQkxvEoElv.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/rrKH3VhHssGTCfPuaEQkxvEoElv.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 374720,
+     "title": "Dunkirk",
+     "year": 2017,
+     "release_date": "2017-07-19",
+     "genres": [
+      "War",
+      "Action",
+      "History"
+     ],
+     "original_language": "en",
+     "score": 7.45,
+     "votes": 18123,
+     "score_ok": true,
+     "popularity": 21.5647,
+     "revenue_2025": 721712007.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/b4Oe15CGLL61Ped0RAS9JpqdmCt.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/b4Oe15CGLL61Ped0RAS9JpqdmCt.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 352114,
+     "title": "Quay",
+     "year": 2015,
+     "release_date": "2015-08-19",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 6.0,
+     "votes": 73,
+     "score_ok": true,
+     "popularity": 1.9713,
+     "revenue_2025": 70485.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/uluMeKfYFVvfZlmHgFBXqbnHXE2.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/uluMeKfYFVvfZlmHgFBXqbnHXE2.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 157336,
+     "title": "Interstellar",
+     "year": 2014,
+     "release_date": "2014-11-04",
+     "genres": [
+      "Adventure",
+      "Drama",
+      "Science Fiction"
+     ],
+     "original_language": "en",
+     "score": 8.491,
+     "votes": 41560,
+     "score_ok": true,
+     "popularity": 65.5537,
+     "revenue_2025": 1015990767.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 49521,
+     "title": "Man of Steel",
+     "year": 2013,
+     "release_date": "2013-06-12",
+     "genres": [
+      "Action",
+      "Adventure",
+      "Science Fiction"
+     ],
+     "original_language": "en",
+     "score": 6.662,
+     "votes": 16722,
+     "score_ok": true,
+     "popularity": 26.7967,
+     "revenue_2025": 923830869.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/8GFtkImmK0K1VaUChR0n9O61CFU.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/8GFtkImmK0K1VaUChR0n9O61CFU.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 49026,
+     "title": "The Dark Knight Rises",
+     "year": 2012,
+     "release_date": "2012-07-17",
+     "genres": [
+      "Action",
+      "Crime",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 7.799,
+     "votes": 25150,
+     "score_ok": true,
+     "popularity": 32.2582,
+     "revenue_2025": 1516854507.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/hr0L2aueqlP2BYUblTTjmtn0hw4.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/hr0L2aueqlP2BYUblTTjmtn0hw4.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 27205,
+     "title": "Inception",
+     "year": 2010,
+     "release_date": "2010-07-15",
+     "genres": [
+      "Action",
+      "Science Fiction",
+      "Crime"
+     ],
+     "original_language": "en",
+     "score": 8.373,
+     "votes": 40486,
+     "score_ok": true,
+     "popularity": 56.3005,
+     "revenue_2025": 1239572562.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 155,
+     "title": "The Dark Knight",
+     "year": 2008,
+     "release_date": "2008-07-16",
+     "genres": [
+      "Action",
+      "Thriller",
+      "Crime"
+     ],
+     "original_language": "en",
+     "score": 8.538,
+     "votes": 37016,
+     "score_ok": true,
+     "popularity": 52.1547,
+     "revenue_2025": 1508966563.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/qJ2tW6WMUDux911r6m7haRef0WH.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 1124,
+     "title": "The Prestige",
+     "year": 2006,
+     "release_date": "2006-10-19",
+     "genres": [
+      "Drama",
+      "Mystery",
+      "Science Fiction"
+     ],
+     "original_language": "en",
+     "score": 8.212,
+     "votes": 18315,
+     "score_ok": true,
+     "popularity": 40.4871,
+     "revenue_2025": 175267633.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/Ag2B2KHKQPukjH7WutmgnnSNurZ.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/Ag2B2KHKQPukjH7WutmgnnSNurZ.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 11660,
+     "title": "Following",
+     "year": 1999,
+     "release_date": "1999-04-02",
+     "genres": [
+      "Drama",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 7.116,
+     "votes": 2008,
+     "score_ok": true,
+     "popularity": 14.5747,
+     "revenue_2025": 243782.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/3bX6VVSMf0dvzk5pMT4ALG5A92d.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/3bX6VVSMf0dvzk5pMT4ALG5A92d.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 456684,
+     "title": "Larceny",
+     "year": 1996,
+     "release_date": "1996-07-14",
+     "genres": [
+      "Crime",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 5.8,
+     "votes": 8,
+     "score_ok": false,
+     "popularity": 2.0529,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/jBWtTViwpr9xN6PWuzp8WlxTSXB.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/jBWtTViwpr9xN6PWuzp8WlxTSXB.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    },
+    {
+     "id": 804706,
+     "title": "Tarantella",
+     "year": 1990,
+     "release_date": "1990-09-12",
+     "genres": [
+      "Horror"
+     ],
+     "original_language": "en",
+     "score": 5.1,
+     "votes": 56,
+     "score_ok": true,
+     "popularity": 1.7472,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Producer"
+     ]
+    }
+   ],
+   "stats": {
+    "film_count": 13,
+    "first_year": 1990,
+    "last_year": 2023,
+    "top_genres": [
+     {
+      "name": "Action",
+      "films": 6
+     },
+     {
+      "name": "Drama",
+      "films": 5
+     },
+     {
+      "name": "Science Fiction",
+      "films": 5
+     }
+    ],
+    "avg_score": {
+     "value": 7.4,
+     "films": 12
+    },
+    "box_office_2025": {
+     "total": 8563741926.0,
+     "films": 11,
+     "of": 13
+    },
+    "top_actor": {
+     "id": 3895,
+     "name": "Michael Caine",
+     "shared_films": 6
+    },
+    "top_director": null
+   }
+  },
+  {
+   "role": "music",
+   "label": "Music",
+   "films": [
+    {
+     "id": 352114,
+     "title": "Quay",
+     "year": 2015,
+     "release_date": "2015-08-19",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 6.0,
+     "votes": 73,
+     "score_ok": true,
+     "popularity": 1.9713,
+     "revenue_2025": 70485.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/uluMeKfYFVvfZlmHgFBXqbnHXE2.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/uluMeKfYFVvfZlmHgFBXqbnHXE2.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Original Music Composer"
+     ]
+    }
+   ],
+   "stats": {
+    "film_count": 1,
+    "first_year": 2015,
+    "last_year": 2015,
+    "top_genres": [
+     {
+      "name": "Documentary",
+      "films": 1
+     }
+    ],
+    "avg_score": {
+     "value": 6.0,
+     "films": 1
+    },
+    "box_office_2025": {
+     "total": 70485.0,
+     "films": 1,
+     "of": 1
+    },
+    "top_actor": null,
+    "top_director": null
+   }
+  },
+  {
+   "role": "camera",
+   "label": "Camera",
+   "films": [
+    {
+     "id": 352114,
+     "title": "Quay",
+     "year": 2015,
+     "release_date": "2015-08-19",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 6.0,
+     "votes": 73,
+     "score_ok": true,
+     "popularity": 1.9713,
+     "revenue_2025": 70485.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/uluMeKfYFVvfZlmHgFBXqbnHXE2.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/uluMeKfYFVvfZlmHgFBXqbnHXE2.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director of Photography"
+     ]
+    },
+    {
+     "id": 11660,
+     "title": "Following",
+     "year": 1999,
+     "release_date": "1999-04-02",
+     "genres": [
+      "Drama",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 7.116,
+     "votes": 2008,
+     "score_ok": true,
+     "popularity": 14.5747,
+     "revenue_2025": 243782.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/3bX6VVSMf0dvzk5pMT4ALG5A92d.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/3bX6VVSMf0dvzk5pMT4ALG5A92d.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director of Photography"
+     ]
+    },
+    {
+     "id": 43629,
+     "title": "Doodlebug",
+     "year": 1997,
+     "release_date": "1997-01-01",
+     "genres": [
+      "Horror",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 6.5,
+     "votes": 510,
+     "score_ok": true,
+     "popularity": 2.1741,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/cXDFFv6yZNW3vUHOKKUPJNnL0So.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/cXDFFv6yZNW3vUHOKKUPJNnL0So.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director of Photography"
+     ]
+    },
+    {
+     "id": 804706,
+     "title": "Tarantella",
+     "year": 1990,
+     "release_date": "1990-09-12",
+     "genres": [
+      "Horror"
+     ],
+     "original_language": "en",
+     "score": 5.1,
+     "votes": 56,
+     "score_ok": true,
+     "popularity": 1.7472,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Director of Photography"
+     ]
+    }
+   ],
+   "stats": {
+    "film_count": 4,
+    "first_year": 1990,
+    "last_year": 2015,
+    "top_genres": [
+     {
+      "name": "Horror",
+      "films": 2
+     },
+     {
+      "name": "Thriller",
+      "films": 2
+     },
+     {
+      "name": "Documentary",
+      "films": 1
+     }
+    ],
+    "avg_score": {
+     "value": 6.2,
+     "films": 4
+    },
+    "box_office_2025": {
+     "total": 314267.0,
+     "films": 2,
+     "of": 4
+    },
+    "top_actor": {
+     "id": 70230,
+     "name": "Jeremy Theobald",
+     "shared_films": 2
+    },
+    "top_director": null
+   }
+  },
+  {
+   "role": "editing",
+   "label": "Editing",
+   "films": [
+    {
+     "id": 352114,
+     "title": "Quay",
+     "year": 2015,
+     "release_date": "2015-08-19",
+     "genres": [
+      "Documentary"
+     ],
+     "original_language": "en",
+     "score": 6.0,
+     "votes": 73,
+     "score_ok": true,
+     "popularity": 1.9713,
+     "revenue_2025": 70485.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/uluMeKfYFVvfZlmHgFBXqbnHXE2.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/uluMeKfYFVvfZlmHgFBXqbnHXE2.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Editor"
+     ]
+    },
+    {
+     "id": 11660,
+     "title": "Following",
+     "year": 1999,
+     "release_date": "1999-04-02",
+     "genres": [
+      "Drama",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 7.116,
+     "votes": 2008,
+     "score_ok": true,
+     "popularity": 14.5747,
+     "revenue_2025": 243782.0,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/3bX6VVSMf0dvzk5pMT4ALG5A92d.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/3bX6VVSMf0dvzk5pMT4ALG5A92d.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Editor"
+     ]
+    },
+    {
+     "id": 43629,
+     "title": "Doodlebug",
+     "year": 1997,
+     "release_date": "1997-01-01",
+     "genres": [
+      "Horror",
+      "Thriller"
+     ],
+     "original_language": "en",
+     "score": 6.5,
+     "votes": 510,
+     "score_ok": true,
+     "popularity": 2.1741,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/cXDFFv6yZNW3vUHOKKUPJNnL0So.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/cXDFFv6yZNW3vUHOKKUPJNnL0So.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Editor"
+     ]
+    },
+    {
+     "id": 456684,
+     "title": "Larceny",
+     "year": 1996,
+     "release_date": "1996-07-14",
+     "genres": [
+      "Crime",
+      "Drama"
+     ],
+     "original_language": "en",
+     "score": 5.8,
+     "votes": 8,
+     "score_ok": false,
+     "popularity": 2.0529,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/jBWtTViwpr9xN6PWuzp8WlxTSXB.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/jBWtTViwpr9xN6PWuzp8WlxTSXB.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Editor"
+     ]
+    },
+    {
+     "id": 804706,
+     "title": "Tarantella",
+     "year": 1990,
+     "release_date": "1990-09-12",
+     "genres": [
+      "Horror"
+     ],
+     "original_language": "en",
+     "score": 5.1,
+     "votes": 56,
+     "score_ok": true,
+     "popularity": 1.7472,
+     "revenue_2025": null,
+     "poster": {
+      "small": "https://image.tmdb.org/t/p/w342/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg",
+      "large": "https://image.tmdb.org/t/p/w780/eqFhruWEIRwjkvqgJN48VPuR50Q.jpg"
+     },
+     "character": null,
+     "jobs": [
+      "Editor"
+     ]
+    }
+   ],
+   "stats": {
+    "film_count": 5,
+    "first_year": 1990,
+    "last_year": 2015,
+    "top_genres": [
+     {
+      "name": "Drama",
+      "films": 2
+     },
+     {
+      "name": "Horror",
+      "films": 2
+     },
+     {
+      "name": "Thriller",
+      "films": 2
+     }
+    ],
+    "avg_score": {
+     "value": 6.2,
+     "films": 4
+    },
+    "box_office_2025": {
+     "total": 314267.0,
+     "films": 2,
+     "of": 5
+    },
+    "top_actor": {
+     "id": 70230,
+     "name": "Jeremy Theobald",
+     "shared_films": 3
+    },
+    "top_director": null
+   }
+  }
+ ]
+}

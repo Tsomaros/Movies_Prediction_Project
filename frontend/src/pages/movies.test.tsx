@@ -83,8 +83,10 @@ describe('people and facts', () => {
     expect(formatLife('not a date', undefined, today)).toBeNull()
   })
 
-  test('"Predict a film with this actor" starts a fresh form with them as the lead', () => {
-    const form = personToForm({ id: 31, name: 'Tom Hanks' }, new Date(2026, 9, 25))
+  test('"Predict a film with this actor / director" starts a fresh form with them in that slot', () => {
+    const director = personToForm({ id: 525, name: 'Christopher Nolan' }, 'director', new Date(2026, 9, 25))
+    expect(director).toEqual({ ...emptyForm(new Date(2026, 9, 25)), director: { id: 525, name: 'Christopher Nolan' } })
+    const form = personToForm({ id: 31, name: 'Tom Hanks' }, 'actor', new Date(2026, 9, 25))
     expect(form.actors).toEqual([{ id: 31, name: 'Tom Hanks' }])
     expect(form).toEqual({ ...emptyForm(new Date(2026, 9, 25)), actors: [{ id: 31, name: 'Tom Hanks' }] })
     expect(form.director).toBeNull()

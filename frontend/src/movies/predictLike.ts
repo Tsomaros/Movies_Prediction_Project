@@ -4,7 +4,8 @@
 //   filmToForm(film, options, today?)  -> FormValues: genres, themes, runtime, language, US rating, the director
 //                                         and the top-billed cast; the release date and everything else as a
 //                                         fresh form has them (it is a new film, not a remake of this one)
-//   personToForm(person, today?)       -> a fresh form with this actor as the lead ("Predict a film with this actor")
+//   personToForm(person, as?, today?)  -> a fresh form with this person as the lead actor or as the director
+//                                         ("Predict a film with this actor / director", the person page)
 //
 // Every limit comes from GET /meta/options, like the form's own rules: values the form wouldn't accept (a
 // genre outside the 19, a rating outside the list, a runtime out of range) are left out or reset to the default.
@@ -47,7 +48,9 @@ export function filmToForm(film: MovieDetail, options: Options, today = new Date
   }
 }
 
-/** "Predict a film with this actor" (the person page): a fresh form with them as the lead, the rest left to fill. */
-export function personToForm(person: { id: number; name: string }, today = new Date()): FormValues {
-  return { ...emptyForm(today), actors: [{ id: person.id, name: person.name }] }
+/** "Predict a film with this actor / director" (the person page): a fresh form with them in that slot. */
+export function personToForm(person: { id: number; name: string }, as: 'actor' | 'director' = 'actor',
+  today = new Date()): FormValues {
+  const ref = { id: person.id, name: person.name }
+  return as === 'director' ? { ...emptyForm(today), director: ref } : { ...emptyForm(today), actors: [ref] }
 }

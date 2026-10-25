@@ -64,7 +64,7 @@ export function formatLife(born: string | null | undefined, died: string | null 
   return `Born ${b.d} ${MONTHS[b.m - 1]} ${b.y} · ${age}`
 }
 
-type Film = PersonDetail['cast_credits'][number]
+type Film = PersonDetail['roles'][number]['films'][number]
 export type FilmSort = 'newest' | 'oldest' | 'score' | 'box_office'
 export const FILM_SORTS: { value: FilmSort; label: string }[] = [
   { value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' },
