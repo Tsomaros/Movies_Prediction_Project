@@ -600,6 +600,7 @@ Each person page has a Career section between the stats and the films, for the r
 - **Endpoints:** `GET /people/{id}/career` and `GET /people/{id}/career/model` (see API). Both count toward the predict limit.
   - **Speed:** `/career` takes 6–25 ms. A model answer takes about 400 ms locally, through the prediction cache, and then comes from an LRU of 2,000.
 - **Bundle:** the section and Recharts are their own lazy chunk (351 kB, 103 kB gzipped). The main bundle and the person page are unchanged.
+- **Memory:** the API is at 381 MiB in Docker after 100 predictions and 50 career pages with their model films (gate 450 MB). The image is unchanged at 1,085 MB unpacked.
 
 ## Frontend
 
