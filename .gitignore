@@ -41,3 +41,6 @@ Thumbs.db
 
 # Docker build inputs made by scripts/slim_db.py
 build/
+
+# Day 16: demo script, Q&A notes and the summary PDF, never committed
+private/

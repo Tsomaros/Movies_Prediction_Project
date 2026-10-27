@@ -354,7 +354,10 @@ Day 16 ends with a repo that explains itself in 30 seconds or in depth, a rehear
 
 | Topic | Decision | Why |
 | --- | --- | --- |
-| README | Focused README + `docs/` folder | Skimmers get the essentials; engineers can go deep |
+| README | Focused README + `docs/` folder; Oct 27: the README keeps about 150–200 lines and every detailed section moves word for word into `docs/`, which becomes the source of truth for the numbers | Skimmers get the essentials; engineers can go deep |
+| Demo speed (Oct 27) | `scripts/warmup.py` wakes the live site and runs the demo's exact requests, so they're cached when clicked; local `docker compose` is the backup | Live, the sweep takes about 25 s and the wake-up about 84 s |
+| GIF and video (Oct 27) | Dimitris records both from Claude's shot list | A narrated recording is his to make |
+| Private notes (Oct 27) | A gitignored `private/` folder: demo script with the failure card, shot list, Q&A, the summary and its PDF | Nothing private can be committed by mistake |
 | Diagrams | Mermaid, rendered on GitHub | Versioned with the code, no redrawing |
 | Decision log | `docs/decisions.md`, including "two databases" and "why Neon" (Day 14) | Answers "why did you choose X?" in writing |
 | Model card | `MODEL_CARD.md`, Hugging Face style | Shows ML maturity; matches `/model-card` |

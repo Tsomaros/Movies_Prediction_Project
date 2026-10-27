@@ -1,4 +1,4 @@
-.PHONY: setup model data db people people-db features career tune train evaluate test test-fast test-pg coverage api userdb docker-build docker-run deploy smoke web-setup web web-test gen-api collages
+.PHONY: setup model data db people people-db features career tune train evaluate test test-fast test-pg coverage api userdb docker-build docker-run deploy smoke warmup web-setup web web-test gen-api collages
 
 # Create .venv and install the locked dependencies (then `make model` for the text model)
 setup:
@@ -90,6 +90,10 @@ docker-run:
 # docker login ghcr.io and RENDER_DEPLOY_HOOK in .env)
 deploy:
 	uv run python scripts/deploy.py
+
+# Before a demo: wake the live app and cache the demo's predictions (scripts/warmup.py; URL= for another)
+warmup:
+	uv run python scripts/warmup.py $(if $(filter command line,$(origin URL)),--base-url $(URL))
 
 # Check the running app: the API at URL and the frontend at WEB (make smoke WEB= skips the frontend);
 # make smoke URL=https://... WEB=https://... for the live one

@@ -4,7 +4,6 @@
     cluster_keywords(vectors, k, seed) -> one cluster label per keyword (KMeans on MiniLM vectors)
     propose(con, embedder)             -> unnamed clusters, largest first, for naming by hand
     load_themes(path)                  -> {theme name: set of keyword ids} from the committed themes.json
-    theme_flags(keyword_ids, themes)   -> {theme name: 0/1} for one film
 
 Only train films (<=2015) choose the keywords, so later films can't shape the themes. The clusters
 were cleaned and named by hand and saved in themes.json (27 themes; keywords that don't describe the
@@ -21,7 +20,6 @@ import json
 import sqlite3
 import sys
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 import pandas as pd
@@ -70,11 +68,6 @@ def propose(con: sqlite3.Connection, embedder: Embedder, k: int = N_CLUSTERS) ->
 def load_themes(path: Path = THEMES_FILE) -> dict[str, set[int]]:
     data = json.loads(path.read_text(encoding="utf-8"))
     return {t["name"]: {kw["id"] for kw in t["keywords"]} for t in data["themes"]}
-
-
-def theme_flags(keyword_ids: Iterable[int], themes: dict[str, set[int]]) -> dict[str, int]:
-    ids = set(keyword_ids)
-    return {name: int(bool(ids & members)) for name, members in themes.items()}
 
 
 def main() -> None:
