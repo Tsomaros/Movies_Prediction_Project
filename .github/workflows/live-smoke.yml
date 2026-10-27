@@ -1,14 +1,14 @@
 # The live app's daily check (Day 15): scripts/smoke.py against the Render URL, the same checks as `make smoke`.
 # Once a day, so the free instance is allowed to sleep (any check wakes it; frequent ones would be a keep-alive);
 # --wait 180 covers the wake-up. A failed run emails the repository's owner (GitHub's default for scheduled runs).
-# Set the URL once: GitHub -> Settings -> Secrets and variables -> Actions -> Variables -> LIVE_URL.
+# The live URL is public, so it is written here (change it if the Render service is renamed).
 # GitHub disables scheduled workflows after 60 days without activity in the repository; re-enable it in Actions.
 name: Live smoke
 
 on:
   schedule:
-    - cron: "17 6 * * *"  # 06:17 UTC, about 9 in Athens
-  workflow_dispatch:      # "Run workflow" by hand, e.g. after a deploy
+    - cron: "17 6 * * *" # 06:17 UTC, about 9 in Athens
+  workflow_dispatch: # "Run workflow" by hand, e.g. after a deploy
 
 permissions:
   contents: read
@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-      - run: pip install httpx==0.28.1  # smoke.py needs only httpx and the committed golden files
+      - run: pip install httpx==0.28.1 # smoke.py needs only httpx and the committed golden files
       - run: python scripts/smoke.py --base-url "$LIVE_URL" --web-url "$LIVE_URL" --wait 180
         env:
-          LIVE_URL: ${{ vars.LIVE_URL }}
+          LIVE_URL: https://movie-prediction-2f1b0265282c.onrender.com
