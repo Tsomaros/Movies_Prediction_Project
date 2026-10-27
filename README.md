@@ -436,7 +436,7 @@ A FastAPI backend in `backend/app/`. Every endpoint lives under `/api/v1`, and t
 | GET | `/api/v1/movies/{id}` | Facts, themes, cast (with TMDB photos where the person pull has them) and crew, money (as reported and in 2025 $), score, posters and 6 similar films |
 | GET | `/api/v1/people?role=director\|actor&q=` | Director and actor autocomplete (any word of the name, accents folded), each with a TMDB photo thumbnail and the film they're known for |
 | GET | `/api/v1/people/{id}` | One person: TMDB photo, biography, life dates and links (where the person pull found them), their `main_role`, and per role (acting, directing, writing, production, music, camera, editing) their films (characters, or jobs) and stats from our data (films, years, top genres, average score over 50+ vote films, trusted box office in 2025 $, the actor and director they shared 2+ of those films with) |
-| GET | `/api/v1/people/{id}/career?role=acting\|directing\|writing` | One person's dated films in a role (score, votes, lead or supporting, the year's average), a 5-film career line, the best film and a track-record forecast of their next film's score with its backtest coverage (Day 14.8); counts toward the predict limit |
+| GET | `/api/v1/people/{id}/career?role=acting\|directing\|writing` | One person's dated films in a role (score, votes, lead or supporting), a 5-film career line, the best film and a track-record forecast of their next film's score with its backtest coverage (Day 14.8); counts toward the predict limit |
 | GET | `/api/v1/people/{id}/career/model?role=acting\|directing&genre=` | The score model on "Their usual film" and "Something new" (each with the recipe it scored, never a budget) plus up to 4 never-done genre chips; with `genre`, only that "Something new"; cached, counts toward the predict limit |
 | GET | `/api/v1/companies?q=`, `/api/v1/collections?q=` | Studio and franchise autocomplete |
 | GET | `/api/v1/meta/options` | Every form field and limit from the contract, the 27 themes, common languages and countries, suggested years |
@@ -578,7 +578,7 @@ Every person in our data has a page at `/people/:id`: actors (Day 14.6) and crew
 
 Each person page has a Career section between the stats and the films, for the role the page shows: acting, directing or writing. Other roles show a one-line note.
 
-- **The chart:** one dot per dated film (shorts under the form's 40 minutes are left out of the chart, the forecasts and the recipes; an unknown runtime counts), filled for leads (cast order 0–2) and crew, hollow for supporting roles, and faint grey under 50 votes. A line shows the centred average of 5 rated films, and a ring marks the best film. "Score / Revenue" (`?view=`) switches the whole section to box office: a log axis in 2025 dollars, a dot for every film with a trusted revenue (known, not doubted, not still in cinemas), a line of the typical (geometric mean) box office of 5 neighbouring films, and the best earner. Hover shows the film, a click opens it; on touch the first tap shows it, the second opens it. "View as table" lists every dated film.
+- **The chart:** one dot per dated film (shorts under the form's 40 minutes are left out of the chart, the forecasts and the recipes; an unknown runtime counts), filled for leads (cast order 0–2) and crew, hollow for supporting roles, and faint grey under 50 votes. A line shows the centred average of 5 rated films, and a ring marks the best film. Hover shows the film, a click opens it; on touch the first tap shows it, the second opens it. "View as table" lists every dated film.
 - **Their next film, from their track record:** an 80% range from their rated films (5+ needed). Recent films count more: a film h years older than their latest counts half. Their weighted average is trusted n_eff / (n_eff + k), and the role's average over the last 10 years the rest. The range is that middle ± q × the spread, with their own spread blended with the role's the same way. "How is this calculated?" fills in their numbers and the test result.
 - **The settings come from a backtest** (`make career`, a few seconds, `ml/artifacts/career_forecast.json`):
   - Every rated film after a person's 5th is a "next film", forecast from strictly earlier films only, and each person weighs the same.
@@ -592,23 +592,15 @@ Each person page has a Career section between the stats and the films, for the r
   | Writing | 3 | 1 | 1.55 | 83.4% | 0.54 | 0.63 | 1.86 | 991 | 2,030 |
 
   Unlike the Day 5 models, this small forecast is tuned on 2016–18 too: it is separate and has only three numbers per role.
-- **The same forecast for box office:** on log 2025 dollars, from films with a trusted revenue (5+ needed), with its own backtest. Box office is much harder to call than the score: the ranges are wide, and the card says so with the test numbers.
-
-  | Role | h (years) | k | q | Coverage | Within 2× | Log error | Database average | People | Films |
-  | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-  | Acting | 12 | 3 | 1.45 | 84.6% | 23% | 1.96 | 2.09 | 4,006 | 10,216 |
-  | Directing (acting's settings: 297 people) | 12 | 3 | 1.45 | 86.7% | 31% | 1.57 | 2.13 | 297 | 496 |
-  | Writing | 8 | 1 | 1.40 | 87.1% | 32% | 1.35 | 2.26 | 351 | 600 |
-
-- **The film model:** the Day 5 score model on two made-up films. Each shows the recipe it was given, its score and box office (the revenue model given their median budget when one is known, else estimating it), and has "Edit in predictor", which opens the form pre-filled with the named people and the median budget.
+- **The film model:** the Day 5 score model on two made-up films. Each shows the recipe it was given and has "Edit in predictor", which opens the form pre-filled with the named people and the median budget.
   - **Their usual film:** built from their last 10 rated films in the role: the 2 most common genres and 3 themes, language, month, US rating, country, the median runtime and budget, next year's date. The cast and director are people they made 2+ films with.
   - **Something new:** the most common recent genre pair they have never worked in, with no named collaborators. Up to 4 chips try other never-done genres.
   - **Filling the gaps:** missing values come from recent films of those genres, so every recipe is a form the contract accepts.
   - Writing has no model, because the form has no writer field.
 - **Endpoints:** `GET /people/{id}/career` and `GET /people/{id}/career/model` (see API). Both count toward the predict limit.
   - **Speed:** `/career` takes 6–25 ms. A model answer takes about 400 ms locally, through the prediction cache, and then comes from an LRU of 2,000.
-- **Bundle:** the section and Recharts are their own lazy chunk (351 kB, 103 kB gzipped). The main bundle and the person page are unchanged.
-- **Memory:** the API is at 380 MiB in Docker after 100 predictions and 50 career pages with their model films (gate 450 MB). The image is unchanged at 1,085 MB unpacked.
+- **Bundle:** the section and Recharts are their own lazy chunk (350 kB, 103 kB gzipped). The main bundle and the person page are unchanged.
+- **Memory:** the API is at 378 MiB in Docker after 100 predictions and 50 career pages with their model films (gate 450 MB). The image is unchanged at 1,085 MB unpacked.
 
 ## Frontend
 
