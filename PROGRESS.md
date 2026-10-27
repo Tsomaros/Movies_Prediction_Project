@@ -2122,3 +2122,123 @@ Dimitris asked to replace "Compared with its year" with box office, built the sa
 - **A chip that repeats the default pair** (Nolan's Romance gives Romance + Comedy) scores the same as the default but misses the prediction cache, because the genre order differs.
 - **The first `/career/model` call takes about 400 ms locally.** Check it on Render's small CPU against the 3 s target.
 - **Disk:** `make docker-build` needs about 1 GB free on C: for `slim_db.py`'s VACUUM; it failed at 0.5 GB until space was freed.
+
+## Day 15: Deployment (in progress, 2026-10-27)
+
+- [x] 0. Plan document: Day 15's decisions, from Dimitris's choices before the build:
+  - a private GHCR image built here, because about 470 MB the image needs isn't in git;
+  - a daily smoke Action instead of 5-minute uptime pings (any ping wakes the service);
+  - Sentry on the backend and the frontend, errors only;
+  - `docker compose` runs the same image as Render.
+- [x] 1. Single production container: FastAPI serves the built app (`2f1b026`)
+- [x] 2. int8 encoder: already done on Day 9 (`text.APP_MODEL`)
+- [x] 3. Render setup: Free web service in Frankfurt from `ghcr.io/tsomaros/movie-prediction` (Dimitris made the accounts)
+- [x] 4. Live verification: smoke, timings, the wake-up. The manual run-through on desktop and phone is still open
+- [ ] 5. Monitoring: the daily Action runs; Sentry is wired up, but no DSN is set
+- [ ] 6. Safety net: the clean-clone path is documented (`docker compose pull app`); the warm-up routine and the demo video are open
+- [x] 7. Accounts on Render: Neon in Frankfurt, migrated and seeded; demo login and a list write checked live; the client IP fixed (`24468ce`). Smoke still has no demo login or list toggle
+- [ ] 8. Wrap-up: README and CLAUDE.md done (`8fd34d3`); the `v1.0` tag waits for the open items
+
+### Task 1: one image
+
+- **`backend/app/web.py`** serves `frontend/dist` when `WEB_DIR` is set:
+  - client routes get `index.html`, `no-cache`;
+  - `/assets/` cached for a year, immutable;
+  - an old bundle name and an unknown `/api` path are 404s;
+  - gzip over 1 KB, `nosniff` and a referrer policy on every answer.
+- **`backend/Dockerfile`** gains a Node 24 stage; `frontend/Dockerfile`, `nginx.conf` and `frontend/.dockerignore` are gone. Compose maps :8000 and :8080 to the same server, so `make smoke` and Playwright keep their defaults.
+- **Runtime settings:** `PORT` from the host, `OMP_NUM_THREADS=1`.
+- **Data before code:** the Dockerfile copies `build/` before `ml/` and `backend/` (`24468ce`), so a code-only push is small.
+- **Found by the smoke check:** the collages went out as `application/octet-stream`. Python 3.11 has no `.webp` type and the slim image no `/etc/mime.types`; `web.py` registers it.
+
+### Task 5 (code): Sentry
+
+- **Backend** (`services/monitoring.py`): unhandled errors only, no tracing.
+  - Cookies, auth and forwarded-for headers, and request bodies are dropped.
+  - Stack-frame variables are off too. The first test showed the `mp_session` token leaking through them, because the ASGI scope holds every header.
+- **Frontend** (`lib/monitoring.ts`, `lib/sentry.ts`): loaded in the background only with `VITE_SENTRY_DSN`; route crashes are reported from `RouteError`.
+  - A whole-package `import('@sentry/browser')` made a 139 kB chunk (gzipped); named imports from `lib/sentry.ts` brought it to 30.7 kB.
+  - The start page's bundle grows by 125 bytes.
+
+### Task 3: deploying
+
+- **`scripts/deploy.py` (`make deploy`):** refuses uncommitted changes, builds, pushes `:<commit>` and `:latest`, then calls the deploy hook with that tag as `imgURL`.
+- **GHCR needs a classic token:** the first push was refused with a fine-grained one (`github_pat_…`), and the error only says the scopes don't match.
+- **The first push** took just over 10 minutes (about 410 MB).
+- **Image tags:** Render redeploys the service's own image tag after a settings change, so it must match the deployed tag.
+
+### Task 7: Neon
+
+- **First try:** the first value in `.env` was a Neon API key (`napi_…`), not a connection string. My check printed it in the session's tool output, so Dimitris was advised to revoke it.
+- **Region:** the first project was in London (eu-west-2). Dimitris made a new one in Frankfurt (eu-central-1), on a direct connection with `connect_timeout=10`.
+- **Seeded:** `001_init.sql` applied, then the demo account (12 watched, 8 to watch, 4 notes); a second migration run says "up to date". Postgres 18.6, first connection about 0.5 s.
+
+### Task 7: the client IP on Render
+
+| 6 wrong logins | Result |
+| --- | --- |
+| No forged header | 6th: 429 (the limit works) |
+| A new forged `X-Forwarded-For` each time, `FORWARDED_ALLOW_IPS` default or `*` | all 401: the forged value became the visitor's address |
+| After `24468ce` with `CLIENT_IP_HEADER=CF-Connecting-IP`: forged `X-Forwarded-For`, `True-Client-IP`, `X-Real-IP` | 6th: 429 |
+| A forged `CF-Connecting-IP` | Cloudflare's 403, never reaching the app |
+
+- **What happens:** Render appends to a visitor's own `X-Forwarded-For`, so no `FORWARDED_ALLOW_IPS` value helps.
+- **The fix:** `deps.client_ip` reads `CLIENT_IP_HEADER`, and the predict limiter uses it too (it read the connection directly before). `FORWARDED_ALLOW_IPS` stays at the default `127.0.0.1`, which is where Render's proxy connects from, so the cookie stays Secure.
+- **Still to check:** from one machine I couldn't test that two visitors are counted apart. That's Dimitris's phone test.
+
+### Task 4: checks
+
+| | |
+| --- | --- |
+| Python tests | 595 (`make test`), 465 quick, 46 accounts (`pg`); new: `test_web.py` (9), `test_monitoring.py` (2), the client IP header |
+| Frontend tests | 280 (2 new for monitoring) |
+| Local Docker | smoke 22/22, Playwright 2/2 |
+| Under 512 MB and 0.1 CPU in Docker | healthy after 80.5 s, startup peak 456 MiB, 353 MiB after; `/predict` median 5.9 s (6.4 s with 8 threads; 669 ms at 1 CPU) |
+| Live smoke | 22/22 from the laptop; the daily Action's first run passed in 57 s |
+| Live accounts | demo login (HttpOnly, SameSite=Lax, Secure), a list entry added and removed in about 0.1 s each, another site's `Origin` refused with a 403 |
+| Image | 1,097 MB unpacked, about 411 MB compressed |
+
+**Live speed:**
+
+| | |
+| --- | --- |
+| First request after 15 idle minutes | 83.8 s |
+| Model loading | 31–36 s |
+| `/predict`, uncached | median 2.2 s, max 2.6 s |
+| `/predict`, cached | 107 ms |
+| Pages, search, autocomplete | about 0.1 s |
+| Surprise me | 0.4 s |
+| Compare with two variants | 4.5 s |
+| Career section's model films | 6.1 s |
+| 12-month sweep | 24.6 s |
+
+### Changes from the plan
+
+- **The image:** Render runs a prebuilt private image instead of building from GitHub.
+- **Monitoring:** a daily smoke Action instead of uptime alerts.
+- **The client IP:** read from `CF-Connecting-IP`, not `X-Forwarded-For`.
+- **`smoke.py`:** its API timeout went from 60 to 120 s, for the live sweep.
+- **The Action names the URL directly:** Dimitris wrote it into the workflow; his `${{ https://… }}` form wasn't a valid GitHub expression, so it is a plain value now (`8d31ffe`).
+
+### Mistakes, fixed
+
+- **My first live write test** read the status answer wrong and changed the demo account's *The Matrix* (watched, 8/10, 2026-08-30): it moved the film to the watchlist and then removed it. Running the seed against Neon again restored the starting set.
+- **`RENDER_DEPLOY_HOOK` held the site's address** at the second deploy, so the hook call got a 405 and Render wasn't told. Dimitris set the image tag and the environment in the dashboard instead.
+
+### Still open
+
+- **Sentry:** `SENTRY_DSN` on Render and `VITE_SENTRY_DSN` in `.env`, a `make deploy`, and one test error on each side.
+- **`.env`:** put the real deploy hook (`https://api.render.com/deploy/srv-…?key=…`) back in `RENDER_DEPLOY_HOOK`.
+- **By hand:**
+  - the run-through on desktop and phone in both themes, with the TMDB attribution;
+  - the phone test of the login limit, one visitor against another.
+- **Safety net:** the warm-up routine (open the site about 2 minutes before a demo) and the 2–3 minute demo video plus a README GIF.
+- **`smoke.py`:** a demo login and a list toggle that puts the entry back exactly as it was.
+- **Finish:** the `v1.0` tag, then push.
+
+### Surprises / inputs for Day 16
+
+- **The sweep takes about 25 s live** (12 predictions on 0.1 CPU), and the career model films about 6 s. Faster predictions or a progress hint on the compare page would help the demo.
+- **The wake-up takes about 84 s,** longer than Render's "about a minute", because the models load after the container starts.
+- **The README still says "Cast and crew have no photos"** in Limitations, out of date since Day 14.7.
+- **Scheduled workflows stop after 60 days** without repository activity; check before interview day.
