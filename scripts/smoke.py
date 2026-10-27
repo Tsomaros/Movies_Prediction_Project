@@ -41,7 +41,7 @@ TARGETS = ("budget", "revenue", "score")
 
 
 class Smoke:
-    def __init__(self, base_url: str, timeout: float = 60.0):
+    def __init__(self, base_url: str, timeout: float = 120.0):  # the live sweep takes about 25 s warm
         self.client = httpx.Client(base_url=base_url.rstrip("/"), timeout=timeout)
         self.failures = 0
 

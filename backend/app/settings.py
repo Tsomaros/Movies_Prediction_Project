@@ -13,6 +13,7 @@
 | CAREER_FILE   | ml/artifacts/career_forecast.json | the career forecast's settings (make career, Day 14.8); missing: no start |
 | WEB_DIR       | (none: API only)            | the built app (frontend/dist) to serve beside the API (the image, Day 15) |
 | SENTRY_DSN    | (none: Sentry off)          | where the backend's errors are reported (Day 15)       |
+| CLIENT_IP_HEADER | (none: the connection's address) | the header holding the visitor's address for the per-IP limits (Render) |
 | APP_RELEASE   | (none)                      | the git commit the image was built from (make deploy), Sentry's release |
 
 The browser origins are also the only ones allowed to write to /auth and /me (deps.same_origin_write),
@@ -51,6 +52,7 @@ class Settings:
     web_dir: Path | None = None
     sentry_dsn: str | None = None
     release: str | None = None
+    client_ip_header: str | None = None
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -68,4 +70,5 @@ class Settings:
             web_dir=Path(env["WEB_DIR"]) if env.get("WEB_DIR") else None,
             sentry_dsn=env.get("SENTRY_DSN") or None,
             release=env.get("APP_RELEASE") or None,
+            client_ip_header=env.get("CLIENT_IP_HEADER") or None,
         )

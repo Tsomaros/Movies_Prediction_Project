@@ -286,6 +286,19 @@ def test_the_31st_prediction_in_a_minute_is_refused_politely(api):
     assert api.get("/openapi.json").status_code == 200  # other endpoints are not limited
 
 
+def test_the_limits_count_per_client_ip_header_when_one_is_set(db, predictor):
+    settings = Settings(db_path=db / "movies.db", rate_limit=1, client_ip_header="CF-Connecting-IP")
+    with TestClient(create_app(settings, predictor=predictor)) as c:
+        as_ip = lambda ip: c.post(PREDICT, json=film_form(), headers={"CF-Connecting-IP": ip}).status_code
+        assert as_ip("198.51.100.1") == 200 and as_ip("198.51.100.1") == 429
+        assert as_ip("198.51.100.2") == 200  # another visitor, though the connection is the same
+        forged = {"CF-Connecting-IP": "198.51.100.3", "X-Forwarded-For": "203.0.113.9"}
+        assert c.post(PREDICT, json=film_form(), headers=forged).status_code == 200
+        assert c.post(PREDICT, json=film_form(), headers={**forged, "X-Forwarded-For": "203.0.113.10"}).status_code == 429
+        assert c.post(PREDICT, json=film_form()).status_code == 200  # no header: the connection's address
+        assert c.post(PREDICT, json=film_form()).status_code == 429
+
+
 def test_the_rate_limit_window_slides_and_forgets_idle_clients():
     now = [0.0]
     limiter = RateLimiter(limit=2, window=60, clock=lambda: now[0])

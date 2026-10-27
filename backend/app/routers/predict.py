@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from backend.app.deps import get_predictions
+from backend.app.deps import client_ip, get_predictions
 from backend.app.schemas.errors import VALIDATION, Message
 from backend.app.schemas.form import CompareRequest, PredictForm
 from backend.app.schemas.prediction import CompareResponse, Prediction
@@ -20,8 +20,7 @@ TOO_MANY = "Too many predictions from your address. Please try again in a minute
 
 
 def rate_limited(request: Request) -> None:
-    client = request.client.host if request.client else "unknown"
-    wait = request.app.state.rate_limiter.hit(client)
+    wait = request.app.state.rate_limiter.hit(client_ip(request))
     if wait is not None:
         raise HTTPException(status_code=429, detail=TOO_MANY, headers={"Retry-After": str(wait)})
 

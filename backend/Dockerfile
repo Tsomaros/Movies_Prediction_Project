@@ -38,10 +38,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
     && useradd --create-home --uid 1000 app
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
-COPY ml/ ml/
-COPY backend/ backend/
+# The data first: it changes only with a new database (make docker-build), so a code-only deploy reuses
+# these 350 MB of layers and pushes only what changed
 COPY build/movies.db data/movies.db
 COPY build/context.joblib data/context.joblib
+COPY ml/ ml/
+COPY backend/ backend/
 COPY --from=web /web/dist web/
 ARG APP_RELEASE=""
 

@@ -9,7 +9,10 @@
 The accounts side (Day 14):
     get_userdb(request)       -> a connection from the user-database pool; 503 when accounts are off
     now(request)              -> the current UTC time from app.state.clock (tests freeze it)
-    client_ip(request)        -> the visitor's address (uvicorn's proxy headers make it the real one behind Render's proxy)
+    client_ip(request)        -> the visitor's address for the per-IP limits: the CLIENT_IP_HEADER header when that
+                                 setting names one and the request has it (on Render, a header its edge sets;
+                                 X-Forwarded-For can't be used there: a visitor's own value reaches the app as the
+                                 client), else the connection's address
     optional_user / current_user
                               -> the logged-in user ({id, username, is_demo}) from the mp_session cookie, or
                                  None / 401
@@ -83,7 +86,9 @@ def now(request: Request) -> datetime:
 
 
 def client_ip(request: Request) -> str:
-    return request.client.host if request.client else "unknown"
+    header = request.app.state.settings.client_ip_header
+    value = request.headers.get(header, "").split(",")[0].strip() if header else ""
+    return value or (request.client.host if request.client else "unknown")
 
 
 def optional_user(request: Request, conn: psycopg.Connection = Depends(get_userdb)) -> Optional[dict[str, Any]]:
