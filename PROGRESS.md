@@ -2041,6 +2041,25 @@ Dimitris asked to replace "Compared with its year" with box office, built the sa
 - **Tom Hanks:** 77 rated films become 72; the score range is now 5.9–7.9.
 - **Checks:** Python 466 fast and 188 career/API/e2e; frontend 289 on re-saved real answers; Docker smoke passes.
 
+### Revenue view and year toggle removed (`9ac1592`, `dcf5519`)
+
+- **Dimitris's decision:** the Revenue view is removed, and "Compared with its year" doesn't come back. The section shows the score only, with no toggle; an old `?view=` link opens the score.
+- **What stays:** the 40-minute rule for shorts. The code is the pre-revenue code with that rule, and the year averages are gone from the API and the artifact.
+- **Score numbers** (2019+ next films, unchanged from the shorts run):
+
+  | Role | h, k, q | Coverage | MAE (database average) | People |
+  | --- | --- | --- | --- | --- |
+  | Acting | 8, 3, 1.40 | 82.9% | 0.589 (0.638) | 9,498 |
+  | Directing | 3, 1, 1.50 | 84.4% | 0.507 (0.610) | 734 |
+  | Writing | 3, 1, 1.55 | 83.4% | 0.538 (0.625) | 991 |
+
+  Tom Hanks's next film reads 5.9–7.9 from 72 rated films; Nolan's directing range is 6.6–8.3, with chips Comedy, Romance, Fantasy, Family.
+- **Checks:**
+  - Python 583 (`make test`), frontend 278;
+  - the section's chunk is 350 kB (103 kB gzipped);
+  - Docker: smoke passes, memory 378 MiB, Playwright 2/2;
+  - Nolan's page in Docker shows the score only.
+
 ### Surprises / inputs for Day 15+
 
 - **Tom Hanks's usual film is Drama + Documentary**, because recent films include documentaries where he appears as himself. He has credits in every genre (low-vote films included), so he gets no chips, only "They've already worked in every genre."
