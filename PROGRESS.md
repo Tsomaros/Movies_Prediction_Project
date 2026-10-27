@@ -1731,6 +1731,61 @@ Write-up: `reports/audit.md`.
 - **The thresholds are fixed fractions:** for many films a month, a rating or a holiday release stays within the uncertainty, which is honest but can feel flat in a demo. The franchise and unknown-cast presets show clear differences.
 - **The quick loops:** `make test-fast` (320 tests, about 18 s) and `make web-test` (178 tests, about 20 s).
 
+## Day 14: Test user, watched list, watchlist and notes (done 2026-10-24)
+
+Written afterwards (2026-10-27) from commit `a943ac7`, the plan and the README; the Day 14 commit left `PROGRESS.md` unchanged.
+
+- [x] 0. Plan document: Day 14 inserted from Dimitris's document, and the file renamed from `Days 11–15` to `Days 11–16`, so deployment is Day 15 and documentation Day 16.
+- [x] 1. Postgres and schema: `001_init.sql`, the migration runner, the pool, `demo_seed.json` and the seed. The Neon project itself is still to create (see below).
+- [x] 2. Auth: `/auth/demo`, `/auth/login`, `/auth/logout`, `/auth/me`
+- [x] 3. User endpoints under `/me`: lists, status, notes
+- [x] 4. Frontend: login page and dialog, account menu, list control, stars, notes, browse badges and quick buttons, `/my-movies`
+- [x] 5. Tests: 43 against Postgres, Vitest for the account UI, one Playwright flow
+- [x] 6. Wrap-up: README section, CLAUDE.md, commit `a943ac7` (66 files); this entry added later
+
+### What was built
+
+- **Two databases:** movies stay in the read-only SQLite file; user data goes to Postgres (`backend/app/userdb/`), the compose `db` locally (Postgres 18, volume `userdb`). `movie_id` has no cross-database key, so the API checks it against SQLite.
+- **The database holds the rules:** `CHECK`s for one list per film, a date or rating only on a watched film, and notes of 1–2,000 characters. Every user table has `user_id`.
+- **Sessions:** a random 32-byte token in the `mp_session` cookie (httpOnly, SameSite=Lax, Secure on https, 7 days); only its SHA-256 is stored. Passwords use argon2id at 19 MiB and 2 passes.
+- **Writes:** the `Origin` must be the site's own or in `CORS_ORIGINS`, and the body must be JSON (else 403 or 415).
+- **Limits:** 30 writes a minute per user, 500 list entries and 200 notes (409 beyond), password login 5 and demo login 10 a minute per IP.
+- **Nightly reset:** the first demo login after midnight Athens time restores the starting set (12 watched, 8 on the watchlist, 4 notes) in one transaction under `pg_advisory_xact_lock`.
+- **The real client IP:** uvicorn's proxy headers with `FORWARDED_ALLOW_IPS` (`*` in compose, `127.0.0.1` in the image), done now instead of on deployment day.
+- **Without `USER_DATABASE_URL`** `/auth` and `/me` answer 503, and an unreachable database is a 503 too; everything else works as before.
+
+### Bugs found by hand, fixed before the commit
+
+- **A click before login could wipe a rating.** The click was queued while the page didn't yet know the film was rated, so marking Inception watched cleared its 9/10. Now a date or rating left out of a PUT keeps its value, and only an explicit `null` clears the rating.
+- **Fast clicks could save the wrong rating.** Seven arrow-key presses sent seven requests that finished out of order, so 1/10 was saved instead of 8/10. List writes now run one at a time in click order (`scope: 'me-lists'`), and keyboard changes save once, after the keys stop (`KEY_SAVE_MS`).
+
+### Changes from the plan
+
+- **Schedule:** Dimitris's document had accounts replacing a chat-assistant day, but the repo never had one. Day 14 was inserted instead, and the chat assistant went to the README's next steps.
+- **Undo on a deleted note** adds it back as a new note, at the top with today's date (a README Limitation).
+- **One existing test** (`app.test.tsx`) had a timing race once in four full runs, now that the header also asks who is logged in. That check now waits.
+- **Neon not set up yet:** Claude can't create accounts, so `.env` points at the compose Postgres with a random demo password. Task 7 of Day 15 sets up the live database.
+
+### Checks
+
+| | |
+| --- | --- |
+| Python tests | 447 (`make test`), 320 quick, 43 accounts (`pg`) |
+| Frontend tests | 219, 15 of them added after the first coverage run (204 before) |
+| Frontend coverage | 97.2% of lines, 86.7% of branches (Day 13: 97% / 86%); it was 92.5% / 83.8% before the 15 tests |
+| Playwright | the demo flow passes against Docker on :8080 through nginx: a logged-out click, the demo login, 8/10 by keyboard, a note with Ctrl+Enter, both in My movies after a reload |
+| Smoke | all 19 checks pass |
+| Docker | three containers; lists and the session survive a container restart; the API logs each visitor's address, not nginx's; the API container uses 372 MiB with the Postgres driver loaded |
+
+### Surprises / inputs for Day 14.5+
+
+- **Disk:** C: filled up (0 GB free) during the checks, and the time-travel test failed with "disk is full" until it passed after the space was freed. Pruning Docker's build cache freed 2.75 GB inside `docker_data.vhdx` but nothing on C:; compacting the file with `diskpart` (Docker stopped, admin) gave 9 GB back.
+- **After `wsl --shutdown`** the containers reported healthy but :8080 sent empty replies; recreating them fixed it, and the `userdb` volume kept the demo data.
+- **Day 15 (deployment):**
+  - create the Neon project (Frankfurt, Postgres 18), put its URL in `.env` and run `make userdb` against it;
+  - on Render, `FORWARDED_ALLOW_IPS` must list only Render's proxy;
+  - everyone shares the demo account, so its "private" notes are visible to every visitor until the nightly reset.
+
 ## Day 14.5: "Surprise me" random picker (done 2026-10-24)
 
 - [x] 0. Plan document: Day 14.5 inserted into `Days 11–16` from Dimitris's document, with the choices made before the build:
