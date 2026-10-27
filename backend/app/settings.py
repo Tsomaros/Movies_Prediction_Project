@@ -11,6 +11,9 @@
 | CONTEXT_FILE  | (none: build at startup)    | prebuilt track records (ml.features.build prebuilt)  |
 | USER_DATABASE_URL | (none: accounts off)    | Postgres for the demo account (Day 14); without it /auth and /me answer 503 |
 | CAREER_FILE   | ml/artifacts/career_forecast.json | the career forecast's settings (make career, Day 14.8); missing: no start |
+| WEB_DIR       | (none: API only)            | the built app (frontend/dist) to serve beside the API (the image, Day 15) |
+| SENTRY_DSN    | (none: Sentry off)          | where the backend's errors are reported (Day 15)       |
+| APP_RELEASE   | (none)                      | the git commit the image was built from (make deploy), Sentry's release |
 
 The browser origins are also the only ones allowed to write to /auth and /me (deps.same_origin_write),
 besides the API's own origin.
@@ -45,6 +48,9 @@ class Settings:
     context_file: Path | None = None
     user_database_url: str | None = None
     career_file: Path = CAREER_FILE
+    web_dir: Path | None = None
+    sentry_dsn: str | None = None
+    release: str | None = None
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -59,4 +65,7 @@ class Settings:
             context_file=Path(env["CONTEXT_FILE"]) if env.get("CONTEXT_FILE") else None,
             user_database_url=env.get("USER_DATABASE_URL") or None,
             career_file=Path(env.get("CAREER_FILE", str(CAREER_FILE))),
+            web_dir=Path(env["WEB_DIR"]) if env.get("WEB_DIR") else None,
+            sentry_dsn=env.get("SENTRY_DSN") or None,
+            release=env.get("APP_RELEASE") or None,
         )

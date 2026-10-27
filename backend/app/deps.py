@@ -9,7 +9,7 @@
 The accounts side (Day 14):
     get_userdb(request)       -> a connection from the user-database pool; 503 when accounts are off
     now(request)              -> the current UTC time from app.state.clock (tests freeze it)
-    client_ip(request)        -> the visitor's address (uvicorn's proxy headers make it the real one behind nginx)
+    client_ip(request)        -> the visitor's address (uvicorn's proxy headers make it the real one behind Render's proxy)
     optional_user / current_user
                               -> the logged-in user ({id, username, is_demo}) from the mp_session cookie, or
                                  None / 401

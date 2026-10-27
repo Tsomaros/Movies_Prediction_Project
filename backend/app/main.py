@@ -19,6 +19,7 @@ app.state.clock gives the current UTC time to the accounts side (tests freeze it
 Then memory freed while loading is handed back to the system (release_free_memory, Linux only).
 The database itself is never held open: every request gets its own read-only connection (deps.get_db).
 A new endpoint is a new module in backend/app/routers/ with a `router`, added to ROUTERS below.
+With WEB_DIR set (the production image, Day 15) the app itself is served too (backend/app/web.py).
 """
 
 from __future__ import annotations
@@ -34,13 +35,14 @@ from typing import AsyncIterator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app import errors
+from backend.app import errors, web
 from backend.app.deps import connect_read_only
 from backend.app.routers import (auth, career, collections, companies, health, meta, model_card, movies, my_movies,
                                  notes, people, predict, random, sweep)
 from backend.app.services.career_forecast import load_career_artifact
 from backend.app.services.career_model import CareerModelCache
 from backend.app.services.lookups import Lookups
+from backend.app.services.monitoring import start_sentry
 from backend.app.services.prediction import PredictionService
 from backend.app.services.ratelimit import RateLimiter
 from backend.app.settings import API_PREFIX, Settings
@@ -76,6 +78,8 @@ def release_free_memory() -> bool:
 def create_app(settings: Settings | None = None, predictor: Predictor | None = None,
                lookups: Lookups | None = None) -> FastAPI:
     settings = settings or Settings.from_env()
+    if settings.sentry_dsn:
+        start_sentry(settings.sentry_dsn, release=settings.release)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -106,12 +110,14 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
     app = FastAPI(title="Movie Prediction API", version="1.0.0", description=DESCRIPTION, lifespan=lifespan)
     app.state.settings = settings
     app.state.clock = lambda: datetime.now(timezone.utc)
-    # The app and the API share one origin (Vite's proxy, nginx), so the cookie needs no CORS credentials
+    # The app and the API share one origin (Vite's proxy, or the app served by web.py), so the cookie needs no CORS credentials
     app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins),
                        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["*"])
     errors.install(app)
     for module in ROUTERS:
         app.include_router(module.router, prefix=API_PREFIX)
+    if settings.web_dir is not None:
+        web.install(app, settings.web_dir)  # last, so the API and /docs match first
     return app
 
 

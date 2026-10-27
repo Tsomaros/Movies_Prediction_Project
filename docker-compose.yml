@@ -1,10 +1,11 @@
-# The app's services: the API (Day 9), the frontend (Day 10), which serves the app on :8080 and proxies
-# /api to the backend, so the browser talks to one origin, and Postgres for the demo account (Day 14; live,
-# the API uses Neon instead). The user data survives `docker compose down` in the userdb volume.
+# The app's services: the app's one image (Day 15: the API and the built React app on one origin, the same
+# image Render runs) and Postgres for the demo account (Day 14; live, the API uses Neon instead). The user data
+# survives `docker compose down` in the userdb volume.
 #
-#   make docker-build   # slim database + both images
-#   make docker-run     # docker compose up -d, then waits for both healthchecks
-#   make smoke          # scripts/smoke.py against the API on :8000 and the app on :8080
+#   make docker-build         # slim database + the image
+#   docker compose pull app   # or the image from GHCR, for a clean clone without the data (docker login ghcr.io)
+#   make docker-run           # docker compose up -d, then waits for the healthchecks
+#   make smoke                # scripts/smoke.py against the API on :8000 and the app on :8080
 #   docker compose down
 #   docker compose up -d --wait db   # Postgres alone, on :5432 (make test-pg; make api with USER_DATABASE_URL)
 services:
@@ -26,35 +27,23 @@ services:
       retries: 10
     restart: unless-stopped
 
-  backend:
+  app:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    image: movie-prediction-api
-    container_name: movie-prediction-api
+    image: ${IMAGE:-ghcr.io/tsomaros/movie-prediction:latest}
+    container_name: movie-prediction
     ports:
-      - "8000:8000"
+      - "8000:8000"  # the API (make smoke's URL)
+      - "8080:8000"  # the same server as the app's address (make smoke's WEB, Playwright)
     environment:
-      CORS_ORIGINS: "http://localhost:5173,http://localhost:8080"  # the Vite dev server; the frontend container
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:8080"  # the Vite dev server; the app on :8080
       RATE_LIMIT: "30"
       CACHE_SIZE: "1000"
       USER_DATABASE_URL: "postgresql://movies:movies@db:5432/movies"
-      FORWARDED_ALLOW_IPS: "*"  # trust nginx's X-Forwarded-For, so the rate limits see each visitor
     depends_on:
       db:
         condition: service_healthy
-    restart: unless-stopped
-
-  frontend:
-    build:
-      context: frontend
-    image: movie-prediction-web
-    container_name: movie-prediction-web
-    ports:
-      - "8080:8080"
-    depends_on:
-      backend:
-        condition: service_healthy  # nginx answers /api only once the models are loaded
     restart: unless-stopped
 
 volumes:

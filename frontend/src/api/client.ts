@@ -1,4 +1,4 @@
-// The one typed client for the backend (/api/v1, proxied by Vite in dev and by nginx in docker compose).
+// The one typed client for the backend (/api/v1, proxied by Vite in dev, on the same server in the image).
 //
 //   getOptions(), searchNames(kind, q), predict(form), compare(body), sweep(body), getModelCard(),
 //   listMovies(query), getMovie(id)                     -> typed bodies from schema.d.ts (npm run gen:api)

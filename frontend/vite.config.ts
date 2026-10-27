@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 // The dev server proxies /api to the backend (make api, port 8000), so the browser stays on one origin,
-// as it does behind nginx in docker compose.
+// as it is in the image, where the API serves the app too.
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {

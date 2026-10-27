@@ -1,4 +1,4 @@
-.PHONY: setup model data db people people-db features career tune train evaluate test test-fast test-pg coverage api userdb docker-build docker-run smoke web-setup web web-test gen-api collages
+.PHONY: setup model data db people people-db features career tune train evaluate test test-fast test-pg coverage api userdb docker-build docker-run deploy smoke web-setup web web-test gen-api collages
 
 # Create .venv and install the locked dependencies (then `make model` for the text model)
 setup:
@@ -76,15 +76,20 @@ userdb:
 	uv run python -m backend.app.userdb.migrate
 	uv run python -m backend.app.userdb.seed
 
-# The images: the slim database copy, the prebuilt track records (build/), then the backend and frontend (needs Docker)
+# The image: the slim database copy, the prebuilt track records (build/), then the app's one image (needs Docker)
 docker-build: ml/artifacts/career_forecast.json
 	uv run python scripts/slim_db.py
 	uv run python -m ml.features.build prebuilt
 	docker compose build
 
-# Start both containers in the background and wait until their healthchecks pass (about 15 s); the app is on :8080
+# Start the app and Postgres in the background and wait until their healthchecks pass (about 15 s); the app is on :8080
 docker-run:
 	docker compose up -d --wait
+
+# Build the image from this commit, push it to GHCR and deploy it on Render (scripts/deploy.py; needs
+# docker login ghcr.io and RENDER_DEPLOY_HOOK in .env)
+deploy:
+	uv run python scripts/deploy.py
 
 # Check the running app: the API at URL and the frontend at WEB (make smoke WEB= skips the frontend);
 # make smoke URL=https://... WEB=https://... for the live one

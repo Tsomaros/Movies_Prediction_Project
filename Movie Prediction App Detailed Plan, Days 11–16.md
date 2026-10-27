@@ -319,21 +319,24 @@ Day 15 ends with the app live at a public link on a free host that needs no card
 | --- | --- | --- |
 | Host | Render Free, Frankfurt region | The only free option that runs our container without a card |
 | Frontend | Served by FastAPI from the same container | One URL, no CORS, fewest moving parts |
-| Deploys | Manual only (`make deploy` via deploy hook); auto-deploy off | A quick commit can't break the live demo |
+| Image (Oct 27) | Built here and pushed to a private GHCR image tagged by git commit; Render pulls it with a read token | About 470 MB the image needs (slim database, models, 8-bit MiniLM) is not in git, so Render can't build it; private keeps the TMDB-derived database from being downloadable |
+| Deploys | Manual only: `make deploy` builds, pushes and calls the deploy hook with that commit's tag; image services never auto-deploy | A quick commit can't break the live demo; a rollback picks an earlier tag |
 | Domain | Platform address | Free, works immediately |
 | Speed | 400 ms local target; up to about 3 s live, stated honestly in the README | 0.1 CPU is slow |
-| Memory | int8 MiniLM; Day 9 gate under about 450 MB | Fits 512 MB safely |
-| Monitoring | Uptime alerts on `/api/v1/health` + Sentry on backend and frontend | Know about problems before the interviewer does |
+| Memory | int8 MiniLM (done on Day 9); Day 9 gate under about 450 MB, startup peak checked under a 512 MB limit | Fits 512 MB safely |
+| Monitoring (Oct 27) | A daily GitHub Action runs `scripts/smoke.py` against the live URL (waiting up to 3 min for the wake-up) and emails on failure; no 5-minute pings | Any uptime ping wakes the service, so frequent ones are a keep-alive |
+| Sentry (Oct 27) | Backend and frontend, errors only (no tracing or replay), no personal data, off without a DSN; the frontend SDK loads lazily | Know about problems before the interviewer does, without growing the first page |
+| Local copy (Oct 27) | `docker compose` runs the same single image as Render (app on :8080, API on :8000) | A clean clone can pull the image instead of rebuilding it from untracked files |
 | Safety net | Warm-up routine, local `docker compose`, recorded demo | The demo works even if the network doesn't |
 
 ### Tasks
 
 0. **Carry-over (if needed).** Finish Day 13 first.
 1. **Single production container (1 h).** React build copied into the backend image and served by FastAPI; unknown paths fall back to `index.html`; CORS limited to the live domain; rate limit on; `/docs` public; no secrets needed.
-2. **int8 encoder swap (45 min, only if Day 3 was built with full precision).** Consistency check on validation films: embeddings nearly identical and prediction shifts tiny compared with range width. Pass → use int8; fail → keep full precision. No retraining, so the Day 6 test results stay valid.
-3. **Render setup (1 h).** Free web service from the GitHub repo with our Dockerfile; Frankfurt; auto-deploy off; `make deploy` triggers the deploy hook; rollback from the dashboard.
+2. **int8 encoder swap:** done on Day 9 (`text.APP_MODEL`, 8-bit per channel), nothing to do.
+3. **Render setup (1 h).** Free web service from the private GHCR image (Dimitris creates the Render, GitHub token and Neon accounts; Claude can't); Frankfurt; `PORT` 8000; `make deploy` pushes and triggers the deploy hook; rollback from the dashboard or by an earlier tag.
 4. **Live verification (1 h).** `scripts/smoke.py` against the public URL; full manual run-through on desktop and phone in both themes; attribution check; record wake-up time and live prediction speed.
-5. **Monitoring (1 h).** Uptime alerts (not keep-alive); Sentry on FastAPI and React with one test error.
+5. **Monitoring (1 h).** The daily smoke Action (scheduled workflows stop after 60 days without repo activity); Sentry on FastAPI and React with one test error.
 6. **Safety net (1 h).** Warm-up routine; local `docker compose up` from a clean clone; 2–3 minute demo video plus a README GIF.
 7. **Accounts on Render (from Day 14).** Set `USER_DATABASE_URL` and `DEMO_PASSWORD` on Render; run the migrations and the seed; add demo login and a list toggle to `scripts/smoke.py`; run the Playwright flow against the live URL; check the real client IP reaches the rate limiter; repeat the memory check with the Postgres driver loaded.
 8. **Wrap-up (30 min).** README: live link, honest live-speed numbers, deployment section; `PROGRESS.md`; tag `v1.0`.

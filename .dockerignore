@@ -1,4 +1,4 @@
-# Build context for backend/Dockerfile: nothing goes in unless listed here.
+# Build context for backend/Dockerfile (the app's one image): nothing goes in unless listed here.
 *
 !pyproject.toml
 !uv.lock
@@ -6,6 +6,19 @@
 !ml/
 !build/movies.db
 !build/context.joblib
+!frontend/
+
+# Inside frontend/: the image installs its own packages and builds its own dist/
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/e2e/
+frontend/test-results/
+frontend/playwright-report/
+frontend/Dockerfile
+frontend/nginx.conf
+frontend/**/*.log
+frontend/**/*.local
 
 # Inside the allowed folders, still out:
 ml/artifacts/*.joblib

@@ -79,7 +79,7 @@ class Smoke:
 
 
 def web_checks(s: Smoke, web_url: str, expected_version: str | None) -> None:
-    """The frontend: nginx serves the app and its bundle, sends any route to the app, and proxies /api."""
+    """The app: the server sends the app and its bundle, sends any route to the app, and answers /api on the same origin."""
     web = httpx.Client(base_url=web_url.rstrip("/"), timeout=30)
     page: dict[str, str] = {}
 
