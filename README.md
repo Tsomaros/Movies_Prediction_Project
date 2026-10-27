@@ -6,6 +6,8 @@ Every prediction is a range: a low end (10th percentile), an expected value (50t
 
 **Stack:** Python, pandas, LightGBM, Optuna, ONNX Runtime, SQLite, FastAPI and React (Vite). All data comes from our own TMDB API pull.
 
+**Live:** https://movie-prediction-2f1b0265282c.onrender.com (Render Free: it sleeps after 15 idle minutes, so the first visit takes about 1.5 minutes; see [Deployment](#deployment-day-15)).
+
 ## Targets
 
 | Target  | Definition                         | Source field                      | Units                                                  |
@@ -66,7 +68,8 @@ make tune                  # tune the LightGBM settings on backtest folds 1-2 (1
 make train                 # calibrate the ranges, then fit and save all three models to ml/artifacts/ (about 5 min)
 make evaluate              # baselines and LightGBM on validation, breakdowns and backtest -> reports/ (test split untouched)
 make api                   # the API on http://localhost:8000, docs at /docs (needs the database and the app's models)
-make docker-build          # the backend and frontend images (see Running with Docker); make docker-run, make smoke
+make docker-build          # the app's one image (see Running with Docker); make docker-run, make smoke
+make deploy                # build from this commit, push to GHCR and deploy on Render (see Deployment)
 make web-setup             # the frontend's packages (needs Node 24); then make web for http://localhost:5173 (see Frontend)
 make web-test              # the frontend's types, lint and tests
 uv run python -m ml.models.rough           # the rough-estimate cut-offs (fitted once on Day 6, then frozen)
@@ -523,7 +526,7 @@ make test-pg                     # the 46 accounts tests against a throwaway dat
 - **Joining two databases:** `GET /me/movies` reads the user's entries (at most 500) from Postgres, fetches those films from SQLite in one query, then sorts (date added, title, your rating, watched date) and pages in Python. It returns the same film cards as `/movies`.
 - **Limits for a shared account:** 30 writes a minute per user, 500 list entries and 200 notes (409 beyond), password login 5 and demo login 10 a minute per IP. Every `/me` answer is `Cache-Control: private, no-store`; someone else's note is a 404.
 - **Nightly reset:** the first demo login after midnight Athens time restores `backend/app/userdb/demo_seed.json` (12 watched films, 8 on the watchlist, 4 notes) in one transaction under `pg_advisory_xact_lock`, so two visitors arriving at once reset once. Render Free has no cron.
-- **The real client IP:** uvicorn reads `X-Forwarded-For` from the proxies in `FORWARDED_ALLOW_IPS` (nginx in compose), so the per-IP limits count each visitor and https sets the Secure cookie.
+- **The real client IP:** the per-IP limits read the visitor's address from the header named by `CLIENT_IP_HEADER` (live: `CF-Connecting-IP`, set by Cloudflare in front of Render), else from the connection. uvicorn's proxy headers (`FORWARDED_ALLOW_IPS`, default `127.0.0.1`, where Render's proxy connects from) give the https scheme, so the cookie is Secure. See [Deployment](#deployment-day-15) for why `X-Forwarded-For` can't be used there.
 - **Without `USER_DATABASE_URL`** `/auth` and `/me` answer 503 and everything else works as before; an unreachable database is a 503 too, never a 500.
 
 **In the app.** The header shows "Log in", or an initials avatar, a "Demo" chip and a menu with My movies and Log out. A logged-out click on a list button opens a small login dialog in place, and the click completes after the login. A film's page has Watched / Plan to watch / Not in a list, the watched date, 10 keyboard-friendly stars ("8 out of 10", shown as 8/10 next to the TMDB score) and your notes (2,000-character counter, Ctrl+Enter, edit in place, delete with Undo). Browse shows a labelled badge on your films from one status request per page, and quick buttons on hover with a mouse. `/my-movies` has Watched, Plan to watch and Notes tabs with counts, its tab, sort and page in the URL. Buttons change at once and roll back with a toast if the server says no; list writes run one at a time in click order.
@@ -739,35 +742,36 @@ A full reload also returns to the top of the page now: scroll positions are kept
 
 ## Running with Docker
 
-Three containers (`docker-compose.yml`): Postgres for the demo account (Day 14, data kept in the `userdb` volume), the backend, with the database, the app's models and the 8-bit text model baked in (`backend/Dockerfile`), and the frontend (`frontend/Dockerfile`), which serves the app on http://localhost:8080 and proxies `/api` to the backend. It needs Docker and the local data and models (`data/movies.db`, `ml/artifacts/final/`, `make model`).
+Two containers (`docker-compose.yml`): Postgres for the demo account (Day 14, data kept in the `userdb` volume), and the app's one image (`backend/Dockerfile`, Day 15): the API with the database, the app's models and the 8-bit text model baked in, which also serves the built React app. The app is on http://localhost:8080 and the API on :8000; both ports reach the same server. It is the image Render runs. Building it needs Docker and the local data and models (`data/movies.db`, `ml/artifacts/final/`, `make model`); a clean clone without them can pull it instead (`docker login ghcr.io`, then `docker compose pull app`; the image is private).
 
 ```bash
-make docker-build   # build/movies.db (slim copy) + build/context.joblib (prebuilt track records), then both images
+make docker-build   # build/movies.db (slim copy) + build/context.joblib (prebuilt track records), then the image
 make docker-run     # docker compose up -d --wait: returns once both healthchecks pass; the app is on :8080
 make smoke          # scripts/smoke.py: the API on :8000 and the app on :8080; make smoke URL=https://... WEB=https://... for the live site
 docker compose down
 ```
 
-**The frontend image** (82.5 MB): Node 24 installs the locked packages, type-checks the app and builds it; then an unprivileged nginx serves it on 8080, as a non-root user with a healthcheck. nginx sends every other path (`/predict`, `/movies/603`) to the app, caches the hashed bundles for a year and the page not at all, gzips, and proxies `/api/` to `backend:8000`. It starts once the backend is healthy.
+**The app inside the image** (until Day 15 an nginx image of its own): a Node 24 stage installs the locked packages, type-checks the app and builds it, and `backend/app/web.py` serves `dist/` (`WEB_DIR`). Every other path (`/predict`, `/movies/603`) gets the app, an unknown `/api` path stays a JSON 404, the hashed bundles are cached for a year and the page not at all, responses over 1 KB are gzipped, and every answer carries `nosniff` and a referrer policy.
 
-**What goes into the backend image:**
+**What goes into the image:**
 - the runtime dependencies only, 10 packages: `uv sync --no-default-groups`; `optuna`, `matplotlib`, `scikit-learn` and `onnx` are in the `ml` group, and `pytest` and `jupyter` in `dev`;
-- `ml/` and `backend/`;
 - `build/movies.db`: `data/movies.db` without the training-only `features` table, VACUUMed, 334 → 293 MB with the person details (`scripts/slim_db.py`; 220 MB before Day 14.6);
 - `build/context.joblib`: History, Companies and Franchises built once (`python -m ml.features.build prebuilt`), stamped with the database's build time and film count, so a file from another build is refused;
-- the app's models and comparables index, and the 8-bit MiniLM only (23 MB).
+- `ml/` and `backend/`, with the app's models and comparables index and the 8-bit MiniLM only (23 MB), copied after the data so a code-only deploy pushes only the small layers;
+- the built app (`frontend/dist`, about 1 MB).
 
 **How it runs:**
 - as a non-root user, with one uvicorn worker (the prediction cache and the rate limiter live in its memory);
 - a healthcheck on `/api/v1/health`;
-- `CORS_ORIGINS` from the environment;
-- `MALLOC_ARENA_MAX=2`, and after loading the app hands freed memory back to the system (`malloc_trim`).
+- `CORS_ORIGINS`, `USER_DATABASE_URL`, `SENTRY_DSN` and `CLIENT_IP_HEADER` from the environment, and the port from `PORT` (8000 unless the host sets it);
+- `MALLOC_ARENA_MAX=2`, and after loading the app hands freed memory back to the system (`malloc_trim`);
+- `OMP_NUM_THREADS=1`: LightGBM's threads gave no speed-up under a 0.1 CPU limit (6.4 s with 8, 5.9 s with 1 per prediction).
 
 **The smoke script** (`scripts/smoke.py`) waits for `/health`, then checks:
 - the model version;
 - the three golden forms, each middle equal to `tests/golden/predictions.json` to 6 significant figures;
 - compare, the 12-month sweep, a bad form's 422, search, the box-office sort and the score filter, a movie page, autocomplete, options and the model card;
-- with `--web-url` (`make smoke` passes `WEB`, default :8080): the start page and its two collages (WebP, under 300 kB), the script bundle (gzipped, cached for a year), a client-side route served as the app, and the API through the frontend's proxy.
+- with `--web-url` (`make smoke` passes `WEB`, default :8080): the start page and its two collages (WebP, under 300 kB), the script bundle (gzipped, cached for a year), a client-side route served as the app, and the API on the app's address.
 
 That is 19 checks. It exits with status 1 on any failure, the same against local Docker and the live URL.
 
@@ -775,12 +779,12 @@ That is 19 checks. It exits with status 1 on any failure, the same against local
 
 | | |
 | --- | --- |
-| Backend image | 1,085 MB unpacked (the layers in `docker history`), about 409 MB compressed (Docker Desktop's `docker images` shows their sum, 1.49 GB); 984 / 370 MB before Day 14's account packages and the person details (Days 14.6–14.7) |
-| Frontend image | 82.5 MB (nginx; the app itself is about 1 MB) |
+| Image | 1,097 MB unpacked (the layers in `docker history`), about 411 MB compressed (Docker Desktop's `docker images` shows their sum, 1.51 GB); 1,085 / 409 MB before Day 15 added the app and Sentry, 984 / 370 MB before Day 14's account packages and the person details (Days 14.6–14.7) |
 | Startup until healthy | 8.3 s (models, prebuilt track records, comparables, lookups) |
 | Memory after startup | 323 MB (it peaks at 489 MB while loading) |
 | Memory after 100 different predictions with synopses | **407 MB** (`docker stats` 385 MiB), under the 450 MB gate |
 | Under a 512 MB limit, like Render Free | no out-of-memory kill; startup, 100 predictions and the smoke test pass |
+| Under 512 MB and 0.1 CPU (Day 15, the image with the app and Sentry) | healthy after 80.5 s, startup peak 456 MiB, 353 MiB after predictions; `/predict` median 5.9 s (1 CPU: 669 ms) |
 | `/predict`, uncached | median 175 ms, 90th percentile 192 ms |
 
 **How memory came down from 663 MB:**
@@ -796,11 +800,64 @@ Every prediction is unchanged: the full features table rebuilt both ways matches
 - **The app stopped loading `optuna` and `scikit-learn`.** `Chain.load` imported `optuna` through `calibrate` and `tune`, and three sklearn imports moved into the training functions that use them.
 - **An 8-bit MiniLM for the creator's synopsis** (23 MB instead of 90 MB). Its weights are quantised per output channel. On 1,000 overviews its vectors have a mean cosine of 0.993 with the full model's, and 89% find the same nearest overview; plain int8 gave 0.956 and 71%. Training and the comparables index keep the full model's vectors, and the golden comparables are unchanged.
 
+## Deployment (Day 15)
+
+The app runs at **https://movie-prediction-2f1b0265282c.onrender.com**: one Render Free web service in Frankfurt (512 MB, 0.1 CPU, no card) running the image above, with the demo account's data in Neon's free Postgres 18, also in Frankfurt.
+
+**Why a prebuilt image.** Render can't build the image from the repository: the slim database, the models and the 8-bit MiniLM (about 470 MB) aren't in git. So the image is built here, pushed to a private GitHub Container Registry image (`ghcr.io/tsomaros/movie-prediction`, private so the TMDB-derived database can't be downloaded), and Render pulls it with a read-only token.
+
+```bash
+make deploy   # scripts/deploy.py: refuses uncommitted changes, builds from this commit, pushes :<commit> and :latest,
+              # then calls Render's deploy hook (RENDER_DEPLOY_HOOK in .env) with that tag
+make smoke URL=https://movie-prediction-2f1b0265282c.onrender.com WEB=https://movie-prediction-2f1b0265282c.onrender.com
+```
+
+- **Manual only:** an image service never deploys by itself, so a commit can't change the live demo. A rollback is Render's dashboard or the hook with an earlier tag.
+- **The first push** uploads about 410 MB (just over 10 minutes here); the data layers come before the code, so later code-only pushes are small.
+- **The service's own image tag** is what Render redeploys after a settings change, so it must be set to the deployed tag (the hook's tag counts for that deploy only).
+- **Neon:** `make userdb USER_DATABASE_URL="<Neon's direct URL>"` applied the migration and the demo seed, with the same `DEMO_PASSWORD` as on Render.
+
+**Render's settings:**
+
+| Variable | Value |
+| --- | --- |
+| `USER_DATABASE_URL` | Neon's direct connection string (no pooler), with `connect_timeout=10` |
+| `DEMO_PASSWORD` | the one the seed hashed |
+| `CORS_ORIGINS` | `https://movie-prediction-2f1b0265282c.onrender.com` |
+| `CLIENT_IP_HEADER` | `CF-Connecting-IP` |
+| `SENTRY_DSN` | the backend's Sentry project (not set yet) |
+| Health check path | `/api/v1/health` |
+
+**The client IP on Render.** Render appends to an `X-Forwarded-For` the visitor sends instead of replacing it, so whatever a visitor writes there reached the app as their address. Six wrong logins, each with a different forged `X-Forwarded-For`, all got 401 instead of a 429 on the 6th, with `FORWARDED_ALLOW_IPS` at its default and at `*`. The limits now read `CF-Connecting-IP`, which Cloudflare (in front of Render) sets itself and which can't be forged: a request that sends its own gets Cloudflare's 403 before it reaches the app. Forged `X-Forwarded-For`, `True-Client-IP` and `X-Real-IP` headers all hit the limit on the 6th login now.
+
+**Checked live (2026-10-27):**
+- `make smoke` against the live URL: all 22 checks, the same golden predictions as locally;
+- the same smoke from GitHub's servers (the daily Action's first run): passed in 57 s;
+- the demo login (cookie HttpOnly, SameSite=Lax, Secure), a list entry added and removed (about 0.1 s each), and a write with another site's `Origin` refused with a 403.
+
+**Speed on Render Free:**
+
+| | Live |
+| --- | --- |
+| The first visit after 15 idle minutes (the start page) | 83.8 s: Render starts the container, then the models load |
+| Model loading at startup | 31–36 s |
+| `/predict`, uncached (10 forms) | median 2.2 s, max 2.6 s (target: up to about 3 s) |
+| `/predict`, cached | 107 ms |
+| Film, person and career pages, search, autocomplete | about 0.1 s |
+| Surprise me | 0.4 s |
+| Compare with two variants | 4.5 s |
+| The career section's model films | 6.1 s |
+| The 12-month sweep | 24.6 s |
+
+**Monitoring:**
+- **A daily check:** `.github/workflows/live-smoke.yml` runs `scripts/smoke.py` against the live URL at 06:17 UTC and waits up to 3 minutes for the wake-up; a failed run emails the repository's owner. Once a day, because any check wakes the service, so frequent pings would be a keep-alive. GitHub stops scheduled workflows after 60 days without activity in the repository.
+- **Sentry** (errors only, no tracing or replay): the backend reports unhandled errors without cookies, IPs, request bodies or stack-frame variables (`backend/app/services/monitoring.py`); the frontend loads its SDK in the background as a 30.7 kB chunk (the start page's bundle grows by 125 bytes) and the route error page reports crashes. Both are off without a DSN, and no DSN is set yet.
+
 ## Testing
 
 ```bash
-make test        # everything: 504 tests, about 2.5 min with the database, the models and the compose Postgres
-make test-fast   # skips the slow, real-data and Postgres tests: 374 tests, about 25 s
+make test        # everything: 595 tests, about 2.7 min with the database, the models and the compose Postgres
+make test-fast   # skips the slow, real-data and Postgres tests: 465 tests, about 35 s
 make test-pg     # starts the compose Postgres, then the 46 accounts tests
 make coverage    # everything, with line and branch coverage of ml/ and backend/
 ```
@@ -822,6 +879,7 @@ Three markers (`pyproject.toml`) sort the tests:
 | Surprise me | `tests/test_random.py`; the logged-in cases in `tests/test_accounts.py` (`pg`) | the pick never returns a watched or already shown film; spinning again until nothing is left gives exactly the films above the floor, each once; hidden gems remove the floor but keep the poster rule; each filter, and a film with no runtime left out under a runtime limit; `no_match`, `all_seen` and `watchlist_empty`; watchlist mode only from the watchlist, with no floor, 401 logged out and 503 without accounts; 422s for a bad decade or more than 200 excluded ids; the 429 |
 | Person pages | `tests/test_people_data.py`, `tests/test_people_db.py`, `tests/test_people_api.py` | slimming and cleaning a TMDB person (blanks, future and reversed dates, only http(s) homepages and `nm…` IMDb ids), the biography cut at a sentence end, which ids are pulled (cast with 2+ films and every crew member, each once), the pull asking `/person/{id}` in English, resuming and recording 404s, the six-month refresh leaving one line per id; `person_details` in every build, the load skipping unknown ids and keeping the newest record and the build stamp; a person page's details and roles (acting first for an actor, films newest first with characters; crew films once per role with their jobs; the main role from TMDB's department or, without one, the most films), stats per role (the 50-vote rule, unknown and doubted money left out, the actor and director with 2+ shared films, never the person: a director's top actor, a writer's top director), cast photos on film pages, bad ids as 404 or 422, search hits with a photo and known-for film, accents folded both ways, search text with SQL or FTS syntax |
 | The demo flow | `frontend/e2e/demo.spec.ts` (Playwright, Edge; `npm run e2e`, default against :8080) | in a real browser: a logged-out click, the demo login in the dialog, 8/10 by keyboard, a note with Ctrl+Enter, both in My movies after a reload, then it cleans up; then a "Surprise me" spin, a second spin with a different film, and its page |
+| The served app and Sentry (Day 15) | `tests/test_web.py`, `tests/test_monitoring.py`, `frontend/src/lib/monitoring.test.ts` | client routes get the app uncached, bundles a year and gzipped, `.webp` typed, an old bundle and an unknown `/api` path are 404s, paths outside `dist/` never leak a file, the safety headers; an unhandled error reaches Sentry without the session cookie or the forwarded IP, 4xx answers don't; the frontend loads Sentry only with a DSN, once, and reports a crash |
 | The model card | `tests/test_model_card.py` | the committed `model_card.json` equals one built from the reports now, belongs to the served models, and copies the reports' numbers exactly, the uncertainty thresholds included |
 | The frontend | `frontend/src/**/*.test.ts(x)` (Vitest, Testing Library) | the rules against the API's real limits, invalid input blocked, the autocomplete (Enter waits for the suggestions), the examples sending exactly the golden forms, the URL and draft round trips, every API error kind, routes and the theme; the results page on the three golden answers saved from the real API (cards, badges, break-even, notes, comparables, drivers, the accuracy numbers equal to the model card), form → results with one request, the actions, and each failure state; compare and the sweep on real answers saved from the API (every preset changes one field or says why not, the `?v=` round trip and broken variants, "within the uncertainty" on both sides of each threshold, the drivers that moved, a variant the API refuses, 12 months with the best and "about as good"); the edge cases (the waking-up notice after 3 s, the API down, 429, links edited by hand on four pages, a crashing page keeping the navigation); the browse state in the URL, search writing `?q=` once after typing, filters, chips, the no-results buttons, the remembered view, the film page (money toggle, few votes, no poster, 404), "Predict a film like this", the curated rows from their config, and TMDB's logo and notice on every route; the start page's panels and their reduced-motion switch, `/series`, the header's links, `/movies` against `/browse` and old `/movies?…` links reaching `/browse`; the accounts (a logged-out click completing after the login in the dialog, the password form: success back to `?next=`, a wrong password, empty and blank fields, a failing demo login; `?next=` only to a path on this site, an optimistic change rolling back with a toast, "Rating removed · Undo", the watched date, the stars by keyboard saving once, notes added with Ctrl+Enter, edited in place, deleted with Undo or rolled back, `/my-movies`' URL state, tabs, empty tab and retry, the browse badges from one request and the quick buttons, logout leaving nothing private); "Surprise me" (the shuffle then the film, at once with reduce motion, Spin again excluding every earlier pick, the login dialog before a watchlist spin, the three empty states and their buttons, the filters sent and remembered, a broken saved choice, the dialog on wide screens, the list buttons, a 429, reopening without a replay); the actor pages (photo, life dates, stats with links, the biography as plain text with Read more, IMDb and TMDB links, films with characters and every sort in the URL, crew credits, an initials avatar without TMDB details, a director-only page, the predict button's form, not found, a bad id never asked, Try again; the people row: 6 actors, nothing under 2 characters, "No films or people match", initials without a photo; cast and crew names linking from film pages; `formatLife` around a birthday); the person page by role (opening on the main role, the switch in `?role=` with the sort, an odd role falling back, the writing credit, the director's predict button, no button for writing); directors in the people row, merged and labelled; cast photos with initials as the fallback); 254 tests, 97.5% of lines and 87.3% of branches (`npm run coverage`) |
 
@@ -894,12 +952,14 @@ The money models hold up on new films; the score ranges under-cover, because you
 - **"Predict a film like this" carries only part of a film.** It leaves out the studio, country, franchise, budget and synopsis, and takes the first credited director when there are two (the form has one).
 - **Cast and crew have no photos.** The pull didn't fetch people's images, so the film page shows initials avatars.
 - **The default browse order is TMDB's popularity on the day of the pull.** It is a trending number, so the first page starts with *Clue* (1985) rather than the best-known films.
-- **The client IP is only as good as `FORWARDED_ALLOW_IPS`.** uvicorn takes the visitor's address from `X-Forwarded-For` when the request comes from a listed proxy. Compose trusts any address (`*`), so a request straight to :8000 could claim any IP; on Render it must list only Render's proxy (Day 15).
+- **The per-IP limits trust Cloudflare's `CF-Connecting-IP` on Render.** It can't be forged through Render's edge, but the app takes it from any request that has it, so on a host without Cloudflare `CLIENT_IP_HEADER` must stay unset. Whether two visitors behind one Cloudflare edge are counted apart was checked from one machine only.
+- **The live site is slow where several predictions run in a row.** On Render Free's 0.1 CPU a prediction takes about 2.2 s (0.2 s locally), the career section's model films 6 s and the 12-month sweep about 25 s, with no progress shown beyond the slow-host notice. The first visit after 15 idle minutes waits about 84 s for the wake-up as well (the app shows its slow-host notice after 3 s); open the site a couple of minutes before a demo.
+- **Sentry is wired up but not active:** no DSN is set on Render or in the bundle yet.
 - **Everyone shares the demo account.** Its lists and "private" notes are private to the account, not to a visitor: anyone logged in to it sees and can change them until the nightly reset.
 - **Undo on a deleted note adds it back as a new note,** at the top of the list with today's date.
 - **The examples are dated October 2026 and May 2027,** like the golden forms they send. Once a date has passed, the year list (this year to four years ahead) no longer offers it, though the form still sends it.
-- **The Docker image is 1,085 MB unpacked, above the ~700 MB aim** (about 409 MB compressed). The Python packages take 489 MB (441 MB before Day 14's Postgres and argon2 packages), scipy alone 143 MB; the database 293 MB, 73 MB of it the person details (Days 14.6–14.7): LightGBM imports `scipy.sparse` when it loads, so scipy can't be left out. The 100 MB of precompiled bytecode stays, so startup doesn't recompile everything.
-- **Startup peaks at 489 MB.** That is under Render Free's 512 MB, but not by much: a bigger database or model would need another look.
+- **The Docker image is 1,097 MB unpacked, above the ~700 MB aim** (about 411 MB compressed). The Python packages take 489 MB (441 MB before Day 14's Postgres and argon2 packages), scipy alone 143 MB; the database 293 MB, 73 MB of it the person details (Days 14.6–14.7): LightGBM imports `scipy.sparse` when it loads, so scipy can't be left out. The 100 MB of precompiled bytecode stays, so startup doesn't recompile everything.
+- **Startup peaks at 456–489 MB.** That is under Render Free's 512 MB, but not by much: a bigger database or model would need another look.
 - **The app embeds a synopsis with an 8-bit model, the comparables index holds full-model vectors.** They agree closely (mean cosine 0.993), but for about 1 synopsis in 10 the nearest overview differs, so a comparable can differ from what the full model would pick.
 - **Memory measurements depend on the system.** On Windows the same app keeps more freed memory (639 MB after startup before the cuts); `malloc_trim` works on Linux only. The gate is measured in Docker, like the host.
 - **Some comparable films are obscure.** *Get Out*'s are small horror films scored about 4.5–6. A tie-break towards well-known films was tried and made the comparables' revenue less like the film's own, so it was dropped.

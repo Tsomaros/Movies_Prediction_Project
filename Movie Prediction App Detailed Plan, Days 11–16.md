@@ -326,6 +326,7 @@ Day 15 ends with the app live at a public link on a free host that needs no card
 | Memory | int8 MiniLM (done on Day 9); Day 9 gate under about 450 MB, startup peak checked under a 512 MB limit | Fits 512 MB safely |
 | Monitoring (Oct 27) | A daily GitHub Action runs `scripts/smoke.py` against the live URL (waiting up to 3 min for the wake-up) and emails on failure; no 5-minute pings | Any uptime ping wakes the service, so frequent ones are a keep-alive |
 | Sentry (Oct 27) | Backend and frontend, errors only (no tracing or replay), no personal data, off without a DSN; the frontend SDK loads lazily | Know about problems before the interviewer does, without growing the first page |
+| Client IP (Oct 27) | The per-IP limits read `CF-Connecting-IP` (`CLIENT_IP_HEADER`), not `X-Forwarded-For` | Render appends to a visitor's own `X-Forwarded-For`, so forged values got past the limits; Cloudflare sets `CF-Connecting-IP` and refuses it from clients |
 | Local copy (Oct 27) | `docker compose` runs the same single image as Render (app on :8080, API on :8000) | A clean clone can pull the image instead of rebuilding it from untracked files |
 | Safety net | Warm-up routine, local `docker compose`, recorded demo | The demo works even if the network doesn't |
 
