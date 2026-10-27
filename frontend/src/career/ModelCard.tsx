@@ -1,16 +1,14 @@
-// The film model on two made-up films (GET /people/{id}/career/model): "Their usual film" and "Something new",
-// each with its range for the section's view (the score in points, or the revenue with money() and whether the
-// model was given their median budget or estimated one), the recipe in one line and "Edit in predictor"; genre
-// chips under "Something new". The
+// The score model on two made-up films (GET /people/{id}/career/model): "Their usual film" and "Something new",
+// each with its range, the recipe in one line and "Edit in predictor"; genre chips under "Something new". The
 // section owns the chosen chip and its queries: `chip` is the query for the chosen genre only (the default chip
 // is the default answer, no request), and while a new chip loads the last numbers stay, faded.
 import type { UseQueryResult } from '@tanstack/react-query'
 
-import type { CareerModelResponse, CareerView, Recipe } from '@/api/client'
+import type { CareerModelResponse, Recipe } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import { money, points } from '@/result/format'
+import { points } from '@/result/format'
 
 export type ModelKind = 'usual' | 'new'
 type Answer = UseQueryResult<CareerModelResponse>
@@ -22,26 +20,17 @@ function recipeLine(r: Recipe): string {
   return [r.labels.genres.join(', '), r.labels.themes.join(', '), people, String(r.release_year)].filter(Boolean).join(' · ')
 }
 
-function Row({ title, film, view, onEdit, canEdit, testId, children }: {
-  title: string; film: CareerModelResponse['new'] | NonNullable<CareerModelResponse['usual']>; view: CareerView
-  onEdit: () => void; canEdit: boolean; testId: string; children?: React.ReactNode
+function Row({ title, film, onEdit, canEdit, testId, children }: {
+  title: string; film: CareerModelResponse['new'] | NonNullable<CareerModelResponse['usual']>; onEdit: () => void
+  canEdit: boolean; testId: string; children?: React.ReactNode
 }) {
-  const { score, revenue } = film.prediction
-  const budget = film.recipe.budget_2025
-  const range = view === 'score'
-    ? `${points(score.low)} – ${points(score.high)}`
-    : `${money(revenue.low)} – ${money(revenue.high)}`
+  const { low, high } = film.prediction
   return (
     <div className="grid gap-1">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3">
         <h4 className="text-sm font-medium">{title}</h4>
-        <span className="text-xl font-semibold tabular-nums">{range}</span>
+        <span className="text-xl font-semibold tabular-nums">{points(low)} – {points(high)}</span>
       </div>
-      {view === 'revenue' && (
-        <p className="text-muted-foreground text-xs" data-testid={`${testId}-budget`}>
-          {revenue.mode === 'given' && budget != null ? `with their median budget of ${money(budget)}` : 'budget estimated by the model'}
-        </p>
-      )}
       <p className="text-muted-foreground text-sm" data-testid={testId}>{recipeLine(film.recipe)}</p>
       {children}
       <Button variant="outline" size="sm" className="w-fit" disabled={!canEdit} onClick={onEdit}>Edit in predictor</Button>
@@ -58,8 +47,8 @@ function Failed({ onRetry }: { onRetry: () => void }) {
   )
 }
 
-export function ModelCard({ base, chip, view, selected, onChip, onEdit, canEdit }: {
-  base: Answer; chip: Answer; view: CareerView; selected: number | null; onChip: (genre: number | null) => void
+export function ModelCard({ base, chip, selected, onChip, onEdit, canEdit }: {
+  base: Answer; chip: Answer; selected: number | null; onChip: (genre: number | null) => void
   onEdit: (recipe: Recipe, kind: ModelKind) => void; canEdit: boolean
 }) {
   const frame = (body: React.ReactNode) => (
@@ -87,7 +76,7 @@ export function ModelCard({ base, chip, view, selected, onChip, onEdit, canEdit 
 
   return frame(
     <>
-      <Row title="Their usual film" film={usual} view={view} testId="usual-recipe" canEdit={canEdit} onEdit={() => onEdit(usual.recipe, 'usual')} />
+      <Row title="Their usual film" film={usual} testId="usual-recipe" canEdit={canEdit} onEdit={() => onEdit(usual.recipe, 'usual')} />
       {asked && chip.isError ? (
         <div className="grid gap-2">
           <h4 className="text-sm font-medium">Something new</h4>
@@ -95,7 +84,7 @@ export function ModelCard({ base, chip, view, selected, onChip, onEdit, canEdit 
         </div>
       ) : (
         <div aria-busy={faded} className={cn('transition-opacity', faded && 'opacity-50')}>
-          <Row title="Something new" film={shown} view={view} testId="new-recipe" canEdit={canEdit && !faded} onEdit={() => onEdit(shown.recipe, 'new')}>
+          <Row title="Something new" film={shown} testId="new-recipe" canEdit={canEdit && !faded} onEdit={() => onEdit(shown.recipe, 'new')}>
             {shown.note && <p className="text-muted-foreground text-xs">{shown.note}</p>}
             {chips.length > 0 && (
               <ul aria-label="Try a genre" className="flex flex-wrap gap-1.5 py-1">

@@ -25,7 +25,6 @@
    "year": 1999,
    "release_date": "1999-04-02",
    "score": 7.116,
-   "revenue": 243782.0,
    "vote_count": 2008,
    "rated": true,
    "lead": null,
@@ -38,7 +37,6 @@
    "year": 2000,
    "release_date": "2000-10-11",
    "score": 8.174,
-   "revenue": 74944739.0,
    "vote_count": 16928,
    "rated": true,
    "lead": null,
@@ -51,7 +49,6 @@
    "year": 2005,
    "release_date": "2005-06-10",
    "score": 7.731,
-   "revenue": 617309814.0,
    "vote_count": 23370,
    "rated": true,
    "lead": null,
@@ -64,7 +61,6 @@
    "year": 2006,
    "release_date": "2006-10-19",
    "score": 8.212,
-   "revenue": 175267633.0,
    "vote_count": 18315,
    "rated": true,
    "lead": null,
@@ -77,7 +73,6 @@
    "year": 2008,
    "release_date": "2008-07-16",
    "score": 8.538,
-   "revenue": 1508966563.0,
    "vote_count": 37016,
    "rated": true,
    "lead": null,
@@ -90,7 +85,6 @@
    "year": 2010,
    "release_date": "2010-07-15",
    "score": 8.373,
-   "revenue": 1239572562.0,
    "vote_count": 40486,
    "rated": true,
    "lead": null,
@@ -103,7 +97,6 @@
    "year": 2012,
    "release_date": "2012-07-17",
    "score": 7.799,
-   "revenue": 1516854507.0,
    "vote_count": 25150,
    "rated": true,
    "lead": null,
@@ -116,7 +109,6 @@
    "year": 2014,
    "release_date": "2014-11-04",
    "score": 8.491,
-   "revenue": 1015990767.0,
    "vote_count": 41560,
    "rated": true,
    "lead": null,
@@ -129,7 +121,6 @@
    "year": 2017,
    "release_date": "2017-07-19",
    "score": 7.45,
-   "revenue": 721712007.0,
    "vote_count": 18123,
    "rated": true,
    "lead": null,
@@ -142,7 +133,6 @@
    "year": 2020,
    "release_date": "2020-08-22",
    "score": 7.172,
-   "revenue": 454709473.0,
    "vote_count": 11664,
    "rated": true,
    "lead": null,
@@ -155,7 +145,6 @@
    "year": 2023,
    "release_date": "2023-07-19",
    "score": 8.022,
-   "revenue": 1006523278.0,
    "vote_count": 12727,
    "rated": true,
    "lead": null,
@@ -163,150 +152,73 @@
    "poster_small": "https://image.tmdb.org/t/p/w342/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"
   }
  ],
- "metrics": {
-  "score": {
-   "line": [
-    {
-     "year": 1999,
-     "value": 7.674
-    },
-    {
-     "year": 2000,
-     "value": 7.808
-    },
-    {
-     "year": 2005,
-     "value": 7.954
-    },
-    {
-     "year": 2006,
-     "value": 8.206
-    },
-    {
-     "year": 2008,
-     "value": 8.131
-    },
-    {
-     "year": 2010,
-     "value": 8.283
-    },
-    {
-     "year": 2012,
-     "value": 8.13
-    },
-    {
-     "year": 2014,
-     "value": 7.857
-    },
-    {
-     "year": 2017,
-     "value": 7.787
-    },
-    {
-     "year": 2020,
-     "value": 7.784
-    },
-    {
-     "year": 2023,
-     "value": 7.548
-    }
-   ],
-   "best_film": {
-    "movie_id": 155,
-    "title": "The Dark Knight",
-    "year": 2008,
-    "value": 8.538
-   },
-   "forecast": {
-    "status": "ok",
-    "low": 6.606,
-    "mid": 7.453,
-    "high": 8.3,
-    "explain": {
-     "n_films": 11,
-     "half_life": 3.0,
-     "own_share": 0.764,
-     "own_avg": 7.783,
-     "db_avg": 6.388
-    },
-    "test": {
-     "coverage": 0.8341,
-     "n_people": 991,
-     "within_2x": null
-    }
-   }
+ "line": [
+  {
+   "year": 1999,
+   "value": 7.674
   },
-  "revenue": {
-   "line": [
-    {
-     "year": 1999,
-     "value": 22425837.0
-    },
-    {
-     "year": 2000,
-     "value": 37496171.0
-    },
-    {
-     "year": 2005,
-     "value": 78510087.0
-    },
-    {
-     "year": 2006,
-     "value": 432692657.0
-    },
-    {
-     "year": 2008,
-     "value": 789623528.0
-    },
-    {
-     "year": 2010,
-     "value": 872363319.0
-    },
-    {
-     "year": 2012,
-     "value": 1157790116.0
-    },
-    {
-     "year": 2014,
-     "value": 910837106.0
-    },
-    {
-     "year": 2017,
-     "value": 873677374.0
-    },
-    {
-     "year": 2020,
-     "value": 761119553.0
-    },
-    {
-     "year": 2023,
-     "value": 691258660.0
-    }
-   ],
-   "best_film": {
-    "movie_id": 49026,
-    "title": "The Dark Knight Rises",
-    "year": 2012,
-    "value": 1516854507.0
-   },
-   "forecast": {
-    "status": "ok",
-    "low": 34202310.0,
-    "mid": 349004543.0,
-    "high": 3561284891.0,
-    "explain": {
-     "n_films": 11,
-     "half_life": 8.0,
-     "own_share": 0.886,
-     "own_avg": 595140419.0,
-     "db_avg": 5542188.0
-    },
-    "test": {
-     "coverage": 0.8707,
-     "n_people": 351,
-     "within_2x": 0.3247
-    }
-   }
+  {
+   "year": 2000,
+   "value": 7.808
+  },
+  {
+   "year": 2005,
+   "value": 7.954
+  },
+  {
+   "year": 2006,
+   "value": 8.206
+  },
+  {
+   "year": 2008,
+   "value": 8.131
+  },
+  {
+   "year": 2010,
+   "value": 8.283
+  },
+  {
+   "year": 2012,
+   "value": 8.13
+  },
+  {
+   "year": 2014,
+   "value": 7.857
+  },
+  {
+   "year": 2017,
+   "value": 7.787
+  },
+  {
+   "year": 2020,
+   "value": 7.784
+  },
+  {
+   "year": 2023,
+   "value": 7.548
+  }
+ ],
+ "best_film": {
+  "movie_id": 155,
+  "title": "The Dark Knight",
+  "year": 2008,
+  "score": 8.538
+ },
+ "forecast": {
+  "status": "ok",
+  "low": 6.606,
+  "mid": 7.453,
+  "high": 8.3,
+  "explain": {
+   "n_rated": 11,
+   "half_life": 3.0,
+   "own_share": 0.764,
+   "own_avg": 7.783,
+   "db_avg": 6.3881
+  },
+  "test": {
+   "coverage": 0.8341,
+   "n_people": 991
   }
  },
  "model_available": false

@@ -15,7 +15,6 @@
    "year": 1994,
    "release_date": "1994-06-23",
    "score": 8.462,
-   "revenue": 1472238049.0,
    "vote_count": 30703,
    "rated": true,
    "lead": false,
@@ -28,7 +27,6 @@
    "year": 1996,
    "release_date": "1996-04-14",
    "score": 7.1,
-   "revenue": null,
    "vote_count": 14,
    "rated": false,
    "lead": false,
@@ -41,7 +39,6 @@
    "year": 1996,
    "release_date": "1996-09-14",
    "score": 6.1,
-   "revenue": null,
    "vote_count": 8,
    "rated": false,
    "lead": true,
@@ -54,7 +51,6 @@
    "year": 2000,
    "release_date": "2000-04-21",
    "score": 7.138,
-   "revenue": 19473937.0,
    "vote_count": 3732,
    "rated": true,
    "lead": false,
@@ -67,7 +63,6 @@
    "year": 2008,
    "release_date": "2008-10-19",
    "score": 5.99,
-   "revenue": null,
    "vote_count": 52,
    "rated": true,
    "lead": true,
@@ -75,70 +70,35 @@
    "poster_small": "https://image.tmdb.org/t/p/w342/1jLDp7fmQz6TkOjdHJtQMXvMR0I.jpg"
   }
  ],
- "metrics": {
-  "score": {
-   "line": [
-    {
-     "year": 1994,
-     "value": 7.197
-    },
-    {
-     "year": 2000,
-     "value": 7.197
-    },
-    {
-     "year": 2008,
-     "value": 7.197
-    }
-   ],
-   "best_film": {
-    "movie_id": 13,
-    "title": "Forrest Gump",
-    "year": 1994,
-    "value": 8.462
-   },
-   "forecast": {
-    "status": "not_enough_films",
-    "low": null,
-    "mid": null,
-    "high": null,
-    "explain": null,
-    "test": {
-     "coverage": 0.8292,
-     "n_people": 9498,
-     "within_2x": null
-    }
-   }
+ "line": [
+  {
+   "year": 1994,
+   "value": 7.197
   },
-  "revenue": {
-   "line": [
-    {
-     "year": 1994,
-     "value": 169322978.0
-    },
-    {
-     "year": 2000,
-     "value": 169322978.0
-    }
-   ],
-   "best_film": {
-    "movie_id": 13,
-    "title": "Forrest Gump",
-    "year": 1994,
-    "value": 1472238049.0
-   },
-   "forecast": {
-    "status": "not_enough_films",
-    "low": null,
-    "mid": null,
-    "high": null,
-    "explain": null,
-    "test": {
-     "coverage": 0.8461,
-     "n_people": 4006,
-     "within_2x": 0.2327
-    }
-   }
+  {
+   "year": 2000,
+   "value": 7.197
+  },
+  {
+   "year": 2008,
+   "value": 7.197
+  }
+ ],
+ "best_film": {
+  "movie_id": 13,
+  "title": "Forrest Gump",
+  "year": 1994,
+  "score": 8.462
+ },
+ "forecast": {
+  "status": "not_enough_films",
+  "low": null,
+  "mid": null,
+  "high": null,
+  "explain": null,
+  "test": {
+   "coverage": 0.8292,
+   "n_people": 9498
   }
  },
  "model_available": true

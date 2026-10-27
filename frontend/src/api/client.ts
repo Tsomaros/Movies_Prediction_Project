@@ -9,8 +9,7 @@
 //   getPerson(id), searchPeople(q, limit, role)          -> a person page; actors or directors with a photo and
 //                                                           known-for film
 //   getCareer(id, role), getCareerModel(id, role, genre) -> the person page's Career section: the chart and the
-//                                                           track-record forecast per metric (score, revenue); the
-//                                                           film model's two films with both ranges
+//                                                           track-record forecast; the score model's two films
 //   ApiError                                             -> every failure, with a `kind` the UI can act on:
 //     validation   422, `fieldErrors` keyed by the API's dotted paths ("actors.2", "budget")
 //     rate_limited 429, `retryAfter` seconds from the Retry-After header
@@ -58,10 +57,6 @@ export type CareerRole = Schemas['CareerResponse']['role']
 export type CareerResponse = Schemas['CareerResponse']
 export type CareerFilm = Schemas['CareerFilmOut']
 export type TrackForecast = Schemas['TrackForecast']
-export type ForecastTest = Schemas['ForecastTest']
-export type CareerMetric = Schemas['CareerMetric']
-/** The Career section's two views, one per metric: 'score' | 'revenue'. */
-export type CareerView = keyof CareerResponse['metrics']
 export type CareerModelResponse = Schemas['CareerModelResponse']
 export type Recipe = Schemas['RecipeOut']
 export type Chip = Schemas['Chip']

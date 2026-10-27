@@ -232,13 +232,8 @@ def test_recipe_to_form(con):
     assert form["actors"] == [{"id": ACTOR, "name": "Actor A"}, {"id": COSTAR, "name": "Co Star"},
                               {"name": "New actor 3"}, {"name": "New actor 4"}, {"name": "New actor 5"}]
     assert len(form["actors"]) == MIN_ACTORS
-    assert form["budget"] == 30_000_000  # their median trusted budget: the revenue model's "given" budget
-    assert not {"franchise", "companies"} & set(form)
-    sparse = recipe_to_form(usual(con, SPARSE_ACTOR), NAMES)
-    assert sparse["director"] == {"name": "New director"}
-    assert "budget" not in sparse  # no known budget: the model estimates it
-    new, _ = new_recipe(con, ACTOR, "acting", usual(con), MIN_VOTES, THEMES)
-    assert recipe_to_form(new, NAMES)["budget"] == 30_000_000  # "Something new" keeps the usual budget
+    assert not {"budget", "franchise", "companies"} & set(form)
+    assert recipe_to_form(usual(con, SPARSE_ACTOR), NAMES)["director"] == {"name": "New director"}
 
 
 @pytest.mark.parametrize("person,role", [(ACTOR, "acting"), (DIRECTOR, "directing"), (SPARSE_ACTOR, "acting"),

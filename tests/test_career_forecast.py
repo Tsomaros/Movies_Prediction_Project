@@ -60,11 +60,3 @@ def test_rolling_line_centred_window():
     pts = [(2000 + i, float(i)) for i in range(7)]
     assert rolling_line(pts) == [(2000, 1.0), (2001, 1.5), (2002, 2.0), (2003, 3.0), (2004, 4.0), (2005, 4.5),
                                  (2006, 5.0)]
-
-
-def test_no_bounds_no_clipping_for_log_revenue():
-    history = [(2000 + i, 20.0 + (i % 2)) for i in range(10)]  # log 2025 $ (about $0.5-1.3B)
-    f = track_record(history, RoleSettings(8, 1, 5.0), 15.5, 2.7, bounds=None)
-    assert f.high > 21.0 and f.low < 20.0 and f.mid == pytest.approx(
-        track_record(history, RoleSettings(8, 1, 5.0), 15.5, 2.7, bounds=(-math.inf, math.inf)).mid)
-    assert track_record(history, RoleSettings(8, 1, 5.0), 15.5, 2.7).high == 10.0  # the default clips to 1-10

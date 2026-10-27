@@ -15,12 +15,11 @@
     chips(con, person_id, role, default_genre, min_votes)
                                     -> [{genre_id, name, default}]: up to 4 never-done genres, the default among them
     recipe_to_form(recipe, genre_names)
-                                    -> the creator form for the film model: budget = the recipe's budget_2025 when
-                                       known (else none, so the model estimates it); no franchise or companies
+                                    -> the creator form for the score model (no budget, franchise or companies)
     career_model_response(con, predictions, person_id, role, genre_id, next_year)
                                     -> {usual, new, chips}, or {new} for a chip's genre: each film its recipe and
-                                       {score: {low, mid, high}, revenue: {low, mid, high, mode}} from one predict()
-                                       call; ValueError as usual_recipe, UnknownGenre / GenreAlreadyDone as new_recipe
+                                       the score model's range {low, mid, high}; ValueError as usual_recipe,
+                                       UnknownGenre / GenreAlreadyDone as new_recipe
     CareerModelCache(size=2000)     -> an LRU of those answers, shared by the thread pool:
                                        cache.response(con, predictions, person_id, role, genre_id, next_year)
                                        keyed by (person, role, genre or "default", model version, next_year)
@@ -29,9 +28,7 @@ A recipe is always a form the contract accepts: gaps in their films are filled, 
 certification come from recent rated films with all the recipe's genres (else its first genre), the month too;
 runtime 110 and language "en" when none of their films has one. Only the country may stay None (optional).
 "Most common" skips missing values and breaks ties toward the more recent film, then the order within that film.
-`themes` is the theme -> keyword ids mapping (predictor.ctx.themes). Recent = repo/career.recent_*. "Something new"
-keeps their usual budget. The score model never sees the budget (ml/models/train.EXCLUDED drops log_budget), so
-the budget changes the revenue range only.
+`themes` is the theme -> keyword ids mapping (predictor.ctx.themes). Recent = repo/career.recent_*.
 """
 
 from __future__ import annotations
@@ -71,7 +68,7 @@ class Recipe(TypedDict):
     country: str | None
     director: PersonSlot
     actors: list[PersonSlot]  # 3, as shown on the card
-    budget_2025: int | None  # median trusted budget: the form's budget when known
+    budget_2025: int | None  # predictor pre-fill only, never scored
     labels: dict[str, list[str]]  # genres, themes, collaborators (named people other than the person)
 
 
@@ -240,10 +237,8 @@ def _ref(slot: PersonSlot, new_name: str) -> dict[str, Any]:
 
 
 def recipe_to_form(recipe: Recipe, genre_names: dict[int, str]) -> dict[str, Any]:
-    """The creator form the film model gets: the recipe's people, then new actors up to MIN_ACTORS, and their median
-    budget when known."""
+    """The creator form the score model gets: the recipe's people, then new actors up to MIN_ACTORS."""
     slots = recipe["actors"] + ["new"] * (MIN_ACTORS - len(recipe["actors"]))
-    budget = {} if recipe["budget_2025"] is None else {"budget": recipe["budget_2025"]}
     return {
         "genres": [genre_names[g] for g in recipe["genres"]],
         "themes": list(recipe["themes"]),
@@ -255,17 +250,14 @@ def recipe_to_form(recipe: Recipe, genre_names: dict[int, str]) -> dict[str, Any
         "director": _ref(recipe["director"], "New director"),
         "actors": [_ref(s, f"New actor {i}") for i, s in enumerate(slots, 1)],
         "countries": [recipe["country"]] if recipe["country"] else [],
-        **budget,
     }
 
 
 def _scored(predictions: PredictionService, recipe: Recipe, names: dict[int, str]) -> dict[str, Any]:
-    """The recipe and the model's score and revenue ranges, through the same validation and cache as POST /predict."""
+    """The recipe and the score model's range, through the same validation and cache as POST /predict."""
     out, _ = predictions.predict(recipe_to_form(recipe, names))
-    s, r = out["score"], out["revenue"]
-    return {"recipe": recipe, "prediction": {
-        "score": {"low": s["low"], "mid": s["middle"], "high": s["high"]},
-        "revenue": {"low": round(r["low"]), "mid": round(r["middle"]), "high": round(r["high"]), "mode": r["mode"]}}}
+    s = out["score"]
+    return {"recipe": recipe, "prediction": {"low": s["low"], "mid": s["middle"], "high": s["high"]}}
 
 
 def career_model_response(con: sqlite3.Connection, predictions: PredictionService, person_id: int, role: ModelRole,

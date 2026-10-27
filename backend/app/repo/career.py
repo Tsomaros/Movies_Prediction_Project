@@ -4,9 +4,8 @@
                                     -> the person's dated films in that role, oldest first (one per film)
     roles_available(con, person_id, min_votes)
                                     -> [{role, film_count, rated_count}] for acting, directing, writing with films
-    population_stats(con, role, min_votes, end_year, metric="score")
-                                    -> (mean, population sd) of the scores of rated films, or of the log revenues of
-                                       trusted-revenue films ("revenue"), in that role from the 10 years to end_year
+    population_stats(con, role, min_votes, end_year)
+                                    -> (mean, population sd) of rated films in that role from the 10 years to end_year
     latest_year(con)                -> the newest release year in the database
 
 Recipe sources for the model card (services/career_model):
@@ -24,9 +23,7 @@ Recipe sources for the model card (services/career_model):
                                     -> month, certification and keywords of recent rated films with all those genres
 
 Acting is movie_cast, directing and writing the crew jobs in repo/people.ROLES. A film is rated with
-min_votes+ votes (callers pass ml.data.clean.MIN_VOTES) and a score; a lead is an acting credit with ord <= 2. A
-film's revenue is trusted (TRUSTED_REVENUE) when revenue_2025 is known and neither money_suspect nor
-revenue_incomplete; a CareerFilm's revenue is None otherwise.
+min_votes+ votes (callers pass ml.data.clean.MIN_VOTES) and a score; a lead is an acting credit with ord <= 2.
 Films without a year, and shorts (a runtime under the form's MIN_RUNTIME, 40 minutes), are left out (DATED); an
 unknown runtime counts. A film with a year but no date sorts as 1 July of that year, ties by id.
 Recent = rated films from the 5 latest release years in the database.
@@ -34,7 +31,6 @@ Recent = rated films from the 5 latest release years in the database.
 
 from __future__ import annotations
 
-import math
 import sqlite3
 import statistics
 from typing import Any, Literal, TypedDict
@@ -47,13 +43,8 @@ CAREER_ROLES: tuple[Role, ...] = ("acting", "directing", "writing")
 JOBS = {role: jobs for role, _, jobs in ROLES if role in CAREER_ROLES[1:]}
 LEAD_MAX_ORD = 2
 ORDER = "COALESCE(m.release_date, m.year || '-07-01'), m.id"
-Metric = Literal["score", "revenue"]
-CAREER_METRICS: tuple[Metric, ...] = ("score", "revenue")
 DATED = f"m.year IS NOT NULL AND (m.runtime IS NULL OR m.runtime >= {MIN_RUNTIME})"  # charted: a year, no shorts
 RATED = f"{DATED} AND m.vote_count >= ? AND m.vote_average IS NOT NULL"
-TRUSTED_REVENUE = f"{DATED} AND m.revenue_2025 IS NOT NULL AND NOT m.money_suspect AND NOT m.revenue_incomplete"
-REVENUE = ("CASE WHEN m.revenue_2025 IS NOT NULL AND NOT m.money_suspect AND NOT m.revenue_incomplete "
-           "THEN m.revenue_2025 END")  # the trusted revenue_2025 of a film, else NULL
 
 
 class CareerFilm(TypedDict):
@@ -62,7 +53,6 @@ class CareerFilm(TypedDict):
     year: int
     release_date: str | None
     score: float | None
-    revenue: float | None  # trusted revenue_2025, else None
     vote_count: int
     rated: bool
     lead: bool | None  # None for crew roles
@@ -81,14 +71,14 @@ def _credited(role: Role) -> tuple[str, tuple[str, ...]]:
 def career_films(con: sqlite3.Connection, person_id: int, role: Role, min_votes: int) -> list[CareerFilm]:
     if role == "acting":
         rows = con.execute(f"""SELECT m.id, m.title, m.year, m.release_date, m.vote_average, m.vote_count,
-                                      {REVENUE} AS revenue, m.poster_path, c.ord, c.character
+                                      m.poster_path, c.ord, c.character
                                FROM movie_cast c JOIN movies m ON m.id = c.movie_id
                                WHERE c.person_id = ? AND {DATED} ORDER BY {ORDER}""",
                            (person_id,)).fetchall()
     else:
         sql, jobs = _credited(role)
         rows = con.execute(f"""SELECT m.id, m.title, m.year, m.release_date, m.vote_average, m.vote_count,
-                                      {REVENUE} AS revenue, m.poster_path, NULL AS ord, NULL AS character
+                                      m.poster_path, NULL AS ord, NULL AS character
                                FROM movies m WHERE m.id IN ({sql} AND person_id = ?) AND {DATED}
                                ORDER BY {ORDER}""", (*jobs, person_id)).fetchall()
     return [_film(r, role, min_votes) for r in rows]
@@ -98,7 +88,7 @@ def _film(r: sqlite3.Row, role: Role, min_votes: int) -> CareerFilm:
     votes = r["vote_count"] or 0
     return {
         "movie_id": r["id"], "title": r["title"], "year": r["year"], "release_date": r["release_date"],
-        "score": r["vote_average"], "revenue": r["revenue"], "vote_count": votes,
+        "score": r["vote_average"], "vote_count": votes,
         "rated": votes >= min_votes and r["vote_average"] is not None,
         "lead": (r["ord"] is not None and r["ord"] <= LEAD_MAX_ORD) if role == "acting" else None,
         "character": r["character"] if role == "acting" else None, "poster_path": r["poster_path"],
@@ -114,23 +104,16 @@ def roles_available(con: sqlite3.Connection, person_id: int, min_votes: int) -> 
     return out
 
 
-def population_stats(con: sqlite3.Connection, role: Role, min_votes: int, end_year: int,
-                     metric: Metric = "score") -> tuple[float, float]:
+
+def population_stats(con: sqlite3.Connection, role: Role, min_votes: int, end_year: int) -> tuple[float, float]:
     sql, jobs = _credited(role)
-    if metric == "score":
-        value, where, params = "m.vote_average", RATED, (min_votes,)
-    else:
-        value, where, params = "m.revenue_2025", TRUSTED_REVENUE, ()
-    values = [v for (v,) in con.execute(
-        f"""SELECT {value} FROM movies m
-            WHERE {where} AND m.year BETWEEN ? AND ? AND m.id IN ({sql})""",
-        (*params, end_year - 9, end_year, *jobs))]
-    if not values:
-        raise ValueError(f"no {'rated' if metric == 'score' else 'trusted-revenue'} {role} films in "
-                         f"{end_year - 9}-{end_year}")
-    if metric == "revenue":
-        values = [math.log(v) for v in values]
-    return statistics.fmean(values), statistics.pstdev(values)
+    scores = [s for (s,) in con.execute(
+        f"""SELECT m.vote_average FROM movies m
+            WHERE {RATED} AND m.year BETWEEN ? AND ? AND m.id IN ({sql})""",
+        (min_votes, end_year - 9, end_year, *jobs))]
+    if not scores:
+        raise ValueError(f"no rated {role} films in {end_year - 9}-{end_year}")
+    return statistics.fmean(scores), statistics.pstdev(scores)
 
 
 def latest_year(con: sqlite3.Connection) -> int:

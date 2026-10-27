@@ -95,76 +95,19 @@ describe('the Career section', () => {
     expect(within(within(section).getByRole('table', { name: 'Career films' })).getAllByRole('row')).toHaveLength(DIRECTING.films.length + 1)
   })
 
-  test('?view=revenue round-trips through the URL, and the page\'s role switch moves the section to writing', async () => {
+  test('the page\'s role switch moves the section to writing', async () => {
     const { calls } = nolan()
     const { router } = renderApp('/people/525')
     const section = await career()
-    await userEvent.click(await within(section).findByRole('radio', { name: 'Revenue' }))
-    expect(router.state.location.search).toBe('?view=revenue')
-    expect(within(section).getByText('$9.4M – $3.1B')).toBeInTheDocument()
-    expect(within(section).getAllByTestId('dot-crew')).toHaveLength(DIRECTING.films.filter(f => f.revenue !== null).length)
-    expect(within(section).getByTestId('forecast-band')).toBeInTheDocument()
+    expect(await within(section).findByText('Their usual film')).toBeInTheDocument()
     await userEvent.click(within(screen.getByRole('radiogroup', { name: 'Show their work as' })).getByRole('radio', { name: /Writing/ }))
-    expect(router.state.location.search).toBe('?view=revenue&role=writing')
+    expect(router.state.location.search).toBe('?role=writing')
     const writing = await career()
-    expect(await within(writing).findByText('$34M – $3.6B')).toBeInTheDocument()
-    expect(within(writing).getByRole('radio', { name: 'Revenue' })).toHaveAttribute('aria-checked', 'true')
+    expect(await within(writing).findByText('Most likely around 7.5')).toBeInTheDocument()
     expect(within(writing).getByText('The film model has no writer input, so only the track record is shown.')).toBeInTheDocument()
     expect(within(writing).queryByText('Their usual film')).toBeNull()
     expect(calls.filter(c => c.url.pathname.endsWith('/career')).map(c => c.url.searchParams.get('role'))).toEqual(['directing', 'writing'])
     expect(modelCalls(calls)).toEqual([null]) // directing only
-    await userEvent.click(within(writing).getByRole('radio', { name: 'Score' }))
-    expect(router.state.location.search).toBe('?role=writing')
-    expect(within(writing).getByText('6.6 – 8.3')).toBeInTheDocument()
-    expect(within(writing).getByText('The film model has no writer input, so only the track record is shown.')).toBeInTheDocument()
-  })
-
-  test('revenue: the money range, the plain "hard to call" line from the backtest and the revenue explanation', async () => {
-    nolan()
-    renderApp('/people/525?view=revenue')
-    const section = await career()
-    expect(await within(section).findByText('$9.4M – $3.1B')).toBeInTheDocument()
-    expect(within(section).getByText('Most likely around $170M')).toBeInTheDocument()
-    const { test: backtest } = DIRECTING.metrics.revenue.forecast
-    expect(within(section).getByText('Box office is hard to call: in our tests only '
-      + `${Math.round(backtest.within_2x! * 100)}% of real next films landed within 2× of the middle, though `
-      + `${Math.round(backtest.coverage * 100)}% fell inside the range.`)).toBeInTheDocument()
-    await userEvent.click(within(section).getByRole('button', { name: 'How is this calculated?' }))
-    expect(within(section).getByText(/^Based on 12 films with a trusted box office \(in 2025 dollars\)\. Recent films count more: a film from 12 years before the latest counts half\./))
-      .toHaveTextContent("Their typical box office is $480M; with this many films we trust it 77% and the database's typical film ($5.5M) 23%, giving $170M. The range is wider for people whose results vary more.")
-    expect(within(section).getByText('Only films with a trusted box office count; many smaller films have none.')).toBeInTheDocument()
-    expect(within(section).queryByText(/most-voted films/)).toBeNull()
-  })
-
-  test('revenue: the model rows show revenue ranges with the budget the model was given', async () => {
-    nolan()
-    renderApp('/people/525?view=revenue')
-    const section = await career()
-    expect(await within(section).findByText('Their usual film')).toBeInTheDocument()
-    expect(within(section).getByText('$8.3M – $970M')).toBeInTheDocument()
-    expect(within(section).getByText('$13M – $690M')).toBeInTheDocument()
-    expect(MODEL.usual!.recipe.budget_2025).toBe(230457848)
-    expect(within(section).getByTestId('usual-recipe-budget')).toHaveTextContent('with their median budget of $230M')
-    expect(within(section).getByTestId('new-recipe-budget')).toHaveTextContent('with their median budget of $230M')
-    await userEvent.click(within(section).getByRole('radio', { name: 'Score' }))
-    expect(within(section).queryByTestId('usual-recipe-budget')).toBeNull()
-  })
-
-  test('revenue: a budget the model estimated says so', async () => {
-    const estimated = structuredClone(MODEL)
-    estimated.usual!.recipe.budget_2025 = null
-    estimated.usual!.prediction.revenue.mode = 'estimated'
-    nolan({ model: () => ({ body: estimated }) })
-    renderApp('/people/525?view=revenue')
-    const section = await career()
-    expect(await within(section).findByTestId('usual-recipe-budget')).toHaveTextContent('budget estimated by the model')
-  })
-
-  test('an unknown ?view= falls back to the score', async () => {
-    nolan()
-    renderApp('/people/525?view=bogus')
-    const section = await career()
-    expect(await within(section).findByRole('radio', { name: 'Score' })).toHaveAttribute('aria-checked', 'true')
   })
 
   test('the model card: a skeleton, then both films with the honesty line', async () => {
@@ -241,14 +184,6 @@ describe('the Career section', () => {
     expect(within(section).queryByTestId(/^dot-/)).toBeNull()
     expect(within(section).queryByRole('radio', { name: 'Score' })).toBeNull()
     expect(within(section).getByText('Not enough rated films to forecast yet (needs 5)')).toBeInTheDocument()
-  })
-
-  test('fewer than 5 films with a box office: no revenue forecast yet', async () => {
-    serve(personFewJson as PersonDetail, { career: () => ({ body: fewJson }), model: () => ({ body: fewModelJson }) })
-    renderApp('/people/204997?view=revenue')
-    const section = await career()
-    expect(await within(section).findByText('Not enough films with a known box office to forecast yet (needs 5)')).toBeInTheDocument()
-    expect(within(section).queryByTestId('forecast-band')).toBeNull()
   })
 
   test('2 to 4 rated films: the chart without a band, and no track-record forecast yet', async () => {

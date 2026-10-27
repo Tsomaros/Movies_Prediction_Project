@@ -586,7 +586,7 @@ ENDPOINTS = {  # every endpoint and the test above that covers it; a new endpoin
     ("GET", "/random"): surprise.test_spin_again_never_repeats_and_covers_exactly_the_films_above_the_floor,
     ("GET", "/people/{person_id}"): person_api.test_a_person_page_has_details_stats_and_films,
     ("GET", "/people/{person_id}/career"): career_api.test_career_full_response,
-    ("GET", "/people/{person_id}/career/model"): career_api.test_model_response_with_their_median_budget,
+    ("GET", "/people/{person_id}/career/model"): career_api.test_model_response_and_no_budget_in_score_call,
     # the demo account (Day 14), tested against Postgres in tests/test_accounts.py
     ("POST", "/auth/login"): accounts.test_password_login_works_and_any_wrong_detail_gets_the_same_answer,
     ("POST", "/auth/demo"): accounts.test_me_is_quiet_when_logged_out_and_names_the_user_after_a_demo_login,
