@@ -92,7 +92,10 @@ def test_a_spin_returns_a_card_with_runtime_and_shuffle_posters_and_is_never_cac
     assert r.status_code == 200 and r.headers["cache-control"] == "private, no-store"
     out = r.json()
     film = out["movie"]
-    assert film["id"] in expected(spin_db) and film["runtime"] == 118 and film["poster"]["small"].startswith("https://")
+    with sqlite3.connect(spin_db) as con:  # the pick is random: NO_RUNTIME and FRENCH have their own runtimes
+        runtime = con.execute("SELECT runtime FROM movies WHERE id = ?", (film["id"],)).fetchone()[0]
+    con.close()
+    assert film["id"] in expected(spin_db) and film["runtime"] == runtime and film["poster"]["small"].startswith("https://")
     assert {"title", "year", "score", "votes", "genres"} <= set(film) and out["reason"] is None
     assert len(out["shuffle"]) == SHUFFLE and out["pool"] == len(expected(spin_db))
 

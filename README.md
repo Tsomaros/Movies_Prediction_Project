@@ -86,8 +86,8 @@ Requirements: [uv](https://docs.astral.sh/uv/) and GNU make. uv installs Python 
 make setup                 # create .venv and install locked dependencies
 make model                 # download the MiniLM text model (about 90 MB, once) and make its 8-bit copy for the app
 cp .env.example .env       # then paste your TMDB API Read Access Token into .env
-make test                  # offline tests, no network needed (about 2-2.5 min; see Testing)
-make test-fast             # the quick loop: no slow or real-data tests (about 15 s)
+make test                  # offline tests, no network needed (about 1 min in a fresh clone, 2.7 min with the data and models)
+make test-fast             # the quick loop: no slow or real-data tests (about 35 s)
 make coverage              # every test with line and branch coverage
 make data                  # pull films from TMDB (resumable), build data/movies.db, then the features table
 make db                    # rebuild data/movies.db from the raw pull only (about 30 s; drops the features table)
