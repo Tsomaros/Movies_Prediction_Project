@@ -6,7 +6,7 @@
 // Every page sits inside LoginProvider, so a logged-out click on a list button opens the login dialog in place.
 // "Surprise me" (src/surprise/) sits before the account menu, so it is reachable from every page with a header.
 // The search (src/search/, V1.1) sits between the brand and the navigation, which then moves to the second row
-// below 1024 px; a route with `handle: { hideSearch: true }` (/series) has none.
+// below 1280 px; a route with `handle: { hideSearch: true }` (/series) has none.
 import { ClapperboardIcon } from 'lucide-react'
 import { Link, NavLink, Outlet, ScrollRestoration, useMatches } from 'react-router'
 
@@ -49,14 +49,14 @@ export function Header() {
           Movie Prediction
         </Link>
         {search && <HeaderSearch />}
-        <Nav className={search ? 'hidden shrink-0 lg:flex' : 'hidden sm:flex'} />
+        <Nav className={search ? 'hidden shrink-0 xl:flex' : 'hidden sm:flex'} />
         <div className={cn('flex shrink-0 items-center gap-2', search ? 'md:ml-auto' : 'ml-auto')}>
           <SurpriseButton />
           <AccountMenu />
           <ThemeToggle />
         </div>
       </div>
-      <Nav className={cn('mx-auto max-w-6xl px-2 pb-2', search ? 'lg:hidden' : 'sm:hidden')} />
+      <Nav className={cn('mx-auto max-w-6xl px-2 pb-2', search ? 'xl:hidden' : 'sm:hidden')} />
     </header>
   )
 }
