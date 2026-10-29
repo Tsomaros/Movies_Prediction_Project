@@ -5,6 +5,8 @@
 // `handle: { bare: true }` (the start page) has no header or footer at all and carries TmdbNotice itself.
 // Every page sits inside LoginProvider, so a logged-out click on a list button opens the login dialog in place.
 // "Surprise me" (src/surprise/) sits before the account menu, so it is reachable from every page with a header.
+// The search (src/search/, V1.1) sits between the brand and the navigation, which then moves to the second row
+// below 1024 px; a route with `handle: { hideSearch: true }` (/series) has none.
 import { ClapperboardIcon } from 'lucide-react'
 import { Link, NavLink, Outlet, ScrollRestoration, useMatches } from 'react-router'
 
@@ -12,6 +14,7 @@ import { ThemeToggle } from '@/app/theme'
 import { AccountMenu } from '@/auth/AccountMenu'
 import { LoginProvider } from '@/auth/LoginDialog'
 import { cn } from '@/lib/utils'
+import { HeaderSearch } from '@/search/HeaderSearch'
 import { SurpriseButton } from '@/surprise/SurpriseButton'
 
 const NAV = [
@@ -37,26 +40,28 @@ function Nav({ className }: { className?: string }) {
 }
 
 export function Header() {
+  const search = !useMatches().some(m => (m.handle as RouteHandle | undefined)?.hideSearch)
   return (
     <header className="print:hidden bg-card/95 supports-backdrop-filter:bg-card/80 sticky top-0 z-40 border-b backdrop-blur">
-      <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-2">
-        <Link to="/" className="flex items-center gap-2 font-semibold">
+      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2">
+        <Link to="/" className="flex shrink-0 items-center gap-2 font-semibold">
           <ClapperboardIcon className="size-5 text-primary" aria-hidden />
           Movie Prediction
         </Link>
-        <Nav className="hidden sm:flex" />
-        <div className="ml-auto flex items-center gap-2">
+        {search && <HeaderSearch />}
+        <Nav className={search ? 'hidden shrink-0 lg:flex' : 'hidden sm:flex'} />
+        <div className={cn('flex shrink-0 items-center gap-2', search ? 'md:ml-auto' : 'ml-auto')}>
           <SurpriseButton />
           <AccountMenu />
           <ThemeToggle />
         </div>
       </div>
-      <Nav className="mx-auto max-w-5xl px-2 pb-2 sm:hidden" />
+      <Nav className={cn('mx-auto max-w-6xl px-2 pb-2', search ? 'lg:hidden' : 'sm:hidden')} />
     </header>
   )
 }
 
-export type RouteHandle = { bleed?: boolean; bare?: boolean }
+export type RouteHandle = { bleed?: boolean; bare?: boolean; hideSearch?: boolean }
 
 /** TMDB's attribution: their logo (unaltered, smaller than ours), the required notice and a link. */
 export function TmdbNotice({ className }: { className?: string }) {

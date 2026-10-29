@@ -16,13 +16,18 @@
 //                                             is set); a new chip keeps the last answer on screen until it arrives
 //   useMovies(query) / useMovie(id)        -> browse and one film, cached an hour like the API says; a new page or
 //                                             filter keeps the last results on screen until the new ones arrive
+//   useQuickSearch(mode, q)                -> the header search's top 5 (films or people) for a debounced, usable q
+//   useOtherModeCount(mode, q, enabled)    -> how many the other mode would find (the "2 people found" hint)
+//   usePeopleSearchPage(q, role, page)     -> one page of the /people results (V1.1)
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
-  ApiError, api, type CareerRole, type CompareRequest, type MovieQuery, type NameKind, type PersonMatch, type PredictForm, type SweepRequest,
+  ApiError, api, type CareerRole, type CompareRequest, type MovieQuery, type MovieSummary, type NameKind, type PeopleSearchResult,
+  type PersonMatch, type PredictForm, type SearchRole, type SweepRequest,
 } from '@/api/client'
 import { notifyError } from '@/api/errors'
 import { useDebounced } from '@/lib/useDebounced'
+import { usableQuery, type SearchMode } from '@/search/search'
 
 export const DEBOUNCE_MS = 250
 const HOUR = 60 * 60 * 1000
@@ -106,6 +111,53 @@ export function useMovies(query: MovieQuery, enabled = true) {
     queryKey: ['movies', query],
     queryFn: ({ signal }) => api.listMovies(query, signal),
     enabled,
+    staleTime: HOUR,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export const QUICK = 5
+export const PEOPLE_PAGE = 24
+
+export type QuickResults =
+  | { mode: 'movies'; total: number; items: MovieSummary[] }
+  | { mode: 'people'; total: number; items: PeopleSearchResult[] }
+
+const quickFetch = (mode: SearchMode, q: string, size: number, signal: AbortSignal): Promise<QuickResults> =>
+  mode === 'movies'
+    ? api.listMovies({ q, page_size: size }, signal).then(r => ({ mode, total: r.total, items: r.items }))
+    : api.peopleSearch({ q, page_size: size }, signal).then(r => ({ mode, total: r.total, items: r.results }))
+
+/** The header's quick results. `q` is the debounced text; nothing is asked under 2 letters or digits. */
+export function useQuickSearch(mode: SearchMode, q: string) {
+  const term = usableQuery(q)
+  return useQuery({
+    queryKey: ['quick', mode, term?.toLowerCase()],
+    queryFn: ({ signal }) => quickFetch(mode, term!, QUICK, signal),
+    enabled: term !== null,
+    staleTime: HOUR,
+    placeholderData: keepPreviousData,
+  })
+}
+
+/** The other mode's total, asked only once the current mode has found nothing (`enabled`). */
+export function useOtherModeCount(mode: SearchMode, q: string, enabled: boolean) {
+  const other: SearchMode = mode === 'movies' ? 'people' : 'movies'
+  const term = usableQuery(q)
+  return useQuery({
+    queryKey: ['quick-count', other, term?.toLowerCase()],
+    queryFn: ({ signal }) => quickFetch(other, term!, 1, signal).then(r => r.total),
+    enabled: enabled && term !== null,
+    staleTime: HOUR,
+  })
+}
+
+export function usePeopleSearchPage(q: string, role: SearchRole, page: number) {
+  const term = usableQuery(q)
+  return useQuery({
+    queryKey: ['people-search', term?.toLowerCase(), role, page],
+    queryFn: ({ signal }) => api.peopleSearch({ q: term!, role, page, page_size: PEOPLE_PAGE }, signal),
+    enabled: term !== null,
     staleTime: HOUR,
     placeholderData: keepPreviousData,
   })

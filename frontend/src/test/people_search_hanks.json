@@ -1,0 +1,107 @@
+{
+ "q": "hanks",
+ "role": "all",
+ "page": 1,
+ "page_size": 5,
+ "total": 13,
+ "role_counts": {
+  "all": 13,
+  "actor": 13,
+  "director": 2,
+  "writer": 1
+ },
+ "results": [
+  {
+   "id": 31,
+   "name": "Tom Hanks",
+   "thumb": "https://image.tmdb.org/t/p/w185/oFvZoKI6lvU03n4YoNGAll9rkas.jpg",
+   "roles": [
+    {
+     "role": "actor",
+     "n_films": 85
+    },
+    {
+     "role": "writer",
+     "n_films": 3
+    },
+    {
+     "role": "director",
+     "n_films": 2
+    }
+   ],
+   "known_for": {
+    "movie_id": 13,
+    "title": "Forrest Gump",
+    "year": 1994
+   }
+  },
+  {
+   "id": 3492,
+   "name": "Colin Hanks",
+   "thumb": "https://image.tmdb.org/t/p/w185/iljyDSiJRcwJL8QXQZ2WTyU1wh5.jpg",
+   "roles": [
+    {
+     "role": "actor",
+     "n_films": 24
+    },
+    {
+     "role": "director",
+     "n_films": 2
+    }
+   ],
+   "known_for": {
+    "movie_id": 512200,
+    "title": "Jumanji: The Next Level",
+    "year": 2019
+   }
+  },
+  {
+   "id": 174331,
+   "name": "Steve Hanks",
+   "thumb": "https://image.tmdb.org/t/p/w185/tZE4bt6oUDagqqHjoIM8YQ3LKLK.jpg",
+   "roles": [
+    {
+     "role": "actor",
+     "n_films": 8
+    }
+   ],
+   "known_for": {
+    "movie_id": 253046,
+    "title": "Jailbait",
+    "year": 2014
+   }
+  },
+  {
+   "id": 104378,
+   "name": "Jim Hanks",
+   "thumb": "https://image.tmdb.org/t/p/w185/id2l65f7uTzRMOK109bXtuUN7Ai.jpg",
+   "roles": [
+    {
+     "role": "actor",
+     "n_films": 6
+    }
+   ],
+   "known_for": {
+    "movie_id": 594530,
+    "title": "Lamp Life",
+    "year": 2020
+   }
+  },
+  {
+   "id": 1421688,
+   "name": "Chet Hanks",
+   "thumb": "https://image.tmdb.org/t/p/w185/rk4WtugPbBHtx9FtsC4spM89kMY.jpg",
+   "roles": [
+    {
+     "role": "actor",
+     "n_films": 3
+    }
+   ],
+   "known_for": {
+    "movie_id": 166424,
+    "title": "Fantastic Four",
+    "year": 2015
+   }
+  }
+ ]
+}

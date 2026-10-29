@@ -9,8 +9,8 @@ import Layout, { type RouteHandle } from '@/app/Layout'
 import NotFound, { RouteError } from '@/pages/NotFound'
 import Start from '@/pages/Start'
 
-const bleed: RouteHandle = { bleed: true }
 const bare: RouteHandle = { bare: true }
+const series: RouteHandle = { bleed: true, hideSearch: true }
 
 export const routes: RouteObject[] = [
   {
@@ -27,7 +27,7 @@ export const routes: RouteObject[] = [
         { path: '/browse', lazy: () => import('@/pages/Browse').then(m => ({ Component: m.default })) },
         { path: '/movies/:id', lazy: () => import('@/pages/MovieDetail').then(m => ({ Component: m.default })) },
         { path: '/people/:id', lazy: () => import('@/pages/Person').then(m => ({ Component: m.default })) },
-        { path: '/series', handle: bleed, lazy: () => import('@/pages/Series').then(m => ({ Component: m.default })) },
+        { path: '/series', handle: series, lazy: () => import('@/pages/Series').then(m => ({ Component: m.default })) },
         { path: '/about', lazy: () => import('@/pages/About').then(m => ({ Component: m.default })) },
         { path: '/login', lazy: () => import('@/pages/Login').then(m => ({ Component: m.default })) },
         { path: '/my-movies', lazy: () => import('@/pages/MyMovies').then(m => ({ Component: m.default })) },

@@ -8,6 +8,8 @@
 //   random(query)                                        -> "Surprise me": one random film, or why there is none
 //   getPerson(id), searchPeople(q, limit, role)          -> a person page; actors or directors with a photo and
 //                                                           known-for film
+//   peopleSearch(query)                                  -> the header's people search: a page of actors, directors
+//                                                           and writers with counts per role (V1.1)
 //   getCareer(id, role), getCareerModel(id, role, genre) -> the person page's Career section: the chart and the
 //                                                           track-record forecast; the score model's two films
 //   ApiError                                             -> every failure, with a `kind` the UI can act on:
@@ -52,6 +54,11 @@ export type NotePage = Schemas['NotePage']
 export type RandomPick = Schemas['RandomPick']
 export type PersonDetail = Schemas['PersonDetail']
 export type PersonMatch = Schemas['PersonMatch']
+export type PeopleSearchPage = Schemas['PeopleSearchPage']
+export type PeopleSearchResult = Schemas['PeopleSearchResult']
+type PeopleSearchQueryAll = NonNullable<operations['people_search_api_v1_people_search_get']['parameters']['query']>
+export type PeopleSearchQuery = { [K in keyof PeopleSearchQueryAll]?: NonNullable<PeopleSearchQueryAll[K]> } & { q: string }
+export type SearchRole = NonNullable<PeopleSearchQuery['role']>
 export type RandomMovie = Schemas['RandomMovie']
 export type CareerRole = Schemas['CareerResponse']['role']
 export type CareerResponse = Schemas['CareerResponse']
@@ -173,6 +180,8 @@ export const api = {
   getPerson: (id: number, signal?: AbortSignal) => request<PersonDetail>(`/people/${id}`, { signal }),
   searchPeople: (q: string, limit: number, role: 'actor' | 'director', signal?: AbortSignal) =>
     request<PersonMatch[]>('/people', { query: { role, q, limit }, signal }),
+  peopleSearch: (query: PeopleSearchQuery, signal?: AbortSignal) =>
+    request<PeopleSearchPage>('/people/search', { query, signal }),
   getCareer: (id: number, role: CareerRole, signal?: AbortSignal) =>
     request<CareerResponse>(`/people/${id}/career`, { query: { role }, signal }),
   getCareerModel: (id: number, role: CareerRole, genre: number | null, signal?: AbortSignal) =>
