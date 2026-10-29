@@ -285,6 +285,19 @@ def test_the_31st_prediction_in_a_minute_is_refused_politely(api):
     assert refused.status_code == 429 and "try again in a minute" in refused.json()["detail"]
     assert 1 <= int(refused.headers["retry-after"]) <= 60
     assert api.get("/openapi.json").status_code == 200  # other endpoints are not limited
+    assert api.get(f"{API_PREFIX}/movies").status_code == 200  # reads have their own limit
+
+
+def test_the_121st_read_in_a_minute_is_refused_but_health_and_predictions_count_apart(db, predictor):
+    with TestClient(create_app(Settings(db_path=db / "movies.db"), predictor=predictor)) as c:
+        assert all(c.get(f"{API_PREFIX}/health").status_code == 200 for _ in range(130))  # never counted
+        assert all(c.post(PREDICT, json=film_form()).status_code == 200 for _ in range(30))
+        assert [c.get(f"{API_PREFIX}/movies").status_code for _ in range(121)] == [200] * 120 + [429]
+        refused = c.head(f"{API_PREFIX}/movies/1")
+        assert refused.status_code == 429 and 1 <= int(refused.headers["retry-after"]) <= 60
+        assert "Too many requests" in c.get(f"{API_PREFIX}/meta/options").json()["detail"]
+        assert c.post(PREDICT, json=film_form()).status_code == 429  # the 31st prediction, on its own limit
+        assert c.get("/openapi.json").status_code == 200  # outside /api
 
 
 def test_the_limits_count_per_client_ip_header_when_one_is_set(db, predictor):

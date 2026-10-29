@@ -42,7 +42,7 @@ def spin_db(db, tmp_path_factory):
 @pytest.fixture
 def spin(spin_db):
     with TestClient(create_app(Settings(db_path=spin_db), predictor=object(), lookups=object())) as c:
-        c.app.state.limiters["random"] = RateLimiter(10_000)
+        c.app.state.limiters["random"] = c.app.state.limiters["read"] = RateLimiter(10_000)
         yield c
 
 

@@ -14,7 +14,8 @@ The lifespan hook runs once at startup and keeps on app.state:
 - started:   the time it finished, plus load_seconds, for /health;
 - userdb, demo_seed, limiters: the user-database pool (None without USER_DATABASE_URL: /auth and /me then
   answer 503), the demo account's starting set and the login/demo/write limits (Day 14) and the
-  "Surprise me" limit (Day 14.5).
+  "Surprise me" limit (Day 14.5), and "read": every /api GET or HEAD but /health, RATE_LIMIT_READ a minute per
+  client IP (V1.1, the read_limit middleware).
 app.state.clock gives the current UTC time to the accounts side (tests freeze it).
 Then memory freed while loading is handed back to the system (release_free_memory, Linux only).
 The database itself is never held open: every request gets its own read-only connection (deps.get_db).
@@ -32,11 +33,12 @@ from datetime import datetime, timezone
 from contextlib import asynccontextmanager, closing
 from typing import AsyncIterator
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from backend.app import errors, web
-from backend.app.deps import connect_read_only
+from backend.app.deps import client_ip, connect_read_only
 from backend.app.routers import (auth, career, collections, companies, health, meta, model_card, movies, my_movies,
                                  notes, people, predict, random, sweep)
 from backend.app.services.career_forecast import load_career_artifact
@@ -55,6 +57,8 @@ log = logging.getLogger("uvicorn.error")
 ROUTERS = (predict, sweep, movies, people, career, companies, collections, meta, model_card, health, auth, my_movies,
            notes, random)
 LIMITS = {"login": 5, "demo": 10, "write": 30, "random": 60}  # a minute: writes per user, the others per client IP
+UNCOUNTED = f"{API_PREFIX}/health"  # Docker's healthcheck and the smoke test
+READ_LIMITED = "Too many requests in a minute. Please wait a moment and try again."
 DESCRIPTION = (
     "Budget, revenue and audience-score ranges for a planned film, with the drivers behind them and "
     "comparable past films, plus search over the 79,199 films in our TMDB data. This product uses the "
@@ -95,7 +99,8 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
             app.state.lookups = lookups
         app.state.predictions = PredictionService(app.state.predictor, settings.cache_size)
         app.state.rate_limiter = RateLimiter(settings.rate_limit)
-        app.state.limiters = {name: RateLimiter(n) for name, n in LIMITS.items()}
+        app.state.limiters = {name: RateLimiter(n) for name, n in LIMITS.items()} | {
+            "read": RateLimiter(settings.read_limit)}
         app.state.userdb = make_pool(settings.user_database_url) if settings.user_database_url else None
         app.state.demo_seed = load_seed()
         release_free_memory()
@@ -110,6 +115,15 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
     app = FastAPI(title="Movie Prediction API", version="1.0.0", description=DESCRIPTION, lifespan=lifespan)
     app.state.settings = settings
     app.state.clock = lambda: datetime.now(timezone.utc)
+    @app.middleware("http")
+    async def read_limit(request: Request, call_next):
+        path = request.url.path
+        if request.method in ("GET", "HEAD") and path.startswith(f"{API_PREFIX}/") and path != UNCOUNTED:
+            wait = request.app.state.limiters["read"].hit(client_ip(request))
+            if wait is not None:
+                return JSONResponse({"detail": READ_LIMITED}, status_code=429, headers={"Retry-After": str(wait)})
+        return await call_next(request)
+
     # The app and the API share one origin (Vite's proxy, or the app served by web.py), so the cookie needs no CORS credentials
     app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins),
                        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["*"])
