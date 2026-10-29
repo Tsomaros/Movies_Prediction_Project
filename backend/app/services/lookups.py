@@ -1,7 +1,9 @@
-"""Autocomplete for the form: directors, actors, companies and franchises, searched in memory.
+"""Autocomplete for the form (directors, actors, companies and franchises) and the header's people search
+(directors, actors and writers, V1.1), searched in memory.
 
     NameIndex.build(rows)          -> a packed index over (id, name, n_films) rows
     index.search(q, limit=10)      -> [{id, name, n_films}]: names with a word starting with q, most films first
+    index.matches(q)               -> the entries of every such name (sorted, unique), for the people search
     Lookups.from_db(con)           -> one NameIndex per kind (KINDS), built once at startup (about 3 s)
 
 Any word of a name can start the match, and the query can run on into later words: "hanks", "tom ha" and
@@ -22,13 +24,15 @@ from typing import Any, Iterable
 
 import numpy as np
 
-KINDS = ("director", "actor", "company", "collection")
+KINDS = ("director", "actor", "writer", "company", "collection")
 LIMIT = 10
 SQL = {  # id, name, number of films in that role, for everyone with at least one film
     "director": """SELECT p.id, p.name, COUNT(DISTINCT c.movie_id) FROM movie_crew c JOIN people p ON p.id = c.person_id
                    WHERE c.job = 'Director' AND p.name IS NOT NULL GROUP BY p.id""",
     "actor": """SELECT p.id, p.name, COUNT(*) FROM movie_cast c JOIN people p ON p.id = c.person_id
                 WHERE p.name IS NOT NULL GROUP BY p.id""",
+    "writer": """SELECT p.id, p.name, COUNT(DISTINCT c.movie_id) FROM movie_crew c JOIN people p ON p.id = c.person_id
+                 WHERE c.job IN ('Screenplay', 'Writer') AND p.name IS NOT NULL GROUP BY p.id""",
     "company": """SELECT co.id, co.name, COUNT(*) FROM movie_companies mc JOIN companies co ON co.id = mc.company_id
                   WHERE co.name IS NOT NULL GROUP BY co.id""",
     "collection": """SELECT cl.id, cl.name, COUNT(*) FROM movies m JOIN collections cl ON cl.id = m.collection_id
@@ -94,12 +98,15 @@ class NameIndex:
     def name(self, entry: int) -> str:
         return self.names[self.name_offsets[entry]:self.name_offsets[entry + 1]].decode("utf-8")
 
-    def search(self, q: str, limit: int = LIMIT) -> list[dict[str, Any]]:
+    def matches(self, q: str) -> np.ndarray:
         prefix = _normalise(q).encode("utf-8")
         if not prefix:
-            return []
+            return np.zeros(0, dtype=np.int32)
         lo, hi = self._first_at_least(prefix), self._first_at_least(prefix + _END)
-        entries = np.unique(self.key_entry[lo:hi])
+        return np.unique(self.key_entry[lo:hi])
+
+    def search(self, q: str, limit: int = LIMIT) -> list[dict[str, Any]]:
+        entries = self.matches(q)
         if len(entries) > limit:  # keep the most-filmed, then sort those few exactly
             entries = entries[np.argpartition(-self.n_films[entries], limit - 1)[:limit]]
         found = sorted(((int(self.n_films[e]), self.name(e), int(self.ids[e])) for e in entries),
