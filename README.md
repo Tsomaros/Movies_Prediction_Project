@@ -168,6 +168,39 @@ uv run python -m ml.predict manifest       # checksums of the app's model files 
 - A movie chat assistant.
 - IMDb score (via OMDb) as an alternative score target.
 
+## How it was built
+
+The project was built by Dimitris (Tsomaros) with Claude Code, an AI coding assistant, from 21 to 29 October 2026: 80 commits over Days 1–16, plus an audit after Day 7 and four extra days added along the way (14.5–14.8: Surprise me, actor pages, crew pages and the Career section). The roles were clear. Dimitris set the goals, made every decision and did everything that needs a person: accounts, tokens, the live dashboards, recording the demo. Claude wrote the code, ran the checks and reported what it found.
+
+### A plan, then a record
+
+- **A written plan first.** The work followed a day-by-day plan in three documents (Days 1–5, 6–10, 11–16). Each day had numbered tasks, and each task said what "done" means.
+- **Decisions before code.** Each day started by asking Dimitris the open questions, usually 2–4 choices with a recommended option, such as a private image or a public one, or a daily smoke test instead of uptime pings. The answers went into the plan document before any code was written.
+- **A record of what really happened.** [PROGRESS.md](PROGRESS.md) holds each day's checklist, its numbers, "Changes from the plan" and "Surprises / inputs for the next day". When the plan turned out wrong, the change was written down, not made silently: LightGBM refuses monotone constraints on quantile models, so revenue got a different model shape; the conformal calibration became our own function instead of MAPIE; Day 14's accounts replaced a chat-assistant day that was never built.
+- **One step at a time.** Each task ended with its tests and a commit. A day was closed only after Dimitris approved it, and nothing was pushed, merged or deployed without asking.
+
+### Evaluation: deciding the rules first
+
+- **The rules came before the models.** Pre-release inputs only, time-based splits and baselines B0–B2 were fixed on Days 1–4, before any LightGBM model existed. They are enforced by tests, not by memory: the test split raises `TestSetLocked` unless one script asks for it, and a test checks that no other file does.
+- **The test was opened once.** On Day 6 everything was frozen and tagged (`pre-test`), a dry run with 2016–18 standing in for the test split reproduced every validation number, and only then did the real run happen, once, in 259 s. The script refuses a second run. The results, disappointments included, went into the README as they came out, and the models were not changed because of them.
+- **Evidence decides features.** The synopsis embeddings were built, measured in an ablation (−0.006 MAE log for revenue: nothing) and dropped by Dimitris's decision. A tie-break towards well-known comparable films was tried and dropped for the same reason.
+- **Checking the checks.** Bugs were planted on purpose to see whether the tests catch them: a leak of the monotone columns, an off-by-one in the conformal quantile, a second test run, same-day comparables. Each one was caught. One that survived (unsorted crossed quantiles) was examined and written down as harmless.
+- **An outside look.** After Day 7, Dimitris asked for an audit of everything from Day 1. It refitted all 13 models (difference 0 from the reports), added 42 sanity tests on the real models and scored the app on a fresh 2026 holdout. Findings that would change frozen models were not applied. They were listed as options, and Dimitris picked which to apply (two became text in the app).
+
+### Failures: written down, not hidden
+
+- **Weak spots are in the README.** The models don't beat the baseline on revenue for $150M+ films, young films' scores are still settling, and the image is above its size aim. Each is a Limitation with its numbers.
+- **Mistakes are in the record too,** including Claude's own: PROGRESS.md records each one with its fix (for example Day 15's "Mistakes, fixed").
+- **Bugs found by hand get a test.** Clicking before login could wipe a rating; fast arrow-key presses could save 1/10 instead of 8/10. Both were fixed before the commit, with tests. A forged `X-Forwarded-For` header got around the login limit on the live site; the fix was tested again live, header by header.
+- **Changing course is allowed.** The Career section got a revenue view on request, and later Dimitris decided to remove it again. The record keeps both steps.
+
+### What the collaboration was like
+
+- **Dimitris steered, Claude proposed.** Claude gave a recommendation with each question, but the call was Dimitris's: dropping the synopsis, removing the revenue view, choosing the Frankfurt region.
+- **Each did what the other couldn't.** Claude can't create accounts or handle passwords, so Dimitris made the TMDB, GitHub, Neon and Render accounts and tokens. Claude ran the migrations, pushed the images and tested the live site.
+- **"Done" means checked.** A task counted as done when its tests passed and its numbers were measured, not when the code was written. The project ends with 595 Python tests, 280 frontend tests, a Playwright demo flow and a daily smoke test of the live site.
+- **Plain writing.** The plan, PROGRESS.md and the docs use short sentences with concrete numbers, so either of us could pick up the next day from the written record alone.
+
 ## Attribution and TMDB terms
 
 The code is under the [MIT License](LICENSE). The film data and images come from TMDB under its own terms:
