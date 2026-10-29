@@ -14,6 +14,7 @@ A FastAPI backend in `backend/app/`. Every endpoint lives under `/api/v1`, and t
 | GET | `/api/v1/movies` | Search (`q`), filters (`genre`, `year_from`, `year_to`, `language`, `score_min`: films with any number of votes), `sort` (popularity, newest, title, score: 50+ votes only, revenue: 2025 $, trusted figures only), `page`, `page_size` (at most 48); each film with its score, votes and revenue in 2025 $ |
 | GET | `/api/v1/movies/{id}` | Facts, themes, cast (with TMDB photos where the person pull has them) and crew, money (as reported and in 2025 $), score, posters and 6 similar films |
 | GET | `/api/v1/people?role=director\|actor&q=` | Director and actor autocomplete (any word of the name, accents folded), each with a TMDB photo thumbnail and the film they're known for |
+| GET | `/api/v1/people/search?q=&role=all\|actor\|director\|writer&page=&page_size=` | The header's people search (V1.1): actors, directors and writers whose name has a word starting with `q` (accents folded), 24 a page (at most 48), ranked by films in the role (for `all`, distinct films over the three), then TMDB popularity and name. Each result has its roles with film counts (most first), a w185 photo and the most-voted film it is known for; `role_counts` says how many each role chip would show. Under 2 letters or digits: `total: 0` |
 | GET | `/api/v1/people/{id}` | One person: TMDB photo, biography, life dates and links (where the person pull found them), their `main_role`, and per role (acting, directing, writing, production, music, camera, editing) their films (characters, or jobs) and stats from our data (films, years, top genres, average score over 50+ vote films, trusted box office in 2025 $, the actor and director they shared 2+ of those films with) |
 | GET | `/api/v1/people/{id}/career?role=acting\|directing\|writing` | One person's dated films in a role (score, votes, lead or supporting), a 5-film career line, the best film and a track-record forecast of their next film's score with its backtest coverage (Day 14.8); counts toward the predict limit |
 | GET | `/api/v1/people/{id}/career/model?role=acting\|directing&genre=` | The score model on "Their usual film" and "Something new" (each with the recipe it scored, never a budget) plus up to 4 never-done genre chips; with `genre`, only that "Something new"; cached, counts toward the predict limit |
@@ -50,9 +51,10 @@ curl -s localhost:8000/api/v1/predict -H 'Content-Type: application/json' -d '{
 
 **Limits and caching.**
 - **Rate limit:** 30 prediction requests a minute per IP, shared by `/predict`, `/compare` and `/sweep` (our own sliding window, in memory). The 31st gets a 429, "Please try again in a minute", with `Retry-After`.
+- **Read limit (V1.1):** 120 GET and HEAD requests a minute per IP on everything under `/api/` but `/health` (Docker's healthcheck and the smoke test call it), counted apart from predictions (`RATE_LIMIT_READ`). Typing in the header search costs 1–3 requests a pause, so a visitor never comes near it; the 121st gets a 429 with `Retry-After`.
 - **Prediction cache:** the 1,000 most recently used predictions are kept (LRU), keyed by the validated form, so the same film written two ways is one entry.
 - **HTTP caching:** movie, autocomplete, options and model-card responses are cacheable for an hour (`Cache-Control: public, max-age=3600`); health is `no-store`.
-- **Settings:** `MOVIES_DB`, `MODELS_DIR`, `CORS_ORIGINS` (default the Vite dev server), `RATE_LIMIT`, `CACHE_SIZE` and `USER_DATABASE_URL` come from environment variables, or from `.env`.
+- **Settings:** `MOVIES_DB`, `MODELS_DIR`, `CORS_ORIGINS` (default the Vite dev server), `RATE_LIMIT`, `RATE_LIMIT_READ`, `CACHE_SIZE` and `USER_DATABASE_URL` come from environment variables, or from `.env`.
 
 **Search and lookups.**
 - **Search:** every word of `q` is a quoted prefix in SQLite FTS5, over titles, original titles and overviews, with accents ignored. Typed text can never be FTS syntax.

@@ -2242,3 +2242,50 @@ Dimitris asked to replace "Compared with its year" with box office, built the sa
 - **The wake-up takes about 84 s,** longer than Render's "about a minute", because the models load after the container starts.
 - **The README still says "Cast and crew have no photos"** in Limitations, out of date since Day 14.7.
 - **Scheduled workflows stop after 60 days** without repository activity; check before interview day.
+
+## V1.1: Header search (built 2026-10-29, not deployed yet)
+
+Dimitris's spec and plan (`2026-10-29-v1.1-header-search-design.md` and `…-header-search.md`, on the Desktop): one search bar in the header with a Movies | People switch, quick results, a `/people?q=` results page, a hint to the other mode on an empty search, and no search box or people row on browse. Decisions asked before the build: writers get their own in-memory name index, and every `/api` GET gets a read limit of 120 a minute.
+
+- [x] 1. People search over the name indexes, writers added (`380b517`)
+- [x] 2. `GET /api/v1/people/search` (`e39370c`)
+- [x] 3. The read limit (`24b397c`)
+- [x] 4–6. Search helpers and hooks, the header search, the phone overlay, `/` and no search on Series (`f41ecc4`, `7b28ccd`, `1f2cb00`)
+- [x] 7. The `/people` results page (`c1773ff`)
+- [x] 8. Browse without its search box and the people row (`0a8353b`)
+- [x] 9. Playwright, smoke, Docker and docs (`9c2f7cf`, this commit)
+- [ ] Deploy (`make deploy`, waiting for Dimitris's go-ahead), then the live check
+
+### Changes from the plan
+
+- **No `people_fts`:** the plan assumed a Day 14.6 people FTS table and `fts_prefix_query`; neither exists. People are matched by the in-memory `NameIndex` (now with `matches(q)`), so no database rebuild was needed. The writer index costs 3.9 MB (Lookups 33 → 37 MB).
+- **The indexes and movie `total` already existed:** `movie_cast(person_id)`, `movie_crew(person_id, job)` and `MovieList.total`.
+- **The read limit is new, not a split:** GETs had no limit before; predictions already had their own 30 a minute. `RATE_LIMIT_READ` (120) is a new setting; `RATE_LIMIT` keeps its name, because it is set on Render.
+- **The real files:** `app/Layout.tsx`, `pages/Browse.tsx`, `movies/PeopleRow.tsx`, `app/routes.tsx`; new code in `src/search/` and `pages/PeopleSearch.tsx`.
+- **No shadcn ToggleGroup or cmdk popover:** the switch is two radio buttons (Radix's ToggleGroup only moves the focus on arrow keys), and the list is our own listbox, like the form's name inputs, which keeps "nothing highlighted until ↓" simple.
+- **Debounce 250 ms,** the API hooks' shared value, not 300.
+- **Quick results only while the dropdown is open,** so a results page doesn't also ask for its top 5.
+- **The navigation moves to a second row below 1280 px** (the plan didn't say): at 1024 px the box was only 149 px wide beside it.
+- **Commits** read `V1.1: …`, like the repository's `Day N: …`, not `feat(api): …`.
+
+### Checks
+
+| | |
+| --- | --- |
+| Python tests | 621 (`make test` with Postgres): `test_people_search.py` 22 new, the read limit, `ENDPOINTS` |
+| Frontend tests | 307 (`npm run check`): `search.test.ts(x)` 25, `peopleSearch.test.tsx` 6, browse updated |
+| People search speed (full database, locally) | a full name 1–10 ms; "tom" 15–25 ms; "jo", "ma" 25–53 ms; same order as a brute-force ranking on 4 queries × 4 roles × 4 pages |
+| Docker | smoke 24/24 (2 new), Playwright 5/5 (3 new) |
+| Memory in Docker | 360 MiB after startup, 360 after 100 predictions, 361 after 200 people searches (gate 450) |
+| Browser pane | desktop dark and phone light: the dropdown, the hint, `/people`, the overlay (Back and Esc leave no extra history entry), no search on Series |
+
+### Mistakes, fixed
+
+- **A commit with a failing test:** `7b28ccd` went in while the phone overlay test failed (`select()` doesn't focus in jsdom); `1f2cb00` fixed it a minute later.
+- **Two tests hit the new read limit:** the Surprise me spins in `test_random.py` and `test_accounts.py` send many GETs; they now raise the read limit as they did the random one.
+
+### Still open
+
+- **Deploy:** `make deploy` (needs the real `RENDER_DEPLOY_HOOK` in `.env`, or set the image tag on Render), then the live check: both modes, `/people?q=hanks`, one prediction.
+- **By hand:** Lighthouse accessibility on `/browse?q=nolan` and `/people?q=nolan` (target 95+), and a keyboard-only pass.
+- **Sentry:** still no DSN, so the plan's "no new errors after 10 minutes" can't be checked.

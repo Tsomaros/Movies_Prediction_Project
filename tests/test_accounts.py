@@ -373,7 +373,7 @@ def test_the_notes_tab_pages_every_note_with_its_film(acct):
 
 def spins(c, **params):
     """Every film GET /random gives with Spin again until nothing is left, and the final reason."""
-    c.app.state.limiters["random"] = RateLimiter(10_000)
+    c.app.state.limiters["random"] = c.app.state.limiters["read"] = RateLimiter(10_000)
     shown = []
     while True:
         r = c.get(f"{API_PREFIX}/random", params={**params, "exclude": ",".join(map(str, shown))})

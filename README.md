@@ -12,7 +12,7 @@ Every prediction is a range: a low end (10th percentile), an expected value (50t
 
 **What it does:**
 - **For creators:** a form for a planned film (genres, themes, director, cast, budget, release month…) gives three calibrated ranges, the drivers behind each, comparable earlier films, a break-even band, "what if" variants and the best release month.
-- **For everyone:** browse and search 79,199 films, film and person pages with career charts, a demo account with lists, ratings and notes, and a "Surprise me" picker.
+- **For everyone:** a header search for films or people (actors, directors, writers), browse 79,199 films, film and person pages with career charts, a demo account with lists, ratings and notes, and a "Surprise me" picker.
 
 ## Targets
 
@@ -120,9 +120,10 @@ uv run python -m ml.predict manifest       # checksums of the app's model files 
 
 ## Limitations
 
-- **The person-row extras run on every autocomplete keystroke.** `GET /people` adds the photo and known-for film (one SQL query, 7–30 ms in Docker) for the form's director and actor fields too, which never show them; on a slow host that could add up. If it does, send them only when the browse row asks.
+- **The autocomplete extras run on every keystroke.** `GET /people` adds the photo and known-for film (one SQL query, 7–30 ms in Docker) for the form's director and actor fields, which never show them; on a slow host that could add up. If it does, drop them (browse's people row that used them is gone since V1.1).
+- **A 2-letter people search ranks thousands of names.** "ma" matches 34,337 people; only those who could reach the page are counted exactly, so it takes up to about 50 ms locally (a full name takes 1–10 ms).
 - **Actors with one film have no TMDB photo or biography,** and TMDB has photos for few crew. The person pull covers the 118,244 cast members with 2+ films and every crew member; the other 203,000 actors get a page from our data only, and 29% of cast slots on film pages show initials. Only 29% of crew (57% of directors) have a photo. Biographies are TMDB's English ones, and 71% of the people pulled have none.
-- **Only actors and directors can be searched.** Writers, producers, composers, cinematographers and editors have pages but no search index (a new one would cost memory under the 450 MB gate); they are reached from film pages.
+- **Producers, composers, cinematographers and editors can't be searched.** They have pages but no search index; they are reached from film pages. Actors, directors and writers can (writers since V1.1, a 3.9 MB index).
 - **The revenue model is mostly an English-language, post-1980 model.** Only 21% of English films have both budget and revenue (32% among the first 700 per year), and most other languages are under 10%. There are only 286 revenue training films from the 1960s and 471 from the 1970s.
 - **Some revenues are incomplete.** 178 training films (2.0%) earned less than 1% of their budget. Some are real flops, but others seem to record only part of the box office, probably the US share (e.g. *Flying Swords of Dragon Gate*, $128k). No rule catches these yet.
 - **Local-currency budgets are only caught when they're extreme.** The currency rule flags budgets far above their language's norm. Smaller mistakes sit near the cap: a budget entered in Brazilian reais (about 3.5 to the dollar in 2016) is only around 3.5× too high, and *The Ten Commandments: The Movie* was flagged only narrowly.
