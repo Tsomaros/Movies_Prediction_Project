@@ -17,6 +17,7 @@ from backend.app.settings import API_PREFIX, Settings
 from tests import test_accounts as accounts  # the module, not its tests: they run there, against Postgres
 from tests import test_random as surprise  # the same: the "Surprise me" tests run in their own module
 from tests import test_people_api as person_api  # and the person pages' tests
+from tests import test_people_search as people_search  # and the header's people search (V1.1)
 from tests import test_career_api as career_api  # and the Career section's
 from tests.test_eval import db  # noqa: F401 (fixture: a small movies.db with a features table, 2008-2022)
 from tests.test_models import (budget_model, budget_rows, revenue_model, revenue_rows,  # noqa: F401 (fixtures)
@@ -597,6 +598,7 @@ ENDPOINTS = {  # every endpoint and the test above that covers it; a new endpoin
     ("GET", "/model-card"): test_the_model_card_has_the_test_results_and_the_database,
     ("GET", "/health"): test_health_reports_the_models_the_database_and_the_cache,
     ("GET", "/random"): surprise.test_spin_again_never_repeats_and_covers_exactly_the_films_above_the_floor,
+    ("GET", "/people/search"): people_search.test_the_search_answers_one_page_with_counts_photos_and_known_for,
     ("GET", "/people/{person_id}"): person_api.test_a_person_page_has_details_stats_and_films,
     ("GET", "/people/{person_id}/career"): career_api.test_career_full_response,
     ("GET", "/people/{person_id}/career/model"): career_api.test_model_response_and_no_budget_in_score_call,

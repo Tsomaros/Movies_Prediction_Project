@@ -106,6 +106,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/people/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search actors, directors and writers by name, a page at a time */
+        get: operations["people_search_api_v1_people_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/people/{person_id}": {
         parameters: {
             query?: never;
@@ -1130,6 +1147,15 @@ export interface components {
                 [key: string]: number;
             };
         };
+        /** KnownFor */
+        KnownFor: {
+            /** Movie Id */
+            movie_id: number;
+            /** Title */
+            title: string;
+            /** Year */
+            year: number | null;
+        };
         /** LinePoint */
         LinePoint: {
             /** Year */
@@ -1544,6 +1570,48 @@ export interface components {
             release_years: number[];
             /** Months */
             months: number[];
+        };
+        /** PeopleSearchPage */
+        PeopleSearchPage: {
+            /** Q */
+            q: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "all" | "actor" | "director" | "writer";
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /**
+             * Total
+             * @description People matching in this role
+             */
+            total: number;
+            /** @description People matching per role (all: in any of the three) */
+            role_counts: components["schemas"]["RoleCounts"];
+            /** Results */
+            results: components["schemas"]["PeopleSearchResult"][];
+        };
+        /** PeopleSearchResult */
+        PeopleSearchResult: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /**
+             * Thumb
+             * @description A small TMDB photo (w185), when TMDB has one
+             */
+            thumb: string | null;
+            /**
+             * Roles
+             * @description Their roles with at least one film, most films first
+             */
+            roles: components["schemas"]["SearchRoleFilms"][];
+            /** @description Their most-voted film as an actor, director or writer */
+            known_for: components["schemas"]["KnownFor"] | null;
         };
         /** PersonDetail */
         PersonDetail: {
@@ -1968,6 +2036,17 @@ export interface components {
              */
             rated_count: number;
         };
+        /** RoleCounts */
+        RoleCounts: {
+            /** All */
+            all: number;
+            /** Actor */
+            actor: number;
+            /** Director */
+            director: number;
+            /** Writer */
+            writer: number;
+        };
         /** Score */
         Score: {
             /** Average */
@@ -2012,6 +2091,16 @@ export interface components {
              * @description A middle that moves by less than this many points is within the uncertainty
              */
             points: number;
+        };
+        /** SearchRoleFilms */
+        SearchRoleFilms: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "actor" | "director" | "writer";
+            /** N Films */
+            n_films: number;
         };
         /** Shift */
         Shift: {
@@ -2428,6 +2517,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PersonMatch"][];
+                };
+            };
+            /** @description Some fields need fixing */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FieldErrors"];
+                };
+            };
+        };
+    };
+    people_search_api_v1_people_search_get: {
+        parameters: {
+            query: {
+                /** @description The start of any word of the name (case-insensitive) */
+                q: string;
+                role?: "all" | "actor" | "director" | "writer";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PeopleSearchPage"];
                 };
             };
             /** @description Some fields need fixing */

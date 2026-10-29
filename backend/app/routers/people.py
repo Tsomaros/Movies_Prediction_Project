@@ -1,4 +1,5 @@
-"""GET /people?role=director|actor&q=: director and actor autocomplete, most films first (at most 10), and
+"""GET /people?role=director|actor&q=: director and actor autocomplete, most films first (at most 10),
+GET /people/search?q=&role=&page=&page_size=: the header's people search (V1.1, services/people_search.py), and
 GET /people/{id}: one person's page (Day 14.6).
 
 A match is a word of the name starting with q ("hanks", "tom ha"; accents folded). n_films counts films in
@@ -16,9 +17,10 @@ from backend.app.deps import get_db, get_lookups
 from backend.app.repo import people as repo
 from backend.app.routers.movies import CACHE, _summary
 from backend.app.schemas.errors import VALIDATION, Message
-from backend.app.schemas.person import PersonDetail, PersonMatch
+from backend.app.schemas.person import PeopleSearchPage, PersonDetail, PersonMatch, SearchRole
 from backend.app.services.autocomplete import LIMIT, QUERY, respond
 from backend.app.services.lookups import Lookups
+from backend.app.services.people_search import search_people
 from backend.app.services.posters import profile
 
 router = APIRouter(tags=["form support"], responses=VALIDATION)
@@ -36,6 +38,19 @@ def people(response: Response, role: Literal["director", "actor"] = Query(..., d
         photo = profile(extra.get("profile_path"))
         h["thumb"], h["known_for"] = photo["small"] if photo else None, extra.get("known_for")
     return hits
+
+
+@router.get("/people/search", response_model=PeopleSearchPage, tags=["movies"],
+            summary="Search actors, directors and writers by name, a page at a time")
+def people_search(response: Response, q: str = QUERY, role: SearchRole = "all", page: int = Query(1, ge=1, le=10_000),
+                  page_size: int = Query(24, ge=1, le=48), lookups: Lookups = Depends(get_lookups),
+                  con: sqlite3.Connection = Depends(get_db)):
+    found = search_people(lookups, con, q, role, page, page_size)
+    response.headers["Cache-Control"] = CACHE
+    for hit in found["results"]:
+        photo = profile(hit.pop("profile_path"))
+        hit["thumb"] = photo["small"] if photo else None
+    return {"q": q, "role": role, "page": page, "page_size": page_size, **found}
 
 
 @router.get("/people/{person_id}", response_model=PersonDetail, tags=["movies"],

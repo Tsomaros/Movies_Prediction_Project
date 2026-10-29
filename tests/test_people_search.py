@@ -1,4 +1,4 @@
-"""The header's people search (V1.1): services/people_search.py on a small database, offline.
+"""The header's people search (V1.1): services/people_search.py and GET /people/search on a small database.
 
 A copy of test_people_api's database (HANKS, named "Actor 1", acts in films 1-4 and 8, directs film 9 and writes
 films 9 and 10; WRITER writes films 1 and 8 and acts in film 9; CRUZ is "Penélope Cruz") with a few more people:
@@ -12,19 +12,23 @@ import shutil
 import sqlite3
 
 import pytest
+from fastapi.testclient import TestClient
 
+from backend.app.main import create_app
 from backend.app.services.lookups import Lookups
 from backend.app.services.people_search import search_people, usable
+from backend.app.settings import API_PREFIX, Settings
 from tests.test_eval import db  # noqa: F401 (fixture: a small movies.db, films 1-300)
 from tests.test_people_api import CRUZ, HANKS, person_db  # noqa: F401 (fixture: the person pages' database)
 
 ANN, BOB, CY = 8001, 8002, 8003
 TOM_MANY, TOM_POPULAR, TOM_ALPHA, TOM_BETA, TOM_OBSCURE = 8101, 8102, 8103, 8104, 8105
 DUAL, SOLO = 8201, 8202
+SEARCH = f"{API_PREFIX}/people/search"
 
 
 @pytest.fixture(scope="module")
-def con(person_db, tmp_path_factory):
+def search_db(person_db, tmp_path_factory):
     path = tmp_path_factory.mktemp("search") / "movies.db"
     shutil.copyfile(person_db, path)
     with sqlite3.connect(path) as c:
@@ -41,7 +45,12 @@ def con(person_db, tmp_path_factory):
         c.executemany("INSERT INTO person_details (person_id, tmdb_popularity, fetched_at) VALUES (?, ?, '2026-10-25')",
                       [(TOM_POPULAR, 90.0), (TOM_OBSCURE, None)])
     c.close()
-    out = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    return path
+
+
+@pytest.fixture(scope="module")
+def con(search_db):
+    out = sqlite3.connect(f"file:{search_db}?mode=ro", uri=True)
     out.row_factory = sqlite3.Row
     yield out
     out.close()
@@ -111,3 +120,46 @@ def test_accents_are_folded_and_the_query_runs_on_into_later_words(lookups, con)
 
 def test_a_usable_query_needs_two_letters_or_digits():
     assert usable(" Tom  HA ") == "tom ha" and usable("a") is None and usable("**") is None and usable("7a") == "7a"
+
+
+# ---------------------------------------------------------------- over HTTP
+
+
+@pytest.fixture(scope="module")
+def client(search_db):
+    with TestClient(create_app(Settings(db_path=search_db), predictor=object())) as c:
+        yield c
+
+
+def test_the_search_answers_one_page_with_counts_photos_and_known_for(client):
+    r = client.get(SEARCH, params={"q": "actor 1", "page_size": 3})
+    assert r.status_code == 200 and r.headers["cache-control"] == "public, max-age=3600"
+    body = r.json()
+    assert {k: body[k] for k in ("q", "role", "page", "page_size")} == {"q": "actor 1", "role": "all", "page": 1,
+                                                                         "page_size": 3}
+    assert body["total"] == body["role_counts"]["all"] > 3 and len(body["results"]) == 3
+    hit = body["results"][0]
+    assert set(hit) == {"id", "name", "thumb", "roles", "known_for"} and hit["id"] == HANKS
+    assert hit["thumb"] == "https://image.tmdb.org/t/p/w185/hanks.jpg" and hit["known_for"]["movie_id"] == 8
+    assert body["results"][1]["thumb"] is None
+    assert client.get(SEARCH, params={"q": "smith", "role": "writer"}).json()["total"] == 2
+
+
+def test_search_is_not_taken_for_a_person_id_and_the_other_people_endpoints_still_work(client):
+    assert client.get(SEARCH, params={"q": "tom"}).status_code == 200
+    assert client.get(f"{API_PREFIX}/people/{HANKS}").json()["id"] == HANKS
+    assert client.get(f"{API_PREFIX}/people", params={"role": "actor", "q": "tom"}).status_code == 200
+
+
+@pytest.mark.parametrize("params,field", [({}, "q"), ({"q": "tom", "role": "producer"}, "role"),
+                                          ({"q": "tom", "page": 0}, "page"), ({"q": "tom", "page_size": 49}, "page_size"),
+                                          ({"q": "x" * 101}, "q")])
+def test_bad_parameters_are_a_422_in_the_usual_shape(client, params, field):
+    r = client.get(SEARCH, params=params)
+    assert r.status_code == 422 and set(r.json()["errors"]) == {field}
+
+
+def test_a_short_or_syntax_only_query_is_an_empty_200(client):
+    for q in ("a", '"*', "NEAR("):
+        body = client.get(SEARCH, params={"q": q}).json()
+        assert body["total"] == 0 and body["results"] == [] and set(body["role_counts"].values()) == {0}
