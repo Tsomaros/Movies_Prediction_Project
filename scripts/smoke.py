@@ -14,9 +14,11 @@ Checks, each printed as one line with its time:
 - search, the box-office sort and the score filter, a movie page, autocomplete and /meta/options on the real data;
 - a person page (Day 14.6): the first actor found for "hanks", with films and a TMDB photo, and a director's
   page opening on directing (Day 14.7); his career forecast and model films, and Nolan's genre chips (Day 14.8);
+- the header's people search (V1.1): /people/search?q=hanks finds Tom Hanks first, with counts per role;
 - /model-card belongs to the served models and has the 2019+ test and the 2026 holdout;
 - with --web-url, the frontend: the start page, its two poster collages, its script bundle (cached for a year), a deep link served
-  as the app (/predict/... and /people/31), and /api/v1/health and /meta/options through the frontend's proxy.
+  as the app (/predict/..., /people/31 and /people?q=hanks), and /api/v1/health and /meta/options through the
+  frontend's proxy.
 
 It waits up to --wait seconds for /health first (a container starting, or a free host waking up), and
 exits with status 1 if any check fails. Only the standard library and httpx are needed.
@@ -129,6 +131,14 @@ def web_checks(s: Smoke, web_url: str, expected_version: str | None) -> None:
         return "served the app"
 
     s.check("GET /people/31 (client-side route)", person_page)
+
+    def people_results() -> str:
+        r = web.get("/people", params={"q": "hanks"})
+        r.raise_for_status()
+        assert '<div id="root">' in r.text, "the people results route didn't get the app"
+        return "served the app"
+
+    s.check("GET /people?q=hanks (client-side route)", people_results)
 
     def proxied() -> str:
         h = web.get(API + "/health").json()
@@ -251,6 +261,14 @@ def main() -> None:
         return f"{p['name']}: {len(acting['films'])} films, known for {first['known_for']}; Nolan opens on directing"
 
     s.check("GET /people/{id} (the first actor for hanks)", person)
+
+    def people_search() -> str:
+        found = s.get("/people/search", q="hanks")
+        assert found["total"] >= 1 and found["results"][0]["name"] == "Tom Hanks", found["results"][:1]
+        assert found["role_counts"]["all"] == found["total"] >= found["role_counts"]["writer"], found["role_counts"]
+        return f"{found['total']} people, first {found['results'][0]['name']}; counts {found['role_counts']}"
+
+    s.check("GET /people/search?q=hanks (V1.1)", people_search)
 
     def career() -> str:
         first = s.get("/people", role="actor", q="hanks")[0]
