@@ -114,7 +114,9 @@ export function SearchBox({ variant, inputRef, onDone, replace = false }: Props)
   }
 
   const term = useDebounced(text, DEBOUNCE_MS)
-  const quick = useQuickSearch(mode, term)
+  const usable = usableQuery(text) !== null
+  const showList = (open || variant === 'overlay') && usable
+  const quick = useQuickSearch(mode, term, showList)
   const data = quick.data?.mode === mode ? quick.data : undefined
   const settled = data !== undefined && !quick.isPlaceholderData
   const none = settled && data.total === 0
@@ -122,8 +124,6 @@ export function SearchBox({ variant, inputRef, onDone, replace = false }: Props)
   const items: (MovieSummary | PeopleSearchResult)[] = data ? data.items.slice(0, QUICK) : []
   const footer = data !== undefined && data.total > 0
   const last = items.length - (footer ? 0 : 1) // the footer is one more row
-  const usable = usableQuery(text) !== null
-  const showList = (open || variant === 'overlay') && usable
   const goTo = (to: string) => {
     navigate(to, { replace })
     setOpen(false)

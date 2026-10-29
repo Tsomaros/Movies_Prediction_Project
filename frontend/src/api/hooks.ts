@@ -16,7 +16,8 @@
 //                                             is set); a new chip keeps the last answer on screen until it arrives
 //   useMovies(query) / useMovie(id)        -> browse and one film, cached an hour like the API says; a new page or
 //                                             filter keeps the last results on screen until the new ones arrive
-//   useQuickSearch(mode, q)                -> the header search's top 5 (films or people) for a debounced, usable q
+//   useQuickSearch(mode, q, enabled)       -> the header search's top 5 (films or people) for a debounced, usable q,
+//                                             asked only while its dropdown is open
 //   useOtherModeCount(mode, q, enabled)    -> how many the other mode would find (the "2 people found" hint)
 //   usePeopleSearchPage(q, role, page)     -> one page of the /people results (V1.1)
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -129,12 +130,12 @@ const quickFetch = (mode: SearchMode, q: string, size: number, signal: AbortSign
     : api.peopleSearch({ q, page_size: size }, signal).then(r => ({ mode, total: r.total, items: r.results }))
 
 /** The header's quick results. `q` is the debounced text; nothing is asked under 2 letters or digits. */
-export function useQuickSearch(mode: SearchMode, q: string) {
+export function useQuickSearch(mode: SearchMode, q: string, enabled: boolean) {
   const term = usableQuery(q)
   return useQuery({
     queryKey: ['quick', mode, term?.toLowerCase()],
     queryFn: ({ signal }) => quickFetch(mode, term!, QUICK, signal),
-    enabled: term !== null,
+    enabled: enabled && term !== null,
     staleTime: HOUR,
     placeholderData: keepPreviousData,
   })

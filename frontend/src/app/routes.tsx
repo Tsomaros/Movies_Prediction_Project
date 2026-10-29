@@ -26,6 +26,7 @@ export const routes: RouteObject[] = [
         { path: '/movies', lazy: () => import('@/pages/Movies').then(m => ({ Component: m.default })) },
         { path: '/browse', lazy: () => import('@/pages/Browse').then(m => ({ Component: m.default })) },
         { path: '/movies/:id', lazy: () => import('@/pages/MovieDetail').then(m => ({ Component: m.default })) },
+        { path: '/people', lazy: () => import('@/pages/PeopleSearch').then(m => ({ Component: m.default })) },
         { path: '/people/:id', lazy: () => import('@/pages/Person').then(m => ({ Component: m.default })) },
         { path: '/series', handle: series, lazy: () => import('@/pages/Series').then(m => ({ Component: m.default })) },
         { path: '/about', lazy: () => import('@/pages/About').then(m => ({ Component: m.default })) },
