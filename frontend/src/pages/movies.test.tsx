@@ -2,14 +2,13 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-import type { CareerModelResponse, ModelCard, MovieDetail, MovieList, Options, PersonMatch, Recipe } from '@/api/client'
+import type { CareerModelResponse, ModelCard, MovieDetail, MovieList, Options, Recipe } from '@/api/client'
 import { emptyForm } from '@/form/model'
 import { decodeForm, LIKE_PARAM } from '@/form/persist'
 import { browseLink, EMPTY, pageNumbers, readBrowse, VIEW_KEY, writeBrowse } from '@/movies/browse'
 import { crewByJob, formatLife, initials, nameHue, runtimeText } from '@/movies/people'
 import { filmToForm, personToForm, recipeToForm } from '@/movies/predictLike'
 import { ROWS } from '@/movies/rows'
-import { SEARCH_MS } from '@/pages/Browse'
 import hanksModelJson from '@/test/career_hanks_model.json'
 import nolanModelJson from '@/test/career_nolan_model.json'
 import { mockFetch } from '@/test/fetch'
@@ -17,7 +16,7 @@ import modelCardJson from '@/test/model_card.json'
 import movieJson from '@/test/movie.json'
 import moviesJson from '@/test/movies.json'
 import optionsJson from '@/test/options.json'
-import peopleRowJson from '@/test/people_row.json'
+import peopleSearchJson from '@/test/people_search_hanks.json'
 import { renderApp } from '@/test/render'
 
 const options = optionsJson as Options
@@ -175,14 +174,24 @@ describe('the browse page', () => {
     expect(within(pager).getByRole('link', { name: 'Next page' })).toHaveAttribute('href', '/browse?page=2')
   })
 
-  test('the search box writes ?q= 300 ms after typing stops and starts from page 1', async () => {
+  test('a search from the URL is asked for, and its chip removes it but keeps the filters', async () => {
     const { calls } = serve()
-    const { router } = renderApp('/browse?page=4')
+    const { router } = renderApp('/browse?q=tom&genre=Drama&page=2')
     await screen.findByRole('list', { name: 'Films' })
-    await userEvent.type(screen.getByRole('searchbox', { name: 'Search films' }), 'alien')
-    await waitFor(() => expect(router.state.location.search).toBe('?q=alien'), { timeout: SEARCH_MS + 1000 })
-    await waitFor(() => expect(lastQuery(calls)).toMatchObject({ q: 'alien', page: '1' }))
-    expect(movieCalls(calls).filter(c => c.url.searchParams.get('q')?.startsWith('ali')).length).toBe(1) // not per keystroke
+    expect(lastQuery(calls)).toMatchObject({ q: 'tom', genre: 'Drama', page: '2' })
+    expect(screen.getByText(/Results for/)).toHaveTextContent('Results for ‘tom’')
+    expect(screen.queryByRole('button', { name: /Remove filter .tom/ })).toBeNull() // the search isn't a filter chip
+    await userEvent.click(screen.getByRole('button', { name: 'Remove search ‘tom’' }))
+    expect(router.state.location.search).toBe('?genre=Drama')
+  })
+
+  test('the page has no search box or people row of its own', async () => {
+    serve()
+    renderApp('/browse?q=tom')
+    await screen.findByRole('list', { name: 'Films' })
+    expect(screen.queryByRole('searchbox', { name: 'Search films' })).toBeNull()
+    expect(screen.queryByTestId('people-row')).toBeNull()
+    expect(screen.getAllByRole('combobox', { name: 'Search movies' })).toHaveLength(1) // the header's
   })
 
   test('filters and sort go to the URL and the request; chips remove them', async () => {
@@ -202,15 +211,22 @@ describe('the browse page', () => {
     expect(new URLSearchParams(router.state.location.search).get('genre')).toBeNull()
   })
 
-  test('no results: a button per filter and "Clear all"', async () => {
-    serve(() => ({ items: [], total: 0, page: 1, page_size: 24, pages: 0 }))
-    const { router } = renderApp('/browse?genre=Western&lang=ja&q=zzz')
+  test('no results: a button per filter, "Clear filters" (the search stays) and the people who match', async () => {
+    const fetch = mockFetch({
+      '/api/v1/meta/options': { body: options },
+      '/api/v1/movies': url => ({ body: { items: [], total: 0, page: 1, page_size: Number(url.searchParams.get('page_size') ?? 24), pages: 0 } }),
+      '/api/v1/people/search': { body: { ...peopleSearchJson, total: 1 } },
+    })
+    const { router } = renderApp('/browse?genre=Western&lang=ja&q=tom%20hanks')
     const none = await screen.findByTestId('no-results')
-    expect(within(none).getAllByRole('button')).toHaveLength(4)
+    expect(within(none).getByText('No movies match ‘tom hanks’.')).toBeInTheDocument()
+    expect(await within(none).findByRole('link', { name: /1 person found/ })).toHaveAttribute('href', '/people?q=tom%20hanks')
+    expect(fetch.calls.find(c => c.url.pathname === '/api/v1/people/search')!.url.search).toBe('?q=tom+hanks&page_size=1')
+    expect(within(none).getAllByRole('button')).toHaveLength(3)
     await userEvent.click(within(none).getByRole('button', { name: 'Remove Western' }))
-    expect(router.state.location.search).toBe('?q=zzz&lang=ja')
-    await userEvent.click(within(await screen.findByTestId('no-results')).getByRole('button', { name: 'Clear all' }))
-    expect(router.state.location.search).toBe('')
+    expect(router.state.location.search).toBe('?q=tom+hanks&lang=ja')
+    await userEvent.click(within(await screen.findByTestId('no-results')).getByRole('button', { name: 'Clear filters' }))
+    expect(router.state.location.search).toBe('?q=tom+hanks')
   })
 
   test('the poster size or list view is remembered', async () => {
@@ -240,76 +256,6 @@ describe('cast photos on the film page', () => {
     expect(items[0].querySelector('img')).toHaveAttribute('src', photo.small)
     expect(within(items[1]).getByText(initials(FILM.cast[1].name!))).toBeInTheDocument()
     expect(items[1].querySelector('img')).toBeNull()
-  })
-})
-
-describe('people in browse search', () => {
-  const PEOPLE = peopleRowJson as PersonMatch[] // a real answer: actors matching "tom"
-  const EMPTY_LIST: MovieList = { items: [], total: 0, page: 1, page_size: 24, pages: 0 }
-  function serveSearch(people: PersonMatch[], list: MovieList = LIST, directors: PersonMatch[] = []) {
-    return mockFetch({
-      '/api/v1/meta/options': { body: options },
-      '/api/v1/movies': { body: list },
-      '/api/v1/people': url => ({
-        body: (url.searchParams.get('role') === 'director' ? directors : people).slice(0, Number(url.searchParams.get('limit'))),
-      }),
-    })
-  }
-  const peopleCalls = (calls: ReturnType<typeof serveSearch>['calls']) => calls.filter(c => c.url.pathname === '/api/v1/people')
-
-  test('a search shows up to 6 matching actors above the films, each linking to their page', async () => {
-    const { calls } = serveSearch(PEOPLE)
-    renderApp('/browse?q=tom')
-    const row = await screen.findByTestId('people-row')
-    expect(within(row).getAllByTestId('person-card')).toHaveLength(6)
-    const hanks = within(row).getByRole('link', { name: /Tom Hanks/ })
-    expect(hanks).toHaveAttribute('href', '/people/31')
-    expect(hanks).toHaveTextContent('Forrest Gump')
-    expect(peopleCalls(calls).map(c => Object.fromEntries(c.url.searchParams))).toEqual([
-      { role: 'actor', q: 'tom', limit: '6' }, { role: 'director', q: 'tom', limit: '6' }])
-    expect(await screen.findByRole('list', { name: 'Films' })).toBeInTheDocument()
-  })
-
-  test('directors join the row, most films first, and someone in both appears once', async () => {
-    const tykwer = { id: 1071, name: 'Tom Tykwer', n_films: 80, thumb: null, known_for: 'Run Lola Run' } // made up: 80 puts him third
-    const hanksDirecting = { ...PEOPLE[1], n_films: 2, known_for: 'That Thing You Do!' }
-    serveSearch(PEOPLE, LIST, [tykwer, hanksDirecting])
-    renderApp('/browse?q=tom')
-    const row = await screen.findByTestId('people-row')
-    const cards = within(row).getAllByTestId('person-card')
-    expect(cards).toHaveLength(6)
-    expect(cards.filter(c => c.getAttribute('href') === '/people/31')).toHaveLength(1) // Tom Hanks once, as an actor
-    const director = within(row).getByRole('link', { name: /Tom Tykwer/ })
-    expect(director).toHaveTextContent('Director')
-    expect(director).toHaveTextContent('Run Lola Run')
-    const counts = [...PEOPLE, tykwer].sort((a, b) => b.n_films - a.n_films).slice(0, 6).map(x => x.id)
-    expect(cards.map(c => Number(c.getAttribute('href')!.split('/').pop()))).toEqual(counts)
-  })
-
-  test('nothing is asked for one character or no search, and no matches show no row', async () => {
-    const { calls } = serveSearch(PEOPLE)
-    renderApp('/browse?q=t')
-    await screen.findByRole('list', { name: 'Films' })
-    expect(screen.queryByTestId('people-row')).toBeNull()
-    expect(peopleCalls(calls)).toHaveLength(0)
-    serveSearch([])
-    renderApp('/browse?q=zzzz')
-    await screen.findAllByRole('list', { name: 'Films' })
-    expect(screen.queryByTestId('people-row')).toBeNull()
-  })
-
-  test('no films and no people say so together', async () => {
-    serveSearch([], EMPTY_LIST)
-    renderApp('/browse?q=zzzz')
-    expect(await screen.findByText('No films or people match.')).toBeInTheDocument()
-  })
-
-  test('a person without a photo gets an initials avatar', async () => {
-    serveSearch([{ ...PEOPLE[1], thumb: null }])
-    renderApp('/browse?q=hanks')
-    const row = await screen.findByTestId('people-row')
-    expect(within(row).getByText('TH')).toBeInTheDocument()
-    expect(row.querySelector('img')).toBeNull()
   })
 })
 
@@ -378,13 +324,14 @@ describe('the curated rows and attribution', () => {
     await waitFor(() => expect(within(screen.getByTestId('row-popular')).getAllByRole('link').length).toBeGreaterThan(6))
   })
 
-  test('/movies has the rows and no search; Browse has the search and no rows', async () => {
+  test('/movies has the rows and Browse the filters, neither a search box of its own', async () => {
     serve()
     renderApp('/movies')
     expect(await screen.findByRole('heading', { level: 1, name: 'Movies' })).toBeInTheDocument()
     expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
     renderApp('/browse')
-    expect(await screen.findByRole('searchbox', { name: 'Search films' })).toBeInTheDocument()
+    expect(await screen.findByRole('complementary', { name: 'Filter films' }, { timeout: 3000 })).toBeInTheDocument()
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
     expect(screen.getAllByTestId('row-popular')).toHaveLength(1)
   })
 

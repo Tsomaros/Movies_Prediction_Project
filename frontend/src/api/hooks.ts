@@ -24,7 +24,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 
 import {
   ApiError, api, type CareerRole, type CompareRequest, type MovieQuery, type MovieSummary, type NameKind, type PeopleSearchResult,
-  type PersonMatch, type PredictForm, type SearchRole, type SweepRequest,
+  type PredictForm, type SearchRole, type SweepRequest,
 } from '@/api/client'
 import { notifyError } from '@/api/errors'
 import { useDebounced } from '@/lib/useDebounced'
@@ -193,30 +193,6 @@ export function useCareerModel(id: number, role: CareerRole, genre: number | nul
     staleTime: HOUR,
     placeholderData: keepPreviousData,
     retry: (count, error) => !(error instanceof ApiError && error.kind === 'not_found') && count < 1,
-  })
-}
-
-export type RowPerson = PersonMatch & { role: 'actor' | 'director' }
-
-/** Actors and directors for browse search's people row (Day 14.7): both searches merged by id (someone in both
- *  appears once, in the role with more films), most films first, at most `limit`; only for 2+ typed characters
- *  (q is already debounced). */
-export function usePeopleRow(q: string, limit: number) {
-  const text = q.trim()
-  return useQuery({
-    queryKey: ['people-row', text, limit],
-    queryFn: async ({ signal }): Promise<RowPerson[]> => {
-      const [actors, directors] = await Promise.all((['actor', 'director'] as const).map(role =>
-        api.searchPeople(text, limit, role, signal).then(hits => hits.map(h => ({ ...h, role })))))
-      const best = new Map<number, RowPerson>()
-      for (const p of [...actors, ...directors]) {
-        const seen = best.get(p.id)
-        if (!seen || p.n_films > seen.n_films) best.set(p.id, p)
-      }
-      return [...best.values()].sort((a, b) => b.n_films - a.n_films || a.name.localeCompare(b.name)).slice(0, limit)
-    },
-    enabled: text.length >= 2,
-    staleTime: HOUR,
   })
 }
 
