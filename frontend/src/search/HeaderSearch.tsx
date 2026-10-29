@@ -16,7 +16,7 @@ function MobileSearch({ open, onClose }: { open: boolean; onClose: (how: 'back' 
   const inputRef = useRef<HTMLInputElement>(null)
   return (
     <Dialog open={open} onOpenChange={o => !o && onClose('dismissed')}>
-      <DialogContent onOpenAutoFocus={e => { e.preventDefault(); inputRef.current?.select() }}
+      <DialogContent onOpenAutoFocus={e => { e.preventDefault(); inputRef.current?.focus(); inputRef.current?.select() }}
         className="top-0 left-0 flex h-svh max-h-svh w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-y-auto rounded-none p-4 pt-14 ring-0 sm:max-w-none data-open:zoom-in-100 data-closed:zoom-out-100">
         <DialogTitle className="sr-only">Search</DialogTitle>
         <DialogDescription className="sr-only">Search movies or people; results appear as you type.</DialogDescription>
