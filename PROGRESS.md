@@ -2243,7 +2243,7 @@ Dimitris asked to replace "Compared with its year" with box office, built the sa
 - **The README still says "Cast and crew have no photos"** in Limitations, out of date since Day 14.7.
 - **Scheduled workflows stop after 60 days** without repository activity; check before interview day.
 
-## V1.1: Header search (built 2026-10-29, not deployed yet)
+## V1.1: Header search (built and deployed 2026-10-29)
 
 Dimitris's spec and plan (`2026-10-29-v1.1-header-search-design.md` and `…-header-search.md`, on the Desktop): one search bar in the header with a Movies | People switch, quick results, a `/people?q=` results page, a hint to the other mode on an empty search, and no search box or people row on browse. Decisions asked before the build: writers get their own in-memory name index, and every `/api` GET gets a read limit of 120 a minute.
 
@@ -2254,7 +2254,7 @@ Dimitris's spec and plan (`2026-10-29-v1.1-header-search-design.md` and `…-hea
 - [x] 7. The `/people` results page (`c1773ff`)
 - [x] 8. Browse without its search box and the people row (`0a8353b`)
 - [x] 9. Playwright, smoke, Docker and docs (`9c2f7cf`, this commit)
-- [ ] Deploy (`make deploy`, waiting for Dimitris's go-ahead), then the live check
+- [x] Deploy (`make deploy`, image `cac9965c5b25`), then the live check
 
 ### Changes from the plan
 
@@ -2278,14 +2278,15 @@ Dimitris's spec and plan (`2026-10-29-v1.1-header-search-design.md` and `…-hea
 | Docker | smoke 24/24 (2 new), Playwright 5/5 (3 new) |
 | Memory in Docker | 360 MiB after startup, 360 after 100 predictions, 361 after 200 people searches (gate 450) |
 | Browser pane | desktop dark and phone light: the dropdown, the hint, `/people`, the overlay (Back and Esc leave no extra history entry), no search on Series |
+| Live (image `cac9965c5b25`) | smoke 24/24 (`/people/search?q=hanks`: 13 people, Tom Hanks first, 113 ms); the 3 header search Playwright flows pass (the demo flow skipped: it writes to the shared account); a prediction 1.5–4.3 s, the 12-month sweep 25 s, pages and search about 0.1 s, as before |
 
 ### Mistakes, fixed
 
 - **A commit with a failing test:** `7b28ccd` went in while the phone overlay test failed (`select()` doesn't focus in jsdom); `1f2cb00` fixed it a minute later.
 - **Two tests hit the new read limit:** the Surprise me spins in `test_random.py` and `test_accounts.py` send many GETs; they now raise the read limit as they did the random one.
+- **The first deploy failed before building:** Docker Desktop had stopped, and the piped output hid the exit code. After a restart the second `make deploy` built, pushed and called the hook (Render answered 200); the new version served about 90 s later.
 
 ### Still open
 
-- **Deploy:** `make deploy` (needs the real `RENDER_DEPLOY_HOOK` in `.env`, or set the image tag on Render), then the live check: both modes, `/people?q=hanks`, one prediction.
 - **By hand:** Lighthouse accessibility on `/browse?q=nolan` and `/people?q=nolan` (target 95+), and a keyboard-only pass.
 - **Sentry:** still no DSN, so the plan's "no new errors after 10 minutes" can't be checked.
