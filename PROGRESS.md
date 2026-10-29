@@ -2272,7 +2272,7 @@ Dimitris's spec and plan (`2026-10-29-v1.1-header-search-design.md` and `…-hea
 
 | | |
 | --- | --- |
-| Python tests | 621 (`make test` with Postgres): `test_people_search.py` 22 new, the read limit, `ENDPOINTS` |
+| Python tests | 621 (`make test` with Postgres): `test_people_search.py` 25 new, the read limit, `ENDPOINTS` |
 | Frontend tests | 307 (`npm run check`): `search.test.ts(x)` 25, `peopleSearch.test.tsx` 6, browse updated |
 | People search speed (full database, locally) | a full name 1–10 ms; "tom" 15–25 ms; "jo", "ma" 25–53 ms; same order as a brute-force ranking on 4 queries × 4 roles × 4 pages |
 | Docker | smoke 24/24 (2 new), Playwright 5/5 (3 new) |
