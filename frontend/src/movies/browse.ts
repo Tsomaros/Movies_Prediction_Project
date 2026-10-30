@@ -1,6 +1,6 @@
 // The browse page's state lives in the URL, so a link or a refresh always shows the same page of films.
 //
-//   readBrowse(params)        -> the search, filters, sort and page from ?q=&genre=&from=&to=&lang=&score=&sort=&page=;
+//   readBrowse(params)        -> the search, filters, sort and page from ?q=&genre=&when=&from=&to=&lang=&score=&sort=&page=;
 //                                anything malformed falls back to its default (never an error)
 //   writeBrowse(state)        -> the same as URL parameters, defaults left out (a clean URL for the plain list)
 //   browseResets(params, genres) -> what a link asked for that couldn't be used, in words ("genre", "page"), for
@@ -14,10 +14,18 @@
 //   GRID                      -> the grid's columns for each poster size
 import type { MovieQuery, Sort } from '@/api/client'
 
+/** V1.2: the New arrivals windows: out in the last 14 days, or due in the next 60 (the server decides the dates). */
+export type When = 'released' | 'upcoming'
+export const WHENS: { value: When; label: string }[] = [
+  { value: 'released', label: 'Just released' },
+  { value: 'upcoming', label: 'Coming soon' },
+]
+
 export const PAGE_SIZE = 24
 export const SORTS: { value: Sort; label: string }[] = [
   { value: 'popularity', label: 'Most popular' },
   { value: 'newest', label: 'Newest' },
+  { value: 'soonest', label: 'Soonest first' },
   { value: 'title', label: 'Title A–Z' },
   { value: 'score', label: 'Highest score (50+ votes)' },
   { value: 'revenue', label: 'Biggest box office (2025 $)' },
@@ -27,6 +35,7 @@ export const SCORE_STEPS = [5, 6, 7, 8, 9] as const
 export type BrowseState = {
   q: string
   genre: string | null
+  when: When | null
   yearFrom: number | null
   yearTo: number | null
   language: string | null
@@ -36,10 +45,10 @@ export type BrowseState = {
 }
 
 export const EMPTY: BrowseState = {
-  q: '', genre: null, yearFrom: null, yearTo: null, language: null, scoreMin: null, sort: 'popularity', page: 1,
+  q: '', genre: null, when: null, yearFrom: null, yearTo: null, language: null, scoreMin: null, sort: 'popularity', page: 1,
 }
 
-const KEYS = { q: 'q', genre: 'genre', yearFrom: 'from', yearTo: 'to', language: 'lang', scoreMin: 'score', sort: 'sort', page: 'page' } as const
+const KEYS = { q: 'q', genre: 'genre', when: 'when', yearFrom: 'from', yearTo: 'to', language: 'lang', scoreMin: 'score', sort: 'sort', page: 'page' } as const
 /** The URL parameters of the browse page (an old /movies?… link carrying one is sent on to /browse). */
 export const BROWSE_PARAMS: string[] = Object.values(KEYS)
 
@@ -56,6 +65,7 @@ export function readBrowse(params: URLSearchParams): BrowseState {
   return {
     q: (params.get(KEYS.q) ?? '').slice(0, 200),
     genre: params.get(KEYS.genre) || null,
+    when: WHENS.some(w => w.value === params.get(KEYS.when)) ? (params.get(KEYS.when) as When) : null,
     yearFrom: int(params.get(KEYS.yearFrom), 1900, 2100),
     yearTo: int(params.get(KEYS.yearTo), 1900, 2100),
     language: language && /^[a-z]{2}$/.test(language) ? language : null,
@@ -75,7 +85,7 @@ export function writeBrowse(state: BrowseState): URLSearchParams {
 }
 
 const KEY_WORDS: Record<string, string> = {
-  q: 'search', genre: 'genre', from: 'from year', to: 'to year', lang: 'language', score: 'score', sort: 'sort', page: 'page',
+  q: 'search', genre: 'genre', when: 'released or upcoming', from: 'from year', to: 'to year', lang: 'language', score: 'score', sort: 'sort', page: 'page',
 }
 
 export function browseResets(params: URLSearchParams, genres: readonly string[] | undefined): string[] {
@@ -95,6 +105,7 @@ export function toQuery(state: BrowseState): MovieQuery {
   return {
     q: state.q.trim() || undefined,
     genre: (state.genre ?? undefined) as MovieQuery['genre'],
+    when: state.when ?? undefined,
     year_from: state.yearFrom ?? undefined,
     year_to: state.yearTo ?? undefined,
     language: state.language ?? undefined,
@@ -116,6 +127,7 @@ export function activeFilters(state: BrowseState, languageName: (code: string) =
   const out: ActiveFilter[] = []
   if (state.q.trim()) out.push({ key: 'q', label: `“${state.q.trim()}”` })
   if (state.genre) out.push({ key: 'genre', label: state.genre })
+  if (state.when) out.push({ key: 'when', label: WHENS.find(w => w.value === state.when)!.label })
   if (state.yearFrom !== null) out.push({ key: 'yearFrom', label: `From ${state.yearFrom}` })
   if (state.yearTo !== null) out.push({ key: 'yearTo', label: `To ${state.yearTo}` })
   if (state.language) out.push({ key: 'language', label: languageName(state.language) })

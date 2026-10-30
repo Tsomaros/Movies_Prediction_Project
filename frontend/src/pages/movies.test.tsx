@@ -5,7 +5,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import type { CareerModelResponse, ModelCard, MovieDetail, MovieList, Options, Recipe } from '@/api/client'
 import { emptyForm } from '@/form/model'
 import { decodeForm, LIKE_PARAM } from '@/form/persist'
-import { browseLink, EMPTY, pageNumbers, readBrowse, VIEW_KEY, writeBrowse } from '@/movies/browse'
+import { browseLink, browseResets, EMPTY, pageNumbers, readBrowse, VIEW_KEY, writeBrowse } from '@/movies/browse'
 import { crewByJob, formatLife, initials, nameHue, runtimeText } from '@/movies/people'
 import { filmToForm, personToForm, recipeToForm } from '@/movies/predictLike'
 import { ROWS } from '@/movies/rows'
@@ -48,6 +48,15 @@ describe('the browse state in the URL', () => {
     expect(writeBrowse(EMPTY).toString()).toBe('')
     expect(readBrowse(new URLSearchParams('from=abc&to=99999&lang=ENG&score=11&sort=evil&page=-2'))).toEqual(EMPTY)
     expect(browseLink({ sort: 'revenue' })).toBe('/browse?sort=revenue')
+  })
+
+  test('when round-trips through the URL, the soonest sort is known and bad values reset', () => {
+    expect(readBrowse(new URLSearchParams('when=upcoming&sort=soonest'))).toMatchObject({ when: 'upcoming', sort: 'soonest' })
+    expect(readBrowse(new URLSearchParams('when=later')).when).toBeNull()
+    expect(browseResets(new URLSearchParams('when=later'), undefined)).toContain('released or upcoming')
+    expect(browseResets(new URLSearchParams('when=released&sort=newest'), undefined)).toEqual([])
+    expect(browseLink({ when: 'released', sort: 'newest' })).toBe('/browse?when=released&sort=newest')
+    expect(writeBrowse({ ...EMPTY, when: 'upcoming', sort: 'soonest' }).toString()).toBe('when=upcoming&sort=soonest')
   })
 
   test('the pager shows the ends, the neighbours and gaps', () => {
@@ -243,6 +252,27 @@ describe('the browse page', () => {
     mockFetch({ '/api/v1/meta/options': { body: options }, '/api/v1/movies': new TypeError('offline') })
     renderApp('/browse')
     expect(await screen.findByRole('alert')).toHaveTextContent("The films couldn't load")
+  })
+})
+
+describe('the browse page: the release window', () => {
+  test('a Coming soon chip, asked of the API with when, and removable', async () => {
+    const { calls } = serve()
+    renderApp('/browse?when=upcoming&sort=soonest')
+    const chip = await screen.findByRole('button', { name: /remove filter coming soon/i })
+    expect(chip).toBeInTheDocument()
+    await waitFor(() => expect(lastQuery(calls)).toMatchObject({ when: 'upcoming', sort: 'soonest' }))
+    await userEvent.click(chip)
+    await waitFor(() => expect(lastQuery(calls)).not.toHaveProperty('when'))
+  })
+
+  test('the Release menu sets and clears the window', async () => {
+    const { calls } = serve()
+    renderApp('/browse')
+    await screen.findAllByRole('link', { name: /poster/i })
+    await choose(screen.getAllByRole('combobox', { name: /release/i })[0], 'Just released')
+    await waitFor(() => expect(lastQuery(calls)).toMatchObject({ when: 'released' }))
+    expect(await screen.findByRole('button', { name: /remove filter just released/i })).toBeInTheDocument()
   })
 })
 

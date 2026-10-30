@@ -672,6 +672,12 @@ export interface components {
             id: number;
             /** Name */
             name: string | null;
+            /**
+             * Linked
+             * @description The person has a page (they are in the main database, not only in fresh.db)
+             * @default true
+             */
+            linked: boolean;
             /** Character */
             character: string | null;
             /** Order */
@@ -813,6 +819,12 @@ export interface components {
             id: number;
             /** Name */
             name: string | null;
+            /**
+             * Linked
+             * @description The person has a page (they are in the main database, not only in fresh.db)
+             * @default true
+             */
+            linked: boolean;
             /** Job */
             job: string;
         };
@@ -1113,6 +1125,16 @@ export interface components {
              */
             budget?: number | null;
         };
+        /** Fresh */
+        Fresh: {
+            /**
+             * Refreshed At
+             * @description When fresh.db (new and upcoming films) was last built; None before the first refresh
+             */
+            refreshed_at: string | null;
+            /** Films */
+            films: number | null;
+        };
         /** GenreCount */
         GenreCount: {
             /** Name */
@@ -1146,6 +1168,8 @@ export interface components {
             prediction_cache: {
                 [key: string]: number;
             };
+            /** @description The small database of new and upcoming films (V1.2) */
+            fresh: components["schemas"]["Fresh"];
         };
         /** KnownFor */
         KnownFor: {
@@ -2423,8 +2447,10 @@ export interface operations {
                 language?: string | null;
                 /** @description Lowest TMDB score; films with any number of votes */
                 score_min?: number | null;
-                /** @description popularity (TMDB, when pulled), newest, title, score (50+ votes only) or revenue (2025 $, trusted figures only) */
-                sort?: "popularity" | "newest" | "title" | "score" | "revenue";
+                /** @description popularity (TMDB, when pulled), newest, soonest (the next release first), title, score (50+ votes only) or revenue (2025 $, trusted figures only) */
+                sort?: "popularity" | "newest" | "title" | "score" | "revenue" | "soonest";
+                /** @description released: out in the last 14 days; upcoming: due in the next 60 (UTC). Without it, and without q, unreleased films are left out */
+                when?: ("released" | "upcoming") | null;
                 page?: number;
                 page_size?: number;
             };

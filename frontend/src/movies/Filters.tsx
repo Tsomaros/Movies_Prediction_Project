@@ -1,4 +1,4 @@
-// The browse filters: genre, years, original language and lowest score. The menus are the same shadcn/Radix
+// The browse filters: genre, release window (Just released | Coming soon), years, original language and lowest score. The menus are the same shadcn/Radix
 // Select as the creator form's (FilterSelect, also the sort menu); the years are number boxes. Every change goes
 // to the URL through `onChange` (and back to page 1); a year is applied when the box loses focus or on Enter.
 import { useState, type ReactNode } from 'react'
@@ -7,7 +7,7 @@ import type { Options } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { codeName } from '@/form/format'
-import { SCORE_STEPS, type BrowseState } from '@/movies/browse'
+import { SCORE_STEPS, WHENS, type BrowseState, type When } from '@/movies/browse'
 
 const CONTROL = 'border-input bg-card dark:bg-input/30 h-9 w-full rounded-md border px-2 text-sm focus-visible:outline-2 focus-visible:outline-ring'
 
@@ -72,6 +72,10 @@ export function Filters({ state, options, onChange, onClear, idPrefix = 'f' }: {
       <Field id={id('genre')} label="Genre">
         <FilterSelect id={id('genre')} value={state.genre} any="Any genre" onChange={genre => onChange({ genre })}
           choices={(options?.genres ?? []).map(g => ({ value: g, label: g }))} />
+      </Field>
+      <Field id={id('when')} label="Release">
+        <FilterSelect id={id('when')} value={state.when} any="Any release date" onChange={when => onChange({ when: when as When | null })}
+          choices={WHENS} />
       </Field>
       <div className="grid grid-cols-2 gap-2">
         <Field id={id('from')} label="From year">
