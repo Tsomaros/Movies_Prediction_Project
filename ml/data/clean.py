@@ -70,14 +70,17 @@ def load_raw(path: Path = RAW_MOVIES) -> list[dict[str, Any]]:
         return [json.loads(line) for line in f if line.strip()]
 
 
-def select_records(records: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, int]]:
-    """Keep released films only; when an id appears twice (a re-pull), keep the latest pull."""
+def select_records(records: list[dict[str, Any]], keep_unreleased: bool = False) -> tuple[list[dict[str, Any]], dict[str, int]]:
+    """Keep released films only; when an id appears twice (a re-pull), keep the latest pull.
+
+    keep_unreleased keeps every status (Planned, In Production, Post Production, ...): only fresh.db, the app's
+    small database of new and upcoming films (V1.2), asks for it; `make db` never does."""
     latest: dict[int, dict[str, Any]] = {}
     for r in records:
         kept = latest.get(r["id"])
         if kept is None or (r.get("pulled_at") or "") >= (kept.get("pulled_at") or ""):
             latest[r["id"]] = r
-    released = [r for r in latest.values() if r.get("status") == "Released"]
+    released = [r for r in latest.values() if keep_unreleased or r.get("status") == "Released"]
     report = {
         "duplicate_ids_dropped": len(records) - len(latest),
         "not_released_dropped": len(latest) - len(released),
@@ -314,10 +317,12 @@ def score_rules(movies: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, int]]:
 # ---------------------------------------------------------------- pipeline
 
 
-def clean(records: list[dict[str, Any]], cpi: dict[int, float]) -> tuple[dict[str, pd.DataFrame], dict[str, Any]]:
-    """Raw trimmed records -> cleaned tables, plus a report of what every rule changed."""
+def clean(records: list[dict[str, Any]], cpi: dict[int, float],
+          keep_unreleased: bool = False) -> tuple[dict[str, pd.DataFrame], dict[str, Any]]:
+    """Raw trimmed records -> cleaned tables, plus a report of what every rule changed. keep_unreleased: see
+    select_records (a film from a year with no CPI row gets NULL 2025-dollar money)."""
     report: dict[str, Any] = {"raw_records": len(records)}
-    records, selected = select_records(records)
+    records, selected = select_records(records, keep_unreleased)
     tables = flatten(records)
     movies, basic = basic_clean(tables["movies"])
     movies, money, caps = money_rules(movies, cpi)

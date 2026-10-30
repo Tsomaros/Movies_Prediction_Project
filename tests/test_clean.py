@@ -201,3 +201,24 @@ def test_report_counts_every_rule():
     assert report["budget_placeholder_nulled"] == 1
     assert report["runtime_nulled"] == 1
     assert report["score_ok"] == 2 and report["score_below_min_votes"] == 1
+
+
+# ---------------------------------------------------------------- unreleased films (fresh.db, V1.2)
+
+
+def test_clean_keeps_unreleased_when_asked():
+    recs = [film(1, status="Released"), film(2, status="Post Production", release_date="2026-12-01")]
+    tables, report = clean(recs, TEST_CPI, keep_unreleased=True)
+    assert sorted(tables["movies"]["id"]) == [1, 2]
+    assert report["not_released_dropped"] == 0
+
+
+def test_clean_default_still_drops_unreleased():
+    tables, report = clean([film(1), film(2, status="Planned")], TEST_CPI)
+    assert list(tables["movies"]["id"]) == [1] and report["not_released_dropped"] == 1
+
+
+def test_a_year_without_a_cpi_row_gives_null_2025_money():
+    tables, _ = clean([film(3, status="Planned", release_date="2027-01-10", budget=5_000_000)], TEST_CPI,
+                      keep_unreleased=True)
+    assert tables["movies"]["budget_2025"].isna().all() and tables["movies"]["budget"].iloc[0] == 5_000_000
