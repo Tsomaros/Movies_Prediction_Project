@@ -19,6 +19,7 @@ Lists (user_movies)
     set_entry(conn, user_id, movie_id, status, watched_on, rating) -> the entry after the upsert
     delete_entry(conn, user_id, movie_id)        -> whether there was one
     counts(conn, user_id)                        -> {"watched", "plan_to_watch", "notes"}
+    listed_movie_ids(conn)                       -> the film ids in ANY user's list or notes (V1.2: fresh.db keeps them)
 
 Notes (comments)
     notes_for(conn, user_id, movie_id)           -> the notes on one film, newest first
@@ -92,6 +93,13 @@ def lock_user(conn: psycopg.Connection, user_id: int) -> None:
 
 def entries(conn: psycopg.Connection, user_id: int) -> list[Row]:
     return conn.execute(f"SELECT {ENTRY} FROM user_movies WHERE user_id = %s", (user_id,)).fetchall()
+
+
+def listed_movie_ids(conn: psycopg.Connection) -> set[int]:
+    """Every film id any user has listed or noted. The one query not filtered by user_id: it only returns film
+    ids, never who listed them, and the refresher needs them all so fresh.db keeps a listed new film."""
+    rows = conn.execute("SELECT movie_id FROM user_movies UNION SELECT movie_id FROM comments").fetchall()
+    return {r["movie_id"] for r in rows}
 
 
 def entry(conn: psycopg.Connection, user_id: int, movie_id: int) -> Optional[Row]:

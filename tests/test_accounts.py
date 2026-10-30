@@ -494,3 +494,10 @@ def test_two_demo_logins_at_once_reset_only_once(pg_url, pg):
     with ThreadPoolExecutor(4) as pool:
         assert sorted(pool.map(login, range(4))) == [False, False, False, True]
     assert repo.get_state(pg, "last_reset") == "2026-10-24"
+
+
+def test_listed_movie_ids_come_from_every_users_lists_and_notes(pg):
+    base = repo.listed_movie_ids(pg)  # the demo seed's films
+    repo.set_entry(pg, pg.other_id, 900_001, "plan_to_watch", None, None)
+    repo.add_note(pg, pg.demo_id, 900_002, "a note on a film not in a list")
+    assert repo.listed_movie_ids(pg) == base | {900_001, 900_002}

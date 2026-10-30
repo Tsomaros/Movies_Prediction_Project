@@ -20,23 +20,38 @@ Building it (this module's pure parts and the async pull):
                                    -> writes a complete database at `path` with the existing clean() (unreleased
                                       films kept) and write_db(); returns the number of films
 
+Keeping it fresh:
+    Refresher(fresh_path, main_db, token, min_popularity, ttl_s, listed, clock, make_client=TMDBClient)
+        due()          -> True when a refresh should start: a token is set, none is running, the last success is
+                          older than ttl_s (or there was none) and the last failure is over 60 s ago
+        maybe_start()  -> starts run() as a background task when due() (never waits for it), else None
+        await run()    -> {"films", "listed", "skipped"}: pulls the two windows plus every listed film (in a user's
+                          list or notes) that movies.db lacks, writes fresh.tmp.db and replaces fresh.db with it in
+                          one step. Any failure keeps the old file, is logged once and backs off; nothing is raised
+        status()       -> {"refreshed_at", "films"} (None before the first refresh)
+    python -m backend.app.services.fresh --once   -> one refresh with the settings of .env (data/fresh.db)
+
 Nothing here is stored in git or in the Docker image: the file lives where FRESH_DB says and is rebuilt by the
-Refresher (the rest of this module) at startup and every 6 hours.
+Refresher at startup and every 6 hours.
 """
 
 from __future__ import annotations
 
+import argparse
 import asyncio
+import json
 import logging
+import os
 import sqlite3
-from datetime import date, timedelta
+from contextlib import closing
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import httpx
 
 from ml.data.build_db import write_db
-from ml.data.clean import clean
+from ml.data.clean import clean, load_cpi
 from ml.data.pull import DETAILS_PARAMS, trim_movie
 from ml.data.tmdb_client import TMDBClient, TMDBError
 
@@ -106,3 +121,124 @@ def build_fresh_db(records: list[dict[str, Any]], cpi: dict[int, float], path: P
     finally:
         con.close()
     return len(tables["movies"])
+
+
+BACKOFF_S = 60
+
+
+class Refresher:
+    def __init__(self, fresh_path: Path, main_db: Path, token: str | None, min_popularity: float, ttl_s: int,
+                 listed: Callable[[], set[int]] | None, clock: Callable[[], datetime],
+                 make_client: Callable[[str], TMDBClient] = TMDBClient):
+        self.fresh_path, self.main_db, self.token = Path(fresh_path), Path(main_db), token
+        self.min_popularity, self.ttl_s, self.listed, self.clock, self.make_client = min_popularity, ttl_s, listed, clock, make_client
+        self._running, self._task = False, None
+        self._last_ok: datetime | None = None
+        self._failed_at: datetime | None = None
+        self._status = {"refreshed_at": None, "films": None}
+
+    @property
+    def tmp_path(self) -> Path:
+        return self.fresh_path.with_name(self.fresh_path.stem + ".tmp.db")
+
+    def due(self) -> bool:
+        if not self.token or self._running:
+            return False
+        now = self.clock()
+        if self._failed_at is not None and (now - self._failed_at).total_seconds() < BACKOFF_S:
+            return False
+        return self._last_ok is None or (now - self._last_ok).total_seconds() >= self.ttl_s
+
+    def maybe_start(self) -> asyncio.Task | None:
+        if not self.due():
+            return None
+        self._running = True  # at once, so a second call before the task has started finds it running
+        self._task = asyncio.get_running_loop().create_task(self.run())
+        return self._task
+
+    def status(self) -> dict[str, Any]:
+        return dict(self._status)
+
+    def cancel(self) -> None:
+        if self._task is not None and not self._task.done():
+            self._task.cancel()
+
+    def _listed(self) -> set[int]:
+        if self.listed is None:
+            return set()
+        try:
+            return set(self.listed())
+        except Exception as e:  # Postgres down: the windows still refresh
+            log.warning("fresh: the listed films could not be read: %s", e)
+            return set()
+
+    def _in_main(self, ids: set[int]) -> set[int]:
+        from backend.app.deps import connect_read_only
+        from backend.app.repo.movies import ids_present
+
+        found: set[int] = set()
+        with closing(connect_read_only(self.main_db)) as con:
+            wanted = sorted(ids)
+            for i in range(0, len(wanted), 500):
+                found |= ids_present(con, wanted[i:i + 500])
+        return found
+
+    def _write(self, records: list[dict[str, Any]], refreshed_at: str) -> int:
+        self.tmp_path.unlink(missing_ok=True)
+        try:
+            n = build_fresh_db(records, load_cpi(), self.tmp_path, {"refreshed_at": refreshed_at})
+            os.replace(self.tmp_path, self.fresh_path)  # one step: a request sees the old file or the new one
+        except BaseException:
+            self.tmp_path.unlink(missing_ok=True)
+            raise
+        return n
+
+    async def run(self) -> dict[str, Any]:
+        self._running = True
+        now = self.clock()
+        try:
+            async with self.make_client(self.token) as client:
+                window = await discover_ids(client, now.date(), self.min_popularity)
+                listed = await asyncio.to_thread(self._listed)
+                known = await asyncio.to_thread(self._in_main, listed) if listed else set()
+                extra = sorted(listed - known - set(window))
+                wanted = window + extra
+                records = await pull_details(client, wanted, now.isoformat(timespec="seconds"))
+            films = await asyncio.to_thread(self._write, records, now.isoformat(timespec="seconds"))
+        except Exception as e:  # TMDB or disk trouble: keep the old file, try again after the back-off
+            log.warning("fresh: refresh failed (%s: %s)", type(e).__name__, e)
+            self._failed_at = now
+            return {"films": 0, "listed": 0, "skipped": 0, "error": str(e)}
+        finally:
+            self._running = False
+        self._last_ok, self._failed_at = now, None
+        self._status = {"refreshed_at": now.isoformat(timespec="seconds"), "films": films}
+        log.info("fresh: %d films (%d listed, %d skipped)", films, len(extra), len(wanted) - len(records))
+        return {"films": films, "listed": len(extra), "skipped": len(wanted) - len(records)}
+
+
+def _once() -> None:
+    from backend.app.settings import Settings
+    from backend.app.userdb.pool import make_pool
+    from backend.app.userdb import repo as userdb
+
+    settings = Settings.from_env()
+    pool = make_pool(settings.user_database_url) if settings.user_database_url else None
+
+    def listed() -> set[int]:
+        with pool.connection() as conn:
+            return userdb.listed_movie_ids(conn)
+
+    refresher = Refresher(settings.fresh_path or Path("data/fresh.db"), settings.db_path, settings.tmdb_read_token,
+                          settings.fresh_min_popularity, settings.fresh_ttl_s, listed if pool else None,
+                          lambda: datetime.now(timezone.utc))
+    if not refresher.token:
+        raise SystemExit("TMDB_READ_TOKEN is not set")
+    print(json.dumps(asyncio.run(refresher.run())))
+    if pool:
+        pool.close()
+
+
+if __name__ == "__main__":
+    argparse.ArgumentParser(description="Build data/fresh.db once.").add_argument("--once", action="store_true", required=True)
+    _once()
