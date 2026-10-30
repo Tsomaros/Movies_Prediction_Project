@@ -22,7 +22,14 @@ flowchart LR
         api --- web
         api --> sqlite
         api --> predictor
+        refresher["Refresher<br/>(every 6 h, in the background)"]
+        fresh[("/tmp/fresh.db<br/>new and upcoming films")]
+        api --> refresher
+        refresher -->|"os.replace"| fresh
+        api -->|"attached, read-only,<br/>shadowing views"| fresh
     end
+    tmdb -.->|"discover + details"| refresher
+    api -.->|"listed film ids"| neon
 
     models --> predictor
     slim --> sqlite
@@ -32,6 +39,7 @@ flowchart LR
 ```
 
 - **Movies stay read-only.** The films, people and features are a SQLite file baked into the image; every request opens its own read-only connection.
+- **New films live in a second small file.** `fresh.db` (the last 14 days and the next 60, plus every film a user listed) has the same schema as the movie tables and is rebuilt in the background every 6 hours. Each request attaches it and reads both files through temporary views; the models, comparables, career data and autocomplete never do ([Fresh films](app.md#new-arrivals-v12)).
 - **User data lives elsewhere.** Render Free's disk is wiped on every sleep and redeploy, so the demo account's lists and notes go to Neon's free Postgres ([The app](app.md#accounts-day-14)).
 - **The image is built on the laptop** and pushed to a private registry, because its 470 MB of data and models aren't in git ([Deployment](deployment.md#deployment-day-15)).
 

@@ -247,9 +247,11 @@ def main() -> None:
     s.check("GET /movies/299536", movie)
 
     def new_arrivals() -> str:
-        out = s.get("/movies?when=released&sort=newest&page_size=12")
-        assert out["page_size"] == 12 and all(f["release_date"] for f in out["items"]), out
-        soon = s.get("/movies?when=upcoming&sort=soonest&page_size=12")
+        out = s.get("/movies", when="released", sort="newest", page_size=12)
+        assert out["page_size"] == 12 and len(out["items"]) <= 12 and all(f["release_date"] for f in out["items"]), out["page_size"]
+        dates = [f["release_date"] for f in out["items"]]
+        assert dates == sorted(dates, reverse=True), dates  # newest first, and only the window's films
+        soon = s.get("/movies", when="upcoming", sort="soonest", page_size=12)
         return f"{out['total']} just released, {soon['total']} coming soon"
 
     s.check("GET /movies?when=released|upcoming (V1.2)", new_arrivals)

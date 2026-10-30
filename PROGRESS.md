@@ -2291,42 +2291,45 @@ Dimitris's spec and plan (`2026-10-29-v1.1-header-search-design.md` and `…-hea
 - **By hand:** Lighthouse accessibility on `/browse?q=nolan` and `/people?q=nolan` (target 95+), and a keyboard-only pass.
 - **Sentry:** still no DSN, so the plan's "no new errors after 10 minutes" can't be checked.
 
-## V1.2: New Arrivals (built 2026-10-30, not deployed)
+## V1.2: New arrivals (built 2026-10-30, not deployed)
 
-Plan: `2026-10-30-v1.2-new-arrivals.md` and its design. Part B (the live rows) first, then Part A (the 2026 films in `movies.db`).
+Plan: `2026-10-30-v1.2-new-arrivals.md` (third design: new films as ordinary films in `fresh.db`) and its design. Two earlier tries were dropped: live TMDB rows with a quick-view popup (reverted in this branch) and a Neon store with a daily job (reverted on 2026-10-30). Part A, the 2026 films in `movies.db`, was kept from the second try.
 
-- [x] Live mapping, cache and endpoint (`services/live.py`, `GET /movies/new-and-upcoming`, `live_matches` on `GET /movies`)
-- [x] Cards, rows, quick view with `?film=`, `/new-and-upcoming`, live results in the header search and on browse
-- [x] Tests: Python (`test_live_mapping.py`, `test_live_cache.py`, `test_live_api.py`), `movies/live.test.tsx`, Playwright `new-arrivals.spec.ts`, a smoke check
-- [x] Part A: the 1,199 films of 2026 in the database, guarded out of every model (`MODEL_DATA_MAX_YEAR`), snapshot test
-- [x] Docker image: smoke 25/25, 358 MiB after 28 predictions (gate 450)
-- [ ] Deploy (and `TMDB_READ_TOKEN` on Render)
+- [x] 0. Back on the Part A commits (`36da2c2`), its local data rebuilt (1,199 films of 2026, snapshot "unchanged")
+- [x] 1. The live approach removed (three reverts)
+- [x] 2. `clean(keep_unreleased=)`
+- [x] 3. `fresh.db` built from TMDB's two windows (`services/fresh.py`)
+- [x] 4. `Refresher` and `userdb.repo.listed_movie_ids`
+- [x] 5. `get_db` attaches `fresh.db` through shadowing views; `get_main_db`; `linked` on cast and crew
+- [x] 6. `when=`, `soonest`, search over both, unreleased films out of default lists, `/health` `fresh`
+- [x] 7. Settings, middleware, lifespan, Dockerfile, `.gitignore`, `.env.example`
+- [x] 8-10. Browse `when` and sort, card and film page labels, the New arrivals row with its switch
+- [x] 11. Docs
+- [ ] Deploy (ask first: `make docker-build`, then `make deploy`; `TMDB_READ_TOKEN` is already set on Render)
 
 ### Changes from the plan
 
-- **Real files:** the film UI is in `src/movies/`, not `components/live/`; pages are `pages/Browse.tsx` and `pages/Movies.tsx`; the rows are on `/movies` too, not only `/browse`.
-- **Our film ids are TMDB ids,** so there is no `tmdb_id` column: `movie_id` is the TMDB id when the film is in the database.
-- **`TMDB_READ_TOKEN`,** the variable the pull already uses, not `TMDB_API_KEY`. It has to be set on Render.
-- **Posters** use the app's `small` (w342) and `large` (w780), not w185/w342.
-- **A failed refresh is not retried for 60 s,** so a TMDB outage doesn't make every request wait 8 s.
-- **The predict button** fills the form through `?f=` (genres, release month and year), as the film page does.
-- **The nav link** reads "New".
-- `LIVE_MIN_POPULARITY` stays 5: against the real API (2026-10-30) that gave 62 new and 52 upcoming films.
-
-### Part A: what was found and done
-
-- `pull.py` only takes years (the 1,200 most voted of a year), not a date range; `data/holdout_2026` already has 1,199 films (pulled Oct 22, audit only).
-- `data/cpi_us_annual.csv` has no 2026 row.
-- A cap on the three training views is not enough: `build_db` would label 2026 films "test", `history.load_films`, `Franchises` and `FilmForms` read every dated film, and **the currency caps are leave-one-out quantiles over all films**, so 2026 budgets would have moved the `money_suspect` flags of earlier films. All of them now stop at 2025 (the caps come from films up to 2025; a 2026 film is checked against them). The comparables index needed no change: it joins the features table, which has no 2026 rows.
-- **Pull:** `ml.data.pull --from 2026-01-01 --to 2026-10-30` (new date-range mode, the same 1,200 most-voted selection) saved 1,199 new films; `make db` -> 80,398 films, `make people` 4,474 new person records, `make people-db`, `make features` (79,199 films x 175 features, as before). A 2026 CPI row equal to 2025's keeps their money in 2025 dollars (the audit does the same).
-- **The career forecast backtest** (`make career`) also read every film: with the 2026 films it gave q 1.35 instead of 1.40 for acting (a person's weight counts all their points) and new test numbers. `ml/career/backtest.py` now stops at 2025 (rows and the population window), and the new database reproduces the committed `career_forecast.json` exactly (a real-data test checks it). `make docker-build` rebuilds that file when `movies.db` is newer, so it caught this.
-- **Proof the models are untouched:** `scripts/snapshot_models.py` (taken before the rebuild, `tests/fixtures/pre_v12_snapshot.json`) records the training views' rows (14,460 / 10,421 / 33,077), a hash of every film's flags, the 23 currency caps and a hash of the features table; the rebuilt database gives the same values, and the golden and sanity tests (3 predictions, ranges, comparables) pass unchanged. A backup of the old database is `data/movies.db.pre_v12` (not in git).
+- **Starting state:** the plan assumed `main` had the V1.2 commits; after the revert it was at `d8c36c3`, so I went back to `36da2c2`, rebuilt the 2026 data and then did Task 1.
+- **`health`, `model_card` and `meta` also use `get_main_db`** (not only career): their film counts, year range and country list must not include upcoming films.
+- **`Settings.fresh_path` is `None` in code** (`from_env` gives `data/fresh.db`), so the many tests that build `Settings(db_path=...)` never attach a real local file.
+- **Speed (Task 5 step 5):** the first version of the views was 1.2-200x slower than main-only (a film page 385 ms instead of 2 ms). SQLite flattens a UNION ALL view only into a one-table query, so correlated subqueries (genres), a join of two views and an `ORDER BY` expression scanned the whole view. Fixed in `repo/movies.py`: genres come from two flat queries (`genres_for`), the film page reads companies and crew without view joins (`_rows_by_id`), `search` fetches the page's ids first and then the summaries, and the views' column lists are cached. Medians on the real database, 20 runs, `fresh.db` of 114 films: default list 331 -> 377 ms, `sort=newest` 39 -> 63 ms, genre + decades 174 -> 184 ms, `q=star` 49 -> 59 ms, `when=released` 5 -> 7 ms, `sort=score` 628 -> 659 ms, `sort=revenue` 623 -> 658 ms, a film page (open + attach + query) 2.5 -> 4.8 ms. The main-only `newest` list got 17x faster (661 -> 39 ms) from the same change.
+- **The "New" tag** sits at the poster's bottom-left, because the top corners are taken by the list-status badge and the quick list buttons.
+- **The image needs `data/cpi_us_annual.csv`** (the first Docker run failed with "No such file"); `.dockerignore` and the Dockerfile now carry it.
+- **`make deploy` does not rebuild `build/`:** run `make docker-build` first (the lesson of the first V1.2 deploy).
+- **Windows:** `os.replace` over a `fresh.db` that a request has open fails there; on Render (Linux) it works. A failed swap only backs off.
 
 ### Checks
 
 | | |
 | --- | --- |
-| Python tests | 662 (`make test`, no Postgres): `test_model_guard.py` 7 (6 offline, 1 on the real database), 3 new in `test_pull.py` |
-| Frontend tests | 335 (`npm run check`), 21 of them new |
-| Playwright | the 2 new flows pass against the dev server with the real API (TMDB mocked in the test) |
-| Real TMDB | the endpoint answered with 62 new and 52 upcoming films; rows, quick view, "Predict a film like this", the header's "New & upcoming" section and `/new-and-upcoming` checked in the browser pane (desktop and phone width, dark) |
+| Python tests | 674 (`make test` with Postgres): `test_fresh_build.py`, `test_fresh_refresh.py`, `test_fresh_views.py`, the model-guard and settings tests, 2 Postgres tests |
+| Frontend tests | 332 (`npm run check`) |
+| Snapshot | `scripts.snapshot_models --check`: the models' data is unchanged; the golden and sanity tests pass |
+| Docker (local, real token) | the refresh builds 114 films in 9.5 s; `make smoke` 25/25 with `fresh 114 films` and `70 just released, 50 coming soon`; 375 MiB after 28 predictions and 120 list requests (gate 450) |
+| Playwright | `new-arrivals.spec.ts` (2) and `header-search.spec.ts` (3) against `make docker-run` |
+| Browser pane | `/movies` at desktop and phone width, the switch, a coming-soon film page |
+
+### Still open
+
+- **By hand:** light theme, keyboard-only pass, Lighthouse accessibility on `/movies`.
+- **On Render:** that the first refresh after a wake-up stays within the memory gate (not measured there).
