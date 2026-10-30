@@ -42,6 +42,8 @@ COPY --from=builder /app/.venv /app/.venv
 # these 350 MB of layers and pushes only what changed
 COPY build/movies.db data/movies.db
 COPY build/context.joblib data/context.joblib
+# the CPI table: the refresher cleans new films in 2025 dollars (V1.2)
+COPY data/cpi_us_annual.csv data/cpi_us_annual.csv
 COPY ml/ ml/
 COPY backend/ backend/
 COPY --from=web /web/dist web/

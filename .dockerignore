@@ -6,6 +6,7 @@
 !ml/
 !build/movies.db
 !build/context.joblib
+!data/cpi_us_annual.csv
 !frontend/
 
 # Inside frontend/: the image installs its own packages and builds its own dist/
