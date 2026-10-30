@@ -49,7 +49,7 @@ import numpy as np
 from backend.app.repo.career import CAREER_ROLES, JOBS, ORDER, RATED, Role, latest_year, population_stats
 from ml.career.forecast import HIGH, LOW, MIN_RATED, RoleSettings
 from ml.data.build_db import DB_FILE
-from ml.data.clean import MIN_VOTES, VALIDATION_LAST_YEAR
+from ml.data.clean import MIN_VOTES, MODEL_DATA_MAX_YEAR, VALIDATION_LAST_YEAR
 
 OUT_FILE = Path("ml/artifacts/career_forecast.json")
 VERSION = 1
@@ -224,7 +224,8 @@ def _load(con: sqlite3.Connection, role: Role, min_votes: int) -> _Rows:
     rows = cur.execute(f"""SELECT c.person_id, m.id, CAST(REPLACE({DATE_KEY}, '-', '') AS INTEGER), m.year,
                                   m.vote_average
                            FROM ({credits}) c JOIN movies m ON m.id = c.movie_id
-                           WHERE {RATED} ORDER BY c.person_id, {ORDER}""", (*params, min_votes)).fetchall()
+                           WHERE {RATED} AND m.year <= ? ORDER BY c.person_id, {ORDER}""",
+                       (*params, min_votes, MODEL_DATA_MAX_YEAR)).fetchall()  # later films never tune or test it (V1.2)
     a = np.array(rows, dtype=float).reshape(-1, 5)
     person, movie, key = a[:, 0].astype(np.int64), a[:, 1].astype(np.int64), a[:, 2].astype(np.int64)
     idx = np.arange(len(a))
@@ -292,7 +293,7 @@ def _role_set(con: sqlite3.Connection, role: Role, min_votes: int) -> _Set:
 
 def build_artifact(con: sqlite3.Connection, min_votes: int, built_at: str,
                    max_points: int | None = MAX_POINTS) -> dict[str, Any]:
-    end = latest_year(con)
+    end = min(latest_year(con), MODEL_DATA_MAX_YEAR)  # the population is the 10 years up to 2025, as when it was tuned
     roles: dict[str, Any] = {}
     acting: RoleSettings | None = None
     for role in CAREER_ROLES:  # acting first: the fallback roles take its settings

@@ -2299,7 +2299,8 @@ Plan: `2026-10-30-v1.2-new-arrivals.md` and its design. Part B (the live rows) f
 - [x] Cards, rows, quick view with `?film=`, `/new-and-upcoming`, live results in the header search and on browse
 - [x] Tests: Python (`test_live_mapping.py`, `test_live_cache.py`, `test_live_api.py`), `movies/live.test.tsx`, Playwright `new-arrivals.spec.ts`, a smoke check
 - [x] Part A: the 1,199 films of 2026 in the database, guarded out of every model (`MODEL_DATA_MAX_YEAR`), snapshot test
-- [ ] Docker image and memory gate, deploy
+- [x] Docker image: smoke 25/25, 358 MiB after 28 predictions (gate 450)
+- [ ] Deploy (and `TMDB_READ_TOKEN` on Render)
 
 ### Changes from the plan
 
@@ -2318,6 +2319,7 @@ Plan: `2026-10-30-v1.2-new-arrivals.md` and its design. Part B (the live rows) f
 - `data/cpi_us_annual.csv` has no 2026 row.
 - A cap on the three training views is not enough: `build_db` would label 2026 films "test", `history.load_films`, `Franchises` and `FilmForms` read every dated film, and **the currency caps are leave-one-out quantiles over all films**, so 2026 budgets would have moved the `money_suspect` flags of earlier films. All of them now stop at 2025 (the caps come from films up to 2025; a 2026 film is checked against them). The comparables index needed no change: it joins the features table, which has no 2026 rows.
 - **Pull:** `ml.data.pull --from 2026-01-01 --to 2026-10-30` (new date-range mode, the same 1,200 most-voted selection) saved 1,199 new films; `make db` -> 80,398 films, `make people` 4,474 new person records, `make people-db`, `make features` (79,199 films x 175 features, as before). A 2026 CPI row equal to 2025's keeps their money in 2025 dollars (the audit does the same).
+- **The career forecast backtest** (`make career`) also read every film: with the 2026 films it gave q 1.35 instead of 1.40 for acting (a person's weight counts all their points) and new test numbers. `ml/career/backtest.py` now stops at 2025 (rows and the population window), and the new database reproduces the committed `career_forecast.json` exactly (a real-data test checks it). `make docker-build` rebuilds that file when `movies.db` is newer, so it caught this.
 - **Proof the models are untouched:** `scripts/snapshot_models.py` (taken before the rebuild, `tests/fixtures/pre_v12_snapshot.json`) records the training views' rows (14,460 / 10,421 / 33,077), a hash of every film's flags, the 23 currency caps and a hash of the features table; the rebuilt database gives the same values, and the golden and sanity tests (3 predictions, ranges, comparables) pass unchanged. A backup of the old database is `data/movies.db.pre_v12` (not in git).
 
 ### Checks

@@ -41,6 +41,7 @@ services:
       RATE_LIMIT: "30"
       CACHE_SIZE: "1000"
       USER_DATABASE_URL: "postgresql://movies:movies@db:5432/movies"
+      TMDB_READ_TOKEN: "${TMDB_READ_TOKEN:-}"  # from .env: the live New Arrivals rows (V1.2); empty: no live rows
     depends_on:
       db:
         condition: service_healthy

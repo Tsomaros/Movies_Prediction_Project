@@ -105,3 +105,15 @@ def test_the_real_database_gives_the_models_the_same_data_as_before_2026_was_add
 
     before, now = json.loads(SNAPSHOT.read_text(encoding="utf-8")), snapshot()
     assert now == before
+
+
+@pytest.mark.real_data
+@pytest.mark.skipif(not build_db.DB_FILE.exists(), reason="needs data/movies.db")
+def test_the_career_forecast_backtest_on_the_real_database_gives_the_committed_artifact():
+    from contextlib import closing
+
+    from ml.career.backtest import MIN_VOTES, OUT_FILE, build_artifact
+
+    with closing(sqlite3.connect(f"file:{build_db.DB_FILE.resolve().as_posix()}?mode=ro", uri=True)) as con:
+        built = build_artifact(con, MIN_VOTES, "now")
+    assert built["roles"] == json.loads(OUT_FILE.read_text(encoding="utf-8"))["roles"]
