@@ -6,13 +6,15 @@
 //                                         fresh form has them (it is a new film, not a remake of this one)
 //   personToForm(person, as?, today?)  -> a fresh form with this person as the lead actor or as the director
 //                                         ("Predict a film with this actor / director", the person page)
+//   liveToForm(film, options, today?)  -> a fresh form started from a live new or upcoming film (V1.2 quick view): its
+//                                         genres and release month and year; the creator adds the director, cast and themes
 //   recipeToForm(recipe, options, today?) -> FormValues: a Career section model film ("Their usual film",
 //                                         "Something new") as scored, plus its median budget; "new" people slots
 //                                         are left empty for the creator to name
 //
 // Every limit comes from GET /meta/options, like the form's own rules: values the form wouldn't accept (a
 // genre outside the 19, a rating outside the list, a runtime out of range) are left out or reset to the default.
-import type { MovieDetail, Options, Recipe } from '@/api/client'
+import type { LiveMovie, MovieDetail, Options, Recipe } from '@/api/client'
 import { DEFAULTS, emptyForm, type FormValues, type NameRef } from '@/form/model'
 
 function spec(options: Options, name: string) {
@@ -48,6 +50,20 @@ export function filmToForm(film: MovieDetail, options: Options, today = new Date
     certification: certification(film.certification, certifications),
     director: director ? { id: director.id, name: director.name! } : null,
     actors: cast,
+  }
+}
+
+/** "Predict a film like this" from the quick view of a live film: only what the live data holds (genres and the
+ *  release month); a year the form wouldn't accept is left at the usual value. */
+export function liveToForm(film: Pick<LiveMovie, 'genres' | 'release_date'>, options: Options, today = new Date()): FormValues {
+  const year = spec(options, 'release_year')
+  const [y, m] = film.release_date.split('-').map(Number)
+  const yearFits = (year?.min == null || y >= year.min) && (year?.max == null || y <= year.max)
+  return {
+    ...emptyForm(today),
+    genres: film.genres.filter(g => options.genres.includes(g)).slice(0, spec(options, 'genres')?.max_items ?? Infinity),
+    release_month: m >= 1 && m <= 12 ? m : DEFAULTS.release_month,
+    ...(yearFits ? { release_year: y } : {}),
   }
 }
 

@@ -3,6 +3,7 @@
 // Mobile first: on a phone the navigation is a second row under the brand; from `sm` it sits in the header.
 // A route with `handle: { bleed: true }` (/series) fills the width between header and footer; one with
 // `handle: { bare: true }` (the start page) has no header or footer at all and carries TmdbNotice itself.
+// LiveFilmHost (V1.2) opens the quick view of a live new or upcoming film from ?film= on any page.
 // Every page sits inside LoginProvider, so a logged-out click on a list button opens the login dialog in place.
 // "Surprise me" (src/surprise/) sits before the account menu, so it is reachable from every page with a header.
 // The search (src/search/, V1.1) sits between the brand and the navigation, which then moves to the second row
@@ -14,12 +15,14 @@ import { ThemeToggle } from '@/app/theme'
 import { AccountMenu } from '@/auth/AccountMenu'
 import { LoginProvider } from '@/auth/LoginDialog'
 import { cn } from '@/lib/utils'
+import { LiveFilmHost } from '@/movies/LiveFilmHost'
 import { HeaderSearch } from '@/search/HeaderSearch'
 import { SurpriseButton } from '@/surprise/SurpriseButton'
 
 const NAV = [
   { to: '/movies', label: 'Movies' },
   { to: '/browse', label: 'Browse' },
+  { to: '/new-and-upcoming', label: 'New' },
   { to: '/predict', label: 'Predict' },
   { to: '/about', label: 'About' },
 ] as const
@@ -101,6 +104,7 @@ export default function Layout() {
           <Outlet />
         </main>
         <Footer flush={bleed} />
+        <LiveFilmHost />
         {scroll}
       </div>
     </LoginProvider>

@@ -40,6 +40,8 @@ export type ModelCard = Schemas['ModelCard']
 export type MovieSummary = Schemas['MovieSummary']
 export type MovieList = Schemas['MovieList']
 export type MovieDetail = Schemas['MovieDetail']
+export type LiveMovie = Schemas['LiveMovie']
+export type NewAndUpcoming = Schemas['NewAndUpcoming']
 export type User = Schemas['User']
 export type Me = Schemas['Me']
 export type Status = Schemas['EntryRequest']['status']
@@ -161,6 +163,7 @@ export const api = {
   getModelCard: (signal?: AbortSignal) => request<ModelCard>('/model-card', { signal }),
   listMovies: (query: MovieQuery, signal?: AbortSignal) => request<MovieList>('/movies', { query, signal }),
   getMovie: (id: number, signal?: AbortSignal) => request<MovieDetail>(`/movies/${id}`, { signal }),
+  newAndUpcoming: (signal?: AbortSignal) => request<NewAndUpcoming>('/movies/new-and-upcoming', { signal }),
 
   me: (signal?: AbortSignal) => request<Me>('/auth/me', { signal }),
   demoLogin: () => request<Me>('/auth/demo', { method: 'POST' }),

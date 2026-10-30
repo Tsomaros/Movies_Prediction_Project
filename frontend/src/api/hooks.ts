@@ -10,6 +10,7 @@
 //                                             the form page just asked, else one request; errors are the page's
 //   useCompare(body)                       -> POST /predict/compare as a query (the compare page), kept for the session
 //   useSweep(body)                         -> POST /predict/sweep (the release-month sweep), kept for the session
+//   useNewAndUpcoming(enabled?)            -> the live new and upcoming films (V1.2), cached 10 minutes, no retry
 //   useModelCard()                         -> GET /model-card, cached an hour
 //   useCareer(id, role)                    -> the Career section's chart and track-record forecast, cached an hour
 //   useCareerModel(id, role, genre, on)    -> its score-model films ("Something new" for one genre chip when genre
@@ -23,7 +24,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
-  ApiError, api, type CareerRole, type CompareRequest, type MovieQuery, type MovieSummary, type NameKind, type PeopleSearchResult,
+  ApiError, api, type CareerRole, type CompareRequest, type LiveMovie, type MovieQuery, type MovieSummary, type NameKind, type PeopleSearchResult,
   type PredictForm, type SearchRole, type SweepRequest,
 } from '@/api/client'
 import { notifyError } from '@/api/errors'
@@ -117,16 +118,27 @@ export function useMovies(query: MovieQuery, enabled = true) {
   })
 }
 
+/** The live new and upcoming films (V1.2). `enabled` false: nothing is asked (the ?film= modal waits for its param). */
+export function useNewAndUpcoming(enabled = true) {
+  return useQuery({
+    queryKey: ['new-and-upcoming'],
+    queryFn: ({ signal }) => api.newAndUpcoming(signal),
+    enabled,
+    staleTime: 10 * 60 * 1000,
+    retry: false,
+  })
+}
+
 export const QUICK = 5
 export const PEOPLE_PAGE = 24
 
 export type QuickResults =
-  | { mode: 'movies'; total: number; items: MovieSummary[] }
+  | { mode: 'movies'; total: number; items: MovieSummary[]; live: LiveMovie[] }
   | { mode: 'people'; total: number; items: PeopleSearchResult[] }
 
 const quickFetch = (mode: SearchMode, q: string, size: number, signal: AbortSignal): Promise<QuickResults> =>
   mode === 'movies'
-    ? api.listMovies({ q, page_size: size }, signal).then(r => ({ mode, total: r.total, items: r.items }))
+    ? api.listMovies({ q, page_size: size }, signal).then(r => ({ mode, total: r.total, items: r.items, live: r.live_matches ?? [] }))
     : api.peopleSearch({ q, page_size: size }, signal).then(r => ({ mode, total: r.total, items: r.results }))
 
 /** The header's quick results. `q` is the debounced text; nothing is asked under 2 letters or digits. */
