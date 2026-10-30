@@ -87,6 +87,7 @@ make smoke URL=https://movie-prediction-2f1b0265282c.onrender.com WEB=https://mo
 | `DEMO_PASSWORD` | the one the seed hashed |
 | `CORS_ORIGINS` | `https://movie-prediction-2f1b0265282c.onrender.com` |
 | `CLIENT_IP_HEADER` | `CF-Connecting-IP` |
+| `TMDB_READ_TOKEN` | TMDB's read token, for the live New Arrivals rows (V1.2); without it they stay empty |
 | `SENTRY_DSN` | the backend's Sentry project (not set yet) |
 | Health check path | `/api/v1/health` |
 

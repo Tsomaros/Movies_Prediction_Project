@@ -2290,3 +2290,37 @@ Dimitris's spec and plan (`2026-10-29-v1.1-header-search-design.md` and `…-hea
 
 - **By hand:** Lighthouse accessibility on `/browse?q=nolan` and `/people?q=nolan` (target 95+), and a keyboard-only pass.
 - **Sentry:** still no DSN, so the plan's "no new errors after 10 minutes" can't be checked.
+
+## V1.2: New Arrivals, Part B (built 2026-10-30, not deployed)
+
+Plan: `2026-10-30-v1.2-new-arrivals.md` and its design. Part B first; Part A (the 2026 films in `movies.db`) is not started.
+
+- [x] Live mapping, cache and endpoint (`services/live.py`, `GET /movies/new-and-upcoming`, `live_matches` on `GET /movies`)
+- [x] Cards, rows, quick view with `?film=`, `/new-and-upcoming`, live results in the header search and on browse
+- [x] Tests: Python (`test_live_mapping.py`, `test_live_cache.py`, `test_live_api.py`), `movies/live.test.tsx`, Playwright `new-arrivals.spec.ts`, a smoke check
+- [ ] Part A: 2026 films in the database (see below), Docker memory gate, deploy
+
+### Changes from the plan
+
+- **Real files:** the film UI is in `src/movies/`, not `components/live/`; pages are `pages/Browse.tsx` and `pages/Movies.tsx`; the rows are on `/movies` too, not only `/browse`.
+- **Our film ids are TMDB ids,** so there is no `tmdb_id` column: `movie_id` is the TMDB id when the film is in the database.
+- **`TMDB_READ_TOKEN`,** the variable the pull already uses, not `TMDB_API_KEY`. It has to be set on Render.
+- **Posters** use the app's `small` (w342) and `large` (w780), not w185/w342.
+- **A failed refresh is not retried for 60 s,** so a TMDB outage doesn't make every request wait 8 s.
+- **The predict button** fills the form through `?f=` (genres, release month and year), as the film page does.
+- **The nav link** reads "New".
+- `LIVE_MIN_POPULARITY` stays 5: against the real API (2026-10-30) that gave 62 new and 52 upcoming films.
+
+### Surprises / inputs for Part A
+
+- `pull.py` only takes years (the 1,200 most voted of a year), not a date range; `data/holdout_2026` already has 1,199 films (pulled Oct 22, audit only).
+- `data/cpi_us_annual.csv` has no 2026 row.
+- A cap on the three training views is not enough: `build_db` would label 2026 films "test", and `history.load_films`, `build_features` and the comparables index read every dated film.
+
+### Checks
+
+| | |
+| --- | --- |
+| Frontend tests | 335 (`npm run check`), 21 of them new |
+| Playwright | the 2 new flows pass against the dev server with the real API (TMDB mocked in the test) |
+| Real TMDB | the endpoint answered with 62 new and 52 upcoming films; rows, quick view, "Predict a film like this", the header's "New & upcoming" section and `/new-and-upcoming` checked in the browser pane (desktop and phone width, dark) |

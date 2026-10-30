@@ -17,7 +17,7 @@ const LIVE = {
 
 async function mockLive(page: Page) {
   await page.route('**/api/v1/movies/new-and-upcoming', route => route.fulfill({ json: LIVE }))
-  await page.route('**/api/v1/movies?*q=dune*', async route => {
+  await page.route(url => url.pathname === '/api/v1/movies' && url.searchParams.has('q'), async route => {
     const real = await route.fetch()
     await route.fulfill({ response: real, json: { ...(await real.json()), live_matches: LIVE.upcoming } })
   })
@@ -36,7 +36,7 @@ test('a new arrival opens the quick view, and "Predict a film like this" starts 
 
 test('an upcoming film is found from the header search', async ({ page }) => {
   await mockLive(page)
-  await page.goto('/')
+  await page.goto('/about')
   await page.getByRole('combobox', { name: /search/i }).fill('dune four')
   await page.getByRole('option', { name: /Dune Four/ }).click()
   await expect(page.getByRole('dialog', { name: 'Dune Four' })).toBeVisible()

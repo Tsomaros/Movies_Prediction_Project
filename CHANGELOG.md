@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **V1.2 – New Arrivals:** live "New Arrivals" (released in the last 14 days) and "Coming soon" (the next 60) rows on `/movies` and the default `/browse`, from a 6-hour in-memory TMDB cache with a stale fallback and a startup warm-up (no scheduler, nothing stored). A quick view for films not in our database, a `/new-and-upcoming` page with tabs, and live matches in the header search and the browse results. API: `GET /api/v1/movies/new-and-upcoming` and `live_matches` on `GET /api/v1/movies`. Needs `TMDB_READ_TOKEN` on the server. The models, data and model card are unchanged; the 2026 films are not in the database yet. Not deployed yet.
+- **The Movies | People switch** only changes what the box searches on a results page too (on `/browse` it could not be switched with an empty box).
 - **Quick list buttons on every film list** when logged in: the home rows, person pages, a film's Similar films, the results page's Films like yours and the list views, beside browse and My movies. On phones they are always shown; with a mouse they appear on hover. Not deployed yet.
 
 ## V1.1 – Header search (2026-10-29)
