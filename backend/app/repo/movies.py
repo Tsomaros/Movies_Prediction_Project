@@ -168,12 +168,14 @@ def movie(con: sqlite3.Connection, movie_id: int) -> dict[str, Any] | None:
     out["spoken_languages"] = [x[0] for x in con.execute(
         "SELECT language FROM movie_languages WHERE movie_id = ? ORDER BY language", (movie_id,))]
     out["cast"] = [dict(x) for x in con.execute(
-        """SELECT p.id, p.name, c.character, c.ord AS "order", d.profile_path
+        """SELECT p.id, p.name, c.character, c.ord AS "order", d.profile_path,
+                  p.id IN (SELECT id FROM main.people) AS linked
            FROM movie_cast c JOIN people p ON p.id = c.person_id LEFT JOIN person_details d ON d.person_id = p.id
            WHERE c.movie_id = ? ORDER BY c.ord LIMIT ?""", (movie_id, TOP_CAST))]
     order = " ".join(f"WHEN '{job}' THEN {i}" for i, job in enumerate(CREW_JOBS))
     out["crew"] = [dict(x) for x in con.execute(
-        f"""SELECT p.id, p.name, c.job FROM movie_crew c JOIN people p ON p.id = c.person_id
+        f"""SELECT p.id, p.name, c.job, p.id IN (SELECT id FROM main.people) AS linked
+            FROM movie_crew c JOIN people p ON p.id = c.person_id
             WHERE c.movie_id = ? ORDER BY CASE c.job {order} ELSE 99 END, p.name""", (movie_id,))]
     return out
 

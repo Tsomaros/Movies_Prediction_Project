@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Request, Response
 
-from backend.app.deps import get_db
+from backend.app.deps import get_main_db
 from backend.app.repo import meta as repo
 from backend.app.schemas.lookup import Health
 
@@ -20,7 +20,7 @@ router = APIRouter(tags=["health"])
 
 
 @router.get("/health", response_model=Health, summary="Status, model version and database build")
-def health(request: Request, response: Response, con: sqlite3.Connection = Depends(get_db)):
+def health(request: Request, response: Response, con: sqlite3.Connection = Depends(get_main_db)):
     state = request.app.state
     manifest = getattr(state.predictor, "manifest", {})
     cache = state.predictions

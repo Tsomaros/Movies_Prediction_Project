@@ -16,6 +16,7 @@ from ml.features.basic import Franchises
 from ml.features.build import FilmForms
 from ml.features.history import History, load_films
 from tests.factories import TEST_CPI, film
+from tests.test_eval import db  # noqa: F401 (fixture: a small movies.db, films 1-300)
 
 TRAIN_VIEWS = ("v_train_revenue", "v_train_budget", "v_train_score")
 SNAPSHOT = Path("tests/fixtures/pre_v12_snapshot.json")
@@ -117,3 +118,31 @@ def test_the_career_forecast_backtest_on_the_real_database_gives_the_committed_a
     with closing(sqlite3.connect(f"file:{build_db.DB_FILE.resolve().as_posix()}?mode=ro", uri=True)) as con:
         built = build_artifact(con, MIN_VOTES, "now")
     assert built["roles"] == json.loads(OUT_FILE.read_text(encoding="utf-8"))["roles"]
+
+
+def test_lookups_career_and_health_never_attach_fresh_db(db, tmp_path, monkeypatch):  # noqa: F811
+    """With a fresh.db in place and attach_fresh made to explode, the main-only answers still work; a request that
+    is allowed to read fresh films (get_db) does hit it, which shows the patch is live."""
+    import backend.app.deps as deps
+    from backend.app.main import create_app
+    from backend.app.services.fresh import build_fresh_db
+    from backend.app.services.lookups import Lookups
+    from backend.app.settings import Settings
+    from fastapi.testclient import TestClient
+
+    fresh_path = tmp_path / "fresh.db"
+    build_fresh_db([film(900_001, release_date="2026-10-25")], TEST_CPI, fresh_path, {})
+
+    def boom(*a, **k):
+        raise AssertionError("attach_fresh was called")
+
+    monkeypatch.setattr(deps, "attach_fresh", boom)
+    with sqlite3.connect(db / "movies.db") as con:
+        con.row_factory = sqlite3.Row
+        assert Lookups.from_db(con) is not None  # the startup autocomplete reads movies.db alone
+    app = create_app(Settings(db_path=db / "movies.db", fresh_path=fresh_path), predictor=object(), lookups=object())
+    with TestClient(app) as c:
+        for url in ("/api/v1/health", "/api/v1/model-card", "/api/v1/people/1000/career?role=directing"):
+            assert c.get(url).status_code in (200, 404, 503), url  # 503: the sentinel predictor has no model version
+        with pytest.raises(AssertionError, match="attach_fresh"):
+            c.get("/api/v1/movies")

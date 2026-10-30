@@ -50,13 +50,17 @@ class Company(Ref):
     origin_country: Optional[str]
 
 
-class CastMember(Ref):
+class LinkedRef(Ref):
+    linked: bool = Field(True, description="The person has a page (they are in the main database, not only in fresh.db)")
+
+
+class CastMember(LinkedRef):
     character: Optional[str]
     order: Optional[int]
     photo: Optional[Poster] = Field(None, description="TMDB photo (small: w185, large: h632), when the person pull has one")
 
 
-class CrewMember(Ref):
+class CrewMember(LinkedRef):
     job: str
 
 

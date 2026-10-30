@@ -501,3 +501,29 @@ def test_listed_movie_ids_come_from_every_users_lists_and_notes(pg):
     repo.set_entry(pg, pg.other_id, 900_001, "plan_to_watch", None, None)
     repo.add_note(pg, pg.demo_id, 900_002, "a note on a film not in a list")
     assert repo.listed_movie_ids(pg) == base | {900_001, 900_002}
+
+
+def test_a_watchlisted_fresh_film_is_in_my_movies_and_hidden_without_the_file(db, pg_url, pg, tmp_path):
+    from backend.app.services.fresh import build_fresh_db
+    from tests.factories import TEST_CPI, film
+
+    fresh_path = tmp_path / "fresh.db"
+    build_fresh_db([film(900_001, title="Just Out", release_date="2026-10-25")], TEST_CPI, fresh_path, {})
+
+    def client(path):
+        app = create_app(Settings(db_path=db / "movies.db", user_database_url=pg_url, fresh_path=path), predictor=object())
+        c = TestClient(app, base_url="http://testserver", headers={"Origin": "http://testserver"})
+        c.clock = Clock(NOW)
+        app.state.clock = c.clock
+        app.state.demo_seed = SEED
+        return c
+
+    with client(fresh_path) as c:
+        demo(c)
+        assert put(c, 900_001, status="plan_to_watch").status_code == 200
+        titles = [m["movie"]["title"] for m in c.get(f"{ME}/movies?status=plan_to_watch").json()["items"]]
+        assert "Just Out" in titles
+    with client(tmp_path / "gone.db") as c:  # a restart that lost the file: the entry stays, the film is hidden as today
+        demo(c)
+        titles = [m["movie"]["title"] for m in c.get(f"{ME}/movies?status=plan_to_watch").json()["items"]]
+        assert "Just Out" not in titles and repo.entry(pg, pg.demo_id, 900_001) is not None

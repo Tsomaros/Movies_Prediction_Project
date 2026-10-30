@@ -14,7 +14,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Request, Response
 
-from backend.app.deps import get_db
+from backend.app.deps import get_main_db
 from backend.app.repo import meta as repo
 from backend.app.schemas.lookup import Options
 from ml.features.contract import CERTIFICATIONS, GENRES, MAX_YEAR, describe
@@ -40,7 +40,7 @@ def build_options(con: sqlite3.Connection, themes: list[str], today: date | None
 
 
 @router.get("/meta/options", response_model=Options, response_model_exclude_none=True, summary="Every dropdown value and limit for the form")
-def options(request: Request, response: Response, con: sqlite3.Connection = Depends(get_db)):
+def options(request: Request, response: Response, con: sqlite3.Connection = Depends(get_main_db)):
     state = request.app.state
     if getattr(state, "options", None) is None:
         state.options = build_options(con, sorted(state.predictor.ctx.themes))
