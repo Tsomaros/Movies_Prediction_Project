@@ -2,7 +2,9 @@
 // the cast (TMDB photos where the person pull has one, initials otherwise) and key crew, similar films, and "Predict a film like this",
 // which opens the creator form pre-filled (src/movies/predictLike.ts). Your lists (watched with a date and a
 // 10-star rating, or plan to watch) sit under the score, and your private notes after the overview.
-// Cast and crew names link to their person pages (/people/:id). The sections live in src/movies/film/.
+// A film out in the last 14 days says "New release" beside its date; one not yet released says "Coming 20 Nov" and
+// shows no score or box office (V1.2). Cast and crew names link to their person pages (/people/:id), except a face
+// that is only in fresh.db (a new film's, no page yet). The sections live in src/movies/film/.
 import { ArrowLeftIcon, ExternalLinkIcon, SparklesIcon } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router'
 
@@ -24,6 +26,7 @@ import { ScoreText } from '@/movies/MovieCard'
 import { runtimeText } from '@/movies/people'
 import { Poster } from '@/movies/Poster'
 import { filmToForm } from '@/movies/predictLike'
+import { localToday, releaseLabel } from '@/movies/release'
 
 function Chips({ label, items }: { label: string; items: string[] }) {
   if (items.length === 0) return null
@@ -82,6 +85,7 @@ export default function MovieDetail() {
     f.certification, f.runtime ? runtimeText(f.runtime) : null, f.release_date,
     f.original_language ? codeName('language', f.original_language) : null,
   ].filter(Boolean)
+  const label = releaseLabel({ release_date: f.release_date, score_ok: f.rating.usable }, localToday())
   const predictLike = () => {
     if (!options.data) return
     navigate(`/predict?${new URLSearchParams({ [URL_PARAM]: encodeForm(filmToForm(f, options.data)), [LIKE_PARAM]: f.title })}`)
@@ -104,14 +108,24 @@ export default function MovieDetail() {
             {f.original_title && f.original_title !== f.title && <p className="text-muted-foreground text-sm">{f.original_title}</p>}
             {f.tagline && <p className="text-muted-foreground mt-1 italic">{f.tagline}</p>}
           </div>
-          {facts.length > 0 && <p className="text-sm">{facts.join(' · ')}</p>}
+          {facts.length > 0 && (
+            <p className="text-sm">
+              {facts.join(' · ')}
+              {label.kind && (
+                <span data-testid="release-label" className={`ml-2 rounded px-1.5 py-0.5 text-xs font-semibold ${label.kind === 'new' ? 'bg-rose-600 text-white' : 'bg-secondary text-secondary-foreground'}`}>
+                  {label.kind === 'new' ? 'New release' : label.text}
+                </span>
+              )}
+            </p>
+          )}
+          {label.hideScore ? <p className="text-muted-foreground text-sm" data-testid="film-score">Not out yet, so there is no score.</p> : (
           <p className="text-sm" data-testid="film-score">
             <ScoreText score={f.rating.average} votes={f.rating.votes} />
             {f.rating.votes > 0 && !f.rating.usable && (
               <span className="text-muted-foreground"> · fewer than 50 votes, so our models don't use this score</span>
             )}
             {yours?.rating != null && <span data-testid="film-your-rating"> · You: <span className="font-medium">{yours.rating}/10</span></span>}
-          </p>
+          </p>)}
           <ListControl movieId={f.id} />
           <Chips label="Genres" items={f.genres} />
           <Chips label="Themes" items={f.themes} />
@@ -127,7 +141,7 @@ export default function MovieDetail() {
 
       <div className="grid gap-6 md:grid-cols-[1fr_20rem]">
         <MadeBy film={f} />
-        <MoneyPanel film={f} />
+        {!label.hideScore && <MoneyPanel film={f} />}
       </div>
 
       <CastList cast={f.cast} />

@@ -24,7 +24,8 @@ export function CastList({ cast }: { cast: Film['cast'] }) {
           <li key={`${c.id}-${c.order}`} className="flex items-center gap-3">
             <Avatar name={c.name ?? '?'} photo={c.photo} />
             <span className="grid">
-              <Link to={`/people/${c.id}`} className="font-medium hover:underline">{c.name}</Link>
+              {c.linked === false ? <span className="font-medium">{c.name}</span>
+                : <Link to={`/people/${c.id}`} className="font-medium hover:underline">{c.name}</Link>}
               {c.character && <span className="text-muted-foreground text-sm">{c.character}</span>}
             </span>
           </li>

@@ -3,7 +3,7 @@
 //   initials(name)        -> "Robert Downey Jr." -> "RD", "Zendaya" -> "Z"
 //   nameHue(name)         -> a hue 0-359 from the name, so a person's avatar has the same colour on every page
 //   runtimeText(minutes)  -> 149 -> "2 h 29 min", 90 -> "1 h 30 min", 45 -> "45 min"
-//   crewByJob(crew, jobs) -> [{job, people: [{id, name}]}] in the order of `jobs`, each person once
+//   crewByJob(crew, jobs) -> [{job, people: [{id, name, linked?: false}]}] in the order of `jobs`, each person once
 //   votes(n)              -> 1 -> "1 vote", 1203 -> "1,203 votes"
 //   FILM_SORTS, readFilmSort(value), sortFilms(films, sort) -> the person page's film order (?sort=): newest
 //                            first (the API's order), oldest, highest score or biggest box office; a film without
@@ -35,11 +35,11 @@ export function runtimeText(minutes: number): string {
   return h === 0 ? `${m} min` : m === 0 ? `${h} h` : `${h} h ${m} min`
 }
 
-export function crewByJob(crew: { id: number; name?: string | null; job: string }[], jobs: string[]) {
+export function crewByJob(crew: { id: number; name?: string | null; job: string; linked?: boolean }[], jobs: string[]) {
   return jobs.map(job => {
     const seen = new Set<number>()
     const people = crew.filter(c => c.job === job && c.name && !seen.has(c.id) && seen.add(c.id))
-      .map(c => ({ id: c.id, name: c.name! }))
+      .map(c => ({ id: c.id, name: c.name!, ...(c.linked === false && { linked: false }) })) // a face only in fresh.db has no page
     return { job, people }
   }).filter(g => g.people.length > 0)
 }

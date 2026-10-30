@@ -20,7 +20,7 @@ export function MadeBy({ film: f }: { film: Film }) {
             <dt className="text-muted-foreground">{JOB_LABELS[g.job] ?? g.job}</dt>
             <dd>
               {g.people.slice(0, MAX_PER_JOB).map((p, i) => (
-                <span key={p.id}>{i > 0 && ', '}<Link to={`/people/${p.id}`} className="hover:underline">{p.name}</Link></span>
+                <span key={p.id}>{i > 0 && ', '}{p.linked === false ? p.name : <Link to={`/people/${p.id}`} className="hover:underline">{p.name}</Link>}</span>
               ))}
               {g.people.length > MAX_PER_JOB && ` and ${g.people.length - MAX_PER_JOB} more`}
             </dd>

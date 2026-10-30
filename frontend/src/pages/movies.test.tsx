@@ -8,6 +8,7 @@ import { decodeForm, LIKE_PARAM } from '@/form/persist'
 import { browseLink, browseResets, EMPTY, pageNumbers, readBrowse, VIEW_KEY, writeBrowse } from '@/movies/browse'
 import { crewByJob, formatLife, initials, nameHue, runtimeText } from '@/movies/people'
 import { filmToForm, personToForm, recipeToForm } from '@/movies/predictLike'
+import { localToday } from '@/movies/release'
 import { ROWS } from '@/movies/rows'
 import hanksModelJson from '@/test/career_hanks_model.json'
 import nolanModelJson from '@/test/career_nolan_model.json'
@@ -339,6 +340,56 @@ describe('the film page', () => {
     expect(screen.getByRole('link', { name: 'Search films' })).toHaveAttribute('href', '/browse')
     renderApp('/movies/not-a-number')
     await waitFor(() => expect(screen.getAllByRole('heading', { name: "We don't have this film" })).toHaveLength(2))
+  })
+})
+
+const daysFromNow = (n: number) => localToday(new Date(Date.now() + n * 86_400_000))
+
+describe('new and upcoming films (V1.2)', () => {
+  test('the film page of a new release: a label, and a new face without a link', async () => {
+    const known = FILM.cast[0]
+    serve(undefined, { ...FILM, release_date: daysFromNow(-3),
+      cast: [known, { id: 990001, name: 'New Face', character: 'Friend', order: 99, photo: null, linked: false }],
+      crew: [{ id: 990002, name: 'Fresh Writer', job: 'Writer', linked: false }, ...FILM.crew.filter(c => c.job === 'Director')] })
+    renderApp(`/movies/${FILM.id}`)
+    expect(await screen.findByTestId('release-label')).toHaveTextContent('New release')
+    const cast = screen.getByRole('region', { name: 'Cast' })
+    expect(within(cast).getByRole('link', { name: known.name! })).toBeInTheDocument()
+    expect(within(cast).getByText('New Face')).toBeInTheDocument()
+    expect(within(cast).queryByRole('link', { name: 'New Face' })).toBeNull()
+    expect(screen.getByText('Fresh Writer')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Fresh Writer' })).toBeNull()
+    expect(screen.getByRole('region', { name: 'Money' })).toBeInTheDocument() // a released film still has its money panel
+  })
+
+  test('a coming-soon film page has its date label and no score or money', async () => {
+    serve(undefined, { ...FILM, release_date: '2099-11-20', rating: { average: null, votes: 0, usable: false } })
+    renderApp(`/movies/${FILM.id}`)
+    expect(await screen.findByTestId('release-label')).toHaveTextContent('Coming 20 Nov 2099')
+    expect(screen.getByTestId('film-score')).toHaveTextContent('Not out yet')
+    expect(screen.queryByRole('region', { name: 'Money' })).toBeNull()
+  })
+
+  test('cards: New tag and Not rated yet, Coming date instead of the score, old films unchanged', async () => {
+    const base = LIST.items[0]
+    const items = [
+      { ...base, id: 1, title: 'Fresh Hit', release_date: daysFromNow(-2), votes: 12, score: 7.1, score_ok: false },
+      { ...base, id: 2, title: 'Rated New', release_date: daysFromNow(-1), votes: 900, score: 7.9, score_ok: true },
+      { ...base, id: 3, title: 'Later On', release_date: '2099-03-04', votes: 0, score: null, score_ok: false },
+      { ...base, id: 4, title: 'Old Classic', release_date: '1999-03-31', votes: 5000, score: 8.7, score_ok: true },
+    ]
+    serve(() => ({ ...LIST, items, total: 4, pages: 1 }))
+    renderApp('/browse')
+    const films = await screen.findByRole('list', { name: 'Films' })
+    const card = (title: string) => within(films).getByText(title).closest('li')!
+    expect(within(card('Fresh Hit')).getByText('New')).toBeInTheDocument()
+    expect(within(card('Fresh Hit')).getByText('Not rated yet')).toBeInTheDocument()
+    expect(within(card('Rated New')).getByText('New')).toBeInTheDocument()
+    expect(within(card('Rated New')).getByText('7.9')).toBeInTheDocument()
+    expect(within(card('Later On')).getByText('Coming 4 Mar 2099')).toBeInTheDocument()
+    expect(within(card('Later On')).queryByText('No votes yet')).toBeNull()
+    expect(within(card('Old Classic')).queryByText('New')).toBeNull()
+    expect(within(card('Old Classic')).getByText('8.7')).toBeInTheDocument()
   })
 })
 
