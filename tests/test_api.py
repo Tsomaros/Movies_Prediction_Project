@@ -19,6 +19,7 @@ from tests import test_random as surprise  # the same: the "Surprise me" tests r
 from tests import test_people_api as person_api  # and the person pages' tests
 from tests import test_people_search as people_search  # and the header's people search (V1.1)
 from tests import test_career_api as career_api  # and the Career section's
+from tests import test_live_api as live_api  # and the live new/upcoming films (V1.2)
 from tests.test_eval import db  # noqa: F401 (fixture: a small movies.db with a features table, 2008-2022)
 from tests.test_models import (budget_model, budget_rows, revenue_model, revenue_rows,  # noqa: F401 (fixtures)
                                score_model, score_rows)
@@ -603,6 +604,7 @@ ENDPOINTS = {  # every endpoint and the test above that covers it; a new endpoin
     ("POST", "/predict/compare"): test_compare_differences_agree_with_separate_predictions,
     ("POST", "/predict/sweep"): test_a_month_sweep_gives_12_points_that_agree_with_single_predictions,
     ("GET", "/movies"): test_browse_pages_through_every_film_and_is_cacheable,
+    ("GET", "/movies/new-and-upcoming"): live_api.test_the_shape_and_the_cache_header,
     ("GET", "/movies/{movie_id}"): test_a_movie_page_has_facts_people_money_score_and_similar_films,
     ("GET", "/people"): test_people_autocomplete_by_role_most_films_first,
     ("GET", "/companies"): test_company_and_franchise_autocomplete,

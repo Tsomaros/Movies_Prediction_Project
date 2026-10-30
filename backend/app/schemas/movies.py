@@ -1,6 +1,7 @@
 """Response models for the public movie pages.
 
-    MovieList    -> GET /movies: one page of summaries, with the total for the pager
+    MovieList    -> GET /movies: one page of summaries, with the total for the pager (and live matches, V1.2)
+    NewAndUpcoming -> GET /movies/new-and-upcoming: the live lists of LiveMovie (V1.2)
     MovieDetail  -> GET /movies/{id}: facts, people, money, score, posters and similar films
 
 Money is shown as stored: nominal US dollars as TMDB reports them, and the same in 2025 dollars. A figure
@@ -33,12 +34,38 @@ class MovieSummary(BaseModel):
     poster: Optional[Poster]
 
 
+class LiveMovie(BaseModel):
+    tmdb_id: int
+    movie_id: Optional[int] = Field(description="Our film id when the film is in the database, else None")
+    title: str
+    original_title: str
+    release_date: str
+    year: int
+    poster: Poster
+    overview: str
+    genres: list[str]
+    vote_average: Optional[float] = Field(description="Only from 50 votes; None means not rated yet")
+    vote_count: int
+    popularity: Optional[float]
+    status: Literal["out_today", "new", "upcoming"]
+
+
+class NewAndUpcoming(BaseModel):
+    fetched_at: Optional[str] = Field(description="When TMDB was last asked; None when it never answered")
+    stale: bool = Field(description="True when the lists are older than their time limit or TMDB did not answer")
+    new: list[LiveMovie] = Field(description="Released in the last 14 days, newest first")
+    upcoming: list[LiveMovie] = Field(description="Released in the next 60 days, soonest first")
+
+
 class MovieList(BaseModel):
     items: list[MovieSummary]
     total: int
     page: int
     page_size: int
     pages: int
+    live_matches: list[LiveMovie] = Field(
+        default_factory=list,
+        description="Page 1 of a text search: up to 3 new or upcoming films (not in our database) whose title matches")
 
 
 class Ref(BaseModel):

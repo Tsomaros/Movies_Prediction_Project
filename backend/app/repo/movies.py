@@ -9,6 +9,7 @@
     random_candidates(con, genre, decade, language, max_runtime, floor, ids)
                                         -> the ids of the films a "Surprise me" spin may pick (Day 14.5)
     posters(con, ids)                   -> {id: poster_path} for the films among ids that have a poster
+    ids_present(con, ids)               -> the ids among them that are films in the database (V1.2: our ids are TMDB ids)
     film_keywords(con, movie_id)        -> the film's TMDB keyword ids (for its themes)
 
 User text never reaches FTS5 as syntax: words are pulled out with a Unicode regex and quoted, so input like
@@ -141,6 +142,12 @@ def posters(con: sqlite3.Connection, ids: list[int]) -> dict[int, str]:
     rows = con.execute(f"SELECT id, poster_path FROM movies WHERE poster_path IS NOT NULL "
                        f"AND id IN ({','.join('?' * len(ids))})", list(ids))
     return {r[0]: r[1] for r in rows}
+
+
+def ids_present(con: sqlite3.Connection, ids: list[int]) -> set[int]:
+    if not ids:
+        return set()
+    return {r[0] for r in con.execute(f"SELECT id FROM movies WHERE id IN ({','.join('?' * len(ids))})", list(ids))}
 
 
 def movie(con: sqlite3.Connection, movie_id: int) -> dict[str, Any] | None:

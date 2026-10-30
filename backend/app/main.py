@@ -15,7 +15,8 @@ The lifespan hook runs once at startup and keeps on app.state:
 - userdb, demo_seed, limiters: the user-database pool (None without USER_DATABASE_URL: /auth and /me then
   answer 503), the demo account's starting set and the login/demo/write limits (Day 14) and the
   "Surprise me" limit (Day 14.5), and "read": every /api GET or HEAD but /health, RATE_LIMIT_READ a minute per
-  client IP (V1.1, the read_limit middleware).
+  client IP (V1.1, the read_limit middleware);
+- live: the cache of new and upcoming films from TMDB (V1.2), warmed in the background when TMDB_READ_TOKEN is set.
 app.state.clock gives the current UTC time to the accounts side (tests freeze it).
 Then memory freed while loading is handed back to the system (release_free_memory, Linux only).
 The database itself is never held open: every request gets its own read-only connection (deps.get_db).
@@ -25,6 +26,7 @@ With WEB_DIR set (the production image, Day 15) the app itself is served too (ba
 
 from __future__ import annotations
 
+import asyncio
 import ctypes
 import logging
 import sys
@@ -33,16 +35,19 @@ from datetime import datetime, timezone
 from contextlib import asynccontextmanager, closing
 from typing import AsyncIterator
 
+import httpx
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.app import errors, web
 from backend.app.deps import client_ip, connect_read_only
+from backend.app.repo import movies as movies_repo
 from backend.app.routers import (auth, career, collections, companies, health, meta, model_card, movies, my_movies,
                                  notes, people, predict, random, sweep)
 from backend.app.services.career_forecast import load_career_artifact
 from backend.app.services.career_model import CareerModelCache
+from backend.app.services.live import LiveCache, fetch_discover, warm_up
 from backend.app.services.lookups import Lookups
 from backend.app.services.monitoring import start_sentry
 from backend.app.services.prediction import PredictionService
@@ -50,6 +55,7 @@ from backend.app.services.ratelimit import RateLimiter
 from backend.app.settings import API_PREFIX, Settings
 from backend.app.userdb.pool import make_pool
 from backend.app.userdb.seed import load_seed
+from ml.data.clean import MIN_VOTES
 from ml.predict import Predictor
 
 log = logging.getLogger("uvicorn.error")
@@ -64,6 +70,11 @@ DESCRIPTION = (
     "comparable past films, plus search over the 79,199 films in our TMDB data. This product uses the "
     "TMDB API but is not endorsed or certified by TMDB."
 )
+
+
+def _ids_present(db_path, ids: list[int]) -> set[int]:
+    with closing(connect_read_only(db_path)) as con:
+        return movies_repo.ids_present(con, ids)
 
 
 def release_free_memory() -> bool:
@@ -103,12 +114,20 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
             "read": RateLimiter(settings.read_limit)}
         app.state.userdb = make_pool(settings.user_database_url) if settings.user_database_url else None
         app.state.demo_seed = load_seed()
+        http = httpx.AsyncClient()
+        app.state.live = LiveCache(
+            lambda today: fetch_discover(http, settings.tmdb_read_token, today, settings.live_min_popularity, MIN_VOTES),
+            lambda ids: _ids_present(settings.db_path, ids), settings.live_cache_ttl_s)
+        warming = asyncio.create_task(warm_up(app.state.live)) if settings.tmdb_read_token else None  # never blocks the start
         release_free_memory()
         app.state.load_seconds = round(time.perf_counter() - start, 1)
         app.state.started = time.time()
         log.info("loaded the models and lookups in %.1f s (model version %s)", app.state.load_seconds,
                  getattr(app.state.predictor, "manifest", {}).get("version", "?"))
         yield
+        if warming is not None:
+            warming.cancel()
+        await http.aclose()
         if app.state.userdb is not None:
             app.state.userdb.close()
 
