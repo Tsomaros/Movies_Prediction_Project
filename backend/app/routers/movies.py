@@ -1,8 +1,6 @@
-"""GET /movies (search, filters, sorting, pages), GET /movies/new-and-upcoming (V1.2: live films from TMDB, cached in
-memory for 6 hours; declared before /movies/{movie_id}) and GET /movies/{id} (one film with similar films).
-A text search on page 1 also carries up to 3 live_matches from that cache (it never waits for TMDB).
+"""GET /movies (search, filters, sorting, pages) and GET /movies/{id} (one film with similar films).
 
-The database answers are cacheable for an hour (Cache-Control: public, max-age=3600): the database only changes with a
+Both are cacheable for an hour (Cache-Control: public, max-age=3600): the database only changes with a
 new build, and a new build means a new deploy. Similar films come from the Day 7 comparables index with
 no date rule (any year) and never the film itself; a film outside the index's pool (no usable score)
 is matched on its genres, themes, language, era and budget, without a synopsis.
@@ -17,20 +15,18 @@ from typing import Any, Optional
 import numpy as np
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
-from backend.app.deps import get_db, get_live, get_predictor
+from backend.app.deps import get_db, get_predictor
 from backend.app.errors import unprocessable
 from backend.app.repo import movies as repo
 from backend.app.schemas.errors import VALIDATION, Message
 from backend.app.schemas.form import Genre
-from backend.app.schemas.movies import MovieDetail, MovieList, NewAndUpcoming, Sort
-from backend.app.services.live import LiveCache, match_live
+from backend.app.schemas.movies import MovieDetail, MovieList, Sort
 from backend.app.services.posters import poster, profile
 from ml.features.contract import GENRES
 from ml.predict import Predictor
 
 router = APIRouter(tags=["movies"], responses=VALIDATION)
 CACHE = "public, max-age=3600"
-LIVE_CACHE = "public, max-age=600"
 MAX_PAGE_SIZE = 48
 N_SIMILAR = 6
 
@@ -53,24 +49,13 @@ def list_movies(
     page: int = Query(1, ge=1, le=10_000),
     page_size: int = Query(24, ge=1, le=MAX_PAGE_SIZE),
     con: sqlite3.Connection = Depends(get_db),
-    live: LiveCache = Depends(get_live),
 ):
     if year_from is not None and year_to is not None and year_from > year_to:
         return unprocessable({"year_to": "must be the same as or after year_from"})
     rows, total = repo.search(con, q, genre, year_from, year_to, language, score_min, sort, page, page_size)
-    live_search = bool(q) and page == 1  # these answers carry live matches, so they are kept for minutes, not an hour
-    response.headers["Cache-Control"] = LIVE_CACHE if live_search else CACHE
-    cached = live.peek() if live_search else None  # never waits for TMDB
+    response.headers["Cache-Control"] = CACHE
     return {"items": [_summary(r) for r in rows], "total": total, "page": page, "page_size": page_size,
-            "pages": math.ceil(total / page_size),
-            "live_matches": match_live(cached["new"] + cached["upcoming"], q) if cached else []}
-
-
-@router.get("/movies/new-and-upcoming", response_model=NewAndUpcoming,
-            summary="Films released in the last 14 days and in the next 60, live from TMDB (cached for 6 hours)")
-async def new_and_upcoming(response: Response, live: LiveCache = Depends(get_live)):
-    response.headers["Cache-Control"] = LIVE_CACHE
-    return await live.get()
+            "pages": math.ceil(total / page_size)}
 
 
 def _similar(predictor: Predictor, film: dict[str, Any], themes: list[str]) -> list[dict[str, Any]]:

@@ -16,9 +16,6 @@
 | SENTRY_DSN    | (none: Sentry off)          | where the backend's errors are reported (Day 15)       |
 | CLIENT_IP_HEADER | (none: the connection's address) | the header holding the visitor's address for the per-IP limits (Render) |
 | APP_RELEASE   | (none)                      | the git commit the image was built from (make deploy), Sentry's release |
-| TMDB_READ_TOKEN | (none: no live films)     | TMDB's read token for the live new/upcoming rows (V1.2); without it they stay empty |
-| LIVE_MIN_POPULARITY | 5                     | lowest TMDB popularity of a live film (V1.2)                                 |
-| LIVE_CACHE_TTL_S | 21600                    | how long the live lists are kept before the next TMDB call (V1.2)            |
 
 The browser origins are also the only ones allowed to write to /auth and /me (deps.same_origin_write),
 besides the API's own origin.
@@ -58,9 +55,6 @@ class Settings:
     sentry_dsn: str | None = None
     release: str | None = None
     client_ip_header: str | None = None
-    tmdb_read_token: str | None = None
-    live_min_popularity: float = 5.0
-    live_cache_ttl_s: int = 21600
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -80,7 +74,4 @@ class Settings:
             sentry_dsn=env.get("SENTRY_DSN") or None,
             release=env.get("APP_RELEASE") or None,
             client_ip_header=env.get("CLIENT_IP_HEADER") or None,
-            tmdb_read_token=env.get("TMDB_READ_TOKEN") or None,
-            live_min_popularity=float(env.get("LIVE_MIN_POPULARITY", "5")),
-            live_cache_ttl_s=int(env.get("LIVE_CACHE_TTL_S", "21600")),
         )

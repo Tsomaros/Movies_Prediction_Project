@@ -5,7 +5,6 @@
     get_predictor(request)    -> the Predictor loaded once by the lifespan hook
     get_lookups(request)      -> the autocomplete indexes built once by the lifespan hook
     get_predictions(request)  -> the PredictionService (cache + compare) around the Predictor
-    get_live(request)         -> the LiveCache of new and upcoming films (V1.2)
 
 The accounts side (Day 14):
     get_userdb(request)       -> a connection from the user-database pool; 503 when accounts are off
@@ -39,7 +38,6 @@ import psycopg
 from fastapi import Depends, HTTPException, Request, Response
 
 from backend.app.services.auth import token_hash
-from backend.app.services.live import LiveCache
 from backend.app.services.lookups import Lookups
 from backend.app.services.prediction import PredictionService
 from backend.app.userdb import repo as userdb
@@ -73,10 +71,6 @@ def get_lookups(request: Request) -> Lookups:
 
 def get_predictions(request: Request) -> PredictionService:
     return request.app.state.predictions
-
-
-def get_live(request: Request) -> LiveCache:
-    return request.app.state.live
 
 
 def get_userdb(request: Request) -> Iterator[psycopg.Connection]:
