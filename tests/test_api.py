@@ -3,6 +3,7 @@ real models are never loaded."""
 
 import json
 import sqlite3
+from pathlib import Path
 
 import pytest
 from fastapi import Depends
@@ -670,3 +671,51 @@ def test_the_api_refuses_to_start_on_models_that_do_not_match_their_manifest(db,
         with TestClient(app):
             pass
     assert not hasattr(app.state, "predictor")  # nothing was served
+
+
+# ---------------------------------------------------------------- fresh.db's refresher (V1.2)
+
+
+def test_settings_fresh_defaults(monkeypatch):
+    for name in ("FRESH_DB", "FRESH_MIN_POPULARITY", "FRESH_TTL_S"):
+        monkeypatch.delenv(name, raising=False)
+    s = Settings.from_env()
+    assert (s.fresh_path, s.fresh_min_popularity, s.fresh_ttl_s) == (Path("data/fresh.db"), 5.0, 21600)
+    assert Settings().fresh_path is None  # tests and code that build Settings directly never attach a fresh.db
+    monkeypatch.setenv("FRESH_DB", "/tmp/fresh.db")
+    monkeypatch.setenv("FRESH_TTL_S", "60")
+    assert (Settings.from_env().fresh_path, Settings.from_env().fresh_ttl_s) == (Path("/tmp/fresh.db"), 60)
+
+
+class StubRefresher:
+    def __init__(self):
+        self.starts, self.cancelled = 0, False
+
+    def maybe_start(self):
+        self.starts += 1
+
+    def status(self):
+        return {"refreshed_at": None, "films": None}
+
+    def cancel(self):
+        self.cancelled = True
+
+
+def test_a_request_asks_the_refresher_to_start_when_due(db):
+    app = create_app(Settings(db_path=db / "movies.db"), predictor=object(), lookups=object())
+    with TestClient(app) as client:
+        stub = app.state.fresh = StubRefresher()
+        client.get(f"{API_PREFIX}/movies")
+        client.get("/docs")  # not an API path
+        assert stub.starts == 1
+    assert stub.cancelled
+
+
+def test_without_a_token_nothing_is_ever_refreshed(db):
+    app = create_app(Settings(db_path=db / "movies.db", fresh_path=db / "fresh-never.db", tmdb_read_token=None),
+                     predictor=object(), lookups=object())
+    with TestClient(app) as client:
+        client.get(f"{API_PREFIX}/movies")
+        assert app.state.fresh.due() is False and app.state.fresh.status() == {"refreshed_at": None, "films": None}
+        assert client.get(f"{API_PREFIX}/health").json()["fresh"] == {"refreshed_at": None, "films": None}
+    assert not (db / "fresh-never.db").exists()

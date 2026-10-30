@@ -194,7 +194,13 @@ def test_health_has_a_fresh_block(client_with_fresh):
         def status(self):
             return {"refreshed_at": "2026-10-30T10:00:00+00:00", "films": 4}
 
-    assert client_with_fresh.get(f"{API_PREFIX}/health").json()["fresh"] == {"refreshed_at": None, "films": None}  # no refresher yet
+        def cancel(self):
+            pass
+
+        def maybe_start(self):
+            return None
+
+    assert client_with_fresh.get(f"{API_PREFIX}/health").json()["fresh"] == {"refreshed_at": None, "films": None}  # no token: never built
     client_with_fresh.app.state.fresh = Stub()
     assert client_with_fresh.get(f"{API_PREFIX}/health").json()["fresh"] == {"refreshed_at": "2026-10-30T10:00:00+00:00", "films": 4}
 

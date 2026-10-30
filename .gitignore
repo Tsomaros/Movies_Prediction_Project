@@ -18,6 +18,7 @@ data/holdout_2026/
 
 # Built from the raw pull (same TMDB terms); rebuild with `make db`
 data/movies.db*
+data/fresh*.db
 
 # MiniLM model files (about 90 MB); download with `make model`
 ml/artifacts/minilm/

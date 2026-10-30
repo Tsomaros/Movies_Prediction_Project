@@ -15,7 +15,10 @@ The lifespan hook runs once at startup and keeps on app.state:
 - userdb, demo_seed, limiters: the user-database pool (None without USER_DATABASE_URL: /auth and /me then
   answer 503), the demo account's starting set and the login/demo/write limits (Day 14) and the
   "Surprise me" limit (Day 14.5), and "read": every /api GET or HEAD but /health, RATE_LIMIT_READ a minute per
-  client IP (V1.1, the read_limit middleware).
+  client IP (V1.1, the read_limit middleware);
+- fresh:     the Refresher of fresh.db, the small database of new and upcoming films (V1.2). It starts in the
+  background at startup and from the fresh_refresh middleware on any /api request once the file is older than
+  FRESH_TTL_S (6 h); a request never waits for it. Without TMDB_READ_TOKEN it never runs.
 app.state.clock gives the current UTC time to the accounts side (tests freeze it).
 Then memory freed while loading is handed back to the system (release_free_memory, Linux only).
 The database itself is never held open: every request gets its own read-only connection (deps.get_db).
@@ -43,11 +46,13 @@ from backend.app.routers import (auth, career, collections, companies, health, m
                                  notes, people, predict, random, sweep)
 from backend.app.services.career_forecast import load_career_artifact
 from backend.app.services.career_model import CareerModelCache
+from backend.app.services.fresh import Refresher
 from backend.app.services.lookups import Lookups
 from backend.app.services.monitoring import start_sentry
 from backend.app.services.prediction import PredictionService
 from backend.app.services.ratelimit import RateLimiter
 from backend.app.settings import API_PREFIX, Settings
+from backend.app.userdb import repo as userdb_repo
 from backend.app.userdb.pool import make_pool
 from backend.app.userdb.seed import load_seed
 from ml.predict import Predictor
@@ -103,18 +108,37 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
             "read": RateLimiter(settings.read_limit)}
         app.state.userdb = make_pool(settings.user_database_url) if settings.user_database_url else None
         app.state.demo_seed = load_seed()
+        pool = app.state.userdb
+
+        def listed() -> set[int]:  # every film any user listed or noted: fresh.db keeps those too
+            with pool.connection() as conn:
+                return userdb_repo.listed_movie_ids(conn)
+
+        app.state.fresh = Refresher(
+            settings.fresh_path or settings.db_path.with_name("fresh.db"), settings.db_path,
+            settings.tmdb_read_token if settings.fresh_path else None, settings.fresh_min_popularity,
+            settings.fresh_ttl_s, listed if pool is not None else None, lambda: app.state.clock())
+        app.state.fresh.maybe_start()  # in the background: the first pages answer from movies.db alone
         release_free_memory()
         app.state.load_seconds = round(time.perf_counter() - start, 1)
         app.state.started = time.time()
         log.info("loaded the models and lookups in %.1f s (model version %s)", app.state.load_seconds,
                  getattr(app.state.predictor, "manifest", {}).get("version", "?"))
         yield
+        app.state.fresh.cancel()
         if app.state.userdb is not None:
             app.state.userdb.close()
 
     app = FastAPI(title="Movie Prediction API", version="1.0.0", description=DESCRIPTION, lifespan=lifespan)
     app.state.settings = settings
     app.state.clock = lambda: datetime.now(timezone.utc)
+    @app.middleware("http")
+    async def fresh_refresh(request: Request, call_next):
+        fresh = getattr(request.app.state, "fresh", None)
+        if fresh is not None and request.url.path.startswith(f"{API_PREFIX}/"):
+            fresh.maybe_start()  # a no-op unless the 6 hours are up; never awaited
+        return await call_next(request)
+
     @app.middleware("http")
     async def read_limit(request: Request, call_next):
         path = request.url.path

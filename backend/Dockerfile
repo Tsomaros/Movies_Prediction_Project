@@ -51,6 +51,7 @@ ENV PATH=/app/.venv/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     MOVIES_DB=/app/data/movies.db \
+    FRESH_DB=/tmp/fresh.db \
     MODELS_DIR=/app/ml/artifacts/final \
     CONTEXT_FILE=/app/data/context.joblib \
     WEB_DIR=/app/web \
