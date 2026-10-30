@@ -6,8 +6,8 @@
 // Quick results: the top 5 in the current mode, 250 ms after the last keystroke, from 2 letters or digits. While
 // a new answer is on its way the last one stays, faded. Nothing is highlighted until the first ↓, so Enter
 // without the arrows always opens the full results page; Enter on a highlighted row opens that row.
-// Esc closes the dropdown, a second Esc leaves the box. On a results page, switching the mode opens the other
-// results page with the same text (a new history entry, so Back returns).
+// Esc closes the dropdown, a second Esc leaves the box. The switch only changes what the box searches, on a results
+// page too (until the next navigation); the other results page opens when the search is submitted.
 import { SearchIcon, XIcon } from 'lucide-react'
 import { useId, useState, type KeyboardEvent, type RefObject } from 'react'
 import { useLocation, useNavigate } from 'react-router'
@@ -101,7 +101,8 @@ export function SearchBox({ variant, inputRef, onDone, replace = false }: Props)
   const urlMode = modeFromLocation(location.pathname)
   const urlQ = urlMode ? new URLSearchParams(location.search).get('q') ?? '' : ''
   const [stored, setStored] = useState(readStoredMode)
-  const mode = urlMode ?? stored
+  const [picked, setPicked] = useState<SearchMode | null>(null) // the switch clicked on this page
+  const mode = picked ?? urlMode ?? stored
   const [text, setText] = useState(urlQ)
   const [open, setOpen] = useState(variant === 'overlay')
   const [active, setActive] = useState(-1)
@@ -109,6 +110,7 @@ export function SearchBox({ variant, inputRef, onDone, replace = false }: Props)
   if (seen !== location.key) { // a navigation: back to the page's own text, dropdown closed
     setSeen(location.key)
     setText(urlQ)
+    setPicked(null)
     setActive(-1)
     if (variant === 'header') setOpen(false)
   }
@@ -137,9 +139,8 @@ export function SearchBox({ variant, inputRef, onDone, replace = false }: Props)
   const changeMode = (m: SearchMode) => {
     storeMode(m)
     setStored(m)
+    setPicked(m)
     setActive(-1)
-    // on a results page the mode is the page's, so switching opens the other page (empty when there is no text yet)
-    if (urlMode && m !== mode) navigate(usable ? resultsUrl(m, text) : m === 'people' ? '/people' : '/browse')
     inputRef?.current?.focus()
   }
 

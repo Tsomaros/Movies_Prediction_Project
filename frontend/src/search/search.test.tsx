@@ -106,23 +106,27 @@ test('with results, the other mode is never asked', async () => {
   expect(calls(fetch, '/api/v1/people/search')).toHaveLength(0)
 })
 
-test('on a results page the box holds its text, and switching the mode opens the other results page', async () => {
+test('on a results page the switch only changes what the box searches; Enter opens the other results page', async () => {
   api()
   const { router } = await start('/browse?q=nolan&genre=Drama')
   expect(box()).toHaveValue('nolan')
   expect(screen.getByRole('radio', { name: 'Movies' })).toHaveAttribute('aria-checked', 'true')
   await userEvent.click(screen.getByRole('radio', { name: 'People' }))
+  expect(screen.getByRole('radio', { name: 'People' })).toHaveAttribute('aria-checked', 'true')
+  expect(box()).toHaveAttribute('placeholder', 'Search actors, directors, writers…')
+  expect(box()).toHaveValue('nolan')
+  expect(router.state.location.pathname + router.state.location.search).toBe('/browse?q=nolan&genre=Drama')
+  await userEvent.keyboard('{Enter}')
   await waitFor(() => expect(router.state.location.pathname + router.state.location.search).toBe('/people?q=nolan'))
-  router.navigate(-1)
-  await waitFor(() => expect(router.state.location.pathname).toBe('/browse'))
 })
 
-test('on a results page with no text, People still opens the people page', async () => {
+test('on a results page with no text, People can be picked without leaving the page', async () => {
   api()
   const { router } = await start('/browse')
   await userEvent.click(screen.getByRole('radio', { name: 'People' }))
-  await waitFor(() => expect(router.state.location.pathname + router.state.location.search).toBe('/people'))
   expect(screen.getByRole('radio', { name: 'People' })).toHaveAttribute('aria-checked', 'true')
+  expect(box()).toHaveAttribute('placeholder', 'Search actors, directors, writers…')
+  expect(router.state.location.pathname).toBe('/browse')
 })
 
 test('the arrow keys switch the mode from the switch itself', async () => {
