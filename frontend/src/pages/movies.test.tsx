@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import type { CareerModelResponse, ModelCard, MovieDetail, MovieList, Options, Recipe } from '@/api/client'
 import { emptyForm } from '@/form/model'
@@ -390,6 +390,49 @@ describe('new and upcoming films (V1.2)', () => {
     expect(within(card('Later On')).queryByText('No votes yet')).toBeNull()
     expect(within(card('Old Classic')).queryByText('New')).toBeNull()
     expect(within(card('Old Classic')).getByText('8.7')).toBeInTheDocument()
+  })
+})
+
+describe('the New arrivals row (V1.2)', () => {
+  beforeEach(() => sessionStorage.clear())
+
+  test('one row on top with a switch, asking for each window and linking "See all" to Browse', async () => {
+    const { calls } = serve()
+    renderApp('/movies')
+    const row = await screen.findByTestId('row-new')
+    expect(screen.getAllByTestId(/^row-/)[0]).toBe(row) // above the curated rows
+    expect(within(row).getByRole('heading', { name: 'New arrivals' })).toBeInTheDocument()
+    expect(screen.queryAllByRole('heading', { name: 'New arrivals' })).toHaveLength(1) // one row, not two
+    expect(within(row).getByRole('radio', { name: 'Just released' })).toBeChecked()
+    await waitFor(() => expect(movieCalls(calls).some(c => c.url.searchParams.get('when') === 'released')).toBe(true))
+    expect(within(row).getByRole('link', { name: /see all/i })).toHaveAttribute('href', '/browse?when=released&sort=newest')
+    await userEvent.click(within(row).getByRole('radio', { name: 'Coming soon' }))
+    await waitFor(() => expect(movieCalls(calls).some(c => c.url.searchParams.get('when') === 'upcoming' &&
+      c.url.searchParams.get('sort') === 'soonest')).toBe(true))
+    expect(within(row).getByRole('link', { name: /see all/i })).toHaveAttribute('href', '/browse?when=upcoming&sort=soonest')
+    expect(sessionStorage.getItem('movie-prediction:new-arrivals')).toBe('upcoming')
+  })
+
+  test('the choice is remembered for the visit, and the arrow keys switch', async () => {
+    sessionStorage.setItem('movie-prediction:new-arrivals', 'upcoming')
+    serve()
+    renderApp('/movies')
+    const row = await screen.findByTestId('row-new')
+    expect(within(row).getByRole('radio', { name: 'Coming soon' })).toBeChecked()
+    within(row).getByRole('radio', { name: 'Coming soon' }).focus()
+    await userEvent.keyboard('{ArrowLeft}')
+    expect(within(row).getByRole('radio', { name: 'Just released' })).toBeChecked()
+    expect(within(row).getByRole('radio', { name: 'Just released' })).toHaveFocus()
+  })
+
+  test('an empty window says so instead of showing an empty strip', async () => {
+    serve(url => (url.searchParams.get('when') ? { ...LIST, items: [], total: 0, pages: 0 } : LIST))
+    renderApp('/movies')
+    const row = await screen.findByTestId('row-new')
+    expect(await within(row).findByText('No new films in the last two weeks yet.')).toBeInTheDocument()
+    await userEvent.click(within(row).getByRole('radio', { name: 'Coming soon' }))
+    expect(await within(row).findByText('Nothing announced for the next two months yet.')).toBeInTheDocument()
+    expect(within(screen.getByTestId('row-popular')).getAllByRole('link').length).toBeGreaterThan(0) // the other rows are unaffected
   })
 })
 

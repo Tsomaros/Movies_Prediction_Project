@@ -11,6 +11,12 @@ export type CuratedRow = { key: string; title: string; filters: Partial<BrowseSt
 
 export const ROW_SIZE = 12
 
+/** V1.2: the New arrivals row's two windows (the switch in its header chooses): "See all" opens the same list on /browse. */
+export const NEW_ROWS = {
+  released: { key: 'new', title: 'New arrivals', filters: { when: 'released', sort: 'newest' } },
+  upcoming: { key: 'new', title: 'New arrivals', filters: { when: 'upcoming', sort: 'soonest' } },
+} as const satisfies Record<'released' | 'upcoming', CuratedRow>
+
 export const ROWS: CuratedRow[] = [
   { key: 'popular', title: 'Most popular', filters: { sort: 'popularity' } },
   { key: 'top-rated', title: 'Top rated (50+ votes)', filters: { sort: 'score' } },
