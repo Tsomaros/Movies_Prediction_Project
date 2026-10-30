@@ -129,3 +129,78 @@ def test_a_known_persons_page_lists_their_fresh_film(client_with_fresh):
 
 def test_health_model_card_and_options_never_count_fresh_films(client_with_fresh):
     assert client_with_fresh.get(f"{API_PREFIX}/health").json()["database"]["films"] == 300
+
+
+# ---------------------------------------------------------------- when=, soonest, search, unreleased, health
+
+
+EDGES = {"2026-10-30": 910_001, "2026-10-16": 910_002, "2026-10-15": 910_003,
+         "2026-10-31": 910_004, "2026-12-29": 910_005, "2026-12-30": 910_006}
+
+
+@pytest.fixture(scope="module")
+def edges_file(tmp_path_factory):
+    path = tmp_path_factory.mktemp("edges") / "fresh.db"
+    build_fresh_db([film(i, release_date=d, status="Released" if d <= "2026-10-30" else "Planned") for d, i in EDGES.items()],
+                   TEST_CPI, path, {})
+    return path
+
+
+def test_when_window_edges(db, predictor, edges_file):  # noqa: F811
+    c = app_client(db, predictor, edges_file)
+    try:
+        # a film released today is Just released; 14 days ago is still in, 15 days ago is out
+        assert ids(c.get(MOVIES, params={"when": "released", "sort": "newest", "page_size": 48})) == [910_001, 910_002]
+        # tomorrow is Coming soon, 60 days on is the last day, 61 is out
+        assert ids(c.get(MOVIES, params={"when": "upcoming", "sort": "soonest"})) == [910_004, 910_005]
+    finally:
+        c.__exit__(None, None, None)
+
+
+def test_when_rejects_unknown_values_and_the_sort_is_known(client_main_only):
+    r = client_main_only.get(MOVIES, params={"when": "soon"})
+    assert r.status_code == 422 and "when" in r.json()["errors"]
+    assert client_main_only.get(MOVIES, params={"sort": "soonest"}).status_code == 200
+
+
+def titles(response) -> list[str]:
+    return [f["title"] for f in response.json()["items"]]
+
+
+def test_search_fresh_only_and_no_duplicates(client_with_fresh):
+    assert titles(client_with_fresh.get(MOVIES, params={"q": "Zyxquest"})) == ["Zyxquest"]  # only in fresh
+    assert titles(client_with_fresh.get(MOVIES, params={"q": "Fresh title"})) == ["Fresh title"]  # in both, once
+    found = ids(client_with_fresh.get(MOVIES, params={"q": "film", "page_size": 48}))
+    assert len(found) == len(set(found)) and OVERLAP in found  # nothing twice
+
+
+def test_search_without_the_file_is_the_old_join(client_main_only):
+    assert client_main_only.get(MOVIES, params={"q": "Zyxquest"}).json()["total"] == 0
+    assert client_main_only.get(MOVIES, params={"q": "film"}).json()["total"] > 0
+
+
+def test_unreleased_left_out_of_default_lists(client_with_fresh):
+    c = client_with_fresh
+    assert UPCOMING not in ids(c.get(MOVIES, params={"page_size": 48}))
+    assert UPCOMING not in ids(c.get(MOVIES, params={"sort": "newest", "page_size": 48}))
+    assert UPCOMING not in ids(c.get(MOVIES, params={"sort": "popularity", "year_from": 2026}))
+    assert UPCOMING in ids(c.get(MOVIES, params={"q": "Upcoming"}))  # search finds it
+    assert UPCOMING in ids(c.get(MOVIES, params={"when": "upcoming"}))
+    assert all(c.get(f"{API_PREFIX}/random", params={"gems": "true"}).json()["movie"]["id"] != UPCOMING for _ in range(40))
+
+
+def test_health_has_a_fresh_block(client_with_fresh):
+    class Stub:
+        def status(self):
+            return {"refreshed_at": "2026-10-30T10:00:00+00:00", "films": 4}
+
+    assert client_with_fresh.get(f"{API_PREFIX}/health").json()["fresh"] == {"refreshed_at": None, "films": None}  # no refresher yet
+    client_with_fresh.app.state.fresh = Stub()
+    assert client_with_fresh.get(f"{API_PREFIX}/health").json()["fresh"] == {"refreshed_at": "2026-10-30T10:00:00+00:00", "films": 4}
+
+
+def test_answers_with_a_fresh_film_are_cached_ten_minutes(client_with_fresh):
+    r = client_with_fresh.get(MOVIES, params={"q": "Zyxquest"})
+    assert "max-age=600" in r.headers["Cache-Control"]
+    assert "max-age=600" in client_with_fresh.get(MOVIES, params={"when": "released"}).headers["Cache-Control"]
+    assert "max-age=3600" in client_with_fresh.get(MOVIES, params={"q": "Film 3"}).headers["Cache-Control"]

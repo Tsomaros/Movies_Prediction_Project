@@ -55,6 +55,11 @@ class Database(BaseModel):
     films: int
 
 
+class Fresh(BaseModel):
+    refreshed_at: Optional[str] = Field(description="When fresh.db (new and upcoming films) was last built; None before the first refresh")
+    films: Optional[int]
+
+
 class Health(BaseModel):
     status: str
     api_version: str
@@ -65,3 +70,4 @@ class Health(BaseModel):
     uptime_seconds: float
     load_seconds: float
     prediction_cache: dict[str, int]
+    fresh: Fresh = Field(description="The small database of new and upcoming films (V1.2)")

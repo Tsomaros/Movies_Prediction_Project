@@ -11,6 +11,7 @@ Checks, each printed as one line with its time:
   the warning codes and each middle equal to tests/golden/predictions.json to 6 significant figures;
 - POST /predict/compare with two variants, the 12-month POST /predict/sweep, and a bad form that must get
   the readable 422;
+- the /health `fresh` block and the New arrivals queries (V1.2: `when=released` and `when=upcoming`);
 - search, the box-office sort and the score filter, a movie page, autocomplete and /meta/options on the real data;
 - a person page (Day 14.6): the first actor found for "hanks", with films and a TMDB photo, and a director's
   page opening on directing (Day 14.7); his career forecast and model films, and Nolan's genre chips (Day 14.8);
@@ -177,7 +178,9 @@ def main() -> None:
         assert expected_version is None or h["model_version"] == expected_version, \
             f"model {h['model_version']}, expected {expected_version}"
         assert h["database"]["films"] > 0
-        return f"model {h['model_version']}, {h['database']['films']:,} films, loaded in {h['load_seconds']} s"
+        assert set(h["fresh"]) == {"refreshed_at", "films"}, h.get("fresh")  # V1.2: fresh.db's block (null before the first refresh)
+        fresh = f", fresh {h['fresh']['films']} films" if h["fresh"]["films"] is not None else ", fresh not built yet"
+        return f"model {h['model_version']}, {h['database']['films']:,} films, loaded in {h['load_seconds']} s{fresh}"
 
     s.check("GET /health", health)
 
@@ -242,6 +245,14 @@ def main() -> None:
         return f"similar: {', '.join(f['title'] for f in m['similar'][:3])}..."
 
     s.check("GET /movies/299536", movie)
+
+    def new_arrivals() -> str:
+        out = s.get("/movies?when=released&sort=newest&page_size=12")
+        assert out["page_size"] == 12 and all(f["release_date"] for f in out["items"]), out
+        soon = s.get("/movies?when=upcoming&sort=soonest&page_size=12")
+        return f"{out['total']} just released, {soon['total']} coming soon"
+
+    s.check("GET /movies?when=released|upcoming (V1.2)", new_arrivals)
 
     def people() -> str:
         found = s.get("/people", role="actor", q="tom ha")

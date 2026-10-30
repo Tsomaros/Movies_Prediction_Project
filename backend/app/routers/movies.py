@@ -1,7 +1,9 @@
 """GET /movies (search, filters, sorting, pages) and GET /movies/{id} (one film with similar films).
 
 Both are cacheable for an hour (Cache-Control: public, max-age=3600): the database only changes with a
-new build, and a new build means a new deploy. Similar films come from the Day 7 comparables index with
+new build, and a new build means a new deploy. With fresh.db attached (V1.2) an answer that holds a new or upcoming
+film, and every `when` window, is cached for ten minutes. `when=released|upcoming` lists a window; without `when`
+(and without a text search) a film not yet released is left out. Similar films come from the Day 7 comparables index with
 no date rule (any year) and never the film itself; a film outside the index's pool (no usable score)
 is matched on its genres, themes, language, era and budget, without a synopsis.
 """
@@ -13,20 +15,21 @@ import sqlite3
 from typing import Any, Optional
 
 import numpy as np
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
 from backend.app.deps import get_db, get_predictor
 from backend.app.errors import unprocessable
 from backend.app.repo import movies as repo
 from backend.app.schemas.errors import VALIDATION, Message
 from backend.app.schemas.form import Genre
-from backend.app.schemas.movies import MovieDetail, MovieList, Sort
+from backend.app.schemas.movies import MovieDetail, MovieList, Sort, When
 from backend.app.services.posters import poster, profile
 from ml.features.contract import GENRES
 from ml.predict import Predictor
 
 router = APIRouter(tags=["movies"], responses=VALIDATION)
 CACHE = "public, max-age=3600"
+LIVE_CACHE = "public, max-age=600"
 MAX_PAGE_SIZE = 48
 N_SIMILAR = 6
 
@@ -37,6 +40,7 @@ def _summary(r: dict[str, Any]) -> dict[str, Any]:
 
 @router.get("/movies", response_model=MovieList, summary="Search and browse films")
 def list_movies(
+    request: Request,
     response: Response,
     q: Optional[str] = Query(None, max_length=200, description="Words to find in the title, original title or overview"),
     genre: Optional[Genre] = None,
@@ -44,16 +48,22 @@ def list_movies(
     year_to: Optional[int] = Query(None, ge=1900, le=2100),
     language: Optional[str] = Query(None, pattern=r"^[a-z]{2}$", description="Original language code (en, fr...)"),
     score_min: Optional[float] = Query(None, ge=0, le=10, description="Lowest TMDB score; films with any number of votes"),
-    sort: Sort = Query("popularity", description="popularity (TMDB, when pulled), newest, title, score (50+ votes only) "
-                                                 "or revenue (2025 $, trusted figures only)"),
+    sort: Sort = Query("popularity", description="popularity (TMDB, when pulled), newest, soonest (the next release "
+                                                 "first), title, score (50+ votes only) or revenue (2025 $, trusted "
+                                                 "figures only)"),
+    when: Optional[When] = Query(None, description="released: out in the last 14 days; upcoming: due in the next 60 "
+                                                   "(UTC). Without it, and without q, unreleased films are left out"),
     page: int = Query(1, ge=1, le=10_000),
     page_size: int = Query(24, ge=1, le=MAX_PAGE_SIZE),
     con: sqlite3.Connection = Depends(get_db),
 ):
     if year_from is not None and year_to is not None and year_from > year_to:
         return unprocessable({"year_to": "must be the same as or after year_from"})
-    rows, total = repo.search(con, q, genre, year_from, year_to, language, score_min, sort, page, page_size)
-    response.headers["Cache-Control"] = CACHE
+    rows, total = repo.search(con, q, genre, year_from, year_to, language, score_min, sort, page, page_size,
+                              when=when, today=request.app.state.clock().date())
+    # new and upcoming films change by the day: ten minutes for a window or a page that holds one, an hour otherwise
+    fresh = when is not None or bool(repo.fresh_ids(con, [r["id"] for r in rows]))
+    response.headers["Cache-Control"] = LIVE_CACHE if fresh else CACHE
     return {"items": [_summary(r) for r in rows], "total": total, "page": page, "page_size": page_size,
             "pages": math.ceil(total / page_size)}
 

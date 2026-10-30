@@ -58,6 +58,7 @@ def random_film(
     con: sqlite3.Connection = Depends(get_db),
     user: Optional[dict[str, Any]] = Depends(maybe_user),
 ):
+    today = request.app.state.clock().date()  # a film not yet released is never picked
     shown = [int(i) for i in exclude.split(",") if i]
     if len(shown) > MAX_EXCLUDE:
         return unprocessable({"exclude": f"at most {MAX_EXCLUDE} ids"})
@@ -70,10 +71,10 @@ def random_film(
         listed = [e["movie_id"] for e in _entries(request, user) if e["status"] == "plan_to_watch"]
         if not listed:
             return {"movie": None, "reason": "watchlist_empty", "shuffle": [], "pool": 0}
-        candidates, seen = repo.random_candidates(con, **filters, ids=listed), []
+        candidates, seen = repo.random_candidates(con, **filters, ids=listed, today=today), []
     else:
         floor = None if gems else random_pick.FLOOR
-        candidates = repo.random_candidates(con, **filters, floor=floor)
+        candidates = repo.random_candidates(con, **filters, floor=floor, today=today)
         seen = [e["movie_id"] for e in _entries(request, user) if e["status"] == "watched"]
     chosen, reason, left = random_pick.pick(candidates, seen, shown)
     if chosen is None:

@@ -35,4 +35,5 @@ def health(request: Request, response: Response, con: sqlite3.Connection = Depen
         "uptime_seconds": round(time.time() - state.started, 1),
         "load_seconds": state.load_seconds,
         "prediction_cache": {"size": len(cache), "max_size": cache.size, "hits": cache.hits, "misses": cache.misses},
+        "fresh": state.fresh.status() if hasattr(state, "fresh") else {"refreshed_at": None, "films": None},
     }

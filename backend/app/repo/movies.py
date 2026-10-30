@@ -10,6 +10,7 @@
                                         -> the ids of the films a "Surprise me" spin may pick (Day 14.5)
     posters(con, ids)                   -> {id: poster_path} for the films among ids that have a poster
     ids_present(con, ids)               -> the ids among them that are films in this database (V1.2: the refresher)
+    fresh_ids(con, ids)                 -> the ids among them that come from fresh.db
     film_keywords(con, movie_id)        -> the film's TMDB keyword ids (for its themes)
 
 User text never reaches FTS5 as syntax: words are pulled out with a Unicode regex and quoted, so input like
@@ -22,7 +23,10 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+from datetime import date
 from typing import Any
+
+from backend.app.fresh_views import has_fresh
 
 SORTS = {  # name -> ORDER BY; ties broken by id so pages never overlap
     "popularity": "m.popularity IS NULL, m.popularity DESC, m.id",
@@ -30,6 +34,7 @@ SORTS = {  # name -> ORDER BY; ties broken by id so pages never overlap
     "title": "m.title COLLATE NOCASE, m.year, m.id",
     "score": "m.vote_average DESC, m.vote_count DESC, m.id",  # films with a usable score (50+ votes) only
     "revenue": "m.revenue_2025 DESC, m.id",  # films with a trusted revenue only, in 2025 dollars
+    "soonest": "m.release_date IS NULL, m.release_date ASC, m.id",  # the next release first (the Coming soon list)
 }
 CREW_JOBS = ("Director", "Screenplay", "Writer", "Producer", "Original Music Composer", "Director of Photography",
              "Editor")  # the order shown
@@ -48,17 +53,37 @@ def fts_query(text: str | None) -> str | None:
 
 def search(con: sqlite3.Connection, q: str | None = None, genre: str | None = None, year_from: int | None = None,
            year_to: int | None = None, language: str | None = None, score_min: float | None = None,
-           sort: str = "popularity", page: int = 1, page_size: int = 24) -> tuple[list[dict[str, Any]], int]:
+           sort: str = "popularity", page: int = 1, page_size: int = 24, *, when: str | None = None,
+           today: date | None = None) -> tuple[list[dict[str, Any]], int]:
     """score_min keeps films of any vote count (the page shows the votes next to the score); sorting by score
-    keeps only films with a usable score (50+ votes), so a 10.0 from 2 votes never tops the list."""
+    keeps only films with a usable score (50+ votes), so a 10.0 from 2 votes never tops the list.
+
+    With `today` (V1.2): when="released" / "upcoming" keeps the films of that window (services.fresh.windows); with
+    neither `when` nor a text search a film not yet released is left out, so a coming-soon film is found only
+    through when="upcoming", a search or its page. With fresh.db attached the text is matched in both FTS tables."""
     joins, where, args = "", ["m.release_date IS NOT NULL"], []
     if q is not None:
         match = fts_query(q)
         if match is None:  # only punctuation: nothing can match
             return [], 0
-        joins = "JOIN movies_fts ON movies_fts.rowid = m.id"
-        where.append("movies_fts MATCH ?")
-        args.append(match)
+        if has_fresh(con):  # FTS5 can't be read through the shadowing view: ask both tables for ids
+            where.append("m.id IN (SELECT rowid FROM main.movies_fts WHERE movies_fts MATCH ? "
+                         "UNION SELECT rowid FROM fresh.movies_fts WHERE movies_fts MATCH ?)")
+            args.extend((match, match))
+        else:
+            joins = "JOIN movies_fts ON movies_fts.rowid = m.id"
+            where.append("movies_fts MATCH ?")
+            args.append(match)
+    if today is not None:
+        if when is not None:
+            from backend.app.services.fresh import windows
+
+            first, last = windows(today)[when]
+            where.append("m.release_date BETWEEN ? AND ?")
+            args.extend((first.isoformat(), last.isoformat()))
+        elif q is None:
+            where.append("m.release_date <= ?")
+            args.append(today.isoformat())
     if genre:
         where.append("EXISTS (SELECT 1 FROM movie_genres mg JOIN genres g ON g.id = mg.genre_id "
                      "WHERE mg.movie_id = m.id AND g.name = ?)")
@@ -105,11 +130,15 @@ def summaries(con: sqlite3.Connection, ids: list[int]) -> dict[int, dict[str, An
 
 def random_candidates(con: sqlite3.Connection, genre: str | None = None, decade: int | None = None,
                       language: str | None = None, max_runtime: int | None = None,
-                      floor: tuple[int, float] | None = None, ids: list[int] | None = None) -> list[int]:
+                      floor: tuple[int, float] | None = None, ids: list[int] | None = None,
+                      today: date | None = None) -> list[int]:
     """floor = (fewest votes, lowest score), or None for no floor. ids limits the films to those (a watchlist);
     without ids every film needs a poster, because the reveal is a poster shuffle. A film with no runtime is
-    left out under max_runtime."""
+    left out under max_runtime. With `today`, a film not yet released is never a candidate (V1.2)."""
     where, args = ["m.release_date IS NOT NULL"], []
+    if today is not None:
+        where.append("m.release_date <= ?")
+        args.append(today.isoformat())
     if ids is not None:
         if not ids:
             return []
@@ -142,6 +171,13 @@ def posters(con: sqlite3.Connection, ids: list[int]) -> dict[int, str]:
     rows = con.execute(f"SELECT id, poster_path FROM movies WHERE poster_path IS NOT NULL "
                        f"AND id IN ({','.join('?' * len(ids))})", list(ids))
     return {r[0]: r[1] for r in rows}
+
+
+def fresh_ids(con: sqlite3.Connection, ids: list[int]) -> set[int]:
+    """The ids among them whose film comes from fresh.db (empty without it)."""
+    if not ids or not has_fresh(con):
+        return set()
+    return {r[0] for r in con.execute(f"SELECT id FROM fresh.movies WHERE id IN ({','.join('?' * len(ids))})", list(ids))}
 
 
 def ids_present(con: sqlite3.Connection, ids: list[int]) -> set[int]:

@@ -15,7 +15,8 @@ from pydantic import BaseModel, Field
 
 from backend.app.schemas.prediction import Comparable, Poster
 
-Sort = Literal["popularity", "newest", "title", "score", "revenue"]
+Sort = Literal["popularity", "newest", "title", "score", "revenue", "soonest"]
+When = Literal["released", "upcoming"]
 
 
 class MovieSummary(BaseModel):
