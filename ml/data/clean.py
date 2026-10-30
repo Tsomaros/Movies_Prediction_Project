@@ -49,6 +49,7 @@ TEXT_COLUMNS = ["title", "original_title", "original_language", "overview", "tag
 
 MAX_RUNTIME = 600  # minutes; longer entries are miniseries or errors
 TRAIN_LAST_YEAR, VALIDATION_LAST_YEAR = 2015, 2018  # train <=2015, validation 2016-18, test 2019+
+MODEL_DATA_MAX_YEAR = 2025  # the models, their track records and their comparables never see a later film (V1.2: the database now holds 2026 films too)
 
 MIN_MONEY = 1_000  # USD; smaller values are TMDB placeholders such as 7 meaning $7M
 CPI_BASE_YEAR = 2025
@@ -159,7 +160,8 @@ def split_for_year(year: pd.Series) -> pd.Series:
     split = pd.Series(pd.NA, index=year.index, dtype="string")
     split[year <= TRAIN_LAST_YEAR] = "train"
     split[(year > TRAIN_LAST_YEAR) & (year <= VALIDATION_LAST_YEAR)] = "validation"
-    split[year > VALIDATION_LAST_YEAR] = "test"
+    split[(year > VALIDATION_LAST_YEAR) & (year <= MODEL_DATA_MAX_YEAR)] = "test"
+    split[year > MODEL_DATA_MAX_YEAR] = "later"  # shown in the app, never used by a model
     return split
 
 
@@ -239,19 +241,27 @@ def currency_caps(movies: pd.DataFrame) -> tuple[pd.Series, dict[str, float]]:
     A film is compared with its language's other budgets only, so one budget entered in
     local currency can't raise its own cap. Languages with few budgets share the pooled cap.
     The returned dict gives each language's cap over all its budgets, for the report.
+
+    Only films up to MODEL_DATA_MAX_YEAR make the caps, so adding later films to the database never changes
+    whether an earlier film is flagged; a later film is compared with its language's cap over those films.
     """
     foreign = movies[(movies["original_language"] != "en") & movies["budget_2025"].notna()]
-    budgets = foreign.groupby("original_language")["budget_2025"]
+    ref = foreign[foreign["year"] <= MODEL_DATA_MAX_YEAR]
+    budgets = ref.groupby("original_language")["budget_2025"]
     big = sorted(budgets.size()[lambda n: n >= CURRENCY_CAP_MIN_BUDGETS].index)
 
-    cap = CURRENCY_CAP_MULTIPLE * leave_one_out_quantile(foreign["budget_2025"], 0.99)
+    cap = CURRENCY_CAP_MULTIPLE * leave_one_out_quantile(ref["budget_2025"], 0.99)
     for lang in big:
         group = budgets.get_group(lang)
         cap[group.index] = CURRENCY_CAP_MULTIPLE * leave_one_out_quantile(group, 0.99)
 
     summary = {lang: CURRENCY_CAP_MULTIPLE * float(budgets.get_group(lang).quantile(0.99)) for lang in big}
-    if len(foreign):  # no non-English budgets at all -> no caps, nothing to flag
-        summary[POOLED_LANGUAGE] = CURRENCY_CAP_MULTIPLE * float(foreign["budget_2025"].quantile(0.99))
+    if len(ref):  # no non-English budgets at all -> no caps, nothing to flag
+        summary[POOLED_LANGUAGE] = CURRENCY_CAP_MULTIPLE * float(ref["budget_2025"].quantile(0.99))
+    later = foreign[foreign["year"] > MODEL_DATA_MAX_YEAR]
+    if len(later):
+        cap = pd.concat([cap, later["original_language"].map(summary).fillna(summary.get(POOLED_LANGUAGE, np.nan))
+                         .astype(float)])
     return cap.reindex(movies.index).astype("Float64"), summary
 
 

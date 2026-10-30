@@ -7,7 +7,7 @@ How the parts fit together: the offline pipeline that builds the data and the mo
 ```mermaid
 flowchart LR
     subgraph offline["Offline, on the laptop"]
-        tmdb[("TMDB API")] --> pull["ml.data.pull<br/>79,199 films, 1960–2025"]
+        tmdb[("TMDB API")] --> pull["ml.data.pull<br/>80,398 films, 1960–2026; models use up to 2025"]
         pull --> db[("data/movies.db<br/>SQLite")]
         db --> features["ml.features<br/>one feature function"]
         features --> models["LightGBM: budget, revenue, score<br/>+ calibration, comparables index"]

@@ -9,6 +9,7 @@ The key choices, what else was on the table, and why. Each day was planned the s
 | **Our own TMDB pull**, the 1,200 most-voted films per year, 1960–2025, all languages (79,199 films) | A Kaggle dataset | Fresh data with credits and recent films, which an honest 2019+ test needs; one source keeps cleaning simple |
 | **Score = TMDB `vote_average`** | IMDb's score via OMDb | It comes in the same API call; IMDb is a next step |
 | **Keep every released film;** bad money becomes NULL and suspect money is flagged | Drop incomplete films | Browse pages and the score model still need them; each model gets its own training view |
+| **2026 films in the database but never in a model** (`MODEL_DATA_MAX_YEAR = 2025`) | Retraining on them, or leaving them out of the app | The app shows what came out this year; the models, their track records and the model card stay exactly as tested, which a snapshot of the training data proves |
 | **2025 dollars from a committed CPI table** (FRED CPI-U, 1960–2025) | The `cpi` Python library | Offline and fixed, so a rebuild gives the same numbers |
 | **One SQLite database** for the app and the pipeline | A server database | Read-only at serve time, baked into the image, nothing to run |
 

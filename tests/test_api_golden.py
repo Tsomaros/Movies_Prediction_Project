@@ -106,4 +106,4 @@ def test_real_options_and_health(api, predictor):
     assert len(options["themes"]) == 27 and options["languages"][0]["code"] == "en"
     health = api.get(f"{API_PREFIX}/health").json()
     assert health["status"] == "ok" and health["model_version"] == predictor.manifest["version"]
-    assert health["database"]["films"] == 79_199
+    assert health["database"]["films"] == 80_398  # 79,199 up to 2025 and the 2026 films pulled on 2026-10-30 (V1.2)

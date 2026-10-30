@@ -67,7 +67,7 @@ UNCOUNTED = f"{API_PREFIX}/health"  # Docker's healthcheck and the smoke test
 READ_LIMITED = "Too many requests in a minute. Please wait a moment and try again."
 DESCRIPTION = (
     "Budget, revenue and audience-score ranges for a planned film, with the drivers behind them and "
-    "comparable past films, plus search over the 79,199 films in our TMDB data. This product uses the "
+    "comparable past films, plus search over the 80,398 films in our TMDB data. This product uses the "
     "TMDB API but is not endorsed or certified by TMDB."
 )
 

@@ -26,10 +26,11 @@ export default function About() {
 
       <Section title="The data">
         <p>
-          79,199 films released from 1960 to 2025, pulled from <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer"
+          80,398 films released from 1960 to 2026, pulled from <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer"
             className="text-primary underline">TMDB</a> in October 2026. Money is compared in 2025 US dollars, adjusted with the US
           consumer price index. Only 13% of films report both a budget and a box office, so the money models learn from the
-          better-documented films.
+          better-documented films. The models learn only from the 79,199 films up to 2025; the 1,199 films of 2026 are there
+          to browse, and the 2026 holdout checks the models on them.
         </p>
         <p className="text-muted-foreground text-sm">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
       </Section>

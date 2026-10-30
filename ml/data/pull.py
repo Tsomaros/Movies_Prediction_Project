@@ -9,6 +9,12 @@ saved (and 404s already recorded in data/raw/missing_ids.txt).
     uv run python -m ml.data.pull                    # full pull, 1960-2025
     uv run python -m ml.data.pull --limit 20         # smoke test: first 20 films
     uv run python -m ml.data.pull --years 2019-2019 --phase discover
+    uv run python -m ml.data.pull --from 2026-01-01 --to 2026-10-30   # a date range instead of whole years (V1.2)
+
+A date range (--from, --to defaults to today, UTC) takes the same most-voted selection as a year, over the films whose
+primary release date falls in it. It is how the partial year 2026 is added: run it again later with a later --to and
+only the films not saved yet are fetched (a saved film keeps its first pull's votes). Unreleased films never get in:
+the range ends today, and cleaning keeps only status "Released".
 """
 
 from __future__ import annotations
@@ -19,7 +25,7 @@ import csv
 import json
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
@@ -119,6 +125,17 @@ def discover_params(year: int, page: int) -> dict[str, Any]:
     }
 
 
+def discover_range_params(start: date, end: date, page: int) -> dict[str, Any]:
+    return {
+        "primary_release_date.gte": start.isoformat(),
+        "primary_release_date.lte": end.isoformat(),
+        "sort_by": "vote_count.desc",
+        "include_adult": "false",
+        "include_video": "false",
+        "page": page,
+    }
+
+
 def finished_years(ids_path: Path) -> set[int]:
     if not ids_path.exists():
         return set()
@@ -165,6 +182,34 @@ async def run_discover(client: TMDBClient, years: range, pages: int, ids_path: P
             added += len(rows)
             print(f"discover: {year} -> {len(rows)} films")
     return added
+
+
+async def run_discover_range(client: TMDBClient, start: date, end: date, pages: int, ids_path: Path) -> int:
+    """The most-voted films with a primary release date from `start` to `end`, appended to the ids file under the
+    year of each film's release date (the details phase reads them by year; repeated ids are fine)."""
+    first = await client.get("/discover/movie", discover_range_params(start, end, 1))
+    if first is None:
+        return 0
+    last_page = min(pages, first.get("total_pages", 1))
+    rest = await asyncio.gather(
+        *(client.get("/discover/movie", discover_range_params(start, end, p)) for p in range(2, last_page + 1))
+    )
+    rows, seen = [], set()
+    for page_no, body in enumerate([first, *rest], start=1):
+        for movie in (body or {}).get("results", []):
+            if movie["id"] not in seen:
+                seen.add(movie["id"])
+                year = int((movie.get("release_date") or str(start.year))[:4])
+                rows.append((year, page_no, movie["id"]))
+    ids_path.parent.mkdir(parents=True, exist_ok=True)
+    new_file = not ids_path.exists()
+    with ids_path.open("a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        if new_file:
+            writer.writerow(["year", "page", "id"])
+        writer.writerows(rows)
+    print(f"discover: {start} to {end} -> {len(rows)} films")
+    return len(rows)
 
 
 # ---------------------------------------------------------------- phase B: details
@@ -292,12 +337,29 @@ def parse_years(text: str) -> range:
     return range(int(first), int(last or first) + 1)
 
 
+def parse_range(first: str | None, last: str | None) -> tuple[date, date] | None:
+    """--from/--to as dates, or None when no range was asked for; --to defaults to today (UTC)."""
+    if first is None:
+        if last is not None:
+            raise SystemExit("--to needs --from")
+        return None
+    start = date.fromisoformat(first)
+    end = date.fromisoformat(last) if last else datetime.now(timezone.utc).date()
+    if start > end:
+        raise SystemExit("--from is after --to")
+    return start, end
+
+
 async def run(args: argparse.Namespace) -> None:
     raw_dir = Path(args.out_dir)
-    years = parse_years(args.years)
+    dates = parse_range(args.date_from, args.date_to)
+    years = range(dates[0].year, dates[1].year + 1) if dates else parse_years(args.years)
     async with TMDBClient.from_env(rate=args.rate, max_concurrency=args.workers) as client:
         if args.phase in ("discover", "all"):
-            await run_discover(client, years, args.pages, raw_dir / IDS_FILE)
+            if dates:
+                await run_discover_range(client, *dates, args.pages, raw_dir / IDS_FILE)
+            else:
+                await run_discover(client, years, args.pages, raw_dir / IDS_FILE)
         if args.phase in ("details", "all"):
             ids = load_discover_ids(raw_dir / IDS_FILE, years)
             stats = await run_details(
@@ -310,6 +372,8 @@ async def run(args: argparse.Namespace) -> None:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Pull films from TMDB into data/raw/.")
     parser.add_argument("--years", default=f"{FIRST_YEAR}-{LAST_YEAR}", help="e.g. 1960-2025 or 2019")
+    parser.add_argument("--from", dest="date_from", metavar="YYYY-MM-DD", help="first primary release date (replaces --years)")
+    parser.add_argument("--to", dest="date_to", metavar="YYYY-MM-DD", help="last primary release date (default: today, UTC)")
     parser.add_argument("--pages", type=int, default=PAGES_PER_YEAR, help="discover pages per year (20 films each)")
     parser.add_argument("--phase", choices=["discover", "details", "all"], default="all")
     parser.add_argument("--limit", type=int, default=None, help="fetch details for at most N new films")

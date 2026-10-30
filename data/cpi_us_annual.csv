@@ -65,3 +65,4 @@ year,cpi,note
 2023,304.702,FRED CPIAUCNS annual average
 2024,313.689,FRED CPIAUCNS annual average
 2025,322.153,mean of 12 months; Oct 2025 (unpublished) = mean of Sep and Nov
+2026,322.153,not published: counted as 2025 (V1.2; as ml.eval.audit does for the 2026 holdout)

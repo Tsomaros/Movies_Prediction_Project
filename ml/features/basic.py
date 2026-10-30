@@ -23,7 +23,7 @@ from typing import Any, Iterable
 import numpy as np
 import pandas as pd
 
-from ml.data.clean import COVID_YEARS
+from ml.data.clean import COVID_YEARS, MODEL_DATA_MAX_YEAR
 from ml.features.contract import CERTIFICATIONS, GENRES, UNRATED
 from ml.features.history import LOG_BUDGET_SQL, MATURE_DAYS, Groups
 
@@ -120,7 +120,7 @@ class Franchises:
                    CASE WHEN budget IS NOT NULL AND revenue IS NOT NULL AND NOT money_suspect
                              AND NOT revenue_incomplete THEN LN(revenue_2025) END AS log_revenue,
                    {LOG_BUDGET_SQL} AS log_budget
-            FROM movies WHERE collection_id IS NOT NULL AND release_date IS NOT NULL
+            FROM movies WHERE collection_id IS NOT NULL AND release_date IS NOT NULL AND year <= {MODEL_DATA_MAX_YEAR}
             """,  # same revenue rule as v_train_revenue, budget rule as v_train_budget
             con,
         )

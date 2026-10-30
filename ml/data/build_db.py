@@ -28,6 +28,7 @@ from ml.data.clean import (
     CPI_BASE_YEAR,
     CPI_FILE,
     MIN_VOTES,
+    MODEL_DATA_MAX_YEAR,
     RAW_MOVIES,
     TRAIN_LAST_YEAR,
     VALIDATION_LAST_YEAR,
@@ -53,7 +54,7 @@ CREATE TABLE movies (
     release_date         TEXT,
     year                 INTEGER,
     month                INTEGER,
-    split                TEXT,     -- train <=2015, validation 2016-18, test 2019+
+    split                TEXT,     -- train <=2015, validation 2016-18, test 2019-2025, later 2026+ (no model uses these)
     status               TEXT,
     runtime              INTEGER,
     overview             TEXT,
@@ -136,15 +137,17 @@ CREATE VIRTUAL TABLE movies_fts USING fts5(
 INSERT INTO movies_fts(movies_fts) VALUES ('rebuild');
 """
 
-VIEWS = """
--- Training views keep every split; the test rows stay unused until Day 6.
+VIEWS = f"""
+-- Training views keep every split; the test rows stay unused until Day 6. Films after MODEL_DATA_MAX_YEAR (2025)
+-- are in the database for the app only, so no view returns them (V1.2).
 CREATE VIEW v_train_revenue AS
     SELECT * FROM movies
-    WHERE budget IS NOT NULL AND revenue IS NOT NULL AND NOT money_suspect AND NOT revenue_incomplete;
+    WHERE budget IS NOT NULL AND revenue IS NOT NULL AND NOT money_suspect AND NOT revenue_incomplete
+      AND year <= {MODEL_DATA_MAX_YEAR};
 CREATE VIEW v_train_budget AS
-    SELECT * FROM movies WHERE budget IS NOT NULL AND NOT money_suspect;
+    SELECT * FROM movies WHERE budget IS NOT NULL AND NOT money_suspect AND year <= {MODEL_DATA_MAX_YEAR};
 CREATE VIEW v_train_score AS
-    SELECT * FROM movies WHERE score_ok;
+    SELECT * FROM movies WHERE score_ok AND year <= {MODEL_DATA_MAX_YEAR};
 
 -- Autocomplete: people ranked by how many films they have in the database.
 CREATE VIEW v_directors AS
@@ -198,7 +201,7 @@ def build(raw_path: Path = RAW_MOVIES, cpi_path: Path = CPI_FILE, db_path: Path 
         "cpi_base_year": CPI_BASE_YEAR,
         "vote_threshold": MIN_VOTES,
         "splits": {"train": f"<={TRAIN_LAST_YEAR}", "validation": f"{TRAIN_LAST_YEAR + 1}-{VALIDATION_LAST_YEAR}",
-                   "test": f">={VALIDATION_LAST_YEAR + 1}"},
+                   "test": f"{VALIDATION_LAST_YEAR + 1}-{MODEL_DATA_MAX_YEAR}", "later": f">{MODEL_DATA_MAX_YEAR}"},
         "cleaning_report": report,
     }
 

@@ -94,11 +94,11 @@ def test_the_training_views_keep_the_messy_films_out(pipeline):
     con = sqlite3.connect(pipeline["db"])
     in_view = lambda view: {i for (i,) in con.execute(f"SELECT id FROM {view} WHERE id > 9000")}
     assert in_view("v_train_revenue") == {9005, 9006, 9008, 9009, 9010, 9011}  # money fine, the rest is NULLed
-    assert in_view("v_train_budget") == {9005, 9006, 9008, 9009, 9010, 9011, 9012}  # a young film's budget is fine
+    assert in_view("v_train_budget") == {9005, 9006, 9008, 9009, 9010, 9011}  # 9012 is a 2026 film: in the database, in no training view (V1.2)
     assert 9010 not in in_view("v_train_score")
     row = con.execute("SELECT title, runtime, budget FROM movies WHERE id = 9008").fetchone()
     assert row[0] == "Messy New Pull"
-    assert con.execute("SELECT COUNT(*) FROM features").fetchone()[0] == 211
+    assert con.execute("SELECT COUNT(*) FROM features").fetchone()[0] == 210  # every film but the 2026 one (V1.2)
     con.close()
 
 

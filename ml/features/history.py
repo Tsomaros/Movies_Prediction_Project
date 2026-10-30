@@ -35,7 +35,7 @@ from typing import Any, Iterable
 import numpy as np
 import pandas as pd
 
-from ml.data.clean import INCOMPLETE_DAYS
+from ml.data.clean import INCOMPLETE_DAYS, MODEL_DATA_MAX_YEAR
 
 SHRINK_FILMS = 4  # the typical film counts as this many extra films
 MATURE_DAYS = INCOMPLETE_DAYS  # revenue and score count once a film is this old
@@ -341,7 +341,8 @@ class Companies:
 
 
 def load_films(con: sqlite3.Connection) -> pd.DataFrame:
-    """Every dated film with the revenue, score and budget it may contribute (NaN when unusable)."""
+    """Every dated film up to MODEL_DATA_MAX_YEAR with the revenue, score and budget it may contribute (NaN when
+    unusable). Later films are in the database for the app only and never reach a track record."""
     return pd.read_sql_query(
         f"""
         SELECT id, release_date, collection_id,
@@ -349,7 +350,7 @@ def load_films(con: sqlite3.Connection) -> pd.DataFrame:
                          AND NOT revenue_incomplete THEN LN(revenue_2025) END AS log_revenue,
                CASE WHEN score_ok THEN vote_average END AS score,
                {LOG_BUDGET_SQL} AS log_budget
-        FROM movies WHERE release_date IS NOT NULL
+        FROM movies WHERE release_date IS NOT NULL AND year <= {MODEL_DATA_MAX_YEAR}
         """,  # revenue rule = v_train_revenue, score rule = v_train_score, budget rule = v_train_budget
         con,
     )

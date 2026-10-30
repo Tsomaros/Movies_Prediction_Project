@@ -13,7 +13,7 @@ export default function Movies() {
   if (BROWSE_PARAMS.some(k => params.has(k))) return <Navigate replace to={`/browse?${params}`} />
   return (
     <div className="grid gap-10">
-      <PageHeading title="Movies">Curated picks from 79,000 films, 1960 to 2025. "See all" opens the full list on Browse.</PageHeading>
+      <PageHeading title="Movies">Curated picks from 80,000 films, 1960 to 2026. "See all" opens the full list on Browse.</PageHeading>
       <div className="-mt-6 grid gap-10">
         <LiveRows />
         {ROWS.map((row, i) => <CuratedRow key={row.key} row={row} first={i === 0} />)}

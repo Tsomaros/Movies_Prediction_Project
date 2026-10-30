@@ -2,14 +2,18 @@
 
 import csv
 import json
+from datetime import date
 
 import httpx
+import pytest
 
 from ml.data.pull import (
     load_discover_ids,
+    parse_range,
     repair_jsonl,
     run_details,
     run_discover,
+    run_discover_range,
     trim_movie,
     us_certification,
 )
@@ -277,3 +281,62 @@ async def test_resume_after_interrupted_write(tmp_path):
 
     assert fake.details_calls == [2]
     assert [m["id"] for m in read_jsonl(movies)] == [1, 2]
+
+
+# ---------------------------------------------------------------- date range (V1.2)
+
+
+class FakeRange(FakeTMDB):
+    """Discover by primary_release_date.gte/lte: films are (id, release_date) pairs."""
+
+    def __init__(self, films: list[tuple[int, str]], per_page: int = 20):
+        super().__init__({}, per_page=per_page)
+        self.films, self.params = films, []
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        if request.url.path != "/3/discover/movie":
+            return super().__call__(request)
+        self.discover_calls += 1
+        q = request.url.params
+        self.params.append(dict(q))
+        inside = [(i, d) for i, d in self.films if q["primary_release_date.gte"] <= d <= q["primary_release_date.lte"]]
+        page = int(q["page"])
+        chunk = inside[(page - 1) * self.per_page : page * self.per_page]
+        return httpx.Response(200, json={"page": page, "total_pages": max(1, -(-len(inside) // self.per_page)),
+                                         "results": [{"id": i, "release_date": d} for i, d in chunk]})
+
+
+async def test_a_date_range_is_sent_to_discover_and_films_outside_it_are_not_asked_for(tmp_path):
+    ids_path = tmp_path / "discover_ids.csv"
+    fake = FakeRange([(1, "2025-12-31"), (2, "2026-01-01"), (3, "2026-10-30"), (4, "2026-10-31")])
+    async with client_for(fake) as client:
+        added = await run_discover_range(client, date(2026, 1, 1), date(2026, 10, 30), pages=60, ids_path=ids_path)
+    assert added == 2 and fake.params[0]["primary_release_date.gte"] == "2026-01-01"
+    assert fake.params[0]["primary_release_date.lte"] == "2026-10-30" and fake.params[0]["sort_by"] == "vote_count.desc"
+    assert load_discover_ids(ids_path, range(2026, 2027)) == [2, 3]
+
+
+async def test_a_range_is_stored_under_each_films_year_and_a_second_run_only_fetches_new_films(tmp_path):
+    ids_path, movies, missing = tmp_path / "ids.csv", tmp_path / "movies.jsonl", tmp_path / "missing.txt"
+    fake = FakeRange([(1, "2025-12-30"), (2, "2026-01-02"), (3, "2026-03-04")])
+    async with client_for(fake) as client:
+        await run_discover_range(client, date(2025, 12, 1), date(2026, 3, 31), pages=60, ids_path=ids_path)
+        await run_details(client, load_discover_ids(ids_path, range(2025, 2027)), movies, missing)
+        assert sorted(fake.details_calls) == [1, 2, 3]
+        fake.films.append((4, "2026-03-20"))
+        fake.details_calls.clear()
+        await run_discover_range(client, date(2025, 12, 1), date(2026, 4, 30), pages=60, ids_path=ids_path)
+        await run_details(client, load_discover_ids(ids_path, range(2025, 2027)), movies, missing)
+    assert fake.details_calls == [4]
+    assert sorted(r["id"] for r in read_jsonl(movies)) == [1, 2, 3, 4]
+
+
+def test_parse_range():
+    assert parse_range(None, None) is None
+    assert parse_range("2026-01-01", "2026-10-30") == (date(2026, 1, 1), date(2026, 10, 30))
+    start, end = parse_range("2026-01-01", None)
+    assert start == date(2026, 1, 1) and end >= start
+    with pytest.raises(SystemExit):
+        parse_range(None, "2026-10-30")  # --to alone
+    with pytest.raises(SystemExit):
+        parse_range("2026-10-30", "2026-01-01")  # backwards

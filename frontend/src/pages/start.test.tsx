@@ -19,7 +19,7 @@ function mockReducedMotion() {
 describe('the start page', () => {
   test('two panels link to movies and series, over their collages', async () => {
     renderApp('/')
-    const movies = await screen.findByRole('link', { name: /^Movies Browse 79,000 films/ })
+    const movies = await screen.findByRole('link', { name: /^Movies Browse 80,000 films/ })
     const series = screen.getByRole('link', { name: /^Series Coming soon/ })
     expect(movies).toHaveAttribute('href', '/movies')
     expect(series).toHaveAttribute('href', '/series')

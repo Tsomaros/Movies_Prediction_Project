@@ -2291,14 +2291,15 @@ Dimitris's spec and plan (`2026-10-29-v1.1-header-search-design.md` and `…-hea
 - **By hand:** Lighthouse accessibility on `/browse?q=nolan` and `/people?q=nolan` (target 95+), and a keyboard-only pass.
 - **Sentry:** still no DSN, so the plan's "no new errors after 10 minutes" can't be checked.
 
-## V1.2: New Arrivals, Part B (built 2026-10-30, not deployed)
+## V1.2: New Arrivals (built 2026-10-30, not deployed)
 
-Plan: `2026-10-30-v1.2-new-arrivals.md` and its design. Part B first; Part A (the 2026 films in `movies.db`) is not started.
+Plan: `2026-10-30-v1.2-new-arrivals.md` and its design. Part B (the live rows) first, then Part A (the 2026 films in `movies.db`).
 
 - [x] Live mapping, cache and endpoint (`services/live.py`, `GET /movies/new-and-upcoming`, `live_matches` on `GET /movies`)
 - [x] Cards, rows, quick view with `?film=`, `/new-and-upcoming`, live results in the header search and on browse
 - [x] Tests: Python (`test_live_mapping.py`, `test_live_cache.py`, `test_live_api.py`), `movies/live.test.tsx`, Playwright `new-arrivals.spec.ts`, a smoke check
-- [ ] Part A: 2026 films in the database (see below), Docker memory gate, deploy
+- [x] Part A: the 1,199 films of 2026 in the database, guarded out of every model (`MODEL_DATA_MAX_YEAR`), snapshot test
+- [ ] Docker image and memory gate, deploy
 
 ### Changes from the plan
 
@@ -2311,16 +2312,19 @@ Plan: `2026-10-30-v1.2-new-arrivals.md` and its design. Part B first; Part A (th
 - **The nav link** reads "New".
 - `LIVE_MIN_POPULARITY` stays 5: against the real API (2026-10-30) that gave 62 new and 52 upcoming films.
 
-### Surprises / inputs for Part A
+### Part A: what was found and done
 
 - `pull.py` only takes years (the 1,200 most voted of a year), not a date range; `data/holdout_2026` already has 1,199 films (pulled Oct 22, audit only).
 - `data/cpi_us_annual.csv` has no 2026 row.
-- A cap on the three training views is not enough: `build_db` would label 2026 films "test", and `history.load_films`, `build_features` and the comparables index read every dated film.
+- A cap on the three training views is not enough: `build_db` would label 2026 films "test", `history.load_films`, `Franchises` and `FilmForms` read every dated film, and **the currency caps are leave-one-out quantiles over all films**, so 2026 budgets would have moved the `money_suspect` flags of earlier films. All of them now stop at 2025 (the caps come from films up to 2025; a 2026 film is checked against them). The comparables index needed no change: it joins the features table, which has no 2026 rows.
+- **Pull:** `ml.data.pull --from 2026-01-01 --to 2026-10-30` (new date-range mode, the same 1,200 most-voted selection) saved 1,199 new films; `make db` -> 80,398 films, `make people` 4,474 new person records, `make people-db`, `make features` (79,199 films x 175 features, as before). A 2026 CPI row equal to 2025's keeps their money in 2025 dollars (the audit does the same).
+- **Proof the models are untouched:** `scripts/snapshot_models.py` (taken before the rebuild, `tests/fixtures/pre_v12_snapshot.json`) records the training views' rows (14,460 / 10,421 / 33,077), a hash of every film's flags, the 23 currency caps and a hash of the features table; the rebuilt database gives the same values, and the golden and sanity tests (3 predictions, ranges, comparables) pass unchanged. A backup of the old database is `data/movies.db.pre_v12` (not in git).
 
 ### Checks
 
 | | |
 | --- | --- |
+| Python tests | 662 (`make test`, no Postgres): `test_model_guard.py` 7 (6 offline, 1 on the real database), 3 new in `test_pull.py` |
 | Frontend tests | 335 (`npm run check`), 21 of them new |
 | Playwright | the 2 new flows pass against the dev server with the real API (TMDB mocked in the test) |
 | Real TMDB | the endpoint answered with 62 new and 52 upcoming films; rows, quick view, "Predict a film like this", the header's "New & upcoming" section and `/new-and-upcoming` checked in the browser pane (desktop and phone width, dark) |

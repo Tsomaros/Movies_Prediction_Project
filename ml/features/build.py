@@ -42,6 +42,7 @@ import numpy as np
 import pandas as pd
 
 from ml.data.build_db import DB_FILE
+from ml.data.clean import MODEL_DATA_MAX_YEAR
 from ml.features.basic import Franchises, basic_features, load_vocab
 from ml.features.contract import certification_category
 from ml.features.history import BUDGET_FEATURES, Companies, History, day_number
@@ -148,7 +149,8 @@ class FilmForms:
 
         movies = pd.read_sql_query(
             "SELECT id, split, release_date, year, month, runtime, original_language, us_certification, "
-            "collection_id, budget_2025, overview FROM movies WHERE release_date IS NOT NULL", con).set_index("id")
+            "collection_id, budget_2025, overview FROM movies WHERE release_date IS NOT NULL "
+            f"AND year <= {MODEL_DATA_MAX_YEAR}", con).set_index("id")  # later films get no features (V1.2)
         return cls(
             movies=movies,
             genres=lists("SELECT mg.movie_id, g.name FROM movie_genres mg JOIN genres g ON g.id = mg.genre_id "

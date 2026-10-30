@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import { useReducedMotion } from '@/lib/useReducedMotion'
 
 const CARDS = [
-  { to: '/movies', title: 'Movies', text: 'Browse 79,000 films from 1960 to 2025, and plan your own.', image: '/collages/movies.webp' },
+  { to: '/movies', title: 'Movies', text: 'Browse 80,000 films from 1960 to 2026, and plan your own.', image: '/collages/movies.webp' },
   { to: '/series', title: 'Series', text: 'Coming soon.', image: '/collages/series.webp' },
 ] as const
 
