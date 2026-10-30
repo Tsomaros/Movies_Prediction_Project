@@ -2,43 +2,28 @@
 // the cast (TMDB photos where the person pull has one, initials otherwise) and key crew, similar films, and "Predict a film like this",
 // which opens the creator form pre-filled (src/movies/predictLike.ts). Your lists (watched with a date and a
 // 10-star rating, or plan to watch) sit under the score, and your private notes after the overview.
-// Cast and crew names link to their person pages (/people/:id).
+// Cast and crew names link to their person pages (/people/:id). The sections live in src/movies/film/.
 import { ArrowLeftIcon, ExternalLinkIcon, SparklesIcon } from 'lucide-react'
-import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 
-import { ApiError, type MovieDetail as Film } from '@/api/client'
+import { ApiError } from '@/api/client'
 import { useMetaOptions, useMovie } from '@/api/hooks'
 import { SlowNotice } from '@/app/SlowNotice'
-import { useMe } from '@/auth/session'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { codeName } from '@/form/format'
 import { encodeForm, LIKE_PARAM, URL_PARAM } from '@/form/persist'
-import { cn } from '@/lib/utils'
-import { QuickButtons, StatusBadge } from '@/me/CardStatus'
 import { FilmNotes } from '@/me/FilmNotes'
 import { useStatuses } from '@/me/hooks'
 import { ListControl } from '@/me/ListControl'
+import { CastList } from '@/movies/film/CastList'
+import { MadeBy } from '@/movies/film/MadeBy'
+import { MoneyPanel } from '@/movies/film/MoneyPanel'
+import { SimilarFilms } from '@/movies/film/SimilarFilms'
 import { ScoreText } from '@/movies/MovieCard'
-import { crewByJob, initials, nameHue, runtimeText } from '@/movies/people'
+import { runtimeText } from '@/movies/people'
 import { Poster } from '@/movies/Poster'
 import { filmToForm } from '@/movies/predictLike'
-import { money, points } from '@/result/format'
-
-const CREW_JOBS = ['Director', 'Screenplay', 'Writer', 'Producer', 'Original Music Composer', 'Director of Photography', 'Editor']
-const JOB_LABELS: Record<string, string> = { 'Original Music Composer': 'Music', 'Director of Photography': 'Cinematography' }
-const MAX_PER_JOB = 4
-
-function Avatar({ name, photo }: { name: string; photo?: Film['cast'][number]['photo'] }) {
-  if (photo) return <img src={photo.small} alt="" loading="lazy" decoding="async" className="bg-muted size-12 shrink-0 rounded-full object-cover" />
-  return (
-    <span aria-hidden className="inline-flex size-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
-      style={{ backgroundColor: `hsl(${nameHue(name)} 45% 38%)` }}>
-      {initials(name)}
-    </span>
-  )
-}
 
 function Chips({ label, items }: { label: string; items: string[] }) {
   if (items.length === 0) return null
@@ -46,51 +31,6 @@ function Chips({ label, items }: { label: string; items: string[] }) {
     <ul aria-label={label} className="flex flex-wrap gap-1.5">
       {items.map(i => <li key={i} className="bg-secondary text-secondary-foreground rounded-full px-2.5 py-0.5 text-xs">{i}</li>)}
     </ul>
-  )
-}
-
-function MoneyPanel({ film }: { film: Film }) {
-  const [inflated, setInflated] = useState(true)
-  const m = film.money
-  const rows = [
-    { label: 'Budget', value: inflated ? m.budget_2025 : m.budget },
-    { label: 'Worldwide box office', value: inflated ? m.revenue_2025 : m.revenue },
-  ]
-  return (
-    <section aria-labelledby="money-heading" className="bg-card grid content-start gap-3 self-start rounded-lg border p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="money-heading" className="font-semibold">Money</h2>
-        <div role="radiogroup" aria-label="Show money" className="bg-muted inline-flex rounded-md p-0.5 text-xs">
-          {[{ v: false, label: 'As reported' }, { v: true, label: 'In 2025 dollars' }].map(o => (
-            <button key={o.label} type="button" role="radio" aria-checked={inflated === o.v} onClick={() => setInflated(o.v)}
-              className={cn('rounded px-2 py-1', inflated === o.v ? 'bg-background shadow-xs' : 'text-muted-foreground')}>
-              {o.label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <dl className="grid gap-1 text-sm">
-        {rows.map(r => (
-          <div key={r.label} className="flex justify-between gap-4">
-            <dt className="text-muted-foreground">{r.label}</dt>
-            <dd className={r.value == null ? 'text-muted-foreground italic' : 'font-medium tabular-nums'}>
-              {r.value == null ? 'not reported' : money(r.value)}
-            </dd>
-          </div>
-        ))}
-      </dl>
-      <p className="text-muted-foreground text-xs">
-        {inflated ? 'Adjusted to 2025 US dollars with the US consumer price index.' : `US dollars of ${film.year ?? 'the release year'}, as TMDB reports them.`}
-      </p>
-      {m.suspect && (
-        <p className="rounded-md bg-amber-50 px-2 py-1 text-xs dark:bg-amber-950/30">
-          Our cleaning rules doubt these figures{m.suspect_reason ? ` (${m.suspect_reason})` : ''}, so the models never learn from them.
-        </p>
-      )}
-      {m.revenue_incomplete && (
-        <p className="text-muted-foreground text-xs">Released less than six months before our data was pulled: the box office may still grow.</p>
-      )}
-    </section>
   )
 }
 
@@ -125,8 +65,6 @@ export default function MovieDetail() {
   const options = useMetaOptions()
   const navigate = useNavigate()
   const yours = useStatuses(movieId === null ? [] : [movieId]).get(movieId ?? -1)
-  const { user } = useMe()
-  const similar = useStatuses(user && film.data ? film.data.similar.map(s => s.id) : [])
 
   if (movieId === null || (film.error instanceof ApiError && film.error.kind === 'not_found')) return <NotFoundFilm />
   if (film.isError) {
@@ -140,7 +78,6 @@ export default function MovieDetail() {
   if (!film.data) return <><SlowNotice pending /><Loading /></>
 
   const f = film.data
-  const crew = crewByJob(f.crew, CREW_JOBS)
   const facts = [
     f.certification, f.runtime ? runtimeText(f.runtime) : null, f.release_date,
     f.original_language ? codeName('language', f.original_language) : null,
@@ -189,66 +126,12 @@ export default function MovieDetail() {
       <FilmNotes movieId={f.id} />
 
       <div className="grid gap-6 md:grid-cols-[1fr_20rem]">
-        <section aria-labelledby="made-heading" className="grid content-start gap-2 text-sm">
-          <h2 id="made-heading" className="text-lg font-semibold">Made by</h2>
-          <dl className="grid gap-1.5 sm:grid-cols-[9rem_1fr]">
-            {crew.map(g => (
-              <div key={g.job} className="contents">
-                <dt className="text-muted-foreground">{JOB_LABELS[g.job] ?? g.job}</dt>
-                <dd>
-                  {g.people.slice(0, MAX_PER_JOB).map((p, i) => (
-                    <span key={p.id}>{i > 0 && ', '}<Link to={`/people/${p.id}`} className="hover:underline">{p.name}</Link></span>
-                  ))}
-                  {g.people.length > MAX_PER_JOB && ` and ${g.people.length - MAX_PER_JOB} more`}
-                </dd>
-              </div>
-            ))}
-            {f.companies.length > 0 && <><dt className="text-muted-foreground">Studios</dt><dd>{f.companies.map(c => c.name).join(', ')}</dd></>}
-            {f.countries.length > 0 && <><dt className="text-muted-foreground">Countries</dt><dd>{f.countries.map(c => codeName('region', c)).join(', ')}</dd></>}
-            {f.franchise && <><dt className="text-muted-foreground">Franchise</dt><dd>{f.franchise.name}</dd></>}
-          </dl>
-        </section>
+        <MadeBy film={f} />
         <MoneyPanel film={f} />
       </div>
 
-      {f.cast.length > 0 && (
-        <section aria-labelledby="cast-heading" className="grid gap-3">
-          <h2 id="cast-heading" className="text-lg font-semibold">Cast</h2>
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {f.cast.map(c => (
-              <li key={`${c.id}-${c.order}`} className="flex items-center gap-3">
-                <Avatar name={c.name ?? '?'} photo={c.photo} />
-                <span className="grid">
-                  <Link to={`/people/${c.id}`} className="font-medium hover:underline">{c.name}</Link>
-                  {c.character && <span className="text-muted-foreground text-sm">{c.character}</span>}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {f.similar.length > 0 && (
-        <section aria-labelledby="similar-heading" className="grid gap-3">
-          <h2 id="similar-heading" className="text-lg font-semibold">Similar films</h2>
-          <ul className="grid grid-cols-3 gap-4 sm:grid-cols-6">
-            {f.similar.map(s => { const entry = similar.get(s.id); return (
-              <li key={s.id} className="group/card relative">
-                <Link to={`/movies/${s.id}`} className="group grid gap-1.5 rounded-md focus-visible:outline-2 focus-visible:outline-ring">
-                  <span className="relative block">
-                    <Poster poster={s.poster} title={s.title} />
-                    {entry && <StatusBadge entry={entry} />}
-                  </span>
-                  <span className="text-sm leading-tight group-hover:underline">{s.title}</span>
-                  <span className="text-muted-foreground text-xs">{s.year} · {points(s.score)}</span>
-                  {s.why[0] && <span className="text-muted-foreground text-[11px]">{s.why[0]}</span>}
-                </Link>
-                {user && <QuickButtons movieId={s.id} title={s.title} entry={entry} />}
-              </li>
-            )})}
-          </ul>
-        </section>
-      )}
+      <CastList cast={f.cast} />
+      <SimilarFilms films={f.similar} />
 
       <p className="text-muted-foreground border-t pt-4 text-xs">
         Data from TMDB.{' '}

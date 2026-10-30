@@ -1,6 +1,6 @@
 # Decisions
 
-The key choices, what else was on the table, and why. Each day was planned the same way: Claude proposed options, Dimitris chose, and the day's plan document records it (`Movie Prediction App Detailed Plan, Days 1–5.md`, `Days 6–10.md`, `Days 11–16.md`). Changes made during a day are in `PROGRESS.md`. Back to the [README](../README.md).
+The key choices, what else was on the table, and why. Each day was planned the same way: Claude proposed options, Dimitris chose, and the day's plan document records it (`plan/Movie Prediction App Detailed Plan, Days 1–5.md`, `Days 6–10.md`, `Days 11–16.md`). Changes made during a day are in `PROGRESS.md`. Back to the [README](../README.md).
 
 ## Data
 

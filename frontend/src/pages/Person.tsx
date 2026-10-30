@@ -5,41 +5,29 @@
 // forecasts, loaded on demand with its chart library) and their films as a poster grid (the character they
 // played, or their writing credit), sorted by ?sort=. "Predict a film with this actor / director" starts a fresh form with them in
 // that slot; other roles have no form field. The biography is plain text: blank lines make paragraphs, never HTML.
+// The page's parts live in src/movies/person/.
 import { ArrowLeftIcon, ExternalLinkIcon, SparklesIcon } from 'lucide-react'
-import { lazy, Suspense, useState, type ReactNode } from 'react'
+import { lazy, Suspense } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 
-import { ApiError, type CareerRole, type PersonDetail } from '@/api/client'
+import { ApiError, type CareerRole } from '@/api/client'
 import { usePerson } from '@/api/hooks'
 import { SlowNotice } from '@/app/SlowNotice'
-import { useMe } from '@/auth/session'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { encodeForm, LIKE_PARAM, URL_PARAM } from '@/form/persist'
-import { cn } from '@/lib/utils'
-import { useStatuses } from '@/me/hooks'
-import { GRID } from '@/movies/browse'
 import { FilterSelect } from '@/movies/Filters'
-import { MovieCard } from '@/movies/MovieCard'
 import { FILM_SORTS, formatLife, initials, nameHue, readFilmSort, sortFilms } from '@/movies/people'
+import { Biography } from '@/movies/person/Biography'
+import { FilmGrid } from '@/movies/person/FilmGrid'
+import { RoleSwitch } from '@/movies/person/RoleSwitch'
+import { ROLE_TEXT, type RoleName } from '@/movies/person/roles'
+import { Stats } from '@/movies/person/Stats'
 import { personToForm } from '@/movies/predictLike'
-import { money, points } from '@/result/format'
 
-type Role = PersonDetail['roles'][number]
-type RoleName = Role['role']
-const ROLE_TEXT: Record<RoleName, { noun: string; verb?: string; cast: string }> = {
-  acting: { noun: 'Actor', cast: 'Most often with' },
-  directing: { noun: 'Director', verb: 'Directed', cast: 'Most often cast' },
-  writing: { noun: 'Writer', verb: 'Wrote', cast: 'Most often with' },
-  production: { noun: 'Producer', verb: 'Produced', cast: 'Most often with' },
-  music: { noun: 'Composer', verb: 'Scored', cast: 'Most often with' },
-  camera: { noun: 'Cinematographer', verb: 'Shot', cast: 'Most often with' },
-  editing: { noun: 'Editor', verb: 'Edited', cast: 'Most often with' },
-}
 const CareerSection = lazy(() => import('@/career/CareerSection'))
 const CAREER_ROLES: readonly string[] = ['acting', 'directing', 'writing'] satisfies CareerRole[]
 const PREDICT_AS: Partial<Record<RoleName, 'actor' | 'director'>> = { acting: 'actor', directing: 'director' }
-const LONG_BIO = 600 // characters: longer biographies start clamped to 4 lines, with "Read more"
 
 function Avatar({ name }: { name: string }) {
   return (
@@ -47,78 +35,6 @@ function Avatar({ name }: { name: string }) {
       style={{ backgroundColor: `hsl(${nameHue(name)} 45% 38%)` }}>
       {initials(name)}
     </span>
-  )
-}
-
-function Biography({ text }: { text: string }) {
-  const long = text.length > LONG_BIO
-  const [open, setOpen] = useState(!long)
-  const paragraphs = text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean)
-  return (
-    <div className="grid justify-items-start gap-1">
-      <div className={cn('grid max-w-prose gap-2', !open && 'line-clamp-4')} data-testid="biography">
-        {paragraphs.map((p, i) => <p key={i}>{p}</p>)}
-      </div>
-      {long && (
-        <button type="button" onClick={() => setOpen(o => !o)} aria-expanded={open} className="text-primary text-sm underline">
-          {open ? 'Show less' : 'Read more'}
-        </button>
-      )}
-    </div>
-  )
-}
-
-function Stats({ role }: { role: Role }) {
-  const s = role.stats
-  const text = ROLE_TEXT[role.role]
-  const chips: { key: string; content: ReactNode }[] = []
-  if (s.film_count > 0) {
-    const years = s.first_year == null ? '' : s.first_year === s.last_year ? ` · ${s.first_year}` : ` · ${s.first_year}–${s.last_year}`
-    const films = `${s.film_count} ${s.film_count === 1 ? 'film' : 'films'}`
-    chips.push({ key: 'films', content: `${text.verb ? `${text.verb} ${films}` : films}${years}` })
-  }
-  if (s.top_genres.length > 0) chips.push({ key: 'genres', content: `Mostly ${s.top_genres.map(g => g.name).join(', ')}` })
-  if (s.avg_score) chips.push({ key: 'score', content: `Average score ${points(s.avg_score.value)} from ${s.avg_score.films} ${s.avg_score.films === 1 ? 'film' : 'films'}` })
-  if (s.box_office_2025) {
-    const b = s.box_office_2025
-    chips.push({ key: 'money', content: `${money(b.total)} box office (2025 $) from ${b.films} of ${b.of} films` })
-  }
-  for (const [key, label, ref] of [['actor', text.cast, s.top_actor], ['director', 'Most often directed by', s.top_director]] as const) {
-    if (ref) chips.push({ key, content: <>{label} <Link to={`/people/${ref.id}`} className="font-medium underline">{ref.name}</Link> ({ref.shared_films} films)</> })
-  }
-  if (chips.length === 0) return null
-  return (
-    <ul aria-label="Stats" className="flex flex-wrap gap-2">
-      {chips.map(c => <li key={c.key} className="bg-secondary text-secondary-foreground rounded-full px-3 py-1 text-sm">{c.content}</li>)}
-    </ul>
-  )
-}
-
-function RoleSwitch({ roles, value, onChange }: { roles: Role[]; value: RoleName; onChange: (r: RoleName) => void }) {
-  return (
-    <div role="radiogroup" aria-label="Show their work as" className="bg-muted inline-flex max-w-full flex-wrap gap-0.5 rounded-md p-0.5">
-      {roles.map(r => (
-        <button key={r.role} type="button" role="radio" aria-checked={value === r.role} onClick={() => onChange(r.role)}
-          className={cn('inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-sm',
-            value === r.role ? 'bg-background font-medium shadow-xs' : 'text-muted-foreground hover:text-foreground')}>
-          {r.label} <span className="text-muted-foreground text-xs tabular-nums">{r.films.length}</span>
-        </button>
-      ))}
-    </div>
-  )
-}
-
-/** The role's films; logged in, with list badges and quick buttons (one status request per 48 films). */
-function FilmGrid({ films, writing }: { films: Role['films']; writing: boolean }) {
-  const { user } = useMe()
-  const statuses = useStatuses(user ? films.map(f => f.id) : [])
-  return (
-    <ul className={cn('grid gap-4', GRID.medium)} aria-label="Films">
-      {films.map((f, i) => (
-        <li key={f.id}><MovieCard film={f} eager={i < 4} entry={statuses.get(f.id)} quick={user !== null}
-          subtitle={f.character ? `as ${f.character}` : writing ? f.jobs.join(', ') : undefined} /></li>
-      ))}
-    </ul>
   )
 }
 

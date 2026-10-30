@@ -3,7 +3,7 @@
 // The toolbar on top loads an example, copies a link to this form, or clears it; every change is reported
 // through onValuesChange (the page keeps the URL and the draft from it).
 import { zodResolver } from '@hookform/resolvers/zod'
-import { EraserIcon, LinkIcon, Loader2Icon } from 'lucide-react'
+import { Loader2Icon } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Controller, useForm, type FieldErrors } from 'react-hook-form'
 
@@ -11,8 +11,8 @@ import type { Options, PredictForm } from '@/api/client'
 import { applyFieldErrors } from '@/api/errors'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
-import { EXAMPLES } from '@/form/examples'
 import { MONTHS } from '@/form/format'
+import { FormToolbar } from '@/form/FormToolbar'
 import { ChipGroup } from '@/form/inputs/ChipGroup'
 import { CodeCombobox, CodeMultiSelect } from '@/form/inputs/CodeCombobox'
 import { FormField } from '@/form/inputs/FormField'
@@ -107,23 +107,8 @@ export function CreatorForm({ options, initial, onSubmit, pending, onValuesChang
   return (
     <form noValidate aria-label="Creator form" onSubmit={handleSubmit(submit, onInvalid)}
       className="bg-card text-card-foreground grid gap-x-6 gap-y-5 rounded-lg border p-4 shadow-xs sm:grid-cols-2 sm:p-6">
-      <div className="flex flex-wrap items-center gap-2 border-b pb-4 sm:col-span-2" role="toolbar" aria-label="Form tools">
-        <span className="text-muted-foreground text-sm">Try an example:</span>
-        {EXAMPLES.map(example => (
-          <Button key={example.key} type="button" variant="outline" size="sm" title={example.description}
-            onClick={() => load(example.form)}>
-            {example.label}
-          </Button>
-        ))}
-        <span className="flex gap-1 sm:ml-auto">
-          {onCopyLink && (
-            <Button type="button" variant="ghost" size="sm" onClick={() => onCopyLink(getValues())}><LinkIcon /> Copy link</Button>
-          )}
-          <Button type="button" variant="ghost" size="sm" onClick={() => { load(emptyForm()); onClear?.() }}>
-            <EraserIcon /> Clear form
-          </Button>
-        </span>
-      </div>
+      <FormToolbar onLoad={load} onClear={() => { load(emptyForm()); onClear?.() }}
+        onCopyLink={onCopyLink && (() => onCopyLink(getValues()))} />
       <Controller control={control} name="genres" render={({ field }) => (
         <FormField id="f-genres" className="sm:col-span-2" error={messageOf(errors.genres)}
           label={<Counted label="Genres" n={field.value.length} of={String(maxGenres)} />}>
