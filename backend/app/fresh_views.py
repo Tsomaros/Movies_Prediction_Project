@@ -33,8 +33,13 @@ def has_fresh(con: sqlite3.Connection) -> bool:
     return any(row[1] == "fresh" for row in con.execute("PRAGMA database_list"))
 
 
+_COLUMNS: dict[str, str] = {}  # the schema is fixed for a build of movies.db: read each table's columns once
+
+
 def _columns(con: sqlite3.Connection, table: str) -> str:
-    return ", ".join(f'"{r[1]}"' for r in con.execute(f"PRAGMA main.table_info({table})"))
+    if table not in _COLUMNS:
+        _COLUMNS[table] = ", ".join(f'"{r[1]}"' for r in con.execute(f"PRAGMA main.table_info({table})"))
+    return _COLUMNS[table]
 
 
 def attach_fresh(con: sqlite3.Connection, fresh_path: Path | None) -> bool:

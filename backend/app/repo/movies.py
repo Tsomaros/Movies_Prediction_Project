@@ -39,11 +39,16 @@ SORTS = {  # name -> ORDER BY; ties broken by id so pages never overlap
 CREW_JOBS = ("Director", "Screenplay", "Writer", "Producer", "Original Music Composer", "Director of Photography",
              "Editor")  # the order shown
 TOP_CAST = 15
-GENRES_SQL = """(SELECT json_group_array(name) FROM (SELECT g.name FROM movie_genres mg JOIN genres g ON g.id = mg.genre_id
-                 WHERE mg.movie_id = m.id ORDER BY mg.ord))"""
-SUMMARY = f"""m.id, m.title, m.year, m.release_date, m.poster_path, m.original_language, m.vote_average, m.vote_count,
-              m.score_ok, m.popularity, CASE WHEN m.money_suspect THEN NULL ELSE m.revenue_2025 END AS revenue_2025,
-              {GENRES_SQL} AS genres"""
+GENRES_SQL = """(SELECT json_group_array(n) FROM (
+    SELECT (SELECT g.name FROM genres g WHERE g.id = mg.genre_id) AS n
+    FROM movie_genres mg WHERE mg.movie_id = m.id ORDER BY mg.ord LIMIT 100))"""
+# With fresh.db attached movie_genres and genres are UNION ALL views. SQLite uses an index on such a view only for a
+# one-table query it can flatten: the LIMIT keeps the inner query apart from the aggregate, and the name is looked up
+# by id instead of joined. The earlier join form scanned every row of the view for each film (120 ms for 12 films).
+SUMMARY_COLS = """m.id, m.title, m.year, m.release_date, m.poster_path, m.original_language, m.vote_average, m.vote_count,
+              m.score_ok, m.popularity, CASE WHEN m.money_suspect THEN NULL ELSE m.revenue_2025 END AS revenue_2025"""
+SUMMARY = f"""{SUMMARY_COLS},
+              {GENRES_SQL} AS genres"""  # the card row in one query: person pages; the film pages and lists add genres_for()
 
 
 def fts_query(text: str | None) -> str | None:
@@ -108,14 +113,30 @@ def search(con: sqlite3.Connection, q: str | None = None, genre: str | None = No
         where.append("m.revenue_2025 IS NOT NULL AND NOT m.money_suspect")
     clause = f"FROM movies m {joins} WHERE {' AND '.join(where)}"
     total = con.execute(f"SELECT COUNT(*) {clause}", args).fetchone()[0]
-    rows = con.execute(f"SELECT {SUMMARY} {clause} ORDER BY {SORTS[sort]} LIMIT ? OFFSET ?",
-                       [*args, page_size, (page - 1) * page_size]).fetchall()
-    return [_summary(r) for r in rows], total
+    # two steps: the ids of the page (a sort over the view, no per-row subqueries), then the page's summaries
+    page_ids = [r[0] for r in con.execute(f"SELECT m.id {clause} ORDER BY {SORTS[sort]} LIMIT ? OFFSET ?",
+                                          [*args, page_size, (page - 1) * page_size])]
+    found = summaries(con, page_ids)
+    return [found[i] for i in page_ids if i in found], total
+
+
+def genres_for(con: sqlite3.Connection, ids: list[int]) -> dict[int, list[str]]:
+    """Each film's genre names in TMDB's order, for a page of films: two flat queries instead of a subquery per
+    film (with fresh.db attached the genre tables are UNION ALL views, and a correlated subquery over one scans it)."""
+    if not ids:
+        return {}
+    names = {r[0]: r[1] for r in con.execute("SELECT id, name FROM genres")}
+    out: dict[int, list[str]] = {i: [] for i in ids}
+    for movie_id, genre_id in con.execute(f"SELECT movie_id, genre_id FROM movie_genres "
+                                           f"WHERE movie_id IN ({','.join('?' * len(ids))}) ORDER BY movie_id, ord", list(ids)):
+        if genre_id in names:
+            out[movie_id].append(names[genre_id])
+    return out
 
 
 def _summary(r: sqlite3.Row) -> dict[str, Any]:
     out = dict(r)
-    out["genres"] = json.loads(out["genres"]) if out["genres"] else []
+    out["genres"] = (json.loads(out["genres"]) if out["genres"] else []) if "genres" in out else []
     out["score_ok"] = bool(out["score_ok"])
     return out
 
@@ -123,9 +144,12 @@ def _summary(r: sqlite3.Row) -> dict[str, Any]:
 def summaries(con: sqlite3.Connection, ids: list[int]) -> dict[int, dict[str, Any]]:
     if not ids:
         return {}
-    rows = con.execute(f"SELECT {SUMMARY}, m.runtime FROM movies m WHERE m.id IN ({','.join('?' * len(ids))})",
+    rows = con.execute(f"SELECT {SUMMARY_COLS}, m.runtime FROM movies m WHERE m.id IN ({','.join('?' * len(ids))})",
                        list(ids))
-    return {r["id"]: _summary(r) for r in rows}
+    films = {r["id"]: _summary(r) for r in rows}
+    for movie_id, names in genres_for(con, list(films)).items():
+        films[movie_id]["genres"] = names
+    return films
 
 
 def random_candidates(con: sqlite3.Connection, genre: str | None = None, decade: int | None = None,
@@ -186,19 +210,33 @@ def ids_present(con: sqlite3.Connection, ids: list[int]) -> set[int]:
     return {r[0] for r in con.execute(f"SELECT id FROM movies WHERE id IN ({','.join('?' * len(ids))})", list(ids))}
 
 
+def _rows_by_id(con: sqlite3.Connection, table: str, columns: str, ids: list[int]) -> list[sqlite3.Row]:
+    """The rows of a lookup table (a view with fresh.db attached) for a few ids; the LIMIT lets SQLite search the
+    view by id in each file instead of scanning it."""
+    if not ids:
+        return []
+    return con.execute(f"SELECT {columns} FROM (SELECT {columns} FROM {table} WHERE id IN ({','.join('?' * len(ids))}) "
+                       f"LIMIT {len(ids)})", list(ids)).fetchall()
+
+
 def movie(con: sqlite3.Connection, movie_id: int) -> dict[str, Any] | None:
-    r = con.execute(f"""SELECT {SUMMARY}, m.original_title, m.tagline, m.overview, m.month, m.runtime, m.status,
+    r = con.execute(f"""SELECT {SUMMARY_COLS}, m.original_title, m.tagline, m.overview, m.month, m.runtime, m.status,
                                m.us_certification, m.budget, m.revenue, m.budget_2025, m.revenue_2025, m.money_suspect,
-                               m.money_suspect_reason, m.revenue_incomplete, c.id AS collection_id,
-                               c.name AS collection_name
-                        FROM movies m LEFT JOIN collections c ON c.id = m.collection_id WHERE m.id = ?""",
-                    (movie_id,)).fetchone()
+                               m.money_suspect_reason, m.revenue_incomplete, m.collection_id
+                        FROM movies m WHERE m.id = ?""", (movie_id,)).fetchone()
     if r is None:
         return None
     out = _summary(r)
-    out["companies"] = [dict(x) for x in con.execute(
-        """SELECT co.id, co.name, co.origin_country FROM movie_companies mc JOIN companies co ON co.id = mc.company_id
-           WHERE mc.movie_id = ? ORDER BY co.name COLLATE NOCASE""", (movie_id,))]
+    out["genres"] = genres_for(con, [movie_id])[movie_id]
+    out["collection_name"] = None
+    if out["collection_id"] is not None:
+        found = _rows_by_id(con, "collections", "id, name", [out["collection_id"]])
+        out["collection_name"] = found[0]["name"] if found else None
+        if not found:
+            out["collection_id"] = None  # the old LEFT JOIN found no collection either
+    company_ids = [x[0] for x in con.execute("SELECT company_id FROM movie_companies WHERE movie_id = ?", (movie_id,))]
+    out["companies"] = sorted((dict(x) for x in _rows_by_id(con, "companies", "id, name, origin_country", company_ids)),
+                              key=lambda c: (c["name"] or "").casefold())
     out["countries"] = [x[0] for x in con.execute(
         "SELECT country FROM movie_countries WHERE movie_id = ? ORDER BY country", (movie_id,))]
     out["spoken_languages"] = [x[0] for x in con.execute(
@@ -208,11 +246,13 @@ def movie(con: sqlite3.Connection, movie_id: int) -> dict[str, Any] | None:
                   p.id IN (SELECT id FROM main.people) AS linked
            FROM movie_cast c JOIN people p ON p.id = c.person_id LEFT JOIN person_details d ON d.person_id = p.id
            WHERE c.movie_id = ? ORDER BY c.ord LIMIT ?""", (movie_id, TOP_CAST))]
-    order = " ".join(f"WHEN '{job}' THEN {i}" for i, job in enumerate(CREW_JOBS))
-    out["crew"] = [dict(x) for x in con.execute(
-        f"""SELECT p.id, p.name, c.job, p.id IN (SELECT id FROM main.people) AS linked
-            FROM movie_crew c JOIN people p ON p.id = c.person_id
-            WHERE c.movie_id = ? ORDER BY CASE c.job {order} ELSE 99 END, p.name""", (movie_id,))]
+    jobs = {(x[0], x[1]) for x in con.execute("SELECT person_id, job FROM movie_crew WHERE movie_id = ?", (movie_id,))}
+    people = {x["id"]: x["name"] for x in _rows_by_id(con, "people", "id, name", sorted({p for p, _ in jobs}))}
+    in_main = {x[0] for x in con.execute(
+        f"SELECT id FROM main.people WHERE id IN ({','.join('?' * len(people))})", list(people))} if people else set()
+    rank = {job: i for i, job in enumerate(CREW_JOBS)}
+    out["crew"] = [{"id": p, "name": people[p], "job": job, "linked": p in in_main}
+                   for p, job in sorted((j for j in jobs if j[0] in people), key=lambda j: (rank.get(j[1], 99), people[j[0]]))]
     return out
 
 
