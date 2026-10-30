@@ -1,6 +1,7 @@
 // A film card's list status, for a logged-in visitor: a badge on the poster (a check for watched, with your
 // rating; a bookmark for the watchlist; always with a text label, not colour alone) and two quick buttons that
-// appear on hover or focus on devices with a mouse. Phones show the badge only.
+// appear on hover or focus on devices with a mouse and are always shown on touch screens. `className` places
+// them (default: the poster's top right corner).
 import { BookmarkIcon, CheckIcon } from 'lucide-react'
 
 import type { Entry } from '@/api/client'
@@ -23,12 +24,14 @@ export function StatusBadge({ entry }: { entry: Entry }) {
 
 const QUICK = 'inline-flex size-8 items-center justify-center rounded-full shadow backdrop-blur focus-visible:outline-2 focus-visible:outline-ring'
 
-export function QuickButtons({ movieId, title, entry }: { movieId: number; title: string; entry?: Entry }) {
+export function QuickButtons({ movieId, title, entry, className = 'absolute top-1.5 right-1.5' }: {
+  movieId: number; title: string; entry?: Entry; className?: string
+}) {
   const change = useListChange()
   const watched = entry?.status === 'watched'
   const planned = entry?.status === 'plan_to_watch'
   return (
-    <div className="pointer-fine:flex absolute top-1.5 right-1.5 hidden gap-1 opacity-0 transition-opacity group-hover/card:opacity-100 focus-within:opacity-100">
+    <div className={cn('flex gap-1 transition-opacity print:hidden pointer-fine:opacity-0 pointer-fine:group-hover/card:opacity-100 pointer-fine:focus-within:opacity-100', className)}>
       <button type="button" aria-pressed={watched} aria-label={`Watched: ${title}`} title={watched ? 'Remove from watched' : 'Mark as watched'}
         onClick={() => change(movieId, watched ? null : { status: 'watched' }, entry)}
         className={cn(QUICK, watched ? 'bg-emerald-700 text-white' : 'bg-background/90 text-foreground hover:bg-background')}>

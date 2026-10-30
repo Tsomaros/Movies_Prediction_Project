@@ -1,12 +1,13 @@
 // One film in a grid, a row of the home page or the list view: poster, title, year and the score with its
 // vote count ("7.4 (1,203 votes)"), so a high score from a handful of votes is visible as such.
-// For a logged-in visitor a card can also show its list status (`entry`: a badge on the poster) and the quick
-// list buttons (`quick`), which sit beside the link, never inside it. `subtitle` adds a line under the title (the
+// For a logged-in visitor a card (and a list-view row) can also show its list status (`entry`: a badge on the
+// poster) and the quick list buttons (`quick`), which sit beside the link, never inside it. `subtitle` adds a line under the title (the
 // person page's "as Forrest").
 import { StarIcon } from 'lucide-react'
 import { Link } from 'react-router'
 
 import type { Entry, MovieSummary } from '@/api/client'
+import { cn } from '@/lib/utils'
 import { QuickButtons, StatusBadge } from '@/me/CardStatus'
 import { votes } from '@/movies/people'
 import { Poster } from '@/movies/Poster'
@@ -49,16 +50,26 @@ export function MovieCard({ film, showRevenue = false, eager = false, entry, qui
   )
 }
 
-export function MovieListItem({ film, eager = false }: { film: MovieSummary; eager?: boolean }) {
+export function MovieListItem({ film, eager = false, entry, quick = false }: {
+  film: MovieSummary; eager?: boolean; entry?: Entry; quick?: boolean
+}) {
   return (
+    <div className="group/card relative">
     <Link to={`/movies/${film.id}`}
-      className="hover:bg-accent/50 grid grid-cols-[3.5rem_1fr] items-center gap-3 rounded-md p-2 focus-visible:outline-2 focus-visible:outline-ring">
-      <Poster poster={film.poster} title={film.title} eager={eager} />
+      className={cn('hover:bg-accent/50 grid grid-cols-[3.5rem_1fr] items-center gap-3 rounded-md p-2 focus-visible:outline-2 focus-visible:outline-ring',
+        quick && 'pr-20')}>
+      <span className="relative block">
+        <Poster poster={film.poster} title={film.title} eager={eager} />
+        {entry && <StatusBadge entry={entry} />}
+      </span>
       <span className="grid gap-0.5">
         <span className="font-medium">{film.title} <span className="text-muted-foreground font-normal">({film.year ?? '?'})</span></span>
         <span className="text-muted-foreground text-xs">{film.genres.join(', ') || 'No genre listed'}</span>
         <span className="text-xs"><ScoreText score={film.score} votes={film.votes} /></span>
       </span>
     </Link>
+    {quick && <QuickButtons movieId={film.id} title={film.title} entry={entry}
+      className="absolute top-1/2 right-2 -translate-y-1/2" />}
+    </div>
   )
 }

@@ -10,11 +10,13 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { ApiError, type MovieDetail as Film } from '@/api/client'
 import { useMetaOptions, useMovie } from '@/api/hooks'
 import { SlowNotice } from '@/app/SlowNotice'
+import { useMe } from '@/auth/session'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { codeName } from '@/form/format'
 import { encodeForm, LIKE_PARAM, URL_PARAM } from '@/form/persist'
 import { cn } from '@/lib/utils'
+import { QuickButtons, StatusBadge } from '@/me/CardStatus'
 import { FilmNotes } from '@/me/FilmNotes'
 import { useStatuses } from '@/me/hooks'
 import { ListControl } from '@/me/ListControl'
@@ -123,6 +125,8 @@ export default function MovieDetail() {
   const options = useMetaOptions()
   const navigate = useNavigate()
   const yours = useStatuses(movieId === null ? [] : [movieId]).get(movieId ?? -1)
+  const { user } = useMe()
+  const similar = useStatuses(user && film.data ? film.data.similar.map(s => s.id) : [])
 
   if (movieId === null || (film.error instanceof ApiError && film.error.kind === 'not_found')) return <NotFoundFilm />
   if (film.isError) {
@@ -228,16 +232,20 @@ export default function MovieDetail() {
         <section aria-labelledby="similar-heading" className="grid gap-3">
           <h2 id="similar-heading" className="text-lg font-semibold">Similar films</h2>
           <ul className="grid grid-cols-3 gap-4 sm:grid-cols-6">
-            {f.similar.map(s => (
-              <li key={s.id}>
+            {f.similar.map(s => { const entry = similar.get(s.id); return (
+              <li key={s.id} className="group/card relative">
                 <Link to={`/movies/${s.id}`} className="group grid gap-1.5 rounded-md focus-visible:outline-2 focus-visible:outline-ring">
-                  <Poster poster={s.poster} title={s.title} />
+                  <span className="relative block">
+                    <Poster poster={s.poster} title={s.title} />
+                    {entry && <StatusBadge entry={entry} />}
+                  </span>
                   <span className="text-sm leading-tight group-hover:underline">{s.title}</span>
                   <span className="text-muted-foreground text-xs">{s.year} · {points(s.score)}</span>
                   {s.why[0] && <span className="text-muted-foreground text-[11px]">{s.why[0]}</span>}
                 </Link>
+                {user && <QuickButtons movieId={s.id} title={s.title} entry={entry} />}
               </li>
-            ))}
+            )})}
           </ul>
         </section>
       )}

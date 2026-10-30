@@ -1,7 +1,7 @@
 // TanStack Query hooks for the logged-in user's lists and notes. Every key is under ['me'], so logging out drops
 // them all (src/auth/session.ts), and every write refreshes them all once it is done.
 //
-//   useStatuses(ids)          -> Map film id -> list entry, for up to 48 films (one browse page) in one request
+//   useStatuses(ids)          -> Map film id -> list entry; one request per 48 films (one browse page is one)
 //   useSetEntry()             -> PUT (or, with body null, DELETE) /me/movies/{id}; optimistic: the badges and
 //                                buttons change at once and roll back with a toast if the server says no
 //   useListChange()           -> change(id, body, previous): the same behind a login (useRequireLogin), plus
@@ -11,7 +11,7 @@
 //   todayIso(), noteDate(iso)  -> today as "2026-10-24" (the visitor's time zone); "24 Oct 2026"
 //   useAddNote(id), useEditNote(), useDeleteNote()   -> notes; deleting is optimistic and offers Undo (it adds
 //                                the note again, as the newest)
-import { keepPreviousData, useMutation, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQueries, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { toast } from 'sonner'
 
@@ -50,15 +50,28 @@ function useRefreshMine() {
   return () => client.invalidateQueries({ predicate: q => isMeKey(q.queryKey) })
 }
 
+export const STATUS_CHUNK = 48 // the API's MAX_STATUS_IDS
+
+const toStatusMap = (results: { data?: StatusList }[]) =>
+  new Map(results.flatMap(r => r.data?.items ?? []).map(e => [e.movie_id, e]))
+
 export function useStatuses(ids: number[]) {
   const { user } = useMe()
-  const query = useQuery({
-    queryKey: statusKey(ids),
-    queryFn: ({ signal }) => api.statuses(ids, signal),
-    enabled: user !== null && ids.length > 0,
-    staleTime: 5 * 60 * 1000,
+  const chunks = useMemo(() => {
+    const sorted = [...new Set(ids)].sort((a, b) => a - b) // so re-sorting the same films asks nothing new
+    const out: number[][] = []
+    for (let i = 0; i < sorted.length; i += STATUS_CHUNK) out.push(sorted.slice(i, i + STATUS_CHUNK))
+    return out
+  }, [ids])
+  return useQueries({
+    queries: chunks.map(chunk => ({
+      queryKey: statusKey(chunk),
+      queryFn: ({ signal }: { signal: AbortSignal }) => api.statuses(chunk, signal),
+      enabled: user !== null,
+      staleTime: 5 * 60 * 1000,
+    })),
+    combine: toStatusMap,
   })
-  return useMemo(() => new Map((query.data?.items ?? []).map(e => [e.movie_id, e])), [query.data])
 }
 
 /** The entry the server will make of `body` (watched today unless dated; the watchlist has no date or rating). */

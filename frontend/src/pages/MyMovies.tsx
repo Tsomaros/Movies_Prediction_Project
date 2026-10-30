@@ -52,7 +52,7 @@ function FilmList({ data, view, placeholder }: { data: MyMovieList; view: View; 
       aria-label="Films">
       {data.items.map(({ movie, entry }) => (
         <li key={movie.id}>
-          {view === 'list' ? <MovieListItem film={movie} />
+          {view === 'list' ? <MovieListItem film={movie} entry={entry} quick />
             : <MovieCard film={movie} entry={entry} quick />}
         </li>
       ))}

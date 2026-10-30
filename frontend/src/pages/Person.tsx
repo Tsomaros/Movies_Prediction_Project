@@ -12,10 +12,12 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { ApiError, type CareerRole, type PersonDetail } from '@/api/client'
 import { usePerson } from '@/api/hooks'
 import { SlowNotice } from '@/app/SlowNotice'
+import { useMe } from '@/auth/session'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { encodeForm, LIKE_PARAM, URL_PARAM } from '@/form/persist'
 import { cn } from '@/lib/utils'
+import { useStatuses } from '@/me/hooks'
 import { GRID } from '@/movies/browse'
 import { FilterSelect } from '@/movies/Filters'
 import { MovieCard } from '@/movies/MovieCard'
@@ -103,6 +105,20 @@ function RoleSwitch({ roles, value, onChange }: { roles: Role[]; value: RoleName
         </button>
       ))}
     </div>
+  )
+}
+
+/** The role's films; logged in, with list badges and quick buttons (one status request per 48 films). */
+function FilmGrid({ films, writing }: { films: Role['films']; writing: boolean }) {
+  const { user } = useMe()
+  const statuses = useStatuses(user ? films.map(f => f.id) : [])
+  return (
+    <ul className={cn('grid gap-4', GRID.medium)} aria-label="Films">
+      {films.map((f, i) => (
+        <li key={f.id}><MovieCard film={f} eager={i < 4} entry={statuses.get(f.id)} quick={user !== null}
+          subtitle={f.character ? `as ${f.character}` : writing ? f.jobs.join(', ') : undefined} /></li>
+      ))}
+    </ul>
   )
 }
 
@@ -230,12 +246,7 @@ export default function Person() {
             <FilterSelect label="Sort films" value={sort} className="bg-card h-8 w-44" choices={FILM_SORTS}
               onChange={s => setParam('sort', s && s !== 'newest' ? s : null)} />
           </div>
-          <ul className={cn('grid gap-4', GRID.medium)} aria-label="Films">
-            {films.map((f, i) => (
-              <li key={f.id}><MovieCard film={f} eager={i < 4}
-                subtitle={f.character ? `as ${f.character}` : role.role === 'writing' ? f.jobs.join(', ') : undefined} /></li>
-            ))}
-          </ul>
+          <FilmGrid films={films} writing={role.role === 'writing'} />
         </section>
       )}
 

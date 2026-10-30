@@ -3,9 +3,12 @@ import userEvent from '@testing-library/user-event'
 import { toast } from 'sonner'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
-import type { Entry, Me, MovieDetail, MovieList, MyMovieList, Note, NotePage, Options } from '@/api/client'
+import type { Entry, Me, MovieDetail, MovieList, MyMovieList, Note, NotePage, Options, PersonDetail } from '@/api/client'
+import { EXAMPLES } from '@/form/examples'
+import { encodeForm } from '@/form/persist'
 import { KEY_SAVE_MS, StarRating } from '@/me/StarRating'
 import { MY_DEFAULTS, readMyMovies, writeMyMovies } from '@/me/myMovies'
+import { VIEW_KEY } from '@/movies/browse'
 import { mockFetch } from '@/test/fetch'
 import meJson from '@/test/me.json'
 import movieJson from '@/test/movie.json'
@@ -13,9 +16,12 @@ import moviesJson from '@/test/movies.json'
 import myMoviesJson from '@/test/my_movies.json'
 import myNotesJson from '@/test/my_notes.json'
 import optionsJson from '@/test/options.json'
+import personJson from '@/test/person.json'
+import predictionsJson from '@/test/predictions.json'
 import { renderApp } from '@/test/render'
 
 const ME = meJson as Me
+const PERSON = personJson as PersonDetail
 const FILM = movieJson as MovieDetail
 const LIST = moviesJson as MovieList
 const MY_MOVIES = myMoviesJson as MyMovieList
@@ -220,7 +226,8 @@ describe('the browse grid, logged in', () => {
     const films = await screen.findByRole('list', { name: 'Films' })
     await waitFor(() => expect(within(films).getAllByTestId('status-badge')).toHaveLength(2))
     expect(calls(all, '/me/movies/status')).toHaveLength(1)
-    expect(calls(all, '/me/movies/status')[0].url.searchParams.get('ids')).toBe(LIST.items.map(f => f.id).join(','))
+    expect(calls(all, '/me/movies/status')[0].url.searchParams.get('ids'))
+      .toBe(LIST.items.map(f => f.id).sort((a, b) => a - b).join(',')) // sorted, so a re-sorted page asks nothing new
     expect(within(films).getByText('Watched, rated 9/10')).toBeInTheDocument()
     expect(within(films).getByText('On your watchlist')).toBeInTheDocument()
     expect(within(films).getByRole('button', { name: `Plan to watch: ${second.title}` })).toHaveAttribute('aria-pressed', 'true')
@@ -360,6 +367,75 @@ describe('the quick buttons on a card', () => {
 
     await userEvent.click(planned)
     await waitFor(() => expect(calls(all, `/me/movies/${second.id}`, 'DELETE')).toHaveLength(1))
+  })
+})
+
+describe('quick buttons on every list of films', () => {
+  afterEach(() => { try { localStorage.removeItem(VIEW_KEY) } catch { /* storage can fail */ } })
+  const [first, second] = LIST.items
+
+  test('home rows: a badge and buttons, and a click saves', async () => {
+    const answer = (_url: URL, init?: RequestInit) => ({ body: entry(first.id, JSON.parse(init!.body as string)) })
+    const { calls: all } = serve({ loggedIn: true, entries: [entry(second.id, { status: 'plan_to_watch' })],
+      routes: { [`/api/v1/me/movies/${first.id}`]: answer } })
+    renderApp('/movies')
+    await waitFor(() => expect(screen.getAllByText('On your watchlist').length).toBeGreaterThan(0))
+    await userEvent.click(screen.getAllByRole('button', { name: `Watched: ${first.title}` })[0])
+    await waitFor(() => expect(calls(all, `/me/movies/${first.id}`, 'PUT')).toHaveLength(1))
+  })
+
+  test('a person page with 85 films asks for their statuses in two requests', async () => {
+    const films = PERSON.roles.find(r => r.role === 'acting')!.films
+    const [early, late] = [films[0], films.at(-1)!]
+    const { calls: all } = serve({ loggedIn: true, entries: [entry(early.id), entry(late.id, { status: 'plan_to_watch' })],
+      routes: { [`/api/v1/people/${PERSON.id}`]: { body: PERSON } } })
+    renderApp(`/people/${PERSON.id}`)
+    const grid = await screen.findByRole('list', { name: 'Films' })
+    await waitFor(() => expect(within(grid).getAllByTestId('status-badge')).toHaveLength(2))
+    expect(calls(all, '/me/movies/status')).toHaveLength(2)
+    expect(within(grid).getByRole('button', { name: `Plan to watch: ${late.title}` })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(grid).getAllByRole('button', { name: /^Watched: / })).toHaveLength(films.length)
+  })
+
+  test("a film page's similar films", async () => {
+    const similar = FILM.similar[1]
+    serve({ loggedIn: true, entries: [entry(similar.id, { rating: 8 })] })
+    renderApp(`/movies/${FILM.id}`)
+    const section = within((await screen.findByRole('heading', { name: 'Similar films' })).closest('section')!)
+    expect(await section.findByText('Watched, rated 8/10')).toBeInTheDocument()
+    expect(section.getByRole('button', { name: `Watched: ${similar.title}` })).toHaveAttribute('aria-pressed', 'true')
+    expect(section.getAllByRole('button', { name: /^Plan to watch: / })).toHaveLength(FILM.similar.length)
+  })
+
+  test('the browse list view', async () => {
+    localStorage.setItem(VIEW_KEY, 'list')
+    serve({ loggedIn: true, entries: [entry(first.id)] })
+    renderApp('/browse')
+    const films = await screen.findByRole('list', { name: 'Films' })
+    await waitFor(() => expect(within(films).getAllByTestId('status-badge')).toHaveLength(1))
+    expect(within(films).getByRole('button', { name: `Watched: ${first.title}` })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  test("the results page's films like yours", async () => {
+    const prediction = predictionsJson.small_drama
+    const like = prediction.comparables[0]
+    serve({ loggedIn: true, entries: [entry(like.id, { status: 'plan_to_watch' })],
+      routes: { '/api/v1/predict': { body: prediction } } })
+    renderApp(`/predict/result?f=${encodeForm(EXAMPLES.find(e => e.key === 'small_drama')!.form)}`)
+    const section = within((await screen.findByRole('heading', { name: 'Films like yours' })).closest('section')!)
+    expect(await section.findByText('On your watchlist')).toBeInTheDocument()
+    expect(section.getByRole('button', { name: `Plan to watch: ${like.title}` })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  test('logged out: no buttons and no status requests on these pages', async () => {
+    const { calls: all } = serve({ routes: { [`/api/v1/people/${PERSON.id}`]: { body: PERSON } } })
+    renderApp(`/people/${PERSON.id}`)
+    const grid = await screen.findByRole('list', { name: 'Films' })
+    expect(within(grid).queryByRole('button')).not.toBeInTheDocument()
+    renderApp(`/movies/${FILM.id}`)
+    await screen.findByRole('heading', { name: 'Similar films' })
+    expect(screen.queryByRole('button', { name: /^Watched: / })).not.toBeInTheDocument()
+    expect(calls(all, '/me/movies/status')).toHaveLength(0)
   })
 })
 

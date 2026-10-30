@@ -162,7 +162,8 @@ export default function Browse() {
                 movies.isPlaceholderData && 'opacity-60')} aria-label="Films">
                 {data.items.map((film, i) => (
                   <li key={film.id}>
-                    {view === 'list' ? <MovieListItem film={film} eager={i < EAGER} />
+                    {view === 'list' ? <MovieListItem film={film} eager={i < EAGER}
+                        entry={statuses.get(film.id)} quick={user !== null} />
                       : <MovieCard film={film} showRevenue={state.sort === 'revenue'} eager={i < EAGER}
                           entry={statuses.get(film.id)} quick={user !== null} />}
                   </li>

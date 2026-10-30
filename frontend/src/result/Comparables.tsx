@@ -1,8 +1,12 @@
 // Five earlier films like the planned one, with what they really cost, earned and scored. Each links to its
-// film page; its "why" tags come from the API (the parts of the similarity that matched).
+// film page; its "why" tags come from the API (the parts of the similarity that matched). Logged in, the posters
+// carry the list badge and quick list buttons.
 import { Link } from 'react-router'
 
 import type { Comparable } from '@/api/client'
+import { useMe } from '@/auth/session'
+import { QuickButtons, StatusBadge } from '@/me/CardStatus'
+import { useStatuses } from '@/me/hooks'
 import { Poster } from '@/movies/Poster'
 import { money, points } from '@/result/format'
 
@@ -18,6 +22,8 @@ function Fact({ label, value }: { label: string; value: number | null }) {
 }
 
 export function Comparables({ films }: { films: Comparable[] }) {
+  const { user } = useMe()
+  const statuses = useStatuses(user ? films.map(f => f.id) : [])
   return (
     <section aria-labelledby="comparables-heading" className="bg-card grid gap-3 rounded-lg border p-4 sm:p-6">
       <div>
@@ -31,14 +37,20 @@ export function Comparables({ films }: { films: Comparable[] }) {
         <p className="text-muted-foreground text-sm">No earlier film is close enough to show.</p>
       ) : (
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          {films.map(film => (
+          {films.map(film => { const entry = statuses.get(film.id); return (
             <li key={film.id} className="grid content-start gap-2">
-              <Link to={`/movies/${film.id}`} className="group grid gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-ring">
-                <Poster poster={film.poster} title={film.title} />
-                <span className="font-medium leading-tight group-hover:underline">
-                  {film.title} <span className="text-muted-foreground font-normal">({film.year})</span>
-                </span>
-              </Link>
+              <div className="group/card relative">
+                <Link to={`/movies/${film.id}`} className="group grid gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-ring">
+                  <span className="relative block">
+                    <Poster poster={film.poster} title={film.title} />
+                    {entry && <StatusBadge entry={entry} />}
+                  </span>
+                  <span className="font-medium leading-tight group-hover:underline">
+                    {film.title} <span className="text-muted-foreground font-normal">({film.year})</span>
+                  </span>
+                </Link>
+                {user && <QuickButtons movieId={film.id} title={film.title} entry={entry} />}
+              </div>
               <dl className="grid gap-0.5 text-xs">
                 <Fact label="Budget" value={film.budget ?? null} />
                 <Fact label="Revenue" value={film.revenue ?? null} />
@@ -55,7 +67,7 @@ export function Comparables({ films }: { films: Comparable[] }) {
                 </ul>
               )}
             </li>
-          ))}
+          )})}
         </ul>
       )}
     </section>
