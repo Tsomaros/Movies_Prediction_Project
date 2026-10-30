@@ -2447,7 +2447,7 @@ export interface operations {
                 language?: string | null;
                 /** @description Lowest TMDB score; films with any number of votes */
                 score_min?: number | null;
-                /** @description popularity (TMDB, when pulled), newest, soonest (the next release first), title, score (50+ votes only) or revenue (2025 $, trusted figures only) */
+                /** @description popularity (TMDB, when pulled), newest, soonest (the next release first), title, score (500+ votes only) or revenue (2025 $, trusted figures only) */
                 sort?: "popularity" | "newest" | "title" | "score" | "revenue" | "soonest";
                 /** @description released: out in the last 14 days; upcoming: due in the next 60 (UTC). Without it, and without q, unreleased films are left out */
                 when?: ("released" | "upcoming") | null;

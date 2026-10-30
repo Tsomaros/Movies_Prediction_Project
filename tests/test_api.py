@@ -444,6 +444,20 @@ def test_the_score_filter_keeps_low_vote_films_but_the_score_sort_does_not(db, p
         assert 1 not in [m["id"] for m in c.get(MOVIES, params={"sort": "score", "page_size": 48}).json()["items"]]
 
 
+def test_the_score_sort_needs_500_votes(db, predictor):
+    import shutil
+    import tempfile
+    from pathlib import Path
+    tmp = Path(tempfile.mkdtemp())
+    shutil.copyfile(db / "movies.db", tmp / "movies.db")
+    with sqlite3.connect(tmp / "movies.db") as con:  # 499 votes is out, 500 is in, both with a score above every other film
+        con.execute("UPDATE movies SET vote_average = 9.9, vote_count = 499, score_ok = 1 WHERE id = 1")
+        con.execute("UPDATE movies SET vote_average = 9.8, vote_count = 500, score_ok = 1 WHERE id = 2")
+    with TestClient(create_app(Settings(db_path=tmp / "movies.db"), predictor=predictor)) as c:
+        items = c.get(MOVIES, params={"sort": "score", "page_size": 48}).json()["items"]
+        assert items[0]["id"] == 2 and 1 not in [m["id"] for m in items] and all(m["votes"] >= 500 for m in items)
+
+
 def test_sorting(api):
     newest = api.get(MOVIES, params={"sort": "newest", "page_size": 48}).json()["items"]
     assert all(a["release_date"] >= b["release_date"] for a, b in zip(newest, newest[1:]))

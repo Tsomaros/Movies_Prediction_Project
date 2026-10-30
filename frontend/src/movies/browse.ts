@@ -27,7 +27,7 @@ export const SORTS: { value: Sort; label: string }[] = [
   { value: 'newest', label: 'Newest' },
   { value: 'soonest', label: 'Soonest first' },
   { value: 'title', label: 'Title A–Z' },
-  { value: 'score', label: 'Highest score (50+ votes)' },
+  { value: 'score', label: 'Highest score (500+ votes)' },
   { value: 'revenue', label: 'Biggest box office (2025 $)' },
 ]
 export const SCORE_STEPS = [5, 6, 7, 8, 9] as const

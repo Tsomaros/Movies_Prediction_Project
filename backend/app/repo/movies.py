@@ -32,13 +32,14 @@ SORTS = {  # name -> ORDER BY; ties broken by id so pages never overlap
     "popularity": "m.popularity IS NULL, m.popularity DESC, m.id",
     "newest": "m.release_date IS NULL, m.release_date DESC, m.id",
     "title": "m.title COLLATE NOCASE, m.year, m.id",
-    "score": "m.vote_average DESC, m.vote_count DESC, m.id",  # films with a usable score (50+ votes) only
+    "score": "m.vote_average DESC, m.vote_count DESC, m.id",  # films with SCORE_SORT_MIN_VOTES (500) votes or more only
     "revenue": "m.revenue_2025 DESC, m.id",  # films with a trusted revenue only, in 2025 dollars
     "soonest": "m.release_date IS NULL, m.release_date ASC, m.id",  # the next release first (the Coming soon list)
 }
 CREW_JOBS = ("Director", "Screenplay", "Writer", "Producer", "Original Music Composer", "Director of Photography",
              "Editor")  # the order shown
 TOP_CAST = 15
+SCORE_SORT_MIN_VOTES = 500  # the "Highest score" sort and the Top rated row: a film needs this many votes (our models' own floor, score_ok, stays 50)
 GENRES_SQL = """(SELECT json_group_array(n) FROM (
     SELECT (SELECT g.name FROM genres g WHERE g.id = mg.genre_id) AS n
     FROM movie_genres mg WHERE mg.movie_id = m.id ORDER BY mg.ord LIMIT 100))"""
@@ -61,7 +62,8 @@ def search(con: sqlite3.Connection, q: str | None = None, genre: str | None = No
            sort: str = "popularity", page: int = 1, page_size: int = 24, *, when: str | None = None,
            today: date | None = None) -> tuple[list[dict[str, Any]], int]:
     """score_min keeps films of any vote count (the page shows the votes next to the score); sorting by score
-    keeps only films with a usable score (50+ votes), so a 10.0 from 2 votes never tops the list.
+    keeps only films with SCORE_SORT_MIN_VOTES (500) votes or more, so a 10.0 from 2 votes, or a 9.1 from 80, never
+    tops the list.
 
     With `today` (V1.2): when="released" / "upcoming" keeps the films of that window (services.fresh.windows); with
     neither `when` nor a text search a film not yet released is left out, so a coming-soon film is found only
@@ -108,7 +110,8 @@ def search(con: sqlite3.Connection, q: str | None = None, genre: str | None = No
         where.append("+m.vote_count > 0 AND m.vote_average >= ?")
         args.append(score_min)
     if sort == "score":
-        where.append("m.score_ok")
+        where.append("m.vote_count >= ?")
+        args.append(SCORE_SORT_MIN_VOTES)
     if sort == "revenue":
         where.append("m.revenue_2025 IS NOT NULL AND NOT m.money_suspect")
     clause = f"FROM movies m {joins} WHERE {' AND '.join(where)}"

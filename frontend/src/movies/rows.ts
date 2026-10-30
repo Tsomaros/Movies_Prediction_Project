@@ -19,7 +19,7 @@ export const NEW_ROWS = {
 
 export const ROWS: CuratedRow[] = [
   { key: 'popular', title: 'Most popular', filters: { sort: 'popularity' } },
-  { key: 'top-rated', title: 'Top rated (50+ votes)', filters: { sort: 'score' } },
+  { key: 'top-rated', title: 'Top rated (500+ votes)', filters: { sort: 'score' } },
   { key: '1990s', title: 'From the 1990s', filters: { yearFrom: 1990, yearTo: 1999, sort: 'popularity' } },
   { key: 'box-office', title: 'Biggest box office (2025 $)', filters: { sort: 'revenue' }, showRevenue: true },
 ]

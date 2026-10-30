@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Top rated needs 500+ votes:** the Top rated row on `/movies` and Browse's "Highest score" sort now keep only films with 500 or more votes (was 50), so a film with a handful of votes can't top the list. The models' own 50-vote floor is unchanged.
 - **V1.2 – New arrivals:** one **New arrivals** row on top of `/movies` with a *Just released | Coming soon* switch (the last 14 days, the next 60), "See all" opening Browse with the same window. New films are ordinary films: they have a film page, quick list buttons, ratings, notes, "Predict a film like this" and appear in the header search. Cards say **New** or "Coming 20 Nov" (and "Not rated yet" under 50 votes); Browse has a *Release* menu and a *Soonest first* sort. Behind it a small `fresh.db` (same schema as the movie tables) is rebuilt from TMDB in the background every 6 hours and read beside `movies.db` through attached views; no scheduler, no new service. API: `GET /api/v1/movies?when=released|upcoming`, the `soonest` sort, `fresh` in `/health`, `linked` on cast and crew. Needs `TMDB_READ_TOKEN` on the server.
 - **The 2026 films** released up to 2026-10-30 (1,199) are now in `movies.db` (80,398 films) for browsing, search and the film and person pages; a snapshot test shows that no model, track record, feature or comparable sees them, so the models and the model card are unchanged. Not deployed yet.
 - **The Movies | People switch** only changes what the box searches on a results page too (on `/browse` it could not be switched with an empty box).

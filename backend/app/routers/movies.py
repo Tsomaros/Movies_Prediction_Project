@@ -49,7 +49,7 @@ def list_movies(
     language: Optional[str] = Query(None, pattern=r"^[a-z]{2}$", description="Original language code (en, fr...)"),
     score_min: Optional[float] = Query(None, ge=0, le=10, description="Lowest TMDB score; films with any number of votes"),
     sort: Sort = Query("popularity", description="popularity (TMDB, when pulled), newest, soonest (the next release "
-                                                 "first), title, score (50+ votes only) or revenue (2025 $, trusted "
+                                                 "first), title, score (500+ votes only) or revenue (2025 $, trusted "
                                                  "figures only)"),
     when: Optional[When] = Query(None, description="released: out in the last 14 days; upcoming: due in the next 60 "
                                                    "(UTC). Without it, and without q, unreleased films are left out"),
