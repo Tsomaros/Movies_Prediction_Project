@@ -26,11 +26,11 @@ export function ScoreText({ score, votes: n }: { score: number | null | undefine
   )
 }
 
-/** The "New" tag in a poster's top-right corner (the list-status badge has the top-left). */
+/** The "New" tag in a poster's bottom-left corner (the list-status badge has the top-left, the quick list buttons the top-right). */
 function NewTag({ label }: { label: ReleaseLabel }) {
   if (label.kind !== 'new') return null
   return (
-    <span className="absolute top-1.5 right-1.5 rounded bg-rose-600 px-1.5 py-0.5 text-[0.65rem] font-semibold tracking-wide text-white uppercase shadow-xs">
+    <span className="absolute bottom-1.5 left-1.5 rounded bg-rose-600 px-1.5 py-0.5 text-[0.65rem] font-semibold tracking-wide text-white uppercase shadow-xs">
       {label.text}
     </span>
   )
