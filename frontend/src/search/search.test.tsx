@@ -117,6 +117,14 @@ test('on a results page the box holds its text, and switching the mode opens the
   await waitFor(() => expect(router.state.location.pathname).toBe('/browse'))
 })
 
+test('on a results page with no text, People still opens the people page', async () => {
+  api()
+  const { router } = await start('/browse')
+  await userEvent.click(screen.getByRole('radio', { name: 'People' }))
+  await waitFor(() => expect(router.state.location.pathname + router.state.location.search).toBe('/people'))
+  expect(screen.getByRole('radio', { name: 'People' })).toHaveAttribute('aria-checked', 'true')
+})
+
 test('the arrow keys switch the mode from the switch itself', async () => {
   api()
   await start('/about')

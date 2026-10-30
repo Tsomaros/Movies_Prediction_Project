@@ -138,7 +138,8 @@ export function SearchBox({ variant, inputRef, onDone, replace = false }: Props)
     storeMode(m)
     setStored(m)
     setActive(-1)
-    if (urlMode && usable && m !== mode) navigate(resultsUrl(m, text))
+    // on a results page the mode is the page's, so switching opens the other page (empty when there is no text yet)
+    if (urlMode && m !== mode) navigate(usable ? resultsUrl(m, text) : m === 'people' ? '/people' : '/browse')
     inputRef?.current?.focus()
   }
 
