@@ -15,6 +15,8 @@ Checks, each printed as one line with its time:
 - a person page (Day 14.6): the first actor found for "hanks", with films and a TMDB photo, and a director's
   page opening on directing (Day 14.7); his career forecast and model films, and Nolan's genre chips (Day 14.8);
 - the header's people search (V1.1): /people/search?q=hanks finds Tom Hanks first, with counts per role;
+- the live new and upcoming films (V1.2): /movies/new-and-upcoming answers with its lists (empty and stale is fine
+  when TMDB can't be asked), and is not taken for a film id;
 - /model-card belongs to the served models and has the 2019+ test and the 2026 holdout;
 - with --web-url, the frontend: the start page, its two poster collages, its script bundle (cached for a year), a deep link served
   as the app (/predict/..., /people/31 and /people?q=hanks), and /api/v1/health and /meta/options through the
@@ -285,6 +287,16 @@ def main() -> None:
                 f"Nolan's chips {', '.join(x['name'] for x in nolan['chips'])}")
 
     s.check("GET /people/{id}/career and /career/model (Day 14.8)", career)
+
+    def live() -> str:
+        body = s.get("/movies/new-and-upcoming")
+        assert set(body) == {"fetched_at", "stale", "new", "upcoming"}, sorted(body)
+        assert isinstance(body["new"], list) and isinstance(body["upcoming"], list)
+        for f in body["new"] + body["upcoming"]:
+            assert f["status"] in ("out_today", "new", "upcoming") and f["poster"] and f["title"]
+        return f"{len(body['new'])} new, {len(body['upcoming'])} upcoming{', stale' if body['stale'] else ''}"
+
+    s.check("GET /movies/new-and-upcoming (V1.2)", live)
 
     def options() -> str:
         o = s.get("/meta/options")
