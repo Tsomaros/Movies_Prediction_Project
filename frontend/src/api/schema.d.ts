@@ -72,23 +72,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/movies/new-and-upcoming": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Films released in the last 14 days and in the next 60, live from TMDB (cached for 6 hours) */
-        get: operations["new_and_upcoming_api_v1_movies_new_and_upcoming_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/movies/{movie_id}": {
         parameters: {
             query?: never;
@@ -1183,43 +1166,6 @@ export interface components {
              */
             value: number;
         };
-        /** LiveMovie */
-        LiveMovie: {
-            /** Tmdb Id */
-            tmdb_id: number;
-            /**
-             * Movie Id
-             * @description Our film id when the film is in the database, else None
-             */
-            movie_id: number | null;
-            /** Title */
-            title: string;
-            /** Original Title */
-            original_title: string;
-            /** Release Date */
-            release_date: string;
-            /** Year */
-            year: number;
-            poster: components["schemas"]["Poster"];
-            /** Overview */
-            overview: string;
-            /** Genres */
-            genres: string[];
-            /**
-             * Vote Average
-             * @description Only from 50 votes; None means not rated yet
-             */
-            vote_average: number | null;
-            /** Vote Count */
-            vote_count: number;
-            /** Popularity */
-            popularity: number | null;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "out_today" | "new" | "upcoming";
-        };
         /** LoginRequest */
         LoginRequest: {
             /** Username */
@@ -1462,11 +1408,6 @@ export interface components {
             page_size: number;
             /** Pages */
             pages: number;
-            /**
-             * Live Matches
-             * @description Page 1 of a text search: up to 3 new or upcoming films (not in our database) whose title matches
-             */
-            live_matches?: components["schemas"]["LiveMovie"][];
         };
         /** MovieSummary */
         MovieSummary: {
@@ -1524,29 +1465,6 @@ export interface components {
             /** Pages */
             pages: number;
             counts: components["schemas"]["Counts"];
-        };
-        /** NewAndUpcoming */
-        NewAndUpcoming: {
-            /**
-             * Fetched At
-             * @description When TMDB was last asked; None when it never answered
-             */
-            fetched_at: string | null;
-            /**
-             * Stale
-             * @description True when the lists are older than their time limit or TMDB did not answer
-             */
-            stale: boolean;
-            /**
-             * New
-             * @description Released in the last 14 days, newest first
-             */
-            new: components["schemas"]["LiveMovie"][];
-            /**
-             * Upcoming
-             * @description Released in the next 60 days, soonest first
-             */
-            upcoming: components["schemas"]["LiveMovie"][];
         };
         /** NewFilm */
         NewFilm: {
@@ -2523,35 +2441,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MovieList"];
-                };
-            };
-            /** @description Some fields need fixing */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FieldErrors"];
-                };
-            };
-        };
-    };
-    new_and_upcoming_api_v1_movies_new_and_upcoming_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NewAndUpcoming"];
                 };
             };
             /** @description Some fields need fixing */

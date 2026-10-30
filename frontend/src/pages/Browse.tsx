@@ -1,5 +1,4 @@
-// /browse: browse the 80,398 films, and the header search's movie results (V1.1). On the default view (no search, filters or
-// page) the live New Arrivals and Coming soon rows come first; a search can show up to 3 live matches (V1.2). Everything is in the URL
+// /browse: browse the 80,398 films, and the header search's movie results (V1.1). Everything is in the URL
 // (src/movies/browse.ts): the search ?q= (typed in the header; here a "Results for" chip removes it), the filters,
 // the sort and the page, so a link or the back button always shows the same films. Filters sit in a sidebar
 // from `lg`, in a drawer on smaller screens; the grid size or list view is remembered in this browser. The
@@ -22,8 +21,6 @@ import {
   activeFilters, browseResets, EMPTY, loadView, readBrowse, saveView, SORTS, toQuery, type BrowseState, type View, GRID, writeBrowse,
 } from '@/movies/browse'
 import { Filters, FilterSelect } from '@/movies/Filters'
-import { LiveMatches } from '@/movies/LiveMatches'
-import { LiveRows } from '@/movies/LiveRows'
 import { MovieCard, MovieListItem } from '@/movies/MovieCard'
 import { Pager } from '@/movies/Pager'
 import { ViewPicker } from '@/movies/ViewPicker'
@@ -54,8 +51,6 @@ export default function Browse() {
   const q = state.q.trim()
   const hrefFor = (page: number) => `/browse?${writeBrowse({ ...state, page })}`
   const data = movies.data
-  const defaultView = !q && active.length === 0 && state.page === 1 && resets.length === 0 // no search, filters or page: the live rows show
-  const liveMatches = state.page === 1 ? data?.live_matches ?? [] : []
   const { user } = useMe()
   const statuses = useStatuses(user && data ? data.items.map(f => f.id) : [])
 
@@ -64,8 +59,6 @@ export default function Browse() {
       <PageHeading title="Browse films">
         Filter every film in our TMDB data, released from 1960 to 2026. Search titles and plots from the bar at the top.
       </PageHeading>
-
-      {defaultView && <LiveRows />}
 
       {resets.length > 0 && (
         <p role="status" className="-mt-2 rounded-md bg-amber-50 px-3 py-2 text-sm dark:bg-amber-950/30" data-testid="link-notice">
@@ -125,8 +118,6 @@ export default function Browse() {
             </ul>
           )}
 
-          {data && data.items.length > 0 && <LiveMatches films={liveMatches} />}
-
           <SlowNotice pending={movies.isPending} />
           {movies.isPending && (
             <div className={cn('grid gap-4', view === 'list' ? '' : GRID[view])} aria-busy="true">
@@ -142,11 +133,9 @@ export default function Browse() {
           )}
           {data && data.items.length === 0 && (
             <div className="grid justify-items-start gap-3 rounded-lg border p-6" data-testid="no-results">
-              {liveMatches.length > 0 ? <LiveMatches films={liveMatches} /> : (
-                <p className="font-medium">
-                  {state.page > 1 ? 'No films match on this page.' : q ? `No movies match ‘${q}’.` : 'No films match.'}
-                </p>
-              )}
+              <p className="font-medium">
+                {state.page > 1 ? 'No films match on this page.' : q ? `No movies match ‘${q}’.` : 'No films match.'}
+              </p>
               {active.length > 0 ? (
                 <>
                   <p className="text-muted-foreground text-sm">Try removing a filter:</p>

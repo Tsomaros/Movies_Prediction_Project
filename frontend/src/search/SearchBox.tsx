@@ -12,13 +12,11 @@ import { SearchIcon, XIcon } from 'lucide-react'
 import { useId, useState, type KeyboardEvent, type RefObject } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 
-import type { LiveMovie, MovieSummary, PeopleSearchResult } from '@/api/client'
+import type { MovieSummary, PeopleSearchResult } from '@/api/client'
 import { DEBOUNCE_MS, QUICK, useOtherModeCount, useQuickSearch } from '@/api/hooks'
 import { Skeleton } from '@/components/ui/skeleton'
-import { statusBadge } from '@/lib/live'
 import { useDebounced } from '@/lib/useDebounced'
 import { cn } from '@/lib/utils'
-import { useOpenFilm } from '@/movies/filmParam'
 import { initials, nameHue } from '@/movies/people'
 import { ModeHint } from '@/search/ModeHint'
 import {
@@ -65,21 +63,6 @@ function MovieRow({ film }: { film: MovieSummary }) {
         <span className="bg-secondary text-secondary-foreground shrink-0 rounded px-1.5 py-0.5 text-xs tabular-nums"
           aria-label={`Score ${film.score.toFixed(1)}`}>★ {film.score.toFixed(1)}</span>
       )}
-    </>
-  )
-}
-
-function LiveRow({ film }: { film: LiveMovie }) {
-  const src = thumb(film.poster)
-  return (
-    <>
-      {src ? <img src={src} alt="" loading="lazy" className="bg-muted h-12 w-8 shrink-0 rounded-sm object-cover" />
-        : <span aria-hidden className="bg-muted h-12 w-8 shrink-0 rounded-sm" />}
-      <span className="min-w-0 flex-1">
-        <span className="block truncate font-medium">{film.title}</span>
-        <span className="text-muted-foreground text-xs">{film.year}</span>
-      </span>
-      <span className="bg-secondary text-secondary-foreground shrink-0 rounded px-1.5 py-0.5 text-xs">{statusBadge(film)}</span>
     </>
   )
 }
@@ -138,27 +121,18 @@ export function SearchBox({ variant, inputRef, onDone, replace = false }: Props)
   const quick = useQuickSearch(mode, term, showList)
   const data = quick.data?.mode === mode ? quick.data : undefined
   const settled = data !== undefined && !quick.isPlaceholderData
-  const live: LiveMovie[] = data?.mode === 'movies' ? data.live : [] // new and upcoming films, after the database rows
-  const none = settled && data.total === 0 && live.length === 0
+  const none = settled && data.total === 0
   const other = useOtherModeCount(mode, term, none)
   const items: (MovieSummary | PeopleSearchResult)[] = data ? data.items.slice(0, QUICK) : []
   const footer = data !== undefined && data.total > 0
-  const rows = items.length + live.length // the footer, when there is one, is the row after these
-  const last = rows - (footer ? 0 : 1)
-  const openFilm = useOpenFilm()
+  const last = items.length - (footer ? 0 : 1) // the footer is one more row
   const goTo = (to: string) => {
     navigate(to, { replace })
     setOpen(false)
     onDone?.()
   }
   const openRow = (i: number) => {
-    if (i === rows) return goTo(seeAll())
-    if (i >= items.length) { // a live film has no page of its own: its quick view opens over the current one
-      openFilm(live[i - items.length].tmdb_id)
-      setOpen(false)
-      onDone?.()
-      return
-    }
+    if (i === items.length) return goTo(seeAll())
     goTo(`/${mode === 'movies' ? 'movies' : 'people'}/${items[i].id}`)
   }
   const seeAll = () => resultsUrl(mode, text, location.pathname === '/browse' ? new URLSearchParams(location.search) : undefined)
@@ -217,28 +191,12 @@ export function SearchBox({ variant, inputRef, onDone, replace = false }: Props)
               {mode === 'movies' ? <MovieRow film={item as MovieSummary} /> : <PersonRow person={item as PeopleSearchResult} />}
             </div>
           ))}
-          {live.length > 0 && (
-            <div role="presentation" className="text-muted-foreground border-t px-3 pt-2 pb-1 text-xs font-medium">New &amp; upcoming</div>
-          )}
-          {live.map((film, j) => {
-            const i = items.length + j
-            return (
-              <div key={film.tmdb_id} id={`${listId}-${i}`} role="option" aria-selected={i === active}
-                onMouseEnter={() => setActive(i)} onClick={() => openRow(i)}
-                className={cn('flex cursor-pointer items-center gap-3 px-3', variant === 'overlay' ? 'min-h-14 py-2' : 'py-1.5',
-                  i === active && 'bg-accent text-accent-foreground')}>
-                <LiveRow film={film} />
-              </div>
-            )
-          })}
-          {footer && (
-            <div id={`${listId}-${rows}`} role="option" aria-selected={active === rows}
-              onMouseEnter={() => setActive(rows)} onClick={() => openRow(rows)}
-              className={cn('text-primary cursor-pointer border-t px-3 font-medium', variant === 'overlay' ? 'min-h-11 py-3' : 'py-2',
-                active === rows && 'bg-accent')}>
-              See all {data.total.toLocaleString('en-US')} results for ‘{shown}’
-            </div>
-          )}
+          <div id={`${listId}-${items.length}`} role="option" aria-selected={active === items.length}
+            onMouseEnter={() => setActive(items.length)} onClick={() => openRow(items.length)}
+            className={cn('text-primary cursor-pointer border-t px-3 font-medium', variant === 'overlay' ? 'min-h-11 py-3' : 'py-2',
+              active === items.length && 'bg-accent')}>
+            See all {data.total.toLocaleString('en-US')} results for ‘{shown}’
+          </div>
         </>
       )}
     </div>
