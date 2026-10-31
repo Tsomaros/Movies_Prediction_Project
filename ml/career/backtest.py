@@ -8,9 +8,12 @@
     tune(points, pop, max_points=None)
                                      -> RoleSettings: (h, k) by the lowest weighted MAE of the middle, then the
                                         smallest q on a 0.05 grid with weighted coverage >= 0.80
+    holdout_points(con, role, min_votes)
+                                     -> every rated, settled film from HOLDOUT_FROM on, as Points whose history is
+                                        the person's rated, settled films up to MODEL_DATA_MAX_YEAR
     build_artifact(con, min_votes, built_at, max_points=50000)
                                      -> {version, built_at, roles: {role: {h, k, q, mu, sigma_pop,
-                                        fallback, test}}}
+                                        fallback, test, holdout}}}
 
 CLI: uv run python -m ml.career.backtest [--db data/movies.db] [--out ml/artifacts/career_forecast.json]
                                          [--max-points 50000]
@@ -23,6 +26,11 @@ rated film of the role in those years (a 1960 film) is left out. Tuning uses poi
 report 2019 onward; a role with fewer than MIN_PEOPLE people with test points takes the acting settings
 (fallback). The baseline forecasts every film at mu. The artifact's mu and sigma_pop are the 10 latest years
 (what the API uses); h = inf is written as null.
+
+The holdout (V1.4) scores the settled films from HOLDOUT_FROM (2026) with the settings tuned without them and the
+artifact's own mu and sigma_pop for every point; equal weight per person; nothing is tuned on it. A score younger
+than 182 days at its pull still moves, so those films (SETTLED) are neither history nor holdout points. A role
+with no holdout points writes null coverage and MAE and counts of 0.
 
 The real data has about 450,000 rated acting credits, so the backtest works on arrays: one query per role, and
 per person and h the cumulative sums of w, w·s, w·s² and w² (weights taken relative to the person's first year,
@@ -46,13 +54,14 @@ from typing import Any
 
 import numpy as np
 
-from backend.app.repo.career import CAREER_ROLES, JOBS, ORDER, RATED, Role, latest_year, population_stats
+from backend.app.repo.career import CAREER_ROLES, JOBS, ORDER, RATED, SETTLED, Role, latest_year, population_stats
 from ml.career.forecast import HIGH, LOW, MIN_RATED, RoleSettings
 from ml.data.build_db import DB_FILE
 from ml.data.clean import MIN_VOTES, MODEL_DATA_MAX_YEAR, VALIDATION_LAST_YEAR
 
 OUT_FILE = Path("ml/artifacts/career_forecast.json")
-VERSION = 1
+VERSION = 2
+HOLDOUT_FROM = MODEL_DATA_MAX_YEAR + 1  # films from this year are the check no tuning ever saw (V1.4)
 H_GRID = (3.0, 5.0, 8.0, 12.0, math.inf)
 K_GRID = (1.0, 2.0, 3.0, 5.0, 8.0, 13.0)
 Q_GRID = np.round(np.arange(0.05, 5.0001, 0.05), 2)
@@ -253,6 +262,33 @@ def next_film_points(con: sqlite3.Connection, role: Role, min_votes: int) -> lis
             for j, w, a, n in zip(pts, weights, r.seg_start[pts], r.hist[pts])]
 
 
+def holdout_points(con: sqlite3.Connection, role: Role, min_votes: int) -> list[Point]:
+    """One Point per rated, settled film from HOLDOUT_FROM on, judged on that person's rated, settled films up to
+    MODEL_DATA_MAX_YEAR (oldest first, one per film). Earlier films of the holdout years never enter a history."""
+    if role == "acting":
+        credits, params = "SELECT DISTINCT person_id, movie_id FROM movie_cast", ()
+    else:
+        jobs = JOBS[role]
+        credits = f"SELECT DISTINCT person_id, movie_id FROM movie_crew WHERE job IN ({','.join('?' * len(jobs))})"
+        params = jobs
+    cur = con.cursor()
+    cur.row_factory = None
+    rows = cur.execute(f"""SELECT c.person_id, m.year, m.vote_average
+                           FROM ({credits}) c JOIN movies m ON m.id = c.movie_id
+                           WHERE {RATED} AND {SETTLED} ORDER BY c.person_id, {ORDER}""",
+                       (*params, min_votes)).fetchall()
+    people: dict[int, list[tuple[int, float]]] = {}
+    for person, year, score in rows:
+        people.setdefault(person, []).append((int(year), float(score)))
+    out: list[Point] = []
+    for person, films in people.items():
+        history = [f for f in films if f[0] <= MODEL_DATA_MAX_YEAR]
+        later = [f for f in films if f[0] >= HOLDOUT_FROM]
+        if len(history) >= MIN_RATED:
+            out += [Point(person, history, y, x, 1.0 / len(later)) for y, x in later]
+    return out
+
+
 def _pop_table(r: _Rows, years: np.ndarray) -> dict[int, tuple[float, float] | None]:
     """pop(year) for each year: the population_stats of the films (each once) from the 10 years before."""
     _, first = np.unique(r.movie, return_index=True)
@@ -291,6 +327,10 @@ def _role_set(con: sqlite3.Connection, role: Role, min_votes: int) -> _Set:
                 np.array([m for m, _ in stats], dtype=float), np.array([sd for _, sd in stats], dtype=float), sums)
 
 
+def _rounded(stats: dict[str, Any]) -> dict[str, Any]:
+    return {k: round(v, 4) if isinstance(v, float) else v for k, v in stats.items()}
+
+
 def build_artifact(con: sqlite3.Connection, min_votes: int, built_at: str,
                    max_points: int | None = MAX_POINTS) -> dict[str, Any]:
     end = min(latest_year(con), MODEL_DATA_MAX_YEAR)  # the population is the 10 years up to 2025, as when it was tuned
@@ -303,10 +343,14 @@ def build_artifact(con: sqlite3.Connection, min_votes: int, built_at: str,
         s = acting if fallback else _tune(_sample(train, max_points))
         if role == "acting":
             acting = s
-        mu, sigma_pop = population_stats(con, role, min_votes, end)
-        test_stats = {k: round(v, 4) if isinstance(v, float) else v for k, v in _evaluate(test, s).items()}
-        roles[role] = {"h": None if math.isinf(s.h) else s.h, "k": s.k, "q": s.q, "mu": round(mu, 4),
-                       "sigma_pop": round(sigma_pop, 4), "fallback": fallback, "test": test_stats}
+        mu, sigma_pop = (round(v, 4) for v in population_stats(con, role, min_votes, end))  # as written below
+        test_stats = _rounded(_evaluate(test, s))
+        pop = (mu, sigma_pop)
+        held = _rounded(evaluate(holdout_points(con, role, min_votes), s, lambda _y: pop))  # exactly the written mu, sigma
+        del held["width"]
+        holdout = {"year_from": HOLDOUT_FROM, **held}
+        roles[role] = {"h": None if math.isinf(s.h) else s.h, "k": s.k, "q": s.q, "mu": mu,
+                       "sigma_pop": sigma_pop, "fallback": fallback, "test": test_stats, "holdout": holdout}
     return {"version": VERSION, "built_at": built_at, "roles": roles}
 
 
@@ -331,13 +375,14 @@ def main(argv: list[str] | None = None) -> None:
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(art, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     print(f"{'role':<10} {'h':>5} {'k':>4} {'q':>5} {'coverage':>9} {'MAE':>6} {'base MAE':>9} {'width':>6} "
-          f"{'people':>7} {'points':>8}  fallback")
+          f"{'people':>7} {'points':>8} {'2026 cov':>9} {'2026 MAE':>9} {'2026 pts':>9}  fallback")
     for role, r in art["roles"].items():
-        t = r["test"]
+        t, ho = r["test"], r["holdout"]
         print(f"{role:<10} {'inf' if r['h'] is None else _fmt(r['h'], 'g'):>5} {_fmt(r['k'], 'g'):>4} "
               f"{_fmt(r['q'], '.2f'):>5} {_fmt(t['coverage'], '.3f'):>9} {_fmt(t['mae'], '.3f'):>6} "
               f"{_fmt(t['baseline_mae'], '.3f'):>9} {_fmt(t['width'], '.2f'):>6} {t['n_people']:>7} "
-              f"{t['n_points']:>8}  {r['fallback']}")
+              f"{t['n_points']:>8} {_fmt(ho['coverage'], '.3f'):>9} {_fmt(ho['mae'], '.3f'):>9} "
+              f"{ho['n_points']:>9}  {r['fallback']}")
     print(f"wrote {args.out} in {time.perf_counter() - t0:.0f} s", file=sys.stderr)
 
 

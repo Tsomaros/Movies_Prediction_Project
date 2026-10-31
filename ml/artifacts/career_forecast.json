@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "built_at": "2026-10-27T08:14:55+00:00",
+  "version": 2,
+  "built_at": "2026-10-31T10:52:03+00:00",
   "roles": {
     "acting": {
       "h": 8.0,
@@ -16,6 +16,14 @@
         "baseline_mae": 0.6384,
         "n_people": 9498,
         "n_points": 30979
+      },
+      "holdout": {
+        "year_from": 2026,
+        "coverage": 0.7275,
+        "mae": 0.7343,
+        "baseline_mae": 0.7704,
+        "n_people": 857,
+        "n_points": 935
       }
     },
     "directing": {
@@ -32,6 +40,14 @@
         "baseline_mae": 0.6101,
         "n_people": 734,
         "n_points": 1456
+      },
+      "holdout": {
+        "year_from": 2026,
+        "coverage": 0.7143,
+        "mae": 0.6476,
+        "baseline_mae": 0.7669,
+        "n_people": 56,
+        "n_points": 58
       }
     },
     "writing": {
@@ -48,6 +64,14 @@
         "baseline_mae": 0.6245,
         "n_people": 991,
         "n_points": 2030
+      },
+      "holdout": {
+        "year_from": 2026,
+        "coverage": 0.8288,
+        "mae": 0.6155,
+        "baseline_mae": 0.601,
+        "n_people": 73,
+        "n_points": 74
       }
     }
   }

@@ -13,17 +13,20 @@ import pytest
 
 from backend.app.repo.career import population_stats
 from ml.career import backtest
-from ml.career.backtest import (H_GRID, K_GRID, build_artifact, evaluate, next_film_points, tune, _forecast,
-                                _from_points, _load, _pop_table, _role_set)
+from ml.career.backtest import (H_GRID, HOLDOUT_FROM, K_GRID, build_artifact, evaluate, holdout_points,
+                                next_film_points, tune, _forecast, _from_points, _load, _pop_table, _role_set)
 from ml.career.forecast import MIN_RATED, RoleSettings, track_record
 from ml.data.build_db import SCHEMA
-from ml.data.clean import MIN_VOTES
+from ml.data.clean import MIN_VOTES, MODEL_DATA_MAX_YEAR
 
 ACTORS = range(1, 21)
 SAME_DATE_ACTOR, STAR = 1, 2  # STAR scores about 9.5, so a wide range clips at 10
 DIRECTORS, WRITERS = (31, 32, 33), (41, 42)
 SAME_DATE_SCORE, SAME_DATE_SCORE_2 = 9.1, 2.2  # SAME_DATE_ACTOR's 6th and 7th rated films, on one date
 START, END = dt.date(2005, 1, 1), dt.date(2023, 12, 31)
+YOUNG_2026_SCORE = 9.77  # a 2026 film still settling at its pull: never a holdout point
+HOLDOUT_ACTORS = (3, 4, 5, 6, 7, 8)  # each has a settled 2026 film; actor 3 has two
+PULLED = "2026-10-30T13:42:39+00:00"
 
 
 def _career(rng, n):
@@ -76,6 +79,18 @@ def con(tmp_path):
                   [(i, f"Film {i}", d, y, v, s, int(v >= MIN_VOTES)) for i, d, y, v, s in MOVIES])
     c.executemany("INSERT INTO movie_cast VALUES (?, ?, ?, ?)", CAST)
     c.executemany("INSERT INTO movie_crew VALUES (?, ?, ?)", CREW)
+    later = [(9001, "2026-01-10", 6.5, 3), (9002, "2026-02-14", 7.0, 4), (9003, "2026-03-01", 5.5, 5),
+             (9004, "2026-03-20", 6.0, 6), (9005, "2026-04-02", 8.0, 7), (9006, "2026-04-20", 6.8, 8),
+             (9007, "2026-08-01", YOUNG_2026_SCORE, 3)]  # the last was 90 days old when pulled
+    c.executemany("""INSERT INTO movies (id, title, release_date, year, vote_count, vote_average, score_ok,
+                                         poster_path, money_suspect, revenue_incomplete, covid_period, pulled_at)
+                     VALUES (?, ?, ?, 2026, 200, ?, 1, NULL, 0, 0, 0, ?)""",
+                  [(i, f"Film {i}", d, sc, PULLED) for i, d, sc, _ in later])
+    c.executemany("INSERT INTO movie_cast VALUES (?, ?, 'Role', 0)", [(i, p) for i, _, _, p in later])
+    c.execute("""INSERT INTO movies (id, title, release_date, year, vote_count, vote_average, score_ok, poster_path,
+                                    money_suspect, revenue_incomplete, covid_period, pulled_at)
+                  VALUES (9008, 'Film 9008', '2026-04-25', 2026, 200, 6.2, 1, NULL, 0, 0, 0, ?)""", (PULLED,))
+    c.execute("INSERT INTO movie_cast VALUES (9008, 3, 'Role', 0)")
     yield c
     c.close()
 
@@ -158,10 +173,10 @@ def test_tuning_uses_points_before_2019_only(con):
 def test_artifact_shape_and_fallback(con, monkeypatch):
     art = build_artifact(con, MIN_VOTES, "2026-11-01T00:00:00+00:00")
     json.dumps(art, allow_nan=False)
-    assert set(art) == {"version", "built_at", "roles"} and art["version"] == 1
+    assert set(art) == {"version", "built_at", "roles"} and art["version"] == 2
     acting = art["roles"]["acting"]
     assert acting["fallback"] is False
-    assert set(acting) == {"h", "k", "q", "mu", "sigma_pop", "fallback", "test"}
+    assert set(acting) == {"h", "k", "q", "mu", "sigma_pop", "fallback", "test", "holdout"}
     assert set(acting["test"]) == {"coverage", "mae", "width", "baseline_mae", "n_people", "n_points"}
     for role in ("directing", "writing"):  # far fewer than 300 people: the acting settings
         r = art["roles"][role]
@@ -177,3 +192,57 @@ def test_sampling_caps_the_training_points(con):
     capped = build_artifact(con, MIN_VOTES, "x", max_points=40)["roles"]["acting"]
     assert full["test"]["n_points"] == capped["test"]["n_points"]  # the report always uses every test point
     assert capped == build_artifact(con, MIN_VOTES, "x", max_points=40)["roles"]["acting"]  # seeded
+
+
+# ---------------------------------------------------------------- the 2026 holdout (V1.4)
+
+
+def test_holdout_history_stops_at_2025_and_skips_settling(con):
+    pts = holdout_points(con, "acting", MIN_VOTES)
+    assert pts and all(p.year >= HOLDOUT_FROM and all(y <= MODEL_DATA_MAX_YEAR for y, _ in p.history) for p in pts)
+    assert HOLDOUT_FROM == MODEL_DATA_MAX_YEAR + 1
+    assert YOUNG_2026_SCORE not in [p.score for p in pts]
+    assert all(len(p.history) >= MIN_RATED for p in pts)
+    assert len(pts) == 7  # 6 people, actor 3 with two films; the settling one is out
+
+
+def test_holdout_time_travel(con):
+    before = [p.history for p in holdout_points(con, "acting", MIN_VOTES)]
+    con.execute("UPDATE movies SET vote_average = 1.0 WHERE year >= 2026")
+    assert [p.history for p in holdout_points(con, "acting", MIN_VOTES)] == before
+
+
+def test_holdout_person_weights_sum_to_one(con):
+    totals = Counter()
+    for p in holdout_points(con, "acting", MIN_VOTES):
+        totals[p.person_id] += p.weight
+    assert totals and all(t == pytest.approx(1.0) for t in totals.values())
+
+
+def test_holdout_changes_no_tuned_number(con):
+    art = build_artifact(con, MIN_VOTES, "2026-10-31T00:00:00+00:00")
+    con.execute("DELETE FROM movie_cast WHERE movie_id >= 9000")
+    con.execute("DELETE FROM movies WHERE year >= 2026")
+    old = build_artifact(con, MIN_VOTES, "2026-10-31T00:00:00+00:00")
+    for role in art["roles"]:  # (mu and sigma_pop move here only because the fixture's latest year drops to 2023)
+        assert {k: art["roles"][role][k] for k in ("h", "k", "q", "fallback", "test")} ==                {k: old["roles"][role][k] for k in ("h", "k", "q", "fallback", "test")}
+
+
+def test_artifact_v2_holdout_shape_and_empty_role(con):
+    art = build_artifact(con, MIN_VOTES, "2026-10-31T00:00:00+00:00")
+    assert art["version"] == 2
+    h = art["roles"]["acting"]["holdout"]
+    assert set(h) == {"year_from", "coverage", "mae", "baseline_mae", "n_people", "n_points"}
+    assert h["year_from"] == HOLDOUT_FROM and h["n_points"] == 7 and h["n_people"] == 6
+    assert 0 <= h["coverage"] <= 1
+    w = art["roles"]["writing"]["holdout"]
+    assert w == {"year_from": HOLDOUT_FROM, "coverage": None, "mae": None, "baseline_mae": None,
+                 "n_people": 0, "n_points": 0}
+
+
+def test_holdout_uses_the_artifacts_population_numbers(con):
+    art = build_artifact(con, MIN_VOTES, "x")["roles"]["acting"]
+    s = RoleSettings(math.inf if art["h"] is None else art["h"], art["k"], art["q"])
+    want = evaluate(holdout_points(con, "acting", MIN_VOTES), s, lambda _y: (art["mu"], art["sigma_pop"]))
+    assert art["holdout"]["coverage"] == round(want["coverage"], 4)
+    assert art["holdout"]["baseline_mae"] == round(want["baseline_mae"], 4)

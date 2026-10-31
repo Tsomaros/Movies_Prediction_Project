@@ -31,7 +31,8 @@ from ml.career.forecast import MIN_RATED, RoleSettings, rolling_line, track_reco
 from ml.data.clean import MIN_VOTES
 
 MODEL_ROLES = ("acting", "directing")  # the score model has director and actor inputs, no writer
-ROLE_FIELDS = ("h", "k", "q", "mu", "sigma_pop", "test")
+ROLE_FIELDS = ("h", "k", "q", "mu", "sigma_pop", "test", "holdout")
+HOLDOUT_FIELDS = ("year_from", "coverage", "mae", "baseline_mae", "n_people", "n_points")
 
 
 class NoCredits(LookupError):
@@ -56,6 +57,8 @@ def load_career_artifact(path: Path) -> CareerArtifact:
     try:
         roles = {role: data["roles"][role] for role in CAREER_ROLES}
         missing = [f"{role}.{f}" for role, r in roles.items() for f in ROLE_FIELDS if f not in r]
+        missing += [f"{role}.holdout.{f}" for role, r in roles.items() if isinstance(r.get("holdout"), dict)
+                    for f in HOLDOUT_FIELDS if f not in r["holdout"]]
         if missing:
             raise KeyError(", ".join(missing))
         return CareerArtifact(data["version"], data["built_at"], roles)

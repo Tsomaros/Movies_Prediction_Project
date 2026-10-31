@@ -53,8 +53,9 @@ CAST = ([(101 + k, ACTOR, f"Part {k}", 4 if k in (1, 4) else 0) for k in range(8
 CREW = ([(108, ACTOR, "Director")] + [(101 + k, WRITER, "Screenplay") for k in range(6)]
         + [(101, COMPOSER, "Original Music Composer")])
 ROLE = {"h": 5.0, "k": 3.0, "q": 1.35, "mu": 6.4, "sigma_pop": 0.8, "fallback": False,
-        "test": {"coverage": 0.82, "mae": 0.59, "width": 1.99, "baseline_mae": 0.64, "n_people": 9594, "n_points": 31498}}
-ARTIFACT = {"version": 1, "built_at": "2026-10-25T00:00:00+00:00",
+        "test": {"coverage": 0.82, "mae": 0.59, "width": 1.99, "baseline_mae": 0.64, "n_people": 9594, "n_points": 31498},
+        "holdout": {"year_from": 2026, "coverage": 0.8, "mae": 0.6, "baseline_mae": 0.65, "n_people": 400, "n_points": 900}}
+ARTIFACT = {"version": 2, "built_at": "2026-10-25T00:00:00+00:00",
             "roles": {"acting": ROLE, "directing": {**ROLE, "h": 3.0, "k": 1.0},
                       "writing": {**ROLE, "h": None, "q": 1.6}}}
 
@@ -272,3 +273,14 @@ def test_a_missing_or_broken_artifact_stops_the_start(files, tmp_path):
             with TestClient(app):
                 pass
         assert not hasattr(app.state, "predictor")
+
+
+def test_an_artifact_without_the_holdout_fails_to_load(tmp_path):
+    for holdout in ({k: v for k, v in ROLE["holdout"].items() if k != "n_points"}, None):
+        acting = {k: v for k, v in ROLE.items() if k != "holdout"}
+        if holdout is not None:
+            acting["holdout"] = holdout
+        path = tmp_path / "old.json"
+        path.write_text(json.dumps({**ARTIFACT, "roles": {**ARTIFACT["roles"], "acting": acting}}), encoding="utf-8")
+        with pytest.raises(ValueError, match=r"holdout.*make career"):
+            load_career_artifact(path)
