@@ -307,6 +307,7 @@ def _merge_wikidata(m: pd.DataFrame, wikidata: pd.DataFrame, bad: dict[str, pd.S
         report[f"wikidata_{col}_replaced"] = int(replaced.sum())
         confirmed += int((compared & ~differs).sum())
         disagree |= differs.astype(bool)
+    # Counted per compared value (budget and revenue separately); money_suspect_wikidata_disagree counts films.
     report["wikidata_confirmed"] = confirmed
     return disagree
 

@@ -27,7 +27,6 @@ from typing import Any
 import pandas as pd
 
 from ml.data import people
-from ml.data.fx import FX_FILE, load_fx
 from ml.data.clean import (
     CPI_BASE_YEAR,
     CPI_FILE,
@@ -40,6 +39,7 @@ from ml.data.clean import (
     load_cpi,
     load_raw,
 )
+from ml.data.fx import FX_FILE, load_fx
 from ml.data.wikidata import RAW_WIKIDATA
 from ml.data.wikidata_money import load_statements, select_money
 
@@ -212,13 +212,18 @@ def write_db(con: sqlite3.Connection, tables: dict[str, pd.DataFrame], meta: dic
 
 
 def build(raw_path: Path = RAW_MOVIES, cpi_path: Path = CPI_FILE, db_path: Path = DB_FILE,
-          people_path: Path | None = None, wikidata_path: Path | None = RAW_WIKIDATA,
+          people_path: Path | None = None, wikidata_path: Path | None = None,
           fx_path: Path = FX_FILE) -> dict[str, Any]:
     """Clean the raw pull and write it to db_path via a temp file; returns the cleaning report. With people_path,
-    person_details is filled from that person pull. When wikidata_path exists (V1.5), its budgets and box office
-    (converted with the rates in fx_path) are merged in by clean() and select_money's counts join the report."""
+    person_details is filled from that person pull. With wikidata_path (V1.5, opt-in like people_path; the CLI passes
+    RAW_WIKIDATA), when that file exists its budgets and box office are merged in by clean() and select_money's counts
+    join the report. They are converted with the rates in fx_path, which must then exist (FileNotFoundError naming
+    it and `uv run python -m ml.data.fx build` otherwise)."""
     money, money_report = None, {}
     if wikidata_path is not None and wikidata_path.exists():
+        if not fx_path.exists():
+            raise FileNotFoundError(f"{fx_path} is missing: the Wikidata money in {wikidata_path} needs its exchange "
+                                    "rates; run `uv run python -m ml.data.fx build` first")
         money, money_report = select_money(load_statements(wikidata_path), load_fx(fx_path))
     tables, report = clean(load_raw(raw_path), load_cpi(cpi_path), wikidata=money)
     report.update(money_report)
@@ -259,7 +264,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--out", default=str(DB_FILE))
     parser.add_argument("--people", default=str(people.PEOPLE_FILE), help="the person pull, loaded when it exists")
     parser.add_argument("--wikidata", default=str(RAW_WIKIDATA), help="the Wikidata money pull, merged when it exists")
-    parser.add_argument("--fx", default=str(FX_FILE), help="yearly exchange rates for the Wikidata money")
+    parser.add_argument("--fx", default=str(FX_FILE), help="yearly exchange rates for the Wikidata money; needed when --wikidata exists "
+                        "(`uv run python -m ml.data.fx build`)")
     args = parser.parse_args(argv)
 
     start = time.monotonic()

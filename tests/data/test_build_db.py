@@ -6,6 +6,8 @@ import sqlite3
 import pytest
 
 import ml.data.build_db as build_db
+from ml.data.fx import FX_FILE
+from ml.data.wikidata import RAW_WIKIDATA
 from tests.factories import TEST_CPI, film
 
 
@@ -142,3 +144,34 @@ def test_build_without_wikidata_file(paths, tmp_path):
     assert con.execute("SELECT money_source_revenue FROM movies WHERE id = 4").fetchone() == (None,)
     con.close()
     assert not any(k.startswith("wikidata_") for k in report)
+
+
+def write_wikidata(folder, fx: bool = True):
+    """A Wikidata pull that fills film 4's revenue, plus the FX file, at the default relative paths under folder."""
+    statements = folder / RAW_WIKIDATA
+    statements.parent.mkdir(parents=True, exist_ok=True)
+    statements.write_text(json.dumps(statement(4, "box_office", 90_000_000)) + "\n", encoding="utf-8")
+    if fx:
+        (folder / FX_FILE).parent.mkdir(parents=True, exist_ok=True)
+        (folder / FX_FILE).write_text("currency,year,per_usd\nEUR,2019,0.75\n", encoding="utf-8")
+    return statements
+
+
+def test_build_defaults_never_read_wikidata(paths, tmp_path, monkeypatch):
+    raw, cpi, out = paths
+    write_wikidata(tmp_path)
+    monkeypatch.chdir(tmp_path)  # the default relative paths now exist
+    report = build_db.build(raw, cpi, out)
+    con = sqlite3.connect(out)
+    assert con.execute("SELECT COUNT(*) FROM movies WHERE 'wikidata' IN (money_source_budget, money_source_revenue)"
+                       ).fetchone() == (0,)
+    con.close()
+    assert not any(k.startswith("wikidata_") for k in report)
+
+
+def test_build_with_wikidata_but_no_fx_file_fails_clearly(paths, tmp_path):
+    raw, cpi, out = paths
+    statements = write_wikidata(tmp_path, fx=False)
+    with pytest.raises(FileNotFoundError, match=r"fx\.csv.*ml\.data\.fx build"):
+        build_db.build(raw, cpi, out, wikidata_path=statements, fx_path=tmp_path / "fx.csv")
+    assert not out.exists()
