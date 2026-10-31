@@ -96,6 +96,14 @@ Three models that give a planned film's **budget**, **worldwide box office** and
 - **Drivers describe the model, not causes.** "A $40M budget strongly raises the expected revenue" doesn't mean spending more earns more.
 - **The models are frozen.** They know 2025's world: no streaming deals, no marketing spend, no competition in a release month.
 
+## What we tried to improve accuracy
+
+None of these changed the models; they are the reason the numbers above are v1's. Details in [Modeling](docs/modeling.md#what-we-tried-to-improve-the-models).
+
+- **More films:** the learning curves flattened for revenue and score.
+- **Wikidata budgets and box office (V1.5):** revenue got slightly worse on the same films (MAE log 1.101 against 1.090); not kept.
+- **Release plan from TMDB release dates:** the number of countries a film opened in looked like a big gain but was a popularity leak. The planned US opening (wide or limited) helps revenue by about 1.5% but isn't confirmed on the 2026 holdout yet (revisit mid-2027), and doesn't help the score.
+
 ## How to use
 
 - **The app:** https://movie-prediction-2f1b0265282c.onrender.com/predict (it sleeps when idle; the first visit takes about 1.5 minutes).

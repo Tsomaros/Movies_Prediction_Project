@@ -124,6 +124,23 @@ Each row removes one part and reuses the tuned settings. The full model here mea
   Removing the budget track record costs the most, more than the whole people track record. The synopsis doesn't help the budget model either, so it is left out. Themes are a wash (−0.005 on validation, +0.001 in the backtest) and stay in, as in the other models.
 - **The budget track record (Day 6) helps revenue, mostly on 2016–18.** Added to the saved model's features, it lowers validation MAE log from 1.113 to 1.093 and the backtest mean from 1.130 to 1.124. The backtest gain comes from fold 3 (2016–18, −0.020); folds 1–2 change by +0.004 and −0.002. The revenue and score rows in the first table leave it out.
 
+## What we tried to improve the models
+
+After the 2019+ test (Oct 21) the models were frozen. Three later attempts tried to make them more accurate; none was kept. Details and every number are in [Decisions](decisions.md#v15-wikidata-budgets-and-box-office-not-kept) and the spike reports on branch `spike/release-plan`.
+
+| Attempt | Revenue (MAE log, validation) | Budget | Score (MAE) | Kept? |
+| --- | --- | --- | --- | --- |
+| **More films of the same kind** (learning curve: 15%–100% of the ≤2015 films) | 1.135 at 85% → 1.133 at 100%: flat | small gain | 0.500 → 0.498: flat | — |
+| **V1.5 Wikidata budgets and box office** (+615 revenue films, retuned) | 1.101 against v1's 1.090 on the same films | 0.586 against 0.604 | 0.497 against 0.496 | No |
+| **Release plan: country count** (spike 1) | 0.943, but a popularity leak | — | — | No |
+| **Release plan: planned US opening** (spikes 2–3) | 1.076 against 1.093 (−0.025 on films with a US opening); 2026 holdout +0.007 | — | — | Not yet |
+| **Release plan for score** (spike 4) | — | — | ±0.003, nothing | No |
+| Earlier: tuning, synopsis embeddings, 32 synopsis numbers (Days 5–6) | ≤0.03 | ≤0.015 | ≤0.002 | Tuning only |
+
+- **Where the revenue error is:** 6% of validation films (revenue under 5% of budget) cause 23% of it, and the model is about 2× too high for the least-voted quarter of films and 1.6× too low for the most-voted. Both point at things not known before release (marketing, how the release went), not at the model type.
+- **The trap we avoided:** spike 1's −0.15 looked like the best result of the project. Checking it against `vote_count` showed it was mostly popularity, which the hard rules keep out of the features. Every comparison since uses the same films for both models, a paired bootstrap, the backtest and the 2026 holdout, and asks whether a creator could honestly give the input.
+- **Why every variant was trained from scratch:** continuing from saved trees would only add trees on top; the old ones would never use a new input. Training all three revenue models takes about 3 minutes.
+
 ## Explanations and `predict()`
 
 Day 7 turns the app's models into one call: `ml.predict.predict(form)` returns budget, revenue and score ranges, the top 5 drivers of each in plain English, 5 comparable past films and warnings. `notebooks/07_explanations.ipynb` checks the cut-offs and weights below and runs six famous films through it.
