@@ -1,27 +1,27 @@
 {
   "version": 2,
-  "built_at": "2026-10-31T15:38:03+00:00",
+  "built_at": "2026-10-31T10:52:03+00:00",
   "roles": {
     "acting": {
       "h": 8.0,
       "k": 3.0,
       "q": 1.4,
-      "mu": 6.41,
-      "sigma_pop": 0.8335,
+      "mu": 6.4109,
+      "sigma_pop": 0.833,
       "fallback": false,
       "test": {
-        "coverage": 0.8297,
-        "mae": 0.5883,
-        "width": 2.0623,
-        "baseline_mae": 0.6385,
-        "n_people": 9527,
-        "n_points": 31055
+        "coverage": 0.8292,
+        "mae": 0.5887,
+        "width": 2.0614,
+        "baseline_mae": 0.6384,
+        "n_people": 9498,
+        "n_points": 30979
       },
       "holdout": {
         "year_from": 2026,
         "coverage": 0.7275,
-        "mae": 0.734,
-        "baseline_mae": 0.7705,
+        "mae": 0.7343,
+        "baseline_mae": 0.7704,
         "n_people": 857,
         "n_points": 935
       }
@@ -30,22 +30,22 @@
       "h": 3.0,
       "k": 1.0,
       "q": 1.5,
-      "mu": 6.41,
-      "sigma_pop": 0.8335,
+      "mu": 6.411,
+      "sigma_pop": 0.833,
       "fallback": false,
       "test": {
-        "coverage": 0.8428,
-        "mae": 0.5083,
-        "width": 1.7949,
-        "baseline_mae": 0.6103,
-        "n_people": 735,
-        "n_points": 1460
+        "coverage": 0.8437,
+        "mae": 0.5073,
+        "width": 1.7941,
+        "baseline_mae": 0.6101,
+        "n_people": 734,
+        "n_points": 1456
       },
       "holdout": {
         "year_from": 2026,
         "coverage": 0.7143,
         "mae": 0.6476,
-        "baseline_mae": 0.7672,
+        "baseline_mae": 0.7669,
         "n_people": 56,
         "n_points": 58
       }
@@ -54,21 +54,21 @@
       "h": 3.0,
       "k": 1.0,
       "q": 1.55,
-      "mu": 6.3872,
-      "sigma_pop": 0.825,
+      "mu": 6.3881,
+      "sigma_pop": 0.8245,
       "fallback": false,
       "test": {
-        "coverage": 0.8355,
-        "mae": 0.5378,
-        "width": 1.8627,
-        "baseline_mae": 0.6231,
-        "n_people": 999,
-        "n_points": 2042
+        "coverage": 0.8341,
+        "mae": 0.5382,
+        "width": 1.8614,
+        "baseline_mae": 0.6245,
+        "n_people": 991,
+        "n_points": 2030
       },
       "holdout": {
         "year_from": 2026,
         "coverage": 0.8288,
-        "mae": 0.6157,
+        "mae": 0.6155,
         "baseline_mae": 0.601,
         "n_people": 73,
         "n_points": 74

@@ -91,3 +91,12 @@ The key choices, what else was on the table, and why. Each day was planned the s
 | **A daily smoke check from GitHub Actions** | Uptime pings every 5 minutes | Any ping wakes the free service, so frequent ones are a keep-alive |
 | **The per-IP limits read `CF-Connecting-IP`** | `X-Forwarded-For` | Render appends to a visitor's own `X-Forwarded-For`, so forged values got past the limits; Cloudflare sets `CF-Connecting-IP` and refuses it from clients |
 | **Sentry for errors only,** no personal data | No error reporting, or tracing too | Know about failures; the session cookie never leaves the server |
+
+## V1.5: Wikidata budgets and box office (not kept)
+
+| Decision | Alternatives | Why |
+| --- | --- | --- |
+| **Tried:** fill missing TMDB budgets and box office from Wikidata (worldwide box office only, 11 currencies turned into dollars with World Bank rates), retune and retrain as v2 | Keeping TMDB money only | 1,649 budgets and 944 revenues filled, 0 replaced, 7,562 confirmed, 228 films disagreeing by 3× or more; the revenue training view grew from 10,421 to 11,036 films |
+| **Kept rule:** v2 had to beat v1 on revenue on the same films, on validation (2016–18) and on the backtest mean, with coverage in 77–83%; budget and score no worse than v1's backtest std | Comparing all films | The new films are a different, harder mix; only the same films compare the models |
+| **v2 rejected; the app stays on v1** | Keeping v2 for its better budget | Revenue on 875 shared validation films: MAE log 1.101 against v1's 1.090 (backtest mean 1.113 against 1.118, coverage 82.3% against 83.8%). Budget improved (0.586 against 0.604) and score stayed the same (0.497 against 0.496), but revenue is the headline number. The learning curve also flattened: v2's revenue MAE was 1.135 at 85% of the train films and 1.133 at 100%, so more films of this kind don't help. Numbers in `reports/v2_compare.md` and `reports/v2/learning_curve.md` (v1's in `reports/v1/`) |
+| **The code stays, the data is parked** | Deleting it | `ml/data/wikidata.py`, `fx.py`, `wikidata_money.py` and `data/fx_rates.csv` stay. The pull is in `data/raw/v15/`, outside `make db`'s default path, so a rebuild gives v1; `uv run python -m ml.data.build_db --wikidata data/raw/v15/wikidata_money.jsonl` would try it again |
