@@ -63,6 +63,9 @@ MAX_REASONS = 3
 WHY_CLOSE = {"synopsis": 0.5, "budget": 0.5, "era": 0.6}  # budget 0.5 = within 2x; era 0.6 = about 5 years
 
 
+# ---------------------------------------------------------------- the index
+
+
 @dataclass
 class Index:
     ids: np.ndarray  # TMDB ids
@@ -178,6 +181,9 @@ class Index:
                 "why": why}
 
 
+# ---------------------------------------------------------------- similarity
+
+
 def _jaccard(flags: np.ndarray, wanted: np.ndarray) -> np.ndarray:
     if not wanted.any():
         return np.zeros(len(flags))
@@ -214,6 +220,9 @@ def _weighted(parts: dict[str, np.ndarray]) -> np.ndarray:
 def similarity(index: Index, genres: Sequence[str], themes: Sequence[str], language: str | None,
                vector: np.ndarray | None, year: int, log_budget: float | None) -> np.ndarray:
     return _weighted(similarity_parts(index, genres, themes, language, vector, year, log_budget))
+
+
+# ---------------------------------------------------------------- the CLI
 
 
 def main() -> None:

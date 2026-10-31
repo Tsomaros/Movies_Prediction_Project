@@ -24,8 +24,8 @@ from backend.app.routers.movies import _summary
 from backend.app.schemas.errors import VALIDATION, Message
 from backend.app.schemas.form import Genre
 from backend.app.schemas.random import RandomPick, Source
-from backend.app.services import random_pick
-from backend.app.services.posters import poster
+from backend.app.services.movies import random_pick
+from backend.app.services.movies.posters import poster
 from backend.app.userdb import repo as userdb
 
 router = APIRouter(tags=["movies"], dependencies=[Depends(no_store)])

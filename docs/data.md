@@ -5,7 +5,7 @@ Where the films come from, how they are cleaned, and every model input. Back to 
 ## Data
 
 - **Source:** our own TMDB API pull. The 1,200 most-voted films per year, 1960–2025, in all languages (79,199 films). The first 700 per year carry almost all the money data; the extra 500 mostly add score data.
-- **The 2026 films (V1.2):** the 1,199 most-voted films released from 2026-01-01 to 2026-10-30 (`uv run python -m ml.data.pull --from 2026-01-01 --to 2026-10-30`; the same selection as a year, by date range), so the database holds 80,398 films. They are there for browsing, search, film and person pages and the Career charts only. `MODEL_DATA_MAX_YEAR = 2025` (`ml/data/clean.py`) keeps them out of everything a model sees: the three training views, the track records (`history.load_films`, `Franchises`), the features table (no 2026 rows, so no comparables either) and the currency caps (computed from films up to 2025; a 2026 film is checked against them). Their split is `later`, not `test`. `scripts/snapshot_models.py` records the training views' row counts, hashes of every cleaning flag and of the features table, and the caps, and `tests/test_model_guard.py` requires the rebuilt database to give exactly the same numbers. 2026 money is counted as 2025 dollars (the CPI table has a 2026 row equal to 2025's).
+- **The 2026 films (V1.2):** the 1,199 most-voted films released from 2026-01-01 to 2026-10-30 (`uv run python -m ml.data.pull --from 2026-01-01 --to 2026-10-30`; the same selection as a year, by date range), so the database holds 80,398 films. They are there for browsing, search, film and person pages and the Career charts only. `MODEL_DATA_MAX_YEAR = 2025` (`ml/data/clean.py`) keeps them out of everything a model sees: the three training views, the track records (`history.load_films`, `Franchises`), the features table (no 2026 rows, so no comparables either) and the currency caps (computed from films up to 2025; a 2026 film is checked against them). Their split is `later`, not `test`. `scripts/snapshot_models.py` records the training views' row counts, hashes of every cleaning flag and of the features table, and the caps, and `tests/ml/test_model_guard.py` requires the rebuilt database to give exactly the same numbers. 2026 money is counted as 2025 dollars (the CPI table has a 2026 row equal to 2025's).
 - **Per film:** basic info, genres, overview, runtime, budget, revenue, collection, US certification, keywords, production companies and countries, the top 15 cast, and key crew (director, writers, producers, composer, cinematographer, editor).
 - **Raw output:** `data/raw/tmdb_movies.jsonl`, and the person pull `data/raw/tmdb_people.jsonl` ([Person pages](app.md#person-pages-days-146147)). Neither is committed to git.
 - **Database:** `data/movies.db` (SQLite), built from the raw pull by `make db`, plus the `features` table from `make features`. Neither it nor the overview embedding cache (`data/overview_embeddings.npz`) is committed to git. It holds the cleaned films, people, genres, companies, keywords and collections, full-text search on titles and overviews, and these views:
@@ -16,7 +16,7 @@ Where the films come from, how they are cleaned, and every model input. Back to 
 
 ## Cleaning rules
 
-All rules live in `ml/data/clean.py` and are tested in `tests/test_clean.py`. **Every released film is kept** for browsing; bad values become NULL, and suspect money is flagged rather than deleted. Each model trains on its own view. The counts are from the 2026-10-21 pull (79,199 films), and every build stores them in the database's `meta` table.
+All rules live in `ml/data/clean.py` and are tested in `tests/data/test_clean.py`. **Every released film is kept** for browsing; bad values become NULL, and suspect money is flagged rather than deleted. Each model trains on its own view. The counts are from the 2026-10-21 pull (79,199 films), and every build stores them in the database's `meta` table.
 
 | Rule | What happens | Films affected |
 | --- | --- | --- |
@@ -70,7 +70,7 @@ The `features` table in `data/movies.db` has 175 features for every film. `ml/fe
 | Franchise | 3 | `is_franchise` (sequels only), earlier films in the collection, their median log revenue |
 | Runtime, budget | 1, 1 | `log_budget` in 2025 dollars; not allowed in the budget model |
 
-**Leak safety.** These rules are tested in `tests/test_features.py`:
+**Leak safety.** These rules are tested in `tests/features/test_features.py`:
 - Only films released strictly before the film's date count, so a film never counts towards itself.
 - An earlier film's revenue and score count only once it is 182 days old. Its budget counts from its release, since a budget is known before release.
 - The typical film used for shrinkage is built from earlier films only.

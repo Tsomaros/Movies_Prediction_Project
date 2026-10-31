@@ -49,6 +49,9 @@ BUDGET_FEATURES = ("director_budget", *(f"actors_budget_{a}" for a in ("max", "m
 AGGREGATES = ("max", "mean", "min")
 
 
+# ---------------------------------------------------------------- packed storage
+
+
 def day_number(d: date | str | np.datetime64) -> int:
     return int(np.datetime64(d, "D").astype(np.int64))
 
@@ -162,6 +165,9 @@ def _shrunk(values: np.ndarray, typical: float) -> float:
         return typical
     n = len(values)
     return (n * float(np.median(values)) + SHRINK_FILMS * typical) / (n + SHRINK_FILMS)
+
+
+# ---------------------------------------------------------------- track records
 
 
 class History:
@@ -295,6 +301,9 @@ class History:
         return out
 
 
+# ---------------------------------------------------------------- companies
+
+
 class Companies:
     def __init__(self, films: pd.DataFrame, credits: pd.DataFrame, companies: pd.DataFrame) -> None:
         """films: id, release_date, log_budget (NaN if unusable). credits: company_id, movie_id. companies: id, name."""
@@ -338,6 +347,9 @@ class Companies:
         """The highest shrunk budget among the companies with earlier budgets; the typical budget when none has."""
         known = [b for n, b in (self.budget_of(self.resolve(r), as_of, typical) for r in refs) if n]
         return {"company_budget": max(known) if known else typical}
+
+
+# ---------------------------------------------------------------- the film table
 
 
 def load_films(con: sqlite3.Connection) -> pd.DataFrame:

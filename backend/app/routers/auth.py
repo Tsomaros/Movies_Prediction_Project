@@ -19,7 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from backend.app.deps import (COOKIE, get_userdb, limit, no_store, now, optional_user, same_origin_write)
 from backend.app.schemas.accounts import LoginRequest, Me
 from backend.app.schemas.errors import VALIDATION, Message
-from backend.app.services.auth import new_token, today_athens, token_hash, verify_password
+from backend.app.services.platform.auth import new_token, today_athens, token_hash, verify_password
 from backend.app.userdb import repo
 from backend.app.userdb.seed import reset_if_due
 

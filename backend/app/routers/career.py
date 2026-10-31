@@ -22,8 +22,8 @@ from backend.app.routers.people import MAX_ID
 from backend.app.routers.predict import ERRORS, rate_limited
 from backend.app.schemas.career import CareerModelResponse, CareerResponse
 from backend.app.schemas.errors import Message
-from backend.app.services.career_forecast import MODEL_ROLES, NoCredits, career_response, person_exists
-from backend.app.services.career_model import GenreAlreadyDone, UnknownGenre
+from backend.app.services.career.forecast import MODEL_ROLES, NoCredits, career_response, person_exists
+from backend.app.services.career.model import GenreAlreadyDone, UnknownGenre
 from backend.app.services.prediction import PredictionService
 from ml.data.clean import MIN_VOTES
 

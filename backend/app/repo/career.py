@@ -8,7 +8,7 @@
                                     -> (mean, population sd) of rated films in that role from the 10 years to end_year
     latest_year(con)                -> the newest release year in the database
 
-Recipe sources for the model card (services/career_model):
+Recipe sources for the model card (services/career/model.py):
     person_name(con, person_id)     -> the person's name, or None
     genre_names(con)                -> {genre id: name}
     credited_genres(con, person_id, role)

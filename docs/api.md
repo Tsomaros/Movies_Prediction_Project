@@ -30,7 +30,7 @@ A FastAPI backend in `backend/app/`. Every endpoint lives under `/api/v1`, and t
 **Predictions.**
 - **The form:** `/predict` takes the creator form from `ml/features/contract.py`. People, companies and the franchise can be an id from autocomplete, a typed name or `{id, name}`. Leave `budget` out and it is estimated.
 - **The output:** exactly what `predict()` returns, plus `cached` and full TMDB poster URLs for the comparables. The OpenAPI schema documents every field, for the Day 10 TypeScript types.
-- **The model card:** `uv run python -m ml.eval.model_card` copies the numbers from `reports/final_test.json` and `reports/audit_metrics.json` into `ml/artifacts/final/model_card.json` (committed, because the image has no `reports/`). Per target it has the films, the share inside the range, the typical miss of the middle (money as a factor, exp(MAE log); score in points), within 2× and the median range width, for LightGBM and for B2. `/model-card` adds the database's films and years, and answers 503 if the card was written for other models than those being served. `tests/test_model_card.py` fails when the committed card no longer matches the reports.
+- **The model card:** `uv run python -m ml.eval.model_card` copies the numbers from `reports/final_test.json` and `reports/audit_metrics.json` into `ml/artifacts/final/model_card.json` (committed, because the image has no `reports/`). Per target it has the films, the share inside the range, the typical miss of the middle (money as a factor, exp(MAE log); score in points), within 2× and the median range width, for LightGBM and for B2. `/model-card` adds the database's films and years, and answers 503 if the card was written for other models than those being served. `tests/ml/test_model_card.py` fails when the committed card no longer matches the reports.
 - **"Within the uncertainty" (Day 13):** the card also holds the thresholds the compare page uses. A change between two versions of a film counts only if it moves the middle by at least a tenth of the median 80% range on validation (2016–18, `reports/metrics.json`). For money that is a factor of width^0.1, because the width is high ÷ low: **×1.43** for revenue (×1.47 with the budget estimated) and **×1.23** for budget. For the score it is **0.17 points**.
 - **Compare:** each variant lists only the fields it changes, and `null` clears an optional one. For each variant, `differences` gives the changed fields, the money middles as a ratio of the base's (×1.8), the score as a point difference (+0.3), and whether the revenue mode changed.
 - **Sweep (Day 13):** `{form, field, values}` tries one field at each value, e.g. the 12 months of the planned year, and returns the budget, revenue and score ranges at each, plus the revenue mode. It counts as one request against the rate limit, and every point goes through the prediction cache.
@@ -75,12 +75,12 @@ curl -s localhost:8000/api/v1/predict -H 'Content-Type: application/json' -d '{
 
 Memory was 1,236 MB at first. The track record (`ml/features/history.py`) kept 350k small objects (about 870 MB); it now packs them into flat arrays (about 108 MB), and the rebuilt features table is bit-for-bit identical to the stored one. Day 9 brought the app under the 450 MB gate for the free host.
 
-`tests/test_api.py` (63 tests, offline, on a small fake database and small models) checks:
+`tests/api/test_api.py` (63 tests, offline, on a small fake database and small models) checks:
 - every endpoint, pinned to a list so a new one must get a test;
 - both revenue modes, the cache, compare's differences, a 12-month sweep equal to single predictions, every kind of 422, and the 31st request;
 - FTS input that would be syntax, pages, filters and sorting;
 - similar films that never include the film itself, read-only connections, and parallel requests.
 
-`tests/test_api_golden.py` (10 tests, skipped without the real data and models) checks:
+`tests/api/test_api_golden.py` (10 tests, skipped without the real data and models) checks:
 - the golden forms over HTTP equal `predict()` and the snapshot, in under 400 ms;
 - real autocomplete, movie pages, options and health.

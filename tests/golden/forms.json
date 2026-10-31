@@ -1,5 +1,5 @@
 {
- "about": "The three golden creator forms, run through predict() on the app's real models by tests/test_golden.py and over HTTP by tests/test_api_golden.py and scripts/smoke.py; their expected outputs are in predictions.json.",
+ "about": "The three golden creator forms, run through predict() on the app's real models by tests/ml/test_golden.py and over HTTP by tests/api/test_api_golden.py and scripts/smoke.py; their expected outputs are in predictions.json.",
  "descriptions": {
   "franchise_blockbuster": "The Russo brothers, the Avengers cast, Marvel, the Avengers Collection, $300M, May 2027",
   "small_drama": "Greta Gerwig, Saoirse Ronan, Florence Pugh, Timothee Chalamet and two newcomers, A24, no budget",

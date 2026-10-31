@@ -20,7 +20,7 @@ from pathlib import Path
 import numpy as np
 
 from tests.factories import film
-from tests.test_features import credits
+from tests.features.test_features import credits
 
 FILE = Path(__file__).with_name("mini_raw.jsonl")
 PULLED_AT = "2026-10-21T12:00:00+00:00"

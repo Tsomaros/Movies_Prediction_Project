@@ -74,7 +74,7 @@ def select_records(records: list[dict[str, Any]], keep_unreleased: bool = False)
     """Keep released films only; when an id appears twice (a re-pull), keep the latest pull.
 
     keep_unreleased keeps every status (Planned, In Production, Post Production, ...): only the app's refresher
-    of new and upcoming films (backend/app/services/fresh.py, V1.2) asks for it; `make db` never does."""
+    of new and upcoming films (backend/app/services/fresh/, V1.2) asks for it; `make db` never does."""
     latest: dict[int, dict[str, Any]] = {}
     for r in records:
         kept = latest.get(r["id"])

@@ -37,8 +37,8 @@ from typing import Any, Callable, Iterator, Optional
 import psycopg
 from fastapi import Depends, HTTPException, Request, Response
 
-from backend.app.services.auth import token_hash
-from backend.app.services.lookups import Lookups
+from backend.app.services.platform.auth import token_hash
+from backend.app.services.search.lookups import Lookups
 from backend.app.services.prediction import PredictionService
 from backend.app.userdb import repo as userdb
 from ml.predict import Predictor

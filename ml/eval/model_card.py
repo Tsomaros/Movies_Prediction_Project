@@ -13,7 +13,7 @@
 
 The card is committed next to the models, because the Docker image has no reports/ folder. Nothing here is
 recomputed: every number is copied from the two reports, so the card can't disagree with them
-(tests/test_model_card.py checks the committed file is current). Money metrics are on the log scale, with
+(tests/ml/test_model_card.py checks the committed file is current). Money metrics are on the log scale, with
 "typical_factor" = exp(MAE log): the middle is typically off by this factor. Score metrics are in points.
 
 Thresholds (Day 13): a change between two versions of a film counts as "within the uncertainty" when it moves

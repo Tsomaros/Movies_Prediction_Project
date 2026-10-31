@@ -1,5 +1,5 @@
 """GET /people?role=director|actor&q=: director and actor autocomplete, most films first (at most 10),
-GET /people/search?q=&role=&page=&page_size=: the header's people search (V1.1, services/people_search.py), and
+GET /people/search?q=&role=&page=&page_size=: the header's people search (V1.1, services/search/people_search.py), and
 GET /people/{id}: one person's page (Day 14.6).
 
 A match is a word of the name starting with q ("hanks", "tom ha"; accents folded). n_films counts films in
@@ -18,10 +18,10 @@ from backend.app.repo import people as repo
 from backend.app.routers.movies import CACHE, _summary
 from backend.app.schemas.errors import VALIDATION, Message
 from backend.app.schemas.person import PeopleSearchPage, PersonDetail, PersonMatch, SearchRole
-from backend.app.services.autocomplete import LIMIT, QUERY, respond
-from backend.app.services.lookups import Lookups
-from backend.app.services.people_search import search_people
-from backend.app.services.posters import profile
+from backend.app.services.search.autocomplete import LIMIT, QUERY, respond
+from backend.app.services.search.lookups import Lookups
+from backend.app.services.search.people_search import search_people
+from backend.app.services.movies.posters import profile
 
 router = APIRouter(tags=["form support"], responses=VALIDATION)
 MAX_ID = 2**63 - 1  # SQLite's largest integer: a bigger id can't exist (and would overflow the driver)

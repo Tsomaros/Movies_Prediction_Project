@@ -25,7 +25,7 @@ from backend.app.repo import movies as movies_repo
 from backend.app.routers.movies import _summary
 from backend.app.schemas.accounts import Entry, EntryRequest, MyMovieList, MySort, Status, StatusList
 from backend.app.schemas.errors import VALIDATION, Message
-from backend.app.services.auth import today_athens
+from backend.app.services.platform.auth import today_athens
 from backend.app.userdb import repo
 
 router = APIRouter(tags=["my movies"], dependencies=[Depends(no_store), Depends(same_origin_write)])

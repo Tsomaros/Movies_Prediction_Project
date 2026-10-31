@@ -43,6 +43,9 @@ API = "/api/v1"
 TARGETS = ("budget", "revenue", "score")
 
 
+# ---------------------------------------------------------------- checks
+
+
 class Smoke:
     def __init__(self, base_url: str, timeout: float = 120.0):  # the live sweep takes about 25 s warm
         self.client = httpx.Client(base_url=base_url.rstrip("/"), timeout=timeout)
@@ -153,6 +156,9 @@ def web_checks(s: Smoke, web_url: str, expected_version: str | None) -> None:
 
 def six(x: float) -> float:
     return float(f"{x:.6g}")
+
+
+# ---------------------------------------------------------------- the CLI
 
 
 def main() -> None:

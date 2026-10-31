@@ -27,7 +27,7 @@ report 2019 onward; a role with fewer than MIN_PEOPLE people with test points ta
 The real data has about 450,000 rated acting credits, so the backtest works on arrays: one query per role, and
 per person and h the cumulative sums of w, w·s, w·s² and w² (weights taken relative to the person's first year,
 then rescaled to the history's latest year L), from which every k and q is vectorised. This gives what
-ml.career.forecast.track_record gives (tests/test_career_backtest.py checks it).
+ml.career.forecast.track_record gives (tests/career/test_career_backtest.py checks it).
 """
 
 from __future__ import annotations

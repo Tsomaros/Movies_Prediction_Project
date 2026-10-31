@@ -1,7 +1,7 @@
 """GET /movies (search, filters, sorting, pages) and GET /movies/{id} (one film with similar films).
 
 Both are cacheable for an hour (Cache-Control: public, max-age=3600): the database changes with a new build, plus
-the new and upcoming films the refresher merges every 6 hours (services/fresh.py), so a list that holds one of those
+the new and upcoming films the refresher merges every 6 hours (services/fresh/), so a list that holds one of those
 films (fresh_films), and every `when` window, is cached for ten minutes. `when=released|upcoming` lists a window; without `when`
 (and without a text search) a film not yet released is left out. Similar films come from the Day 7 comparables index with
 no date rule (any year) and never the film itself; a film outside the index's pool (no usable score)
@@ -23,7 +23,7 @@ from backend.app.repo import movies as repo
 from backend.app.schemas.errors import VALIDATION, Message
 from backend.app.schemas.form import Genre
 from backend.app.schemas.movies import MovieDetail, MovieList, Sort, When
-from backend.app.services.posters import poster, profile
+from backend.app.services.movies.posters import poster, profile
 from ml.features.contract import GENRES
 from ml.predict import Predictor
 

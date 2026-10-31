@@ -22,7 +22,7 @@ import threading
 from collections import OrderedDict
 from typing import Any
 
-from backend.app.services.posters import poster
+from backend.app.services.movies.posters import poster
 from ml.features.contract import validate
 from ml.models.train import TARGETS
 from ml.predict import InvalidForm, Predictor

@@ -31,7 +31,7 @@ import psycopg
 from dotenv import load_dotenv
 from psycopg.rows import dict_row
 
-from backend.app.services.auth import hash_password, today_athens
+from backend.app.services.platform.auth import hash_password, today_athens
 from backend.app.userdb import repo
 
 SEED_FILE = Path(__file__).parent / "demo_seed.json"

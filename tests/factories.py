@@ -1,7 +1,7 @@
 """Fake trimmed film records for the cleaning and build tests, made with the real trim_movie."""
 
 from ml.data.pull import trim_movie
-from tests.test_pull import raw_movie
+from tests.data.test_pull import raw_movie
 
 PULLED_AT = "2026-10-21T12:00:00+00:00"
 

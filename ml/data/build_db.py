@@ -96,7 +96,7 @@ CREATE TABLE movie_languages (movie_id INTEGER REFERENCES movies(id), language T
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT);  -- value is JSON
 """
 
-# The app's refresher (backend/app/services/fresh.py, V1.3) writes new and upcoming films into this database and
+# The app's refresher (backend/app/services/fresh/, V1.3) writes new and upcoming films into this database and
 # records here which ones it wrote: `added` = 1 for a film the build didn't have. People it added have no page.
 FRESH_TABLES = """
 CREATE TABLE IF NOT EXISTS fresh_films  (id INTEGER PRIMARY KEY, added INTEGER NOT NULL);
@@ -170,6 +170,9 @@ CREATE VIEW v_actors AS
 """
 
 
+# ---------------------------------------------------------------- writing
+
+
 def _rows(df: pd.DataFrame, columns: list[str]) -> list[tuple]:
     """DataFrame -> plain Python tuples for sqlite3 (pandas NA -> None, booleans -> 0/1)."""
     out = df[columns].astype(object)
@@ -195,6 +198,9 @@ def write_db(con: sqlite3.Connection, tables: dict[str, pd.DataFrame], meta: dic
     if broken:
         raise RuntimeError(f"{len(broken)} rows point at missing ids, e.g. {broken[:3]}")
     con.commit()
+
+
+# ---------------------------------------------------------------- the build and its CLI
 
 
 def build(raw_path: Path = RAW_MOVIES, cpi_path: Path = CPI_FILE, db_path: Path = DB_FILE,

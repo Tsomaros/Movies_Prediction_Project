@@ -173,4 +173,4 @@ Warnings appear for a budget of $150M or more (revenue for these films was the w
 | Small drama (Greta Gerwig, A24, no budget given, October 2026) | $5.2M–$62M, rough | $2M–$170M (budget estimated), rough | 6.2–7.6 |
 | Unknown cast (horror, new director and actors, $2M, no studio or country) | $18K–$7M, rough | $38K–$14M, rough | 4.8–6.9 |
 
-These three forms are the golden examples in `tests/test_golden.py`: the tests check rules (ordered ranges, mode, warnings, earlier comparables, speed) and a snapshot of the output in `tests/golden/predictions.json`, which is rewritten only on purpose (`UPDATE_GOLDEN=1 uv run pytest tests/test_golden.py`).
+These three forms are the golden examples in `tests/ml/test_golden.py`: the tests check rules (ordered ranges, mode, warnings, earlier comparables, speed) and a snapshot of the output in `tests/golden/predictions.json`, which is rewritten only on purpose (`UPDATE_GOLDEN=1 uv run pytest tests/ml/test_golden.py`).

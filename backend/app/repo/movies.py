@@ -48,6 +48,9 @@ SUMMARY = f"""{SUMMARY_COLS},
               {GENRES_SQL} AS genres"""  # the card row in one query: person pages; the film pages and lists add genres_for()
 
 
+# ---------------------------------------------------------------- lists
+
+
 def fts_query(text: str | None) -> str | None:
     words = re.findall(r"\w+", text or "")
     return " ".join(f'"{w}"*' for w in words) or None
@@ -61,7 +64,7 @@ def search(con: sqlite3.Connection, q: str | None = None, genre: str | None = No
     keeps only films with SCORE_SORT_MIN_VOTES (500) votes or more, so a 10.0 from 2 votes, or a 9.1 from 80, never
     tops the list.
 
-    With `today` (V1.2): when="released" / "upcoming" keeps the films of that window (services.fresh.windows); with
+    With `today` (V1.2): when="released" / "upcoming" keeps the films of that window (services/fresh/pull.windows); with
     neither `when` nor a text search a film not yet released is left out, so a coming-soon film is found only
     through when="upcoming", a search or its page."""
     joins, where, args = "", ["m.release_date IS NOT NULL"], []
@@ -74,7 +77,7 @@ def search(con: sqlite3.Connection, q: str | None = None, genre: str | None = No
         args.append(match)
     if today is not None:
         if when is not None:
-            from backend.app.services.fresh import windows
+            from backend.app.services.fresh.pull import windows
 
             first, last = windows(today)[when]
             where.append("m.release_date BETWEEN ? AND ?")
@@ -183,6 +186,9 @@ def random_candidates(con: sqlite3.Connection, genre: str | None = None, decade:
     return [r[0] for r in con.execute(f"SELECT m.id FROM movies m WHERE {' AND '.join(where)}", args)]
 
 
+# ---------------------------------------------------------------- ids
+
+
 def posters(con: sqlite3.Connection, ids: list[int]) -> dict[int, str]:
     if not ids:
         return {}
@@ -202,6 +208,9 @@ def ids_present(con: sqlite3.Connection, ids: list[int]) -> set[int]:
     if not ids:
         return set()
     return {r[0] for r in con.execute(f"SELECT id FROM movies WHERE id IN ({','.join('?' * len(ids))})", list(ids))}
+
+
+# ---------------------------------------------------------------- one film
 
 
 def _rows_by_id(con: sqlite3.Connection, table: str, columns: str, ids: list[int]) -> list[sqlite3.Row]:
