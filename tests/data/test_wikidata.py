@@ -1,13 +1,17 @@
+import argparse
 import json
 import re
 from pathlib import Path
 
 import httpx
+import pytest
 
 from ml.data import wikidata
 from ml.data.pull import load_discover_ids
 from ml.data.wikidata import (
     WikidataClient,
+    main,
+    parse_years,
     append_new_ids,
     flatten_bindings,
     new_ids,
@@ -167,3 +171,27 @@ def test_append_new_ids_uses_page_zero(tmp_path):
     assert append_new_ids(ids, [(2004, 555)]) == 1
     assert ids.read_text(encoding="utf-8").splitlines()[-1] == "2004,0,555"
     assert load_discover_ids(ids, range(2004, 2005)) == [9, 555]
+
+
+def test_parse_years_accepts_single_year_and_range():
+    assert parse_years("2001") == range(2001, 2002)
+    assert parse_years("1960-2025") == range(1960, 2026)
+
+
+@pytest.mark.parametrize("text", ["1959", "2026", "1990-2030", "2005-2001", "abc"])
+def test_parse_years_refuses_bad_input(text):
+    with pytest.raises(argparse.ArgumentTypeError):
+        parse_years(text)
+
+
+def test_new_ids_command_appends_by_default(tmp_path, monkeypatch):
+    raw = tmp_path / "w.jsonl"
+    ids = tmp_path / "discover_ids.csv"
+    ids.write_text("year,page,id\n2000,1,10\n", encoding="utf-8")
+    write_statements(raw, [(2001, 11)])
+    monkeypatch.setattr(wikidata, "RAW_WIKIDATA", raw)
+    monkeypatch.setattr(wikidata, "RAW_DIR", tmp_path)
+    main(["new-ids", "--dry-run"])
+    assert len(ids.read_text(encoding="utf-8").splitlines()) == 2
+    main(["new-ids"])
+    assert ids.read_text(encoding="utf-8").splitlines()[-1] == "2001,0,11"

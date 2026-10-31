@@ -18,8 +18,8 @@ Public API:
 
 CLI:
     uv run python -m ml.data.wikidata survey
-    uv run python -m ml.data.wikidata pull [--years 1960-2025]
-    uv run python -m ml.data.wikidata new-ids                 # lists them; --append adds them to discover_ids.csv
+    uv run python -m ml.data.wikidata pull [--years 1960-2025 | 2001]
+    uv run python -m ml.data.wikidata new-ids                 # appends them to discover_ids.csv; --dry-run only lists
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ SURVEY_FILE = RAW_DIR / "wikidata_survey.json"
 RETRY_STATUSES = {429, 500, 502, 503, 504}
 MAX_RETRY_DELAY = 120.0
 RANKS = {"PreferredRank": "preferred", "NormalRank": "normal"}
-DECADES = range(1960, 2030, 10)
+DECADES = range(1960, MODEL_DATA_MAX_YEAR + 1, 10)  # 1960..2020; the last one stops at 2025
 
 
 class WikidataError(Exception):
@@ -120,7 +120,7 @@ def year_query(year: int) -> str:
 
 def _decade_body(decade: int) -> str:
     return f"""  ?item wdt:P4947 ?tmdb ; wdt:P577 ?date .
-  FILTER(YEAR(?date) >= {decade} && YEAR(?date) < {decade + 10})
+  FILTER(YEAR(?date) >= {decade} && YEAR(?date) <= {min(decade + 9, MODEL_DATA_MAX_YEAR)})
   {{ ?item p:P2142 ?st . ?st psv:P2142 ?v }}
   UNION
   {{ ?item p:P2130 ?st . ?st psv:P2130 ?v }}
@@ -268,9 +268,10 @@ def run_pull(client: WikidataClient, years: range, path: Path = RAW_WIKIDATA) ->
             else:
                 seen.add(s["statement"])
                 fresh.append(s)
+        block = "".join(json.dumps(s) + "\n" for s in fresh or [{"year": year, "empty": True}])
         with path.open("a", encoding="utf-8") as f:
-            for s in fresh or [{"year": year, "empty": True}]:
-                f.write(json.dumps(s) + "\n")
+            f.write(block)  # one write per year: a killed run leaves no half year
+            f.flush()
         totals["years"] += 1
         totals["statements"] += len(fresh)
         for key, n in report.items():
@@ -314,25 +315,41 @@ def append_new_ids(ids_path: Path, rows) -> int:
     return len(rows)
 
 
+def parse_years(text: str) -> range:
+    """"1960-2025" or "2001" -> range; years outside 1960-2025 are refused."""
+    try:
+        start, _, end = text.partition("-")
+        first, last = int(start), int(end or start)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"not a year or a range like 1960-2025: {text!r}") from None
+    if not FIRST_YEAR <= first <= last <= MODEL_DATA_MAX_YEAR:
+        raise argparse.ArgumentTypeError(f"years must be within {FIRST_YEAR}-{MODEL_DATA_MAX_YEAR}: {text!r}")
+    return range(first, last + 1)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Wikidata budgets and box office")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("survey", help="count currencies and regions per decade -> wikidata_survey.json")
     pull = sub.add_parser("pull", help="query Wikidata year by year -> wikidata_money.jsonl (resumable)")
-    pull.add_argument("--years", default=f"{FIRST_YEAR}-{MODEL_DATA_MAX_YEAR}", help="e.g. 1960-2025")
+    pull.add_argument(
+        "--years",
+        type=parse_years,
+        default=range(FIRST_YEAR, MODEL_DATA_MAX_YEAR + 1),
+        help="e.g. 1960-2025 or 2001",
+    )
     ids = sub.add_parser("new-ids", help="TMDB ids in the Wikidata file that discover_ids.csv lacks")
-    ids.add_argument("--append", action="store_true", help="add them to discover_ids.csv")
+    ids.add_argument("--dry-run", action="store_true", help="only list the count, do not append")
     args = parser.parse_args(argv)
     if args.command == "survey":
         print(json.dumps(survey(WikidataClient()), indent=2))
     elif args.command == "pull":
-        start, end = (int(x) for x in args.years.split("-"))
-        print(run_pull(WikidataClient(), range(start, end + 1)))
+        print(run_pull(WikidataClient(), args.years))
     elif args.command == "new-ids":
         ids_path = RAW_DIR / IDS_FILE
         found = new_ids(RAW_WIKIDATA, ids_path)
         print(f"{len(found)} new ids")
-        if args.append:
+        if not args.dry_run:
             print(f"appended {append_new_ids(ids_path, found)} rows to {ids_path}")
     return 0
 
