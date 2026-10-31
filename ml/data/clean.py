@@ -4,9 +4,11 @@
     select_records(records)  -> released films only, one record per id
     flatten(records)         -> {"movies": DataFrame, "genres": ..., "movie_genres": ..., ...}
     basic_clean(movies)      -> movies with tidy text, parsed dates, NULLed bad values and a split column
-    money_rules(movies, cpi) -> placeholder money NULLed, 2025 dollars, money_suspect and other flags
+    money_rules(movies, cpi, wikidata=None)
+                             -> placeholder money NULLed, Wikidata money merged in (V1.5), 2025 dollars,
+                                money_source_*, money_suspect and other flags
     score_rules(movies)      -> score_weight and score_ok
-    clean(records, cpi)      -> all of the above: (tables, report)
+    clean(records, cpi, keep_unreleased=False, wikidata=None) -> all of the above: (tables, report)
 
 Each step that changes data also returns a report: {rule: rows affected}.
 """
@@ -57,6 +59,7 @@ LOW_RATIO = 0.0001  # revenue / budget below this is token box office (e.g. stre
 CURRENCY_CAP_MULTIPLE = 3  # x the language's 99th-percentile budget in 2025 dollars
 CURRENCY_CAP_MIN_BUDGETS = 30  # languages with fewer budgets share one non-English cap
 POOLED_LANGUAGE = "other non-English"
+WIKIDATA_DISAGREE = 3.0  # TMDB and Wikidata money further apart than this (either way) is suspect (V1.5)
 INCOMPLETE_DAYS = 182  # films this young at pull time may still be earning
 COVID_YEARS = (2020, 2021)
 MIN_VOTES = 50
@@ -268,7 +271,50 @@ def currency_caps(movies: pd.DataFrame) -> tuple[pd.Series, dict[str, float]]:
     return cap.reindex(movies.index).astype("Float64"), summary
 
 
-def money_rules(movies: pd.DataFrame, cpi: dict[int, float]) -> tuple[pd.DataFrame, dict[str, Any], dict[str, float]]:
+def _suspicion(m: pd.DataFrame, cpi: dict[int, float]) -> tuple[pd.Series, pd.Series, dict[str, float]]:
+    """2025 dollars for both columns (in place), then the low-ratio and currency-cap flags and the caps."""
+    for col in ("budget", "revenue"):
+        m[f"{col}_{CPI_BASE_YEAR}"] = to_base_dollars(m[col], m["year"], cpi)
+    low_ratio = (m["revenue"] / m["budget"]) < LOW_RATIO
+    film_cap, caps = currency_caps(m)
+    over_cap = m["budget_2025"] > film_cap  # film_cap is NULL for English films and films without a budget
+    return low_ratio.fillna(False).astype(bool), over_cap.fillna(False).astype(bool), caps
+
+
+def _merge_wikidata(m: pd.DataFrame, wikidata: pd.DataFrame, bad: dict[str, pd.Series],
+                    report: dict[str, Any]) -> pd.Series:
+    """Fill missing and replace bad TMDB money with Wikidata's (in place); returns the films where both sources
+    have a good value that differ by more than WIKIDATA_DISAGREE. Films after MODEL_DATA_MAX_YEAR or without a
+    year are left alone."""
+    usable = (m["year"] <= MODEL_DATA_MAX_YEAR).fillna(False).astype(bool)
+    frame = wikidata.set_index("id")
+    disagree = pd.Series(False, index=m.index)
+    confirmed = 0
+    for col in ("budget", "revenue"):
+        wd = m["id"].map(frame[f"wd_{col}"]).astype("Int64")
+        wd = wd.mask(~usable | (wd < MIN_MONEY))  # the placeholder rule holds for Wikidata too
+        has = wd.notna()
+        filled = has & m[col].isna()
+        replaced = has & m[col].notna() & bad[col]
+        # Same film, same year, same CPI factor: the nominal ratio is the ratio in 2025 dollars.
+        compared = has & m[col].notna() & ~bad[col]
+        ratio = m[col].astype("Float64") / wd.astype("Float64")
+        differs = compared & ((ratio > WIKIDATA_DISAGREE) | (ratio < 1 / WIKIDATA_DISAGREE)).fillna(False)
+        take = filled | replaced
+        m[col] = m[col].mask(take, wd)
+        m[f"money_source_{col}"] = m[f"money_source_{col}"].mask(take, "wikidata")
+        report[f"wikidata_{col}_filled"] = int(filled.sum())
+        report[f"wikidata_{col}_replaced"] = int(replaced.sum())
+        confirmed += int((compared & ~differs).sum())
+        disagree |= differs.astype(bool)
+    report["wikidata_confirmed"] = confirmed
+    return disagree
+
+
+def money_rules(movies: pd.DataFrame, cpi: dict[int, float],
+                wikidata: pd.DataFrame | None = None) -> tuple[pd.DataFrame, dict[str, Any], dict[str, float]]:
+    """Placeholder money NULLed, Wikidata merged in (V1.5, when given), then 2025 dollars and the suspect flags on
+    the final values. wikidata: select_money's frame (id = TMDB id, nominal USD)."""
     m = movies.copy()
     report: dict[str, Any] = {}
 
@@ -278,21 +324,28 @@ def money_rules(movies: pd.DataFrame, cpi: dict[int, float]) -> tuple[pd.DataFra
         report[f"{col}_zero_or_missing"] = int((amount.isna() | (amount <= 0)).sum())
         report[f"{col}_placeholder_nulled"] = int(((amount > 0) & (amount < MIN_MONEY)).sum())
         m[col] = amount.mask(amount < MIN_MONEY)
-        m[f"{col}_{CPI_BASE_YEAR}"] = to_base_dollars(m[col], m["year"], cpi)
+        m[f"money_source_{col}"] = pd.Series(pd.NA, index=m.index, dtype="string").mask(m[col].notna(), "tmdb")
+
+    disagree = pd.Series(False, index=m.index)
+    if wikidata is not None:
+        # TMDB-only suspicion first: a currency budget or a token box office is replaced when Wikidata has one.
+        low_ratio, over_cap, _ = _suspicion(m, cpi)
+        disagree = _merge_wikidata(m, wikidata, {"budget": over_cap, "revenue": low_ratio}, report)
 
     # Suspect money stays for display but is kept out of financial training.
-    low_ratio = (m["revenue"] / m["budget"]) < LOW_RATIO
-    film_cap, caps = currency_caps(m)
-    over_cap = m["budget_2025"] > film_cap  # film_cap is NULL for English films and films without a budget
-    low_ratio, over_cap = low_ratio.fillna(False).astype(bool), over_cap.fillna(False).astype(bool)
-    m["money_suspect"] = low_ratio | over_cap
-    m["money_suspect_reason"] = pd.Series(
+    low_ratio, over_cap, caps = _suspicion(m, cpi)
+    m["money_suspect"] = low_ratio | over_cap | disagree
+    reason = pd.Series(
         np.select([low_ratio & over_cap, low_ratio, over_cap], ["low_ratio,currency", "low_ratio", "currency"], ""),
         index=m.index,
         dtype="string",
-    ).replace("", pd.NA)
+    )
+    reason = reason.mask(disagree, (reason + ",wikidata_disagree").str.lstrip(","))
+    m["money_suspect_reason"] = reason.replace("", pd.NA)
     report["money_suspect_low_ratio"] = int(low_ratio.sum())
     report["money_suspect_currency"] = int(over_cap.sum())
+    if wikidata is not None:
+        report["money_suspect_wikidata_disagree"] = int(disagree.sum())
 
     released = pd.to_datetime(m["release_date"])
     pulled = pd.to_datetime(m["pulled_at"], utc=True).dt.tz_localize(None).dt.normalize()
@@ -317,15 +370,15 @@ def score_rules(movies: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, int]]:
 # ---------------------------------------------------------------- pipeline
 
 
-def clean(records: list[dict[str, Any]], cpi: dict[int, float],
-          keep_unreleased: bool = False) -> tuple[dict[str, pd.DataFrame], dict[str, Any]]:
+def clean(records: list[dict[str, Any]], cpi: dict[int, float], keep_unreleased: bool = False,
+          wikidata: pd.DataFrame | None = None) -> tuple[dict[str, pd.DataFrame], dict[str, Any]]:
     """Raw trimmed records -> cleaned tables, plus a report of what every rule changed. keep_unreleased: see
-    select_records (a film from a year with no CPI row gets NULL 2025-dollar money)."""
+    select_records (a film from a year with no CPI row gets NULL 2025-dollar money). wikidata: see money_rules."""
     report: dict[str, Any] = {"raw_records": len(records)}
     records, selected = select_records(records, keep_unreleased)
     tables = flatten(records)
     movies, basic = basic_clean(tables["movies"])
-    movies, money, caps = money_rules(movies, cpi)
+    movies, money, caps = money_rules(movies, cpi, wikidata)
     movies, score = score_rules(movies)
     tables["movies"] = movies
     report.update(selected | basic | money | score)

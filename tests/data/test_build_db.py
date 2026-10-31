@@ -104,3 +104,41 @@ def test_failed_build_keeps_the_old_database(paths, monkeypatch):
     assert con.execute("SELECT COUNT(*) FROM movies").fetchone() == (7,)
     con.close()
     assert not out.with_name(out.name + ".tmp").exists()
+
+
+# ---------------------------------------------------------------- Wikidata money (V1.5)
+
+
+def statement(tmdb_id: int, prop: str, amount: int, currency: str = "USD") -> dict:
+    return {"statement": f"s{tmdb_id}{prop}", "wikidata_id": f"Q{tmdb_id}", "tmdb_id": tmdb_id, "prop": prop,
+            "amount": amount, "currency": currency, "rank": "normal", "region": None, "point_in_time": None,
+            "year": 2019}
+
+
+def test_build_with_wikidata_writes_sources(paths, tmp_path):
+    raw, cpi, out = paths
+    statements = tmp_path / "wikidata_money.jsonl"
+    rows = [statement(4, "box_office", 90_000_000), statement(6, "box_office", 60_000_000, "EUR"), {"empty": True}]
+    statements.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    fx = tmp_path / "fx.csv"
+    fx.write_text("currency,year,per_usd\nEUR,2019,0.75\n", encoding="utf-8")
+
+    report = build_db.build(raw, cpi, out, wikidata_path=statements, fx_path=fx)
+    con = sqlite3.connect(out)
+    rows = con.execute("SELECT id, revenue, money_source_budget, money_source_revenue, money_suspect "
+                       "FROM movies WHERE id IN (1, 4, 5, 6) ORDER BY id").fetchall()
+    meta = json.loads(con.execute("SELECT value FROM meta WHERE key = 'cleaning_report'").fetchone()[0])
+    con.close()
+    assert rows == [(1, 180_000_000, "tmdb", "tmdb", 0), (4, 90_000_000, "tmdb", "wikidata", 0),
+                    (5, 180_000_000, None, "tmdb", 0), (6, 80_000_000, "tmdb", "wikidata", 0)]
+    assert report["wikidata_revenue_filled"] == 1 and report["wikidata_revenue_replaced"] == 1
+    assert meta["wikidata_currency_dropped"] == 0 and meta["money_suspect_wikidata_disagree"] == 0
+
+
+def test_build_without_wikidata_file(paths, tmp_path):
+    raw, cpi, out = paths
+    report = build_db.build(raw, cpi, out, wikidata_path=tmp_path / "missing.jsonl", fx_path=tmp_path / "missing.csv")
+    con = sqlite3.connect(out)
+    assert con.execute("SELECT money_source_revenue FROM movies WHERE id = 4").fetchone() == (None,)
+    con.close()
+    assert not any(k.startswith("wikidata_") for k in report)

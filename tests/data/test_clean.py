@@ -222,3 +222,102 @@ def test_a_year_without_a_cpi_row_gives_null_2025_money():
     tables, _ = clean([film(3, status="Planned", release_date="2027-01-10", budget=5_000_000)], TEST_CPI,
                       keep_unreleased=True)
     assert tables["movies"]["budget_2025"].isna().all() and tables["movies"]["budget"].iloc[0] == 5_000_000
+
+
+# ---------------------------------------------------------------- Wikidata money (V1.5)
+
+
+def wikidata(*rows: tuple) -> pd.DataFrame:
+    """select_money's frame: (id, wd_budget, wd_revenue, year), None for a missing value."""
+    df = pd.DataFrame(rows, columns=["id", "wd_budget", "wd_revenue", "year"])
+    for col in ("wd_budget", "wd_revenue"):
+        df[col] = df[col].astype("Int64")
+    return df
+
+
+def with_wikidata(records: list[dict], frame: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+    tables, report = clean(records, TEST_CPI, wikidata=frame)
+    return tables["movies"].set_index("id"), report
+
+
+WIKIDATA_KEYS = {"wikidata_budget_filled", "wikidata_revenue_filled", "wikidata_budget_replaced",
+                 "wikidata_revenue_replaced", "wikidata_confirmed", "money_suspect_wikidata_disagree"}
+
+
+def test_no_wikidata_is_unchanged():
+    records = [film(1), film(2, budget=7, revenue=0), film(3, budget=65_500_000, revenue=1_281), *hindi_market(40)]
+    tables, report = clean(records, TEST_CPI)
+    m = tables["movies"].set_index("id")
+    assert m.loc[1, "money_source_budget"] == "tmdb" and m.loc[1, "money_source_revenue"] == "tmdb"
+    assert pd.isna(m.loc[2, "money_source_budget"]) and pd.isna(m.loc[2, "money_source_revenue"])
+    assert m.loc[3, "money_source_revenue"] == "tmdb" and m.loc[3, "money_suspect_reason"] == "low_ratio"
+    assert not WIKIDATA_KEYS & report.keys()
+    # An empty Wikidata frame changes nothing but adds the (zero) Wikidata counts.
+    tables_wd, report_wd = clean(records, TEST_CPI, wikidata=wikidata())
+    pd.testing.assert_frame_equal(tables_wd["movies"], tables["movies"])
+    assert {k: v for k, v in report_wd.items() if k not in WIKIDATA_KEYS} == report
+    assert all(report_wd[k] == 0 for k in WIKIDATA_KEYS)
+
+
+def test_wikidata_fills_missing_revenue():
+    m, report = with_wikidata([film(1, revenue=0), film(2, revenue=0)],
+                              wikidata((1, None, 50_000_000, 2019), (2, None, 500, 2019)))  # 500: a placeholder
+    assert m.loc[1, "revenue"] == 50_000_000 and m.loc[1, "money_source_revenue"] == "wikidata"
+    assert m.loc[1, "revenue_2025"] == round(50_000_000 * 130 / 110)
+    assert m.loc[1, "money_source_budget"] == "tmdb"
+    assert pd.isna(m.loc[2, "revenue"]) and pd.isna(m.loc[2, "money_source_revenue"])
+    assert report["wikidata_revenue_filled"] == 1 and report["wikidata_budget_filled"] == 0
+
+
+def test_wikidata_replaces_token_box_office():
+    m, report = with_wikidata([film(1, budget=100_000_000, revenue=5_000)], wikidata((1, None, 80_000_000, 2019)))
+    assert m.loc[1, "revenue"] == 80_000_000 and m.loc[1, "money_source_revenue"] == "wikidata"
+    assert not m.loc[1, "money_suspect"] and pd.isna(m.loc[1, "money_suspect_reason"])
+    assert report["wikidata_revenue_replaced"] == 1 and report["money_suspect_low_ratio"] == 0
+
+
+def test_wikidata_replaces_budget_in_rupees():
+    rupees = film(1, original_language="hi", budget=500_000_000, revenue=20_000_000)
+    m, report = with_wikidata([*hindi_market(), rupees], wikidata((1, 6_000_000, None, 2019)))
+    assert m.loc[1, "budget"] == 6_000_000 and m.loc[1, "money_source_budget"] == "wikidata"
+    assert not m.loc[1, "money_suspect"]
+    assert report["wikidata_budget_replaced"] == 1
+
+
+def test_disagreement_flags_but_keeps_tmdb():
+    m, report = with_wikidata([film(1, revenue=10_000_000)], wikidata((1, None, 40_000_000, 2019)))
+    assert m.loc[1, "revenue"] == 10_000_000 and m.loc[1, "money_source_revenue"] == "tmdb"
+    assert m.loc[1, "money_suspect"] and m.loc[1, "money_suspect_reason"] == "wikidata_disagree"
+    assert report["money_suspect_wikidata_disagree"] == 1 and report["wikidata_confirmed"] == 0
+
+
+def test_disagreement_is_appended_to_other_reasons():
+    m, report = with_wikidata([film(1, budget=65_500_000, revenue=1_281)], wikidata((1, 300_000_000, None, 2019)))
+    assert m.loc[1, "money_suspect_reason"] == "low_ratio,wikidata_disagree"
+    assert m.loc[1, "budget"] == 65_500_000
+    assert report["money_suspect_wikidata_disagree"] == 1
+
+
+def test_within_three_x_confirmed():
+    m, report = with_wikidata([film(1, revenue=10_000_000)], wikidata((1, None, 25_000_000, 2019)))
+    assert not m.loc[1, "money_suspect"] and m.loc[1, "revenue"] == 10_000_000
+    assert m.loc[1, "money_source_revenue"] == "tmdb"
+    assert report["wikidata_confirmed"] == 1 and report["money_suspect_wikidata_disagree"] == 0
+
+
+def test_mixed_sources_still_ratio_checked():
+    m, _ = with_wikidata([film(1, budget=200_000_000, revenue=0)], wikidata((1, None, 1_000, 2019)))
+    assert m.loc[1, "revenue"] == 1_000 and m.loc[1, "money_source_revenue"] == "wikidata"
+    assert m.loc[1, "money_suspect"] and m.loc[1, "money_suspect_reason"] == "low_ratio"
+
+
+def test_2026_film_ignores_wikidata():
+    recs = [film(1, release_date="2026-03-01", revenue=0), film(2, release_date="", revenue=0),
+            film(3, release_date="2026-03-01", revenue=10_000_000)]
+    m, report = with_wikidata(recs, wikidata((1, None, 50_000_000, 2026), (2, None, 50_000_000, 2019),
+                                             (3, None, 90_000_000, 2026), (99, None, 50_000_000, 2019)))
+    assert pd.isna(m.loc[1, "revenue"]) and pd.isna(m.loc[1, "money_source_revenue"])
+    assert pd.isna(m.loc[2, "revenue"]) and pd.isna(m.loc[2, "money_source_revenue"])
+    assert m.loc[3, "revenue"] == 10_000_000 and not m.loc[3, "money_suspect"]
+    assert 99 not in m.index
+    assert all(report[k] == 0 for k in WIKIDATA_KEYS)

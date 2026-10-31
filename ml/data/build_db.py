@@ -5,9 +5,12 @@ build never replaces a working database.
 
     uv run python -m ml.data.build_db
     uv run python -m ml.data.build_db --raw data/raw/tmdb_movies.jsonl --out data/movies.db
+    uv run python -m ml.data.build_db --wikidata data/raw/wikidata_money.jsonl --fx data/fx_rates.csv
 
 The person_details table (Day 14.6) is always created; it is filled from data/raw/tmdb_people.jsonl when that
-pull exists (ml/data/people.py; `make people-db` refills it in place without a rebuild).
+pull exists (ml/data/people.py; `make people-db` refills it in place without a rebuild). Wikidata budgets and box
+office (V1.5, ml/data/wikidata_money.py) are merged when data/raw/wikidata_money.jsonl exists; without it the build
+is as before (every film's money_source_* is 'tmdb' or NULL).
 """
 
 from __future__ import annotations
@@ -24,6 +27,7 @@ from typing import Any
 import pandas as pd
 
 from ml.data import people
+from ml.data.fx import FX_FILE, load_fx
 from ml.data.clean import (
     CPI_BASE_YEAR,
     CPI_FILE,
@@ -36,6 +40,8 @@ from ml.data.clean import (
     load_cpi,
     load_raw,
 )
+from ml.data.wikidata import RAW_WIKIDATA
+from ml.data.wikidata_money import load_statements, select_money
 
 DB_FILE = Path("data/movies.db")
 
@@ -67,7 +73,9 @@ CREATE TABLE movies (
     budget_2025          REAL,
     revenue_2025         REAL,
     money_suspect        INTEGER NOT NULL,  -- shown, but kept out of financial training
-    money_suspect_reason TEXT,
+    money_suspect_reason TEXT,     -- low_ratio, currency, wikidata_disagree (comma-joined)
+    money_source_budget  TEXT,     -- 'tmdb' or 'wikidata' (V1.5); NULL when there is no budget
+    money_source_revenue TEXT,
     revenue_incomplete   INTEGER NOT NULL,
     covid_period         INTEGER NOT NULL,
     -- Post-release fields: targets and display only, never model features.
@@ -204,10 +212,16 @@ def write_db(con: sqlite3.Connection, tables: dict[str, pd.DataFrame], meta: dic
 
 
 def build(raw_path: Path = RAW_MOVIES, cpi_path: Path = CPI_FILE, db_path: Path = DB_FILE,
-          people_path: Path | None = None) -> dict[str, Any]:
+          people_path: Path | None = None, wikidata_path: Path | None = RAW_WIKIDATA,
+          fx_path: Path = FX_FILE) -> dict[str, Any]:
     """Clean the raw pull and write it to db_path via a temp file; returns the cleaning report. With people_path,
-    person_details is filled from that person pull."""
-    tables, report = clean(load_raw(raw_path), load_cpi(cpi_path))
+    person_details is filled from that person pull. When wikidata_path exists (V1.5), its budgets and box office
+    (converted with the rates in fx_path) are merged in by clean() and select_money's counts join the report."""
+    money, money_report = None, {}
+    if wikidata_path is not None and wikidata_path.exists():
+        money, money_report = select_money(load_statements(wikidata_path), load_fx(fx_path))
+    tables, report = clean(load_raw(raw_path), load_cpi(cpi_path), wikidata=money)
+    report.update(money_report)
     meta = {
         "built_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "source_file": raw_path.as_posix(),
@@ -244,11 +258,13 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--cpi", default=str(CPI_FILE))
     parser.add_argument("--out", default=str(DB_FILE))
     parser.add_argument("--people", default=str(people.PEOPLE_FILE), help="the person pull, loaded when it exists")
+    parser.add_argument("--wikidata", default=str(RAW_WIKIDATA), help="the Wikidata money pull, merged when it exists")
+    parser.add_argument("--fx", default=str(FX_FILE), help="yearly exchange rates for the Wikidata money")
     args = parser.parse_args(argv)
 
     start = time.monotonic()
     people_path = Path(args.people) if Path(args.people).exists() else None
-    report = build(Path(args.raw), Path(args.cpi), Path(args.out), people_path)
+    report = build(Path(args.raw), Path(args.cpi), Path(args.out), people_path, Path(args.wikidata), Path(args.fx))
     caps = report.pop("currency_caps_2025_usd")
     details = report.pop("people_details", None)
     print(f"built {args.out} in {time.monotonic() - start:.0f}s")
