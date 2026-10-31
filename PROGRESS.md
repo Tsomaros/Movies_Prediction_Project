@@ -2333,3 +2333,62 @@ Plan: `2026-10-30-v1.2-new-arrivals.md` (third design: new films as ordinary fil
 
 - **By hand:** light theme, keyboard-only pass, Lighthouse accessibility on `/movies`.
 - **On Render:** that the first refresh after a wake-up stays within the memory gate (not measured there).
+
+## V1.4: Career and 2026 (built and deployed 2026-10-31)
+
+Spec and plan: `docs/superpowers/specs/2026-10-31-career-2026-design.md` and `docs/superpowers/plans/2026-10-31-career-2026.md`. Two parts: a film's score counts for the career forecast only once it was 182 days old when pulled, and the forecast gets a 2026 check (a hit rate per role in the artifact, a "From films up to 2025 we said …" line per person).
+
+- [x] 1. `settling` on career films; young scores are drawn, not counted (`6fcfb6d`)
+- [x] 2. `career_forecast.json` v2 with a 2026 holdout per role (`344cb8b`)
+- [x] 3. `/career` `check` and `forecast.test.holdout` (`4638e00`)
+- [x] 4. Settling dots, the 2026 sentence and the check line (`66dbc0e`)
+- [x] 5. Smoke, Docker and docs (`f3c9d68`)
+- [x] Final review fixes (`75070c7`)
+- [x] Deploy (`make deploy`, image `75070c7a9ad2`), then the live check
+
+### Numbers
+
+The 2026 holdout (settled films with 50+ votes, forecast from each person's counted films up to 2025):
+
+| Role | Points | People | Coverage | MAE | Database-average MAE |
+| --- | --- | --- | --- | --- | --- |
+| Acting | 935 | 857 | 72.8% | 0.734 | 0.770 |
+| Directing | 58 | 56 | 71.4% | 0.648 | 0.767 |
+| Writing | 74 | 73 | 82.9% | 0.616 | 0.601 |
+
+Acting and directing are below the 80% target (the 2019+ backtest: 82.9% and 84.4%). Nothing was re-tuned: h, k, q, `mu`, `sigma_pop` and every 2019+ number in the artifact are byte-identical to v1.
+
+Nolan (directing), before (`afa6f23`) and after:
+
+| | Range | Mid | Films counted |
+| --- | --- | --- | --- |
+| Before | 6.78 – 8.28 | 7.53 | 13 |
+| After | 6.63 – 8.28 | 7.46 | 12 (The Odyssey, 2026, is settling) |
+
+His check line: "From films up to 2025 we said 6.6 – 8.3. The Odyssey scored 8.0 so far (still settling), inside."
+
+### Changes from the plan
+
+- **`check` is null whenever the forecast says not enough films:** its history is a subset of the counted films, so the spec's "line shows even without a forecast" case can't happen.
+- **`inside` is judged at one decimal,** the precision the card shows, not at 3 places: otherwise "we said 6.6 – 8.3, it scored 8.3, outside" could happen.
+- **The table view marks settling films** "(still settling)" too (final review: the table is the chart's non-visual alternative).
+- **A `holdout: null` in the artifact is refused at load,** like a missing field.
+- **The check line's range** uses the card's spaced dash ("6.6 – 8.3"), not the spec's "6.6–8.3".
+- **Types and fixtures came from the API on port 8001,** because the old Docker container held 8000.
+- **Commits** use `feat(...)`/`fix:` subjects; the plan's "Git on the VM" line was not used.
+
+### Checks
+
+| | |
+| --- | --- |
+| Python tests | 697 (`make test`) |
+| Frontend tests | 340 (`make web-test`); the career chunk 350.6 kB (limit about 360) |
+| Docker | `make smoke` passes (Nolan's `check` has The Odyssey, `holdout.year_from` 2026) |
+| Memory in Docker | 352 MiB after 100 predictions and 50 career pages from a fresh start (gate 450 MB); one long run without a restart (smoke, 100 predictions, 50 career pages) reached 459 MiB (about 481 MB), above the gate, cause not measured |
+| Browser pane | Nolan: one dashed dot, the check line, "7 out of 10 of 58 … (a small sample)"; Hanks: "7 out of 10 of 935", Toy Story 5 8.3 settling and outside; Kubrick: no check line; phone width light theme, desktop dark |
+| Live (image `75070c7a9ad2`) | serving V1.4 about 2 minutes after the hook; `make smoke` against the live URL: all checks passed |
+
+### Still open
+
+- **Memory:** the 459 MiB long run was not compared with the same sequence on the V1.3 image, so whether V1.4 adds to it is unknown (V1.4 adds no cache; career pages alone added about 3 MiB).
+- **Rounding:** Python rounds an exact x.x5 tie to even and the browser doesn't, so a score exactly on a range edge could read inconsistently. Very unlikely.
