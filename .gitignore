@@ -45,3 +45,6 @@ build/
 
 # Day 16: demo script, Q&A notes and the summary PDF, never committed
 private/
+
+# V1.5 backup of the v1 models (restored on rollback)
+ml/artifacts.pre_v15/

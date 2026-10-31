@@ -22,14 +22,16 @@ FX_FILE = Path("data/fx_rates.csv")
 EURO_FIXED = {"FRF": 6.55957, "DEM": 1.95583, "ITL": 1936.27, "ESP": 166.386}
 EURO_YEAR = 1999
 
-# World Bank country code per currency (extended from the survey).
+# World Bank country code per currency: every currency with 50+ films in the survey (Oct 31, 2026), plus the
+# four pre-euro ones. USD needs no rate.
 CURRENCY_COUNTRY: dict[str, str] = {
     "EUR": "EMU",
+    "AUD": "AUS",
     "GBP": "GBR",
+    "RUB": "RUS",
     "JPY": "JPN",
-    "INR": "IND",
-    "CNY": "CHN",
-    "KRW": "KOR",
+    "HKD": "HKG",
+    "CAD": "CAN",
     "FRF": "FRA",
     "DEM": "DEU",
     "ITL": "ITA",
