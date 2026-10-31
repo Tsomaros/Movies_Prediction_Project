@@ -1,8 +1,8 @@
 """GET /movies (search, filters, sorting, pages) and GET /movies/{id} (one film with similar films).
 
-Both are cacheable for an hour (Cache-Control: public, max-age=3600): the database only changes with a
-new build, and a new build means a new deploy. With fresh.db attached (V1.2) an answer that holds a new or upcoming
-film, and every `when` window, is cached for ten minutes. `when=released|upcoming` lists a window; without `when`
+Both are cacheable for an hour (Cache-Control: public, max-age=3600): the database changes with a new build, plus
+the new and upcoming films the refresher merges every 6 hours (services/fresh.py), so a list that holds one of those
+films (fresh_films), and every `when` window, is cached for ten minutes. `when=released|upcoming` lists a window; without `when`
 (and without a text search) a film not yet released is left out. Similar films come from the Day 7 comparables index with
 no date rule (any year) and never the film itself; a film outside the index's pool (no usable score)
 is matched on its genres, themes, language, era and budget, without a synopsis.

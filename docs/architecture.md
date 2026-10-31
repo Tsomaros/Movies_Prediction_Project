@@ -17,16 +17,14 @@ flowchart LR
     subgraph image["One Docker image (ghcr.io, private)"]
         api["FastAPI /api/v1"]
         web["React app<br/>(served by the API)"]
-        sqlite[("slim movies.db<br/>read-only")]
+        sqlite[("slim movies.db<br/>+ new and upcoming films")]
         predictor["ml.predict.Predictor"]
         api --- web
         api --> sqlite
         api --> predictor
         refresher["Refresher<br/>(every 6 h, in the background)"]
-        fresh[("/tmp/fresh.db<br/>new and upcoming films")]
         api --> refresher
-        refresher -->|"os.replace"| fresh
-        api -->|"attached, read-only,<br/>shadowing views"| fresh
+        refresher -->|"one transaction:<br/>films after 2025 only"| sqlite
     end
     tmdb -.->|"discover + details"| refresher
     api -.->|"listed film ids"| neon
@@ -38,8 +36,8 @@ flowchart LR
     action["GitHub Action<br/>daily smoke"] --> render
 ```
 
-- **Movies stay read-only.** The films, people and features are a SQLite file baked into the image; every request opens its own read-only connection.
-- **New films live in a second small file.** `fresh.db` (the last 14 days and the next 60, plus every film a user listed) has the same schema as the movie tables and is rebuilt in the background every 6 hours. Each request attaches it and reads both files through temporary views; the models, comparables, career data and autocomplete never do ([Fresh films](app.md#new-arrivals-v12)).
+- **One movies database.** The films, people and features are a SQLite file baked into the image; every request opens its own read-only connection.
+- **New films are merged into it.** Every 6 hours a background job pulls the films of the last 14 days and the next 60 (plus every film a user listed) from TMDB and writes them into `movies.db` in one transaction. It only writes films dated after 2025, and every model reads 2025 and earlier, so the models never see them ([New arrivals](app.md#new-arrivals-v12)).
 - **User data lives elsewhere.** Render Free's disk is wiped on every sleep and redeploy, so the demo account's lists and notes go to Neon's free Postgres ([The app](app.md#accounts-day-14)).
 - **The image is built on the laptop** and pushed to a private registry, because its 470 MB of data and models aren't in git ([Deployment](deployment.md#deployment-day-15)).
 

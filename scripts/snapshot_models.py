@@ -1,12 +1,13 @@
 """What the models see, as a small JSON, so a database rebuild can be shown to leave it unchanged (V1.2 Part A).
 
     uv run python -m scripts.snapshot_models > tests/fixtures/pre_v12_snapshot.json
-    uv run python -m scripts.snapshot_models --check tests/fixtures/pre_v12_snapshot.json
+    uv run python -m scripts.snapshot_models --check tests/fixtures/pre_v12_snapshot.json [--db PATH]
 
 For films released up to MODEL_DATA_MAX_YEAR (2025) it records: the rows of each training view, a hash of every
 film's cleaning flags (money_suspect, revenue_incomplete, score_ok, split), the currency caps of the cleaning report
 and a hash of the features table. A rebuild with the 2026 films added must give the same numbers.
-Without --check the JSON is printed; with it the script compares and exits 1 on any difference.
+Without --check the JSON is printed; with it the script compares and exits 1 on any difference. --db checks
+another copy (V1.3: one the app's refresher merged new films into must give the same numbers too).
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ import json
 import sqlite3
 import sys
 from contextlib import closing
+from pathlib import Path
 
 import pandas as pd
 
@@ -29,8 +31,8 @@ def _hash(df: pd.DataFrame) -> str:
     return str(int(pd.util.hash_pandas_object(df, index=True).sum()))
 
 
-def snapshot() -> dict:
-    with closing(sqlite3.connect(f"file:{DB_FILE.resolve().as_posix()}?mode=ro", uri=True)) as con:
+def snapshot(db_path: Path = DB_FILE) -> dict:
+    with closing(sqlite3.connect(f"file:{Path(db_path).resolve().as_posix()}?mode=ro", uri=True)) as con:
         counts = {v: con.execute(f"SELECT COUNT(*) FROM {v} WHERE year <= ?", (MAX_YEAR,)).fetchone()[0] for v in VIEWS}
         flags = pd.read_sql_query(
             "SELECT id, money_suspect, revenue_incomplete, score_ok, "
@@ -47,8 +49,9 @@ def snapshot() -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--check", metavar="FILE", help="compare with a saved snapshot")
+    parser.add_argument("--db", type=Path, default=DB_FILE, help="the database to read (default data/movies.db)")
     args = parser.parse_args()
-    now = snapshot()
+    now = snapshot(args.db)
     if not args.check:
         print(json.dumps(now, indent=2, sort_keys=True))
         return

@@ -178,7 +178,7 @@ def main() -> None:
         assert expected_version is None or h["model_version"] == expected_version, \
             f"model {h['model_version']}, expected {expected_version}"
         assert h["database"]["films"] > 0
-        assert set(h["fresh"]) == {"refreshed_at", "films"}, h.get("fresh")  # V1.2: fresh.db's block (null before the first refresh)
+        assert set(h["fresh"]) == {"refreshed_at", "films"}, h.get("fresh")  # V1.2: the refresh's block (null before the first one)
         fresh = f", fresh {h['fresh']['films']} films" if h["fresh"]["films"] is not None else ", fresh not built yet"
         return f"model {h['model_version']}, {h['database']['films']:,} films, loaded in {h['load_seconds']} s{fresh}"
 

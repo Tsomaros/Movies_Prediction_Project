@@ -1,9 +1,7 @@
 """Request dependencies: the read-only database connection and the objects loaded at startup.
 
     connect_read_only(path)   -> a sqlite3 connection that can't write (mode=ro); a missing file is an error
-    get_db(request)           -> one connection per request, closed after it (use with Depends); with fresh.db
-                                 attached through shadowing views when the file exists (V1.2)
-    get_main_db(request)      -> the same without fresh.db (career, model card, health, options)
+    get_db(request)           -> one connection per request, closed after it (use with Depends)
     get_predictor(request)    -> the Predictor loaded once by the lifespan hook
     get_lookups(request)      -> the autocomplete indexes built once by the lifespan hook
     get_predictions(request)  -> the PredictionService (cache + compare) around the Predictor
@@ -39,7 +37,6 @@ from typing import Any, Callable, Iterator, Optional
 import psycopg
 from fastapi import Depends, HTTPException, Request, Response
 
-from backend.app.fresh_views import attach_fresh
 from backend.app.services.auth import token_hash
 from backend.app.services.lookups import Lookups
 from backend.app.services.prediction import PredictionService
@@ -57,17 +54,6 @@ def connect_read_only(path: Path) -> sqlite3.Connection:
 
 
 def get_db(request: Request) -> Iterator[sqlite3.Connection]:
-    settings = request.app.state.settings
-    con = connect_read_only(settings.db_path)
-    attach_fresh(con, settings.fresh_path)  # V1.2: new and upcoming films, read through shadowing views
-    try:
-        yield con
-    finally:
-        con.close()
-
-
-def get_main_db(request: Request) -> Iterator[sqlite3.Connection]:
-    """movies.db alone: the career, model card, health and options answers never include fresh films."""
     con = connect_read_only(request.app.state.settings.db_path)
     try:
         yield con

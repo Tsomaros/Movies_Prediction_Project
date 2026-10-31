@@ -4,7 +4,7 @@
 // 10-star rating, or plan to watch) sit under the score, and your private notes after the overview.
 // A film out in the last 14 days says "New release" beside its date; one not yet released says "Coming 20 Nov" and
 // shows no score or box office (V1.2). Cast and crew names link to their person pages (/people/:id), except a face
-// that is only in fresh.db (a new film's, no page yet). The sections live in src/movies/film/.
+// the refresh added with a new film (no page yet). The sections live in src/movies/film/.
 import { ArrowLeftIcon, ExternalLinkIcon, SparklesIcon } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router'
 

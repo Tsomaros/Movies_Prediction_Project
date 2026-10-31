@@ -1,5 +1,5 @@
 // New arrivals (V1.2) in a real browser against the running app: the first row of /movies opens an ordinary film
-// page, and a film planned from there is in My movies. Needs a fresh.db with at least one released film (the app
+// page, and a film planned from there is in My movies. Needs at least one released new film merged in (the app
 // needs TMDB_READ_TOKEN: make docker-run takes it from .env) and the demo account (make userdb). It cleans up
 // after itself, like demo.spec.ts, so it can run again on the shared account.
 import { expect, test } from '@playwright/test'

@@ -3,7 +3,7 @@
     Settings.from_env()  -> the settings below, each with a default that works from the repository root
 
 | Variable      | Default                     | Meaning                                              |
-| MOVIES_DB     | data/movies.db              | the SQLite database, always opened read-only         |
+| MOVIES_DB     | data/movies.db              | the SQLite database; requests open it read-only      |
 | MODELS_DIR    | ml/artifacts/final          | the app's models, manifest and comparables index     |
 | CORS_ORIGINS  | http://localhost:5173       | comma-separated browser origins (the Vite dev server) |
 | RATE_LIMIT    | 30                          | prediction requests per minute per client IP         |
@@ -16,10 +16,10 @@
 | SENTRY_DSN    | (none: Sentry off)          | where the backend's errors are reported (Day 15)       |
 | CLIENT_IP_HEADER | (none: the connection's address) | the header holding the visitor's address for the per-IP limits (Render) |
 | APP_RELEASE   | (none)                      | the git commit the image was built from (make deploy), Sentry's release |
-| TMDB_READ_TOKEN | (none: no refresh)        | TMDB's read token for fresh.db (V1.2); without it the app shows only movies.db |
-| FRESH_DB      | data/fresh.db               | the small database of new and upcoming films, attached beside movies.db (the image: /tmp/fresh.db) |
-| FRESH_MIN_POPULARITY | 5                    | lowest TMDB popularity of a new or upcoming film that fresh.db takes |
-| FRESH_TTL_S   | 21600                       | how old fresh.db may get before the next refresh (6 hours) |
+| TMDB_READ_TOKEN | (none: no refresh)        | TMDB's read token for the new and upcoming films (V1.2) |
+| FRESH_REFRESH | (off)                       | 1: merge new and upcoming films into MOVIES_DB every FRESH_TTL_S (the image, V1.3); off, so `make api` never changes the database training reads |
+| FRESH_MIN_POPULARITY | 5                    | lowest TMDB popularity of a new or upcoming film the refresh takes |
+| FRESH_TTL_S   | 21600                       | how long after a refresh the next one starts (6 hours) |
 
 The browser origins are also the only ones allowed to write to /auth and /me (deps.same_origin_write),
 besides the API's own origin.
@@ -37,7 +37,6 @@ from ml.data.build_db import DB_FILE
 from ml.predict import FINAL_DIR
 
 API_PREFIX = "/api/v1"
-FRESH_FILE = "data/fresh.db"
 CAREER_FILE = Path("ml/artifacts/career_forecast.json")  # written by ml.career.backtest (make career)
 
 
@@ -61,7 +60,7 @@ class Settings:
     release: str | None = None
     client_ip_header: str | None = None
     tmdb_read_token: str | None = None
-    fresh_path: Path | None = None  # None (the default, and so in tests): fresh.db is never attached; from_env uses data/fresh.db
+    fresh_refresh: bool = False  # off (the default, and so in tests): the database is never written
     fresh_min_popularity: float = 5.0
     fresh_ttl_s: int = 21600
 
@@ -84,7 +83,7 @@ class Settings:
             release=env.get("APP_RELEASE") or None,
             client_ip_header=env.get("CLIENT_IP_HEADER") or None,
             tmdb_read_token=env.get("TMDB_READ_TOKEN") or None,
-            fresh_path=Path(env.get("FRESH_DB", FRESH_FILE)),
+            fresh_refresh=env.get("FRESH_REFRESH", "") in ("1", "true"),
             fresh_min_popularity=float(env.get("FRESH_MIN_POPULARITY", "5")),
             fresh_ttl_s=int(env.get("FRESH_TTL_S", "21600")),
         )

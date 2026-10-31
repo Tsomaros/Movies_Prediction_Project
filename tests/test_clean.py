@@ -203,7 +203,7 @@ def test_report_counts_every_rule():
     assert report["score_ok"] == 2 and report["score_below_min_votes"] == 1
 
 
-# ---------------------------------------------------------------- unreleased films (fresh.db, V1.2)
+# ---------------------------------------------------------------- unreleased films (the refresh of new films, V1.2)
 
 
 def test_clean_keeps_unreleased_when_asked():

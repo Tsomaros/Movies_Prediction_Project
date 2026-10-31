@@ -16,12 +16,14 @@ The lifespan hook runs once at startup and keeps on app.state:
   answer 503), the demo account's starting set and the login/demo/write limits (Day 14) and the
   "Surprise me" limit (Day 14.5), and "read": every /api GET or HEAD but /health, RATE_LIMIT_READ a minute per
   client IP (V1.1, the read_limit middleware);
-- fresh:     the Refresher of fresh.db, the small database of new and upcoming films (V1.2). It starts in the
-  background at startup and from the fresh_refresh middleware on any /api request once the file is older than
-  FRESH_TTL_S (6 h); a request never waits for it. Without TMDB_READ_TOKEN it never runs.
+- fresh:     the Refresher that merges new and upcoming films into movies.db (V1.2; one database since V1.3). With
+  FRESH_REFRESH and TMDB_READ_TOKEN it opens the file read-write once before serving (prepare), then runs in the
+  background at startup and from the fresh_refresh middleware on any /api request once the last refresh is older
+  than FRESH_TTL_S (6 h); a request never waits for it. Otherwise it never runs.
 app.state.clock gives the current UTC time to the accounts side (tests freeze it).
 Then memory freed while loading is handed back to the system (release_free_memory, Linux only).
-The database itself is never held open: every request gets its own read-only connection (deps.get_db).
+The database itself is never held open: every request gets its own read-only connection (deps.get_db); only the
+refresher writes, in one transaction.
 A new endpoint is a new module in backend/app/routers/ with a `router`, added to ROUTERS below.
 With WEB_DIR set (the production image, Day 15) the app itself is served too (backend/app/web.py).
 """
@@ -110,15 +112,16 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
         app.state.demo_seed = load_seed()
         pool = app.state.userdb
 
-        def listed() -> set[int]:  # every film any user listed or noted: fresh.db keeps those too
+        def listed() -> set[int]:  # every film any user listed or noted: the refresh keeps those too
             with pool.connection() as conn:
                 return userdb_repo.listed_movie_ids(conn)
 
         app.state.fresh = Refresher(
-            settings.fresh_path or settings.db_path.with_name("fresh.db"), settings.db_path,
-            settings.tmdb_read_token if settings.fresh_path else None, settings.fresh_min_popularity,
-            settings.fresh_ttl_s, listed if pool is not None else None, lambda: app.state.clock())
-        app.state.fresh.maybe_start()  # in the background: the first pages answer from movies.db alone
+            settings.db_path, settings.tmdb_read_token if settings.fresh_refresh else None,
+            settings.fresh_min_popularity, settings.fresh_ttl_s, listed if pool is not None else None,
+            lambda: app.state.clock())
+        app.state.fresh.prepare()
+        app.state.fresh.maybe_start()  # in the background: the first pages answer from the build
         release_free_memory()
         app.state.load_seconds = round(time.perf_counter() - start, 1)
         app.state.started = time.time()

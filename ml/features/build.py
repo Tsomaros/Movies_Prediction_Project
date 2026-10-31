@@ -87,10 +87,11 @@ class FeatureContext:
 
 
 def database_stamp(con: sqlite3.Connection) -> dict[str, Any]:
-    """What identifies a database build: its meta built_at and its film count."""
+    """What identifies a database build: its meta built_at and how many films the models may read (year <= 2025).
+    The app's refresher only writes later films, so a refreshed database keeps its stamp (V1.3)."""
     row = con.execute("SELECT value FROM meta WHERE key = 'built_at'").fetchone()
     return {"built_at": json.loads(row[0]) if row else None,
-            "films": con.execute("SELECT COUNT(*) FROM movies").fetchone()[0]}
+            "films": con.execute(f"SELECT COUNT(*) FROM movies WHERE year <= {MODEL_DATA_MAX_YEAR}").fetchone()[0]}
 
 
 def save_prebuilt(con: sqlite3.Connection, path: Path) -> dict[str, Any]:

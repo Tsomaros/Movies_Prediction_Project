@@ -674,7 +674,7 @@ export interface components {
             name: string | null;
             /**
              * Linked
-             * @description The person has a page (they are in the main database, not only in fresh.db)
+             * @description The person has a page (false for a face the refresh added with a new film)
              * @default true
              */
             linked: boolean;
@@ -821,7 +821,7 @@ export interface components {
             name: string | null;
             /**
              * Linked
-             * @description The person has a page (they are in the main database, not only in fresh.db)
+             * @description The person has a page (false for a face the refresh added with a new film)
              * @default true
              */
             linked: boolean;
@@ -1129,7 +1129,7 @@ export interface components {
         Fresh: {
             /**
              * Refreshed At
-             * @description When fresh.db (new and upcoming films) was last built; None before the first refresh
+             * @description When the new and upcoming films were last merged into the database; None before the first refresh
              */
             refreshed_at: string | null;
             /** Films */

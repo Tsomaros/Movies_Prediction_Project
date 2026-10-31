@@ -39,7 +39,7 @@ export function crewByJob(crew: { id: number; name?: string | null; job: string;
   return jobs.map(job => {
     const seen = new Set<number>()
     const people = crew.filter(c => c.job === job && c.name && !seen.has(c.id) && seen.add(c.id))
-      .map(c => ({ id: c.id, name: c.name!, ...(c.linked === false && { linked: false }) })) // a face only in fresh.db has no page
+      .map(c => ({ id: c.id, name: c.name!, ...(c.linked === false && { linked: false }) })) // a face the refresh added with a new film has no page
     return { job, people }
   }).filter(g => g.people.length > 0)
 }

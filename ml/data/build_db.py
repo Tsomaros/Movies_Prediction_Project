@@ -96,6 +96,14 @@ CREATE TABLE movie_languages (movie_id INTEGER REFERENCES movies(id), language T
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT);  -- value is JSON
 """
 
+# The app's refresher (backend/app/services/fresh.py, V1.3) writes new and upcoming films into this database and
+# records here which ones it wrote: `added` = 1 for a film the build didn't have. People it added have no page.
+FRESH_TABLES = """
+CREATE TABLE IF NOT EXISTS fresh_films  (id INTEGER PRIMARY KEY, added INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS fresh_people (id INTEGER PRIMARY KEY);
+"""
+SCHEMA += FRESH_TABLES
+
 # Lookup tables first, so movies' and the links' foreign keys point at existing rows.
 TABLE_ORDER = [
     "genres",

@@ -13,7 +13,7 @@ import sqlite3
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
-from backend.app.deps import get_main_db
+from backend.app.deps import get_db
 from backend.app.repo import meta as repo
 from backend.app.schemas.errors import Message
 from backend.app.schemas.model_card import ModelCard
@@ -26,7 +26,7 @@ STALE = "The model card doesn't match the models being served; rerun `uv run pyt
 @router.get("/model-card", response_model=ModelCard, response_model_exclude_none=True,
             responses={503: {"model": Message, "description": "The model card is missing or out of date"}},
             summary="Test results, data range and version of the served models")
-def model_card(request: Request, response: Response, con: sqlite3.Connection = Depends(get_main_db)):
+def model_card(request: Request, response: Response, con: sqlite3.Connection = Depends(get_db)):
     state = request.app.state
     if getattr(state, "model_card", None) is None:
         version = getattr(state.predictor, "manifest", {}).get("version")

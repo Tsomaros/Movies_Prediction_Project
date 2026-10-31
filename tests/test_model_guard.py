@@ -120,29 +120,32 @@ def test_the_career_forecast_backtest_on_the_real_database_gives_the_committed_a
     assert built["roles"] == json.loads(OUT_FILE.read_text(encoding="utf-8"))["roles"]
 
 
-def test_lookups_career_and_health_never_attach_fresh_db(db, tmp_path, monkeypatch):  # noqa: F811
-    """With a fresh.db in place and attach_fresh made to explode, the main-only answers still work; a request that
-    is allowed to read fresh films (get_db) does hit it, which shows the patch is live."""
-    import backend.app.deps as deps
-    from backend.app.main import create_app
-    from backend.app.services.fresh import build_fresh_db
-    from backend.app.services.lookups import Lookups
-    from backend.app.settings import Settings
-    from fastapi.testclient import TestClient
+def test_a_merge_of_new_films_changes_nothing_the_models_or_the_career_section_read(db, tmp_path):  # noqa: F811
+    """V1.3: the refresher writes into movies.db itself. A merge with new films, upcoming ones and a 2025 one must
+    leave the track records, franchises, features' forms, the stamp and a career answer as they were."""
+    import shutil
+    from contextlib import closing
 
-    fresh_path = tmp_path / "fresh.db"
-    build_fresh_db([film(900_001, release_date="2026-10-25")], TEST_CPI, fresh_path, {})
+    from backend.app.repo import career
+    from backend.app.services.fresh import merge_into, open_for_writing
+    from ml.features.build import database_stamp
 
-    def boom(*a, **k):
-        raise AssertionError("attach_fresh was called")
+    path = tmp_path / "movies.db"
+    shutil.copyfile(db / "movies.db", path)
 
-    monkeypatch.setattr(deps, "attach_fresh", boom)
-    with sqlite3.connect(db / "movies.db") as con:
-        con.row_factory = sqlite3.Row
-        assert Lookups.from_db(con) is not None  # the startup autocomplete reads movies.db alone
-    app = create_app(Settings(db_path=db / "movies.db", fresh_path=fresh_path), predictor=object(), lookups=object())
-    with TestClient(app) as c:
-        for url in ("/api/v1/health", "/api/v1/model-card", "/api/v1/people/1000/career?role=directing"):
-            assert c.get(url).status_code in (200, 404, 503), url  # 503: the sentinel predictor has no model version
-        with pytest.raises(AssertionError, match="attach_fresh"):
-            c.get("/api/v1/movies")
+    def read() -> tuple:
+        with closing(sqlite3.connect(path)) as con:
+            con.row_factory = sqlite3.Row
+            return (load_films(con).to_json(), FilmForms.from_db(con).movies.to_json(), len(Franchises.from_db(con).films.ids),
+                    database_stamp(con), career.latest_year(con),
+                    career.career_films(con, 1000, "directing", 50), career.roles_available(con, 2001, 50))
+
+    before = read()
+    credits = {"cast": [{"id": 2001, "name": "Actor 1", "character": "Hero", "order": 0}],
+               "crew": [{"id": 1000, "name": "Director 0", "job": "Director"}]}  # people of the build's films
+    with closing(open_for_writing(path)) as con:
+        out = merge_into(con, [film(900_001, release_date="2026-10-25", credits=credits, vote_count=900),
+                               film(900_002, status="Planned", release_date="2027-02-01", credits=credits),
+                               film(900_003, release_date="2025-11-01", credits=credits)], TEST_CPI, "now")
+    assert out["films"] == 2 and out["skipped"] == 1
+    assert read() == before

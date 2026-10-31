@@ -31,9 +31,9 @@ MIN_SHARED = 2
 def person(con: sqlite3.Connection, person_id: int) -> dict[str, Any] | None:
     row = con.execute("""SELECT p.id, p.name, d.profile_path, d.biography, d.birthday, d.deathday, d.place_of_birth,
                                 d.known_for_department, d.imdb_id, d.homepage
-                         FROM main.people p LEFT JOIN person_details d ON d.person_id = p.id WHERE p.id = ?""",  # main only: a face
-                      # that is only in fresh.db has no page (V1.2)
-                      (person_id,)).fetchone()
+                         FROM people p LEFT JOIN person_details d ON d.person_id = p.id
+                         WHERE p.id = ? AND p.id NOT IN (SELECT id FROM fresh_people)""",  # a face the refresher
+                      (person_id,)).fetchone()  # added (only in new films) has no page (V1.2)
     return dict(row) if row else None
 
 

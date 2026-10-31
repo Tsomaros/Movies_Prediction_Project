@@ -25,7 +25,8 @@ Recipe sources for the model card (services/career_model):
 Acting is movie_cast, directing and writing the crew jobs in repo/people.ROLES. A film is rated with
 min_votes+ votes (callers pass ml.data.clean.MIN_VOTES) and a score; a lead is an acting credit with ord <= 2.
 Films without a year, and shorts (a runtime under the form's MIN_RUNTIME, 40 minutes), are left out (DATED); an
-unknown runtime counts. A film with a year but no date sorts as 1 July of that year, ties by id.
+unknown runtime counts. A film with a year but no date sorts as 1 July of that year, ties by id. A film the
+refresher added (fresh_films.added: new and upcoming, V1.3) never counts, so a career is that of the build.
 Recent = rated films from the 5 latest release years in the database.
 """
 
@@ -43,7 +44,8 @@ CAREER_ROLES: tuple[Role, ...] = ("acting", "directing", "writing")
 JOBS = {role: jobs for role, _, jobs in ROLES if role in CAREER_ROLES[1:]}
 LEAD_MAX_ORD = 2
 ORDER = "COALESCE(m.release_date, m.year || '-07-01'), m.id"
-DATED = f"m.year IS NOT NULL AND (m.runtime IS NULL OR m.runtime >= {MIN_RUNTIME})"  # charted: a year, no shorts
+BUILT = "m.id NOT IN (SELECT id FROM fresh_films WHERE added)"
+DATED = f"m.year IS NOT NULL AND (m.runtime IS NULL OR m.runtime >= {MIN_RUNTIME}) AND {BUILT}"  # charted: a year, no shorts
 RATED = f"{DATED} AND m.vote_count >= ? AND m.vote_average IS NOT NULL"
 
 
@@ -117,7 +119,7 @@ def population_stats(con: sqlite3.Connection, role: Role, min_votes: int, end_ye
 
 
 def latest_year(con: sqlite3.Connection) -> int:
-    return con.execute("SELECT MAX(year) FROM movies").fetchone()[0]
+    return con.execute(f"SELECT MAX(year) FROM movies m WHERE {BUILT}").fetchone()[0]
 
 
 # ---------------------------------------------------------------- recipe sources (Task 4)

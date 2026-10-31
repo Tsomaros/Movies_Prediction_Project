@@ -87,7 +87,7 @@ make smoke URL=https://movie-prediction-2f1b0265282c.onrender.com WEB=https://mo
 | `DEMO_PASSWORD` | the one the seed hashed |
 | `CORS_ORIGINS` | `https://movie-prediction-2f1b0265282c.onrender.com` |
 | `CLIENT_IP_HEADER` | `CF-Connecting-IP` |
-| `TMDB_READ_TOKEN` | TMDB's read token, for `fresh.db` (V1.2): the New arrivals row. Without it nothing is refreshed and the app shows only `movies.db` |
+| `TMDB_READ_TOKEN` | TMDB's read token, for the New arrivals row (V1.2). Without it nothing is refreshed and the app shows the build's films only |
 | `SENTRY_DSN` | the backend's Sentry project (not set yet) |
 | Health check path | `/api/v1/health` |
 
@@ -112,11 +112,13 @@ make smoke URL=https://movie-prediction-2f1b0265282c.onrender.com WEB=https://mo
 | The career section's model films | 6.1 s |
 | The 12-month sweep | 24.6 s |
 
-**Fresh films (V1.2):**
-- `FRESH_DB=/tmp/fresh.db` (set in the image): the small database of new and upcoming films is never baked into the image or committed. The app builds it in the background right after a start (about 10 s for 114 films) and again every 6 hours; the first requests after a wake-up answer from `movies.db` alone, and a missing or half-built file changes nothing. Render's disk is wiped on every sleep and redeploy, so the file is rebuilt each time. `TMDB_READ_TOKEN` must be set on Render; `FRESH_MIN_POPULARITY` (5) and `FRESH_TTL_S` (21600) are optional.
+**New and upcoming films (V1.2; one database since V1.3):**
+- The image sets `FRESH_REFRESH=1`, and its `movies.db` and `/app/data` belong to the `app` user. Right after a start the app opens the database read-write once, then merges the new and upcoming films into it in the background (about 9 s for 97 films, TMDB included) and again every 6 hours; the first requests after a wake-up answer from the build. Render's disk is wiped on every sleep and redeploy, so the image's database comes back and the merge runs again. `TMDB_READ_TOKEN` must be set on Render; `FRESH_MIN_POPULARITY` (5) and `FRESH_TTL_S` (21600) are optional.
 - A film that a user listed or noted is pulled by id even when it has left the window, so *My movies* keeps it until the next restart (when TMDB still knows it and the listing is read from Neon).
-- The image carries `data/cpi_us_annual.csv` (the refresher cleans money in 2025 dollars). `make deploy` does not rebuild `build/`: run `make docker-build` first after any data change.
-- Measured locally (Docker, 2026-10-30): the refresh takes 9.5 s for 114 films; memory is 375 MiB after 28 predictions and 120 list requests (the gate is 450); `fresh.db` is 0.6 MB.
+- The first write copies the 298 MB file into the container's writable layer: 0.5-1.0 s in Docker, held as page cache the kernel gives back under pressure. Measured locally on the V1.3 image (512 MB limit, `FRESH_TTL_S=60`, 2026-10-31): 1,254 predictions and 1,203 list and search requests in 100 s while a second merge committed; no lock error or failed refresh, no out-of-memory kill, RSS 358 MB (gate 450). A `docker compose restart` keeps the merged file, and the app still starts: the prebuilt context's stamp counts films up to 2025 only.
+- The image carries `data/cpi_us_annual.csv` (the refresher cleans money in 2025 dollars). `make deploy` does not rebuild `build/`: run `make docker-build` first after any data change, and after this version (the stamp changed). `scripts/slim_db.py` refuses a `data/movies.db` that a refresh was merged into.
+- Not measured on Render yet: the copy and memory after a wake-up there. If Render's writable layer were held in memory instead of on disk, the copy would not be reclaimable and the first merge could pass 512 MB. After the first deploy check that `/health`'s `fresh.films` is set and `uptime_seconds` keeps growing past `fresh.refreshed_at` (no restart loop), and look at the dashboard's memory graph. The off switch is `FRESH_REFRESH=0` in Render's environment: it overrides the image, and the app serves the build without new films.
+- A database built before V1.3 lacks the two tables the app reads (`fresh_films`, `fresh_people`): `make db` creates them, or add them in place with `uv run python -c "import sqlite3; from backend.app.services.fresh import ensure_tables; c = sqlite3.connect('data/movies.db', isolation_level=None); c.execute('BEGIN'); ensure_tables(c); c.execute('COMMIT')"`. Without them `/meta/options`, `/health` and `make career` fail.
 
 **Monitoring:**
 - **A daily check:** `.github/workflows/live-smoke.yml` runs `scripts/smoke.py` against the live URL at 06:17 UTC and waits up to 3 minutes for the wake-up; a failed run emails the repository's owner. Once a day, because any check wakes the service, so frequent pings would be a keep-alive. GitHub stops scheduled workflows after 60 days without activity in the repository.

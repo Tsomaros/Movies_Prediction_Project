@@ -5,7 +5,8 @@
 Drops the `features` table (training and the comparables build read it; the app computes features from
 the films themselves) and VACUUMs the copy. Everything the API and predict() read stays: films, people,
 companies, keywords, collections, the link tables, the FTS index, the views and `meta`. The source is
-opened read-only and never changed; the copy is checked to have the same films and an intact FTS index.
+opened read-only and never changed; the copy is checked to have the same films and an intact FTS index, and
+refused when the source holds films the app's refresher merged (fresh_films not empty): the image ships the build.
 """
 
 from __future__ import annotations
@@ -20,7 +21,7 @@ from pathlib import Path
 TRAINING_ONLY = ("features",)
 APP_TABLES = ("movies", "people", "companies", "keywords", "collections", "genres", "movie_genres", "movie_companies",
               "movie_keywords", "movie_cast", "movie_crew", "movie_countries", "movie_languages", "meta", "movies_fts",
-              "person_details")
+              "person_details", "fresh_films", "fresh_people")
 
 
 def slim(src: Path, out: Path) -> dict[str, float]:
@@ -36,13 +37,15 @@ def slim(src: Path, out: Path) -> dict[str, float]:
     con.commit()
     con.execute("VACUUM")
     films = con.execute("SELECT COUNT(*) FROM movies").fetchone()[0]
+    merged = con.execute("SELECT COUNT(*) FROM fresh_films").fetchone()[0] if con.execute(
+        "SELECT 1 FROM sqlite_master WHERE name = 'fresh_films'").fetchone() else 0
     missing = [t for t in APP_TABLES if not con.execute("SELECT 1 FROM sqlite_master WHERE name = ?", (t,)).fetchone()]
     con.execute("INSERT INTO movies_fts(movies_fts) VALUES ('integrity-check')")  # raises if the index is broken
     con.close()
     with closing(sqlite3.connect(source_uri, uri=True)) as source:
-        if missing or films != source.execute("SELECT COUNT(*) FROM movies").fetchone()[0]:
+        if missing or merged or films != source.execute("SELECT COUNT(*) FROM movies").fetchone()[0]:
             tmp.unlink()
-            raise RuntimeError(f"slim copy is wrong: missing {missing}, {films} films")
+            raise RuntimeError(f"slim copy is wrong: missing {missing}, {films} films, {merged} merged by the refresher")
     tmp.replace(out)
     return {"films": films, "source_mb": src.stat().st_size / 1e6, "slim_mb": out.stat().st_size / 1e6}
 

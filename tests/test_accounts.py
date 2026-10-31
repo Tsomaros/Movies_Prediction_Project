@@ -503,27 +503,31 @@ def test_listed_movie_ids_come_from_every_users_lists_and_notes(pg):
     assert repo.listed_movie_ids(pg) == base | {900_001, 900_002}
 
 
-def test_a_watchlisted_fresh_film_is_in_my_movies_and_hidden_without_the_file(db, pg_url, pg, tmp_path):
-    from backend.app.services.fresh import build_fresh_db
+def test_a_watchlisted_new_film_is_in_my_movies_and_hidden_without_it(db, pg_url, pg, tmp_path):
+    import shutil
+
+    from backend.app.services.fresh import merge_into, open_for_writing
     from tests.factories import TEST_CPI, film
 
-    fresh_path = tmp_path / "fresh.db"
-    build_fresh_db([film(900_001, title="Just Out", release_date="2026-10-25")], TEST_CPI, fresh_path, {})
+    merged = tmp_path / "movies.db"
+    shutil.copyfile(db / "movies.db", merged)
+    with closing(open_for_writing(merged)) as con:
+        merge_into(con, [film(900_001, title="Just Out", release_date="2026-10-25")], TEST_CPI, "2026-10-30T10:00:00+00:00")
 
     def client(path):
-        app = create_app(Settings(db_path=db / "movies.db", user_database_url=pg_url, fresh_path=path), predictor=object())
+        app = create_app(Settings(db_path=path, user_database_url=pg_url), predictor=object())
         c = TestClient(app, base_url="http://testserver", headers={"Origin": "http://testserver"})
         c.clock = Clock(NOW)
         app.state.clock = c.clock
         app.state.demo_seed = SEED
         return c
 
-    with client(fresh_path) as c:
+    with client(merged) as c:
         demo(c)
         assert put(c, 900_001, status="plan_to_watch").status_code == 200
         titles = [m["movie"]["title"] for m in c.get(f"{ME}/movies?status=plan_to_watch").json()["items"]]
         assert "Just Out" in titles
-    with client(tmp_path / "gone.db") as c:  # a restart that lost the file: the entry stays, the film is hidden as today
+    with client(db / "movies.db") as c:  # the build without it (a restart): the entry stays, the film is hidden
         demo(c)
         titles = [m["movie"]["title"] for m in c.get(f"{ME}/movies?status=plan_to_watch").json()["items"]]
         assert "Just Out" not in titles and repo.entry(pg, pg.demo_id, 900_001) is not None

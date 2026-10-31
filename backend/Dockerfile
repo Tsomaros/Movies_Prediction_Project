@@ -35,12 +35,14 @@ FROM python:3.11-slim
 # LightGBM needs the OpenMP runtime, which the slim image doesn't have
 RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd --create-home --uid 1000 app
+    && useradd --create-home --uid 1000 app     && mkdir -p /app/data && chown app:app /app/data
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 # The data first: it changes only with a new database (make docker-build), so a code-only deploy reuses
-# these 350 MB of layers and pushes only what changed
-COPY build/movies.db data/movies.db
+# these 350 MB of layers and pushes only what changed. The app user owns movies.db and its folder (for SQLite's
+# journal): the refresher merges new and upcoming films into it (V1.3). --chown, not a RUN chown, which would copy
+# the 298 MB into one more layer
+COPY --chown=app:app build/movies.db data/movies.db
 COPY build/context.joblib data/context.joblib
 # the CPI table: the refresher cleans new films in 2025 dollars (V1.2)
 COPY data/cpi_us_annual.csv data/cpi_us_annual.csv
@@ -53,7 +55,7 @@ ENV PATH=/app/.venv/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     MOVIES_DB=/app/data/movies.db \
-    FRESH_DB=/tmp/fresh.db \
+    FRESH_REFRESH=1 \
     MODELS_DIR=/app/ml/artifacts/final \
     CONTEXT_FILE=/app/data/context.joblib \
     WEB_DIR=/app/web \

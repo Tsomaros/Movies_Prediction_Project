@@ -372,8 +372,9 @@ def test_the_frontend_test_options_match_the_contract():
 
     saved = json.loads(Path("frontend/src/test/options.json").read_text(encoding="utf-8"))
     with sqlite3.connect(":memory:") as con:  # empty tables: the language and country lists aren't compared
-        con.execute("CREATE TABLE movies (original_language TEXT)")
-        con.execute("CREATE TABLE movie_countries (country TEXT)")
+        con.execute("CREATE TABLE movies (id INTEGER, original_language TEXT)")
+        con.execute("CREATE TABLE movie_countries (movie_id INTEGER, country TEXT)")
+        con.execute("CREATE TABLE fresh_films (id INTEGER, added INTEGER)")  # the refresher's films are left out (V1.3)
         current = build_options(con, sorted(load_themes()))
     for key in ("fields", "genres", "certifications", "themes", "months"):
         assert saved[key] == json.loads(json.dumps(current[key])), key
@@ -687,18 +688,18 @@ def test_the_api_refuses_to_start_on_models_that_do_not_match_their_manifest(db,
     assert not hasattr(app.state, "predictor")  # nothing was served
 
 
-# ---------------------------------------------------------------- fresh.db's refresher (V1.2)
+# ---------------------------------------------------------------- the refresher of new films (V1.2, V1.3)
 
 
 def test_settings_fresh_defaults(monkeypatch):
-    for name in ("FRESH_DB", "FRESH_MIN_POPULARITY", "FRESH_TTL_S"):
+    for name in ("FRESH_REFRESH", "FRESH_MIN_POPULARITY", "FRESH_TTL_S"):
         monkeypatch.delenv(name, raising=False)
     s = Settings.from_env()
-    assert (s.fresh_path, s.fresh_min_popularity, s.fresh_ttl_s) == (Path("data/fresh.db"), 5.0, 21600)
-    assert Settings().fresh_path is None  # tests and code that build Settings directly never attach a fresh.db
-    monkeypatch.setenv("FRESH_DB", "/tmp/fresh.db")
+    assert (s.fresh_refresh, s.fresh_min_popularity, s.fresh_ttl_s) == (False, 5.0, 21600)  # make api never writes
+    assert Settings().fresh_refresh is False  # tests and code that build Settings directly never write the database
+    monkeypatch.setenv("FRESH_REFRESH", "1")
     monkeypatch.setenv("FRESH_TTL_S", "60")
-    assert (Settings.from_env().fresh_path, Settings.from_env().fresh_ttl_s) == (Path("/tmp/fresh.db"), 60)
+    assert (Settings.from_env().fresh_refresh, Settings.from_env().fresh_ttl_s) == (True, 60)
 
 
 class StubRefresher:
@@ -725,11 +726,13 @@ def test_a_request_asks_the_refresher_to_start_when_due(db):
     assert stub.cancelled
 
 
-def test_without_a_token_nothing_is_ever_refreshed(db):
-    app = create_app(Settings(db_path=db / "movies.db", fresh_path=db / "fresh-never.db", tmdb_read_token=None),
+@pytest.mark.parametrize("refresh, token", [(True, None), (False, "t")])
+def test_without_a_token_or_the_switch_nothing_is_ever_refreshed(db, refresh, token):
+    before = (db / "movies.db").read_bytes()
+    app = create_app(Settings(db_path=db / "movies.db", fresh_refresh=refresh, tmdb_read_token=token),
                      predictor=object(), lookups=object())
     with TestClient(app) as client:
         client.get(f"{API_PREFIX}/movies")
         assert app.state.fresh.due() is False and app.state.fresh.status() == {"refreshed_at": None, "films": None}
         assert client.get(f"{API_PREFIX}/health").json()["fresh"] == {"refreshed_at": None, "films": None}
-    assert not (db / "fresh-never.db").exists()
+    assert (db / "movies.db").read_bytes() == before

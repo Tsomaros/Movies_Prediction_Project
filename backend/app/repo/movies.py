@@ -10,7 +10,7 @@
                                         -> the ids of the films a "Surprise me" spin may pick (Day 14.5)
     posters(con, ids)                   -> {id: poster_path} for the films among ids that have a poster
     ids_present(con, ids)               -> the ids among them that are films in this database (V1.2: the refresher)
-    fresh_ids(con, ids)                 -> the ids among them that come from fresh.db
+    fresh_ids(con, ids)                 -> the ids among them that the refresher keeps up to date (fresh_films, V1.3)
     film_keywords(con, movie_id)        -> the film's TMDB keyword ids (for its themes)
 
 User text never reaches FTS5 as syntax: words are pulled out with a Unicode regex and quoted, so input like
@@ -25,8 +25,6 @@ import re
 import sqlite3
 from datetime import date
 from typing import Any
-
-from backend.app.fresh_views import has_fresh
 
 SORTS = {  # name -> ORDER BY; ties broken by id so pages never overlap
     "popularity": "m.popularity IS NULL, m.popularity DESC, m.id",
@@ -43,9 +41,7 @@ SCORE_SORT_MIN_VOTES = 500  # the "Highest score" sort and the Top rated row: a 
 GENRES_SQL = """(SELECT json_group_array(n) FROM (
     SELECT (SELECT g.name FROM genres g WHERE g.id = mg.genre_id) AS n
     FROM movie_genres mg WHERE mg.movie_id = m.id ORDER BY mg.ord LIMIT 100))"""
-# With fresh.db attached movie_genres and genres are UNION ALL views. SQLite uses an index on such a view only for a
-# one-table query it can flatten: the LIMIT keeps the inner query apart from the aggregate, and the name is looked up
-# by id instead of joined. The earlier join form scanned every row of the view for each film (120 ms for 12 films).
+# The LIMIT keeps the inner query apart from the aggregate, and the name is looked up by id instead of joined.
 SUMMARY_COLS = """m.id, m.title, m.year, m.release_date, m.poster_path, m.original_language, m.vote_average, m.vote_count,
               m.score_ok, m.popularity, CASE WHEN m.money_suspect THEN NULL ELSE m.revenue_2025 END AS revenue_2025"""
 SUMMARY = f"""{SUMMARY_COLS},
@@ -67,20 +63,15 @@ def search(con: sqlite3.Connection, q: str | None = None, genre: str | None = No
 
     With `today` (V1.2): when="released" / "upcoming" keeps the films of that window (services.fresh.windows); with
     neither `when` nor a text search a film not yet released is left out, so a coming-soon film is found only
-    through when="upcoming", a search or its page. With fresh.db attached the text is matched in both FTS tables."""
+    through when="upcoming", a search or its page."""
     joins, where, args = "", ["m.release_date IS NOT NULL"], []
     if q is not None:
         match = fts_query(q)
         if match is None:  # only punctuation: nothing can match
             return [], 0
-        if has_fresh(con):  # FTS5 can't be read through the shadowing view: ask both tables for ids
-            where.append("m.id IN (SELECT rowid FROM main.movies_fts WHERE movies_fts MATCH ? "
-                         "UNION SELECT rowid FROM fresh.movies_fts WHERE movies_fts MATCH ?)")
-            args.extend((match, match))
-        else:
-            joins = "JOIN movies_fts ON movies_fts.rowid = m.id"
-            where.append("movies_fts MATCH ?")
-            args.append(match)
+        joins = "JOIN movies_fts ON movies_fts.rowid = m.id"
+        where.append("movies_fts MATCH ?")
+        args.append(match)
     if today is not None:
         if when is not None:
             from backend.app.services.fresh import windows
@@ -116,7 +107,7 @@ def search(con: sqlite3.Connection, q: str | None = None, genre: str | None = No
         where.append("m.revenue_2025 IS NOT NULL AND NOT m.money_suspect")
     clause = f"FROM movies m {joins} WHERE {' AND '.join(where)}"
     total = con.execute(f"SELECT COUNT(*) {clause}", args).fetchone()[0]
-    # two steps: the ids of the page (a sort over the view, no per-row subqueries), then the page's summaries
+    # two steps: the ids of the page (a sort without per-row subqueries), then the page's summaries
     page_ids = [r[0] for r in con.execute(f"SELECT m.id {clause} ORDER BY {SORTS[sort]} LIMIT ? OFFSET ?",
                                           [*args, page_size, (page - 1) * page_size])]
     found = summaries(con, page_ids)
@@ -125,7 +116,7 @@ def search(con: sqlite3.Connection, q: str | None = None, genre: str | None = No
 
 def genres_for(con: sqlite3.Connection, ids: list[int]) -> dict[int, list[str]]:
     """Each film's genre names in TMDB's order, for a page of films: two flat queries instead of a subquery per
-    film (with fresh.db attached the genre tables are UNION ALL views, and a correlated subquery over one scans it)."""
+    film (V1.2: 17x faster for the newest list)."""
     if not ids:
         return {}
     names = {r[0]: r[1] for r in con.execute("SELECT id, name FROM genres")}
@@ -201,10 +192,10 @@ def posters(con: sqlite3.Connection, ids: list[int]) -> dict[int, str]:
 
 
 def fresh_ids(con: sqlite3.Connection, ids: list[int]) -> set[int]:
-    """The ids among them whose film comes from fresh.db (empty without it)."""
-    if not ids or not has_fresh(con):
+    """The ids among them whose film the refresher keeps up to date (their answers are cached for minutes only)."""
+    if not ids:
         return set()
-    return {r[0] for r in con.execute(f"SELECT id FROM fresh.movies WHERE id IN ({','.join('?' * len(ids))})", list(ids))}
+    return {r[0] for r in con.execute(f"SELECT id FROM fresh_films WHERE id IN ({','.join('?' * len(ids))})", list(ids))}
 
 
 def ids_present(con: sqlite3.Connection, ids: list[int]) -> set[int]:
@@ -214,12 +205,10 @@ def ids_present(con: sqlite3.Connection, ids: list[int]) -> set[int]:
 
 
 def _rows_by_id(con: sqlite3.Connection, table: str, columns: str, ids: list[int]) -> list[sqlite3.Row]:
-    """The rows of a lookup table (a view with fresh.db attached) for a few ids; the LIMIT lets SQLite search the
-    view by id in each file instead of scanning it."""
+    """The rows of a lookup table for a few ids."""
     if not ids:
         return []
-    return con.execute(f"SELECT {columns} FROM (SELECT {columns} FROM {table} WHERE id IN ({','.join('?' * len(ids))}) "
-                       f"LIMIT {len(ids)})", list(ids)).fetchall()
+    return con.execute(f"SELECT {columns} FROM {table} WHERE id IN ({','.join('?' * len(ids))})", list(ids)).fetchall()
 
 
 def movie(con: sqlite3.Connection, movie_id: int) -> dict[str, Any] | None:
@@ -246,15 +235,15 @@ def movie(con: sqlite3.Connection, movie_id: int) -> dict[str, Any] | None:
         "SELECT language FROM movie_languages WHERE movie_id = ? ORDER BY language", (movie_id,))]
     out["cast"] = [dict(x) for x in con.execute(
         """SELECT p.id, p.name, c.character, c.ord AS "order", d.profile_path,
-                  p.id IN (SELECT id FROM main.people) AS linked
+                  p.id NOT IN (SELECT id FROM fresh_people) AS linked
            FROM movie_cast c JOIN people p ON p.id = c.person_id LEFT JOIN person_details d ON d.person_id = p.id
            WHERE c.movie_id = ? ORDER BY c.ord LIMIT ?""", (movie_id, TOP_CAST))]
     jobs = {(x[0], x[1]) for x in con.execute("SELECT person_id, job FROM movie_crew WHERE movie_id = ?", (movie_id,))}
     people = {x["id"]: x["name"] for x in _rows_by_id(con, "people", "id, name", sorted({p for p, _ in jobs}))}
-    in_main = {x[0] for x in con.execute(
-        f"SELECT id FROM main.people WHERE id IN ({','.join('?' * len(people))})", list(people))} if people else set()
+    added = {x[0] for x in con.execute(
+        f"SELECT id FROM fresh_people WHERE id IN ({','.join('?' * len(people))})", list(people))} if people else set()
     rank = {job: i for i, job in enumerate(CREW_JOBS)}
-    out["crew"] = [{"id": p, "name": people[p], "job": job, "linked": p in in_main}
+    out["crew"] = [{"id": p, "name": people[p], "job": job, "linked": p not in added}
                    for p, job in sorted((j for j in jobs if j[0] in people), key=lambda j: (rank.get(j[1], 99), people[j[0]]))]
     return out
 

@@ -56,7 +56,7 @@ class Database(BaseModel):
 
 
 class Fresh(BaseModel):
-    refreshed_at: Optional[str] = Field(description="When fresh.db (new and upcoming films) was last built; None before the first refresh")
+    refreshed_at: Optional[str] = Field(description="When the new and upcoming films were last merged into the database; None before the first refresh")
     films: Optional[int]
 
 

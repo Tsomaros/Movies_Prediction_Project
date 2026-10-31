@@ -73,8 +73,8 @@ def load_raw(path: Path = RAW_MOVIES) -> list[dict[str, Any]]:
 def select_records(records: list[dict[str, Any]], keep_unreleased: bool = False) -> tuple[list[dict[str, Any]], dict[str, int]]:
     """Keep released films only; when an id appears twice (a re-pull), keep the latest pull.
 
-    keep_unreleased keeps every status (Planned, In Production, Post Production, ...): only fresh.db, the app's
-    small database of new and upcoming films (V1.2), asks for it; `make db` never does."""
+    keep_unreleased keeps every status (Planned, In Production, Post Production, ...): only the app's refresher
+    of new and upcoming films (backend/app/services/fresh.py, V1.2) asks for it; `make db` never does."""
     latest: dict[int, dict[str, Any]] = {}
     for r in records:
         kept = latest.get(r["id"])

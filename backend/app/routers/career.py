@@ -15,7 +15,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import JSONResponse
 
-from backend.app.deps import get_main_db, get_predictions
+from backend.app.deps import get_db, get_predictions
 from backend.app.repo.career import Role, career_films
 from backend.app.routers.movies import CACHE
 from backend.app.routers.people import MAX_ID
@@ -45,7 +45,7 @@ def _no_credits() -> HTTPException:
 @router.get("/people/{person_id}/career", response_model=CareerResponse, responses={**ERRORS, **NOT_FOUND},
             summary="One person's scores over the years in one role, and a track-record forecast of their next film")
 def career(person_id: int, request: Request, response: Response, role: Optional[Role] = ROLE,
-           con: sqlite3.Connection = Depends(get_main_db)):
+           con: sqlite3.Connection = Depends(get_db)):
     _person(con, person_id)
     try:
         out = career_response(con, request.app.state.career, person_id, role)
@@ -63,7 +63,7 @@ def career_model(person_id: int, request: Request, response: Response,
                                                      "input)"),
                  genre: Optional[int] = Query(None, description="A genre id from `chips`: only that \"Something "
                                                                 "new\""),
-                 con: sqlite3.Connection = Depends(get_main_db),
+                 con: sqlite3.Connection = Depends(get_db),
                  predictions: PredictionService = Depends(get_predictions)):
     _person(con, person_id)
     if role not in MODEL_ROLES:
