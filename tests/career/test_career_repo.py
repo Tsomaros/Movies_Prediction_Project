@@ -7,11 +7,11 @@ import statistics
 
 import pytest
 
-from backend.app.repo.career import career_films, latest_year, population_stats, roles_available
+from backend.app.repo.career import career_films, counted, latest_year, population_stats, roles_available
 from ml.data.build_db import SCHEMA
 from ml.data.clean import MIN_VOTES
 
-ACTOR, WRITER, OTHER = 1, 2, 3
+ACTOR, WRITER, OTHER, SETTLER = 1, 2, 3, 4
 LEAD_ID, CAMEO_ID, NO_DATE_ID, LOW_VOTE_ID, NO_ORD_ID, UNDATED_ID = 101, 103, 102, 106, 107, 109
 EXPECTED_ORDER = [101, 103, 102, 104, 105, 106, 107, 108]  # 102 has only a year: 1 July, after 103; 104/105 same date
 POP_2015 = [7.0, 6.5, 7.5, 6.5, 8.0, 5.5]  # rated acting films 2006-15: 102, 103, 104, 105, 107, 108
@@ -35,6 +35,10 @@ CAST = [  # (movie_id, person_id, character, ord)
     (105, ACTOR, "Cop", 3), (106, ACTOR, "Ghost", 4), (107, ACTOR, "Narrator", None), (108, ACTOR, "Dad", 5),
     (109, ACTOR, "Unknown", 0), (104, OTHER, "Lead", 0), (112, OTHER, "Lead", 0),
 ]
+# SETTLER's films: release 2018-01-01 and the pull date; 181 days apart is settling, 182 is settled
+YOUNG_181, OLD_182, NO_PULL_ID = 113, 114, 115
+SETTLE_MOVIES = [(YOUNG_181, "2018-01-01", "2018-07-01T10:00:00+00:00"), (OLD_182, "2018-01-01", "2018-07-02T10:00:00+00:00"),
+                 (NO_PULL_ID, "2018-01-01", None)]
 CREW = [(110, ACTOR, "Director"), (111, ACTOR, "Director"), (110, WRITER, "Screenplay"), (110, WRITER, "Writer")]
 
 
@@ -43,12 +47,18 @@ def con(tmp_path):
     c = sqlite3.connect(tmp_path / "movies.db")
     c.row_factory = sqlite3.Row
     c.executescript(SCHEMA)
-    c.executemany("INSERT INTO people VALUES (?, ?)", [(p, f"Person {p}") for p in (ACTOR, WRITER, OTHER)])
+    c.executemany("INSERT INTO people VALUES (?, ?)", [(p, f"Person {p}") for p in (ACTOR, WRITER, OTHER, SETTLER)])
     c.executemany("""INSERT INTO movies (id, title, release_date, year, vote_count, vote_average, score_ok,
                                          poster_path, money_suspect, revenue_incomplete, covid_period)
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0)""",
                   [(i, f"Film {i}", d, y, v, s, int(v >= MIN_VOTES), f"/f{i}.jpg") for i, d, y, v, s in MOVIES])
+    c.execute("UPDATE movies SET pulled_at = '2026-10-30T13:42:39+00:00'")
+    c.executemany("""INSERT INTO movies (id, title, release_date, year, vote_count, vote_average, score_ok,
+                                         poster_path, money_suspect, revenue_incomplete, covid_period, pulled_at)
+                     VALUES (?, ?, ?, 2018, 100, 7.0, 1, NULL, 0, 0, 0, ?)""",
+                  [(i, f"Film {i}", d, pulled) for i, d, pulled in SETTLE_MOVIES])
     c.executemany("INSERT INTO movie_cast VALUES (?, ?, ?, ?)", CAST)
+    c.executemany("INSERT INTO movie_cast VALUES (?, ?, 'Role', 0)", [(i, SETTLER) for i, _, _ in SETTLE_MOVIES])
     c.executemany("INSERT INTO movie_crew VALUES (?, ?, ?)", CREW)
     yield c
     c.close()
@@ -64,7 +74,7 @@ def test_films_dated_only_deduped_and_ordered(con):
 def test_film_without_a_date_sorts_as_1_july_and_keeps_its_fields(con):
     f = {x["movie_id"]: x for x in career_films(con, ACTOR, "acting", MIN_VOTES)}
     assert f[NO_DATE_ID] == {"movie_id": 102, "title": "Film 102", "year": 2008, "release_date": None, "score": 7.0,
-                             "vote_count": 200, "rated": True, "lead": True, "character": "Friend",
+                             "vote_count": 200, "rated": True, "settling": False, "lead": True, "character": "Friend",
                              "poster_path": "/f102.jpg"}
 
 
@@ -114,3 +124,15 @@ def test_shorts_are_left_out_of_the_films_and_the_population(con):
     assert population_stats(con, "acting", MIN_VOTES, 2015) == before
     con.execute("UPDATE movies SET runtime = 40 WHERE id = 120")  # the form's minimum is a feature film
     assert 120 in {f["movie_id"] for f in career_films(con, ACTOR, "acting", MIN_VOTES)}
+
+
+def test_settled_boundary_uses_the_pull_date(con):  # released 181 vs 182 days before the pull
+    f = {x["movie_id"]: x for x in career_films(con, SETTLER, "acting", MIN_VOTES)}
+    assert f[YOUNG_181]["settling"] is True and f[OLD_182]["settling"] is False
+    assert counted(f[YOUNG_181]) is False and counted(f[OLD_182]) is True
+
+
+def test_no_release_date_or_pull_date_counts_as_settled(con):
+    f = {x["movie_id"]: x for x in career_films(con, ACTOR, "acting", MIN_VOTES)}
+    g = {x["movie_id"]: x for x in career_films(con, SETTLER, "acting", MIN_VOTES)}
+    assert f[NO_DATE_ID]["settling"] is False and g[NO_PULL_ID]["settling"] is False

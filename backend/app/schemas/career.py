@@ -33,6 +33,7 @@ class CareerFilmOut(BaseModel):
     vote_count: int
     rated: bool = Field(description="50+ votes and a score: a solid dot that counts for the line and the forecast; "
                                     "otherwise a faint dot only")
+    settling: bool = Field(description="Score under 182 days old when pulled: drawn, not counted")
     lead: Optional[bool] = Field(description="Acting: billed in the top 3; None for crew roles")
     character: Optional[str] = Field(description="Acting: who they played")
     poster_small: Optional[str] = Field(description="A TMDB poster (w342), when there is one")

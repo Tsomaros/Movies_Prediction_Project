@@ -11,8 +11,8 @@
                                        no film in that role (role None: their acting/directing/writing role with
                                        the most films)
 
-Rated films (MIN_VOTES+ votes and a score) feed the line, the best film and the forecast; low-vote films are
-only drawn. roles_available lists each role with 5+ rated films (MIN_RATED), plus the one shown.
+Counted films (MIN_VOTES+ votes, a score, and a settled score: not `settling`) feed the line, the best film and the
+forecast; low-vote and settling films are only drawn. roles_available lists each role with 5+ rated films (MIN_RATED), plus the one shown.
 """
 
 from __future__ import annotations
@@ -95,7 +95,7 @@ def career_response(con: sqlite3.Connection, art: CareerArtifact, person_id: int
     if current is None:
         raise NoCredits(role)
     films = repo.career_films(con, person_id, role, MIN_VOTES)  # oldest first
-    rated = [f for f in films if f["rated"]]
+    rated = [f for f in films if repo.counted(f)]
     best = max(enumerate(rated), key=lambda t: (t[1]["score"], t[1]["vote_count"], t[0]), default=None)
     return {
         "person_id": person_id,

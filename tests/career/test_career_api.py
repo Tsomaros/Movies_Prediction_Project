@@ -25,11 +25,12 @@ from ml.data.build_db import SCHEMA
 from ml.data.clean import MIN_VOTES
 from tests.career.test_career_model import GENRES, THEMES
 
-ACTOR, FEW, WRITER, COMPOSER, UNRATED, COSTAR = 1, 2, 3, 4, 5, 6
+ACTOR, FEW, WRITER, COMPOSER, UNRATED, COSTAR, YOUNGSTER, FIVE_ONE_YOUNG = 1, 2, 3, 4, 5, 6, 7, 8
 PEOPLE = {ACTOR: "Actor A", FEW: "Few Films", WRITER: "Wendy Writer", COMPOSER: "Composer C", UNRATED: "Unrated U",
-          COSTAR: "Co Star"}
+          COSTAR: "Co Star", YOUNGSTER: "Young Ster", FIVE_ONE_YOUNG: "Five One"}
 DRAMA, CRIME, HORROR, MYSTERY, SCIFI, ACTION = 18, 80, 27, 9648, 878, 28
 BEST, LOW_VOTES, UNDATED = 103, 109, 110
+YOUNG_ID = 300  # an 8.9 film released 2019-01-01 and pulled 60 days later: settling
 CAREER = f"{API_PREFIX}/people/{{}}/career"
 MODEL = f"{API_PREFIX}/people/{{}}/career/model"
 
@@ -39,12 +40,16 @@ FILMS = [  # id, date, year, votes, score, genres, keywords, poster
       for k, s in enumerate(SCORES)],
     (LOW_VOTES, "2020-05-01", 2020, 10, 8.5, (DRAMA,), (3,), None),
     (UNDATED, None, None, 500, 7.0, (DRAMA,), (3,), None),
+    (YOUNG_ID, "2019-01-01", 2019, 500, 8.9, (DRAMA,), (3,), None),
+    *[(301 + k, f"{2014 + k}-03-01", 2014 + k, 500, s, (DRAMA,), (3,), None) for k, s in enumerate([6.0, 6.5, 7.0, 6.2, 6.8])],
     *[(201 + k, f"{2021 + k}-10-01", 2021 + k, 500, 6.5, (HORROR, MYSTERY), (5,), None) for k in range(5)],
     *[(206 + k, f"{2021 + k}-06-01", 2021 + k, 500, 6.5, (SCIFI, ACTION), (6,), None) for k in range(5)],
 ]
 CAST = ([(101 + k, ACTOR, f"Part {k}", 4 if k in (1, 4) else 0) for k in range(8)]
         + [(LOW_VOTES, ACTOR, "Late", 0), (UNDATED, ACTOR, "Lost", 0), (LOW_VOTES, UNRATED, "Extra", 3)]
-        + [(101 + k, FEW, "Friend", 1) for k in range(3)])
+        + [(101 + k, FEW, "Friend", 1) for k in range(3)]
+        + [(i, YOUNGSTER, "Part", 0) for i in (YOUNG_ID, 301, 302, 303, 304, 305)]  # 5 counted + 1 settling
+        + [(i, FIVE_ONE_YOUNG, "Part", 0) for i in (YOUNG_ID, 301, 302, 303, 304)])  # 4 counted + 1 settling
 CREW = ([(108, ACTOR, "Director")] + [(101 + k, WRITER, "Screenplay") for k in range(6)]
         + [(101, COMPOSER, "Original Music Composer")])
 ROLE = {"h": 5.0, "k": 3.0, "q": 1.35, "mu": 6.4, "sigma_pop": 0.8, "fallback": False,
@@ -73,6 +78,7 @@ def files(tmp_path_factory):
         con.execute("INSERT INTO movie_countries VALUES (?, 'US')", (i,))
     con.executemany("INSERT INTO movie_cast VALUES (?, ?, ?, ?)", CAST)
     con.executemany("INSERT INTO movie_crew VALUES (?, ?, ?)", CREW)
+    con.execute("UPDATE movies SET pulled_at = '2019-03-02T10:00:00+00:00' WHERE id = ?", (YOUNG_ID,))
     con.commit()  # the app reads it through its own read-only connections
     con.close()
     (tmp / "career.json").write_text(json.dumps(ARTIFACT), encoding="utf-8")
@@ -118,7 +124,7 @@ def test_career_full_response(client):
     assert [f["movie_id"] for f in b["films"]] == [*range(101, 109), LOW_VOTES]  # the undated film is left out
     first = b["films"][0]
     assert first == {"movie_id": 101, "title": "Film 101", "year": 2012, "release_date": "2012-05-01", "score": 6.0,
-                     "vote_count": 500, "rated": True, "lead": True, "character": "Part 0",
+                     "vote_count": 500, "rated": True, "settling": False, "lead": True, "character": "Part 0",
                      "poster_small": "https://image.tmdb.org/t/p/w342/p101.jpg"}
     assert [f["lead"] for f in b["films"][:3]] == [True, False, True]
     assert b["films"][-1]["rated"] is False  # drawn faint, never counted
@@ -134,6 +140,20 @@ def test_career_full_response(client):
         "test": {"coverage": 0.82, "n_people": 9594}}
     assert b["forecast"]["low"] < b["forecast"]["mid"] < b["forecast"]["high"]
     assert b["model_available"] is True
+
+
+def test_settling_film_is_drawn_but_not_counted(client):
+    b = client.get(CAREER.format(YOUNGSTER)).json()
+    young = next(f for f in b["films"] if f["movie_id"] == YOUNG_ID)
+    assert young["settling"] is True and young["rated"] is True
+    assert b["best_film"]["movie_id"] != YOUNG_ID
+    assert len(b["line"]) == sum(f["rated"] and not f["settling"] for f in b["films"]) == 5
+    assert b["forecast"]["explain"]["n_rated"] == len(b["line"])
+    assert all(f["settling"] is False for f in client.get(CAREER.format(ACTOR)).json()["films"])
+
+
+def test_five_rated_with_one_settling_is_not_enough(client):
+    assert client.get(CAREER.format(FIVE_ONE_YOUNG)).json()["forecast"]["status"] == "not_enough_films"
 
 
 def test_a_role_with_few_rated_films_is_listed_when_shown(client):

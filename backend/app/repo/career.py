@@ -7,6 +7,7 @@
     population_stats(con, role, min_votes, end_year)
                                     -> (mean, population sd) of rated films in that role from the 10 years to end_year
     latest_year(con)                -> the newest release year in the database
+    counted(film)                   -> rated and not settling: the films the line and the forecast use
 
 Recipe sources for the model card (services/career/model.py):
     person_name(con, person_id)     -> the person's name, or None
@@ -27,7 +28,9 @@ min_votes+ votes (callers pass ml.data.clean.MIN_VOTES) and a score; a lead is a
 Films without a year, and shorts (a runtime under the form's MIN_RUNTIME, 40 minutes), are left out (DATED); an
 unknown runtime counts. A film with a year but no date sorts as 1 July of that year, ties by id. A film the
 refresher added (fresh_films.added: new and upcoming, V1.3) never counts, so a career is that of the build.
-Recent = rated films from the 5 latest release years in the database.
+A rated film whose release was under SETTLE_DAYS (ml.data.clean.INCOMPLETE_DAYS, 182) before its pull date is
+settling (a young score still moves): it is drawn but not counted (counted()). SETTLED is the same rule as SQL on
+alias m. Recent = rated films from the 5 latest release years in the database.
 """
 
 from __future__ import annotations
@@ -37,6 +40,7 @@ import statistics
 from typing import Any, Literal, TypedDict
 
 from backend.app.repo.people import MIN_SHARED, ROLES
+from ml.data.clean import INCOMPLETE_DAYS
 from ml.features.contract import MIN_RUNTIME
 
 Role = Literal["acting", "directing", "writing"]
@@ -47,6 +51,10 @@ ORDER = "COALESCE(m.release_date, m.year || '-07-01'), m.id"
 BUILT = "m.id NOT IN (SELECT id FROM fresh_films WHERE added)"
 DATED = f"m.year IS NOT NULL AND (m.runtime IS NULL OR m.runtime >= {MIN_RUNTIME}) AND {BUILT}"  # charted: a year, no shorts
 RATED = f"{DATED} AND m.vote_count >= ? AND m.vote_average IS NOT NULL"
+SETTLE_DAYS = INCOMPLETE_DAYS  # a score younger than this when pulled is still moving
+# true when the score had settled at pull time; no release date or no pull date counts as settled
+SETTLED = (f"(m.release_date IS NULL OR m.pulled_at IS NULL OR "
+           f"julianday(substr(m.pulled_at, 1, 10)) - julianday(m.release_date) >= {SETTLE_DAYS})")
 
 
 class CareerFilm(TypedDict):
@@ -57,6 +65,7 @@ class CareerFilm(TypedDict):
     score: float | None
     vote_count: int
     rated: bool
+    settling: bool  # the score was under SETTLE_DAYS old when pulled: drawn, not counted
     lead: bool | None  # None for crew roles
     character: str | None
     poster_path: str | None
@@ -73,14 +82,14 @@ def _credited(role: Role) -> tuple[str, tuple[str, ...]]:
 def career_films(con: sqlite3.Connection, person_id: int, role: Role, min_votes: int) -> list[CareerFilm]:
     if role == "acting":
         rows = con.execute(f"""SELECT m.id, m.title, m.year, m.release_date, m.vote_average, m.vote_count,
-                                      m.poster_path, c.ord, c.character
+                                      m.poster_path, c.ord, c.character, {SETTLED} AS settled
                                FROM movie_cast c JOIN movies m ON m.id = c.movie_id
                                WHERE c.person_id = ? AND {DATED} ORDER BY {ORDER}""",
                            (person_id,)).fetchall()
     else:
         sql, jobs = _credited(role)
         rows = con.execute(f"""SELECT m.id, m.title, m.year, m.release_date, m.vote_average, m.vote_count,
-                                      m.poster_path, NULL AS ord, NULL AS character
+                                      m.poster_path, NULL AS ord, NULL AS character, {SETTLED} AS settled
                                FROM movies m WHERE m.id IN ({sql} AND person_id = ?) AND {DATED}
                                ORDER BY {ORDER}""", (*jobs, person_id)).fetchall()
     return [_film(r, role, min_votes) for r in rows]
@@ -91,10 +100,15 @@ def _film(r: sqlite3.Row, role: Role, min_votes: int) -> CareerFilm:
     return {
         "movie_id": r["id"], "title": r["title"], "year": r["year"], "release_date": r["release_date"],
         "score": r["vote_average"], "vote_count": votes,
-        "rated": votes >= min_votes and r["vote_average"] is not None,
+        "rated": votes >= min_votes and r["vote_average"] is not None, "settling": not r["settled"],
         "lead": (r["ord"] is not None and r["ord"] <= LEAD_MAX_ORD) if role == "acting" else None,
         "character": r["character"] if role == "acting" else None, "poster_path": r["poster_path"],
     }
+
+
+def counted(f: CareerFilm) -> bool:
+    """Whether the film feeds the line, the best film and the forecast: rated, and its score has settled."""
+    return f["rated"] and not f["settling"]
 
 
 def roles_available(con: sqlite3.Connection, person_id: int, min_votes: int) -> list[dict[str, Any]]:
