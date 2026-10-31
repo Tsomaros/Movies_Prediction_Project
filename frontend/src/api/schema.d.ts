@@ -579,6 +579,25 @@ export interface components {
             given: number | null;
             comparison: components["schemas"]["BudgetComparison"];
         };
+        /** CareerCheck */
+        CareerCheck: {
+            /**
+             * Up To
+             * @description The range is built from counted films up to this year
+             */
+            up_to: number;
+            /** Low */
+            low: number;
+            /** Mid */
+            mid: number;
+            /** High */
+            high: number;
+            /**
+             * Films
+             * @description Their rated films after `up_to`, oldest first
+             */
+            films: components["schemas"]["CheckFilm"][];
+        };
         /** CareerFilmOut */
         CareerFilmOut: {
             /** Movie Id */
@@ -604,6 +623,11 @@ export interface components {
              * @description 50+ votes and a score: a solid dot that counts for the line and the forecast; otherwise a faint dot only
              */
             rated: boolean;
+            /**
+             * Settling
+             * @description Score under 182 days old when pulled: drawn, not counted
+             */
+            settling: boolean;
             /**
              * Lead
              * @description Acting: billed in the top 3; None for crew roles
@@ -660,6 +684,8 @@ export interface components {
             /** @description Highest score (ties: more votes, then newer); None without rated films */
             best_film: components["schemas"]["BestFilm"] | null;
             forecast: components["schemas"]["TrackForecast"];
+            /** @description Films after the model data against the range from earlier ones; None without 5+ counted earlier films or a later rated film */
+            check: components["schemas"]["CareerCheck"] | null;
             /**
              * Model Available
              * @description Acting or directing with 1+ rated film: /career/model answers
@@ -684,6 +710,27 @@ export interface components {
             order: number | null;
             /** @description TMDB photo (small: w185, large: h632), when the person pull has one */
             photo?: components["schemas"]["Poster"] | null;
+        };
+        /** CheckFilm */
+        CheckFilm: {
+            /** Movie Id */
+            movie_id: number;
+            /** Title */
+            title: string;
+            /** Year */
+            year: number;
+            /** Score */
+            score: number;
+            /**
+             * Settling
+             * @description Score under 182 days old when pulled
+             */
+            settling: boolean;
+            /**
+             * Inside
+             * @description low <= score <= high, on the rounded numbers shown
+             */
+            inside: boolean;
         };
         /** Chip */
         Chip: {
@@ -1047,6 +1094,8 @@ export interface components {
              * @description People whose next films were tested
              */
             n_people: number;
+            /** @description The same check on films after the model data */
+            holdout: components["schemas"]["HoldoutTest"];
         };
         /**
          * FormChanges
@@ -1170,6 +1219,24 @@ export interface components {
             };
             /** @description The small database of new and upcoming films (V1.2) */
             fresh: components["schemas"]["Fresh"];
+        };
+        /** HoldoutTest */
+        HoldoutTest: {
+            /**
+             * Year From
+             * @description First year of the films the forecast never saw (the year after the model data)
+             */
+            year_from: number;
+            /**
+             * Coverage
+             * @description Share of their settled films inside a range built this way; None when this role has none
+             */
+            coverage: number | null;
+            /**
+             * N Points
+             * @description Settled films tested
+             */
+            n_points: number;
         };
         /** KnownFor */
         KnownFor: {

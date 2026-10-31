@@ -37,8 +37,8 @@ describe('the career chart', () => {
   test('dot styles follow lead, supporting, crew and low votes; the best film and the band are marked', () => {
     chart(HANKS)
     const films = scored(HANKS)
-    expect(screen.getAllByTestId('dot-lead')).toHaveLength(films.filter(f => f.rated && f.lead).length)
-    expect(screen.getAllByTestId('dot-support')).toHaveLength(films.filter(f => f.rated && f.lead === false).length)
+    expect(screen.getAllByTestId('dot-lead')).toHaveLength(films.filter(f => f.rated && !f.settling && f.lead).length)
+    expect(screen.getAllByTestId('dot-support')).toHaveLength(films.filter(f => f.rated && !f.settling && f.lead === false).length)
     expect(screen.getAllByTestId('dot-faint')).toHaveLength(films.filter(f => !f.rated).length)
     expect(screen.queryByTestId('dot-crew')).toBeNull()
     expect(within(screen.getByTestId('best-marker')).getByText('Best: 8.5')).toBeInTheDocument()
@@ -46,9 +46,30 @@ describe('the career chart', () => {
     expect(screen.getByText('Next film')).toBeInTheDocument()
   })
 
+  test('a settling film is a dashed outline dot, not counted in the summary', () => {
+    chart(NOLAN)
+    const settling = NOLAN.films.filter(f => f.rated && f.settling)
+    expect(settling).toHaveLength(1)
+    const dot = screen.getByTestId('dot-settling')
+    const ring = dot.querySelectorAll('circle')[1]
+    expect(ring).toHaveAttribute('stroke-dasharray', '2 2')
+    expect(ring).toHaveAttribute('fill', 'none')
+    expect(screen.getAllByTestId('dot-settling')).toHaveLength(1)
+    const counted = NOLAN.films.filter(f => f.rated && !f.settling)
+    expect(chartSummary(NOLAN)).toMatch(new RegExp(`^${counted.length} rated films `))
+  })
+
+  test('its tooltip says the score is still settling', () => {
+    chart(NOLAN)
+    fireEvent.pointerEnter(screen.getByTestId('dot-settling'), { pointerType: 'mouse' })
+    const tip = screen.getByRole('tooltip')
+    expect(tip).toHaveTextContent('The Odyssey')
+    expect(tip).toHaveTextContent('Score still settling')
+  })
+
   test('crew films are filled dots', () => {
     chart(NOLAN)
-    expect(screen.getAllByTestId('dot-crew')).toHaveLength(scored(NOLAN).filter(f => f.rated).length)
+    expect(screen.getAllByTestId('dot-crew')).toHaveLength(scored(NOLAN).filter(f => f.rated && !f.settling).length)
     expect(screen.queryByTestId('dot-lead')).toBeNull()
   })
 

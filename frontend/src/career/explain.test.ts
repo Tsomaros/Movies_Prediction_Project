@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 
 import type { CareerResponse } from '@/api/client'
-import { explainText } from '@/career/explain'
+import { explainText, holdoutText } from '@/career/explain'
 import hanksJson from '@/test/career_hanks.json'
 
 const F = { n_rated: 23, own_avg: 6.9, own_share: 0.82, db_avg: 6.3, mid: 6.8 }
@@ -34,5 +34,23 @@ describe('the "How is this calculated?" paragraph', () => {
     expect(text).toContain('Based on 72 rated films. Recent films count more: a film from 8 years before the latest counts half.')
     expect(text).toContain('Their weighted average is 6.9; with this many films we trust it 93% and the database average (6.4) 7%, giving 6.9.')
     expect(text).toContain('8 out of 10 real next films')
+  })
+})
+
+describe('the 2026 sentence', () => {
+  test('says how many landed inside, with a small-sample suffix under 100 points', () => {
+    expect(holdoutText({ year_from: 2026, coverage: 0.83, n_points: 935 }))
+      .toBe('We also checked films from 2026, which the forecast never saw: 8 out of 10 of 935 landed inside.')
+    expect(holdoutText({ year_from: 2026, coverage: 0.81, n_points: 58 })).toMatch(/landed inside \(a small sample\)\.$/)
+  })
+
+  test('no sentence without a coverage, and explainText appends it only when there is one', () => {
+    expect(holdoutText({ year_from: 2026, coverage: null, n_points: 0 })).toBeNull()
+    const f = { n_rated: 23, own_avg: 6.9, own_share: 0.82, db_avg: 6.3, mid: 6.8 }
+    const none = explainText(f, { coverage: 0.81, holdout: { year_from: 2026, coverage: null, n_points: 0 } }, 8)
+    expect(none).not.toContain('2026')
+    expect(none).not.toContain('NaN')
+    expect(explainText(f, { coverage: 0.81, holdout: { year_from: 2026, coverage: 0.7, n_points: 935 } }, 8))
+      .toMatch(/ We also checked films from 2026, which the forecast never saw: 7 out of 10 of 935 landed inside\.$/)
   })
 })

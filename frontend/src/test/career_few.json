@@ -17,6 +17,7 @@
    "score": 8.462,
    "vote_count": 30703,
    "rated": true,
+   "settling": false,
    "lead": false,
    "character": "Young Jenny Curran",
    "poster_small": "https://image.tmdb.org/t/p/w342/saHP97rTPS5eLmrLQEcANmKrsFl.jpg"
@@ -29,6 +30,7 @@
    "score": 7.1,
    "vote_count": 14,
    "rated": false,
+   "settling": false,
    "lead": false,
    "character": "Maybeth Tillerman",
    "poster_small": "https://image.tmdb.org/t/p/w342/nP2yQ98bzQUhL7AL1dggXDbu4zC.jpg"
@@ -41,6 +43,7 @@
    "score": 6.1,
    "vote_count": 8,
    "rated": false,
+   "settling": false,
    "lead": true,
    "character": "Samantha / Sammy",
    "poster_small": "https://image.tmdb.org/t/p/w342/Au25lTsOchxflSWF8cxHCJh3CTb.jpg"
@@ -53,6 +56,7 @@
    "score": 7.138,
    "vote_count": 3732,
    "rated": true,
+   "settling": false,
    "lead": false,
    "character": "Cecilia Lisbon",
    "poster_small": "https://image.tmdb.org/t/p/w342/1NCQtXPQnaHRjOZVmktA9BSM35F.jpg"
@@ -65,6 +69,7 @@
    "score": 5.99,
    "vote_count": 52,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Sarah",
    "poster_small": "https://image.tmdb.org/t/p/w342/1jLDp7fmQz6TkOjdHJtQMXvMR0I.jpg"
@@ -98,8 +103,14 @@
   "explain": null,
   "test": {
    "coverage": 0.8292,
-   "n_people": 9498
+   "n_people": 9498,
+   "holdout": {
+    "year_from": 2026,
+    "coverage": 0.7275,
+    "n_points": 935
+   }
   }
  },
+ "check": null,
  "model_available": true
 }

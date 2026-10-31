@@ -95,6 +95,34 @@ describe('the Career section', () => {
     expect(within(within(section).getByRole('table', { name: 'Career films' })).getAllByRole('row')).toHaveLength(DIRECTING.films.length + 1)
   })
 
+  test('the check line links the later film and says it is settling and inside', async () => {
+    nolan()
+    renderApp('/people/525')
+    const section = await career()
+    const line = await within(section).findByTestId('career-check')
+    expect(line).toHaveTextContent(/^From films up to 2025 we said 6\.6 – 8\.3\./)
+    expect(line).toHaveTextContent('The Odyssey scored 8.0 so far (still settling), inside.')
+    expect(within(line).getByRole('link', { name: 'The Odyssey' })).toHaveAttribute('href', '/movies/1368337')
+  })
+
+  test('no check line when the check is absent', async () => {
+    serve(NOLAN, { career: () => ({ body: { ...DIRECTING, check: null } }) })
+    renderApp('/people/525')
+    const section = await career()
+    await within(section).findByText('Their usual film')
+    expect(within(section).queryByTestId('career-check')).toBeNull()
+  })
+
+  test('the 2026 sentence is never written as NaN when a role has no points', async () => {
+    const test = { ...DIRECTING.forecast.test, holdout: { year_from: 2026, coverage: null, n_points: 0 } }
+    serve(NOLAN, { career: () => ({ body: { ...DIRECTING, forecast: { ...DIRECTING.forecast, test } } }) })
+    renderApp('/people/525')
+    const section = await career()
+    await userEvent.click(await within(section).findByRole('button', { name: 'How is this calculated?' }))
+    expect(within(section).queryByText(/NaN/)).toBeNull()
+    expect(within(section).queryByText(/films from 2026/)).toBeNull()
+  })
+
   test('the page\'s role switch moves the section to writing', async () => {
     const { calls } = nolan()
     const { router } = renderApp('/people/525')

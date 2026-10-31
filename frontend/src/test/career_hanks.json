@@ -4,8 +4,8 @@
  "roles_available": [
   {
    "role": "acting",
-   "film_count": 76,
-   "rated_count": 72
+   "film_count": 78,
+   "rated_count": 73
   }
  ],
  "films": [
@@ -17,6 +17,7 @@
    "score": 5.165,
    "vote_count": 79,
    "rated": true,
+   "settling": false,
    "lead": false,
    "character": "Elliot",
    "poster_small": "https://image.tmdb.org/t/p/w342/90rdztFCRAxQsEfy35cxH9qt3N1.jpg"
@@ -29,6 +30,7 @@
    "score": 4.234,
    "vote_count": 109,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Robbie Wheeling",
    "poster_small": "https://image.tmdb.org/t/p/w342/4i0ISVGGZczwl3RaTIAa8BMu6Df.jpg"
@@ -41,6 +43,7 @@
    "score": 6.262,
    "vote_count": 1547,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Allen Bauer",
    "poster_small": "https://image.tmdb.org/t/p/w342/7FutTsMWBwVhjk1Ujf1wtndUVZh.jpg"
@@ -53,6 +56,7 @@
    "score": 6.326,
    "vote_count": 749,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Rick Gassko",
    "poster_small": "https://image.tmdb.org/t/p/w342/dZf3UpPZDvJYTODSUJQy7wYEop.jpg"
@@ -65,6 +69,7 @@
    "score": 5.739,
    "vote_count": 324,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Richard",
    "poster_small": "https://image.tmdb.org/t/p/w342/lD44uiCKnLVCKiEnB0urtqIR0nE.jpg"
@@ -77,6 +82,7 @@
    "score": 5.5,
    "vote_count": 189,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Lawrence Whatley Bourne III",
    "poster_small": "https://image.tmdb.org/t/p/w342/tua28Wyv9uGBtPTBGCP7GsN3Znu.jpg"
@@ -89,6 +95,7 @@
    "score": 6.521,
    "vote_count": 1293,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Walter Fielding, Jr.",
    "poster_small": "https://image.tmdb.org/t/p/w342/bohhidIi1WWU5NNYF9l5wLQu3Ii.jpg"
@@ -101,6 +108,7 @@
    "score": 5.93,
    "vote_count": 142,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "David Basner",
    "poster_small": "https://image.tmdb.org/t/p/w342/m2G6Idl1CKJwOt8aFsnJk08sfDP.jpg"
@@ -113,6 +121,7 @@
    "score": 6.0,
    "vote_count": 58,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "David",
    "poster_small": "https://image.tmdb.org/t/p/w342/fMiWlS4jNZysUquP6CZfKswukMo.jpg"
@@ -125,6 +134,7 @@
    "score": 5.99,
    "vote_count": 569,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Pep Streebeck",
    "poster_small": "https://image.tmdb.org/t/p/w342/77H17YDeHoJCHebpfGF1rY3Dfof.jpg"
@@ -137,6 +147,7 @@
    "score": 7.192,
    "vote_count": 4221,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Josh",
    "poster_small": "https://image.tmdb.org/t/p/w342/eWhCDJiwxvx3YXkAFRiHjimnF0j.jpg"
@@ -149,6 +160,7 @@
    "score": 5.54,
    "vote_count": 161,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Steven Gold",
    "poster_small": "https://image.tmdb.org/t/p/w342/dgbLnnEJIGldXOMt6OWy3X1l0AC.jpg"
@@ -161,6 +173,7 @@
    "score": 6.763,
    "vote_count": 1446,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Ray Peterson",
    "poster_small": "https://image.tmdb.org/t/p/w342/jwYKzJS0C3A711hmg1G4ptI0InF.jpg"
@@ -173,6 +186,7 @@
    "score": 6.325,
    "vote_count": 1497,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Scott Turner",
    "poster_small": "https://image.tmdb.org/t/p/w342/nllMNbjgvUpw378czm5vBYzZqg1.jpg"
@@ -185,6 +199,7 @@
    "score": 5.829,
    "vote_count": 610,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Joe Banks",
    "poster_small": "https://image.tmdb.org/t/p/w342/fwjMUuDZUxedfsUpVQKQN8cYfzB.jpg"
@@ -197,6 +212,7 @@
    "score": 5.6,
    "vote_count": 560,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Sherman McCoy",
    "poster_small": "https://image.tmdb.org/t/p/w342/pdrPrygZ5dVKi8UxrUXMmq1k2iO.jpg"
@@ -209,6 +225,7 @@
    "score": 7.7,
    "vote_count": 6,
    "rated": false,
+   "settling": false,
    "lead": false,
    "character": "Self",
    "poster_small": "https://image.tmdb.org/t/p/w342/awOHdjvajTSpReWpxFNmgwOcooz.jpg"
@@ -221,6 +238,7 @@
    "score": 7.21,
    "vote_count": 1607,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Jimmy Dugan",
    "poster_small": "https://image.tmdb.org/t/p/w342/f9BtX6wYOwJUyfUr4vyeT3COz6m.jpg"
@@ -233,6 +251,7 @@
    "score": 6.744,
    "vote_count": 2733,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Sam Baldwin",
    "poster_small": "https://image.tmdb.org/t/p/w342/jAXfku1u1uaLGh4cUmK0ESf1pPu.jpg"
@@ -245,6 +264,7 @@
    "score": 7.702,
    "vote_count": 4795,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Andrew Beckett",
    "poster_small": "https://image.tmdb.org/t/p/w342/tFe5Yoo5zT495okA49bq1vPPkiV.jpg"
@@ -257,6 +277,7 @@
    "score": 8.462,
    "vote_count": 30703,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Forrest Gump",
    "poster_small": "https://image.tmdb.org/t/p/w342/saHP97rTPS5eLmrLQEcANmKrsFl.jpg"
@@ -269,6 +290,7 @@
    "score": 7.463,
    "vote_count": 6174,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Jim Lovell",
    "poster_small": "https://image.tmdb.org/t/p/w342/tVeKscCm2fY1xDXZk8PgnZ87h9S.jpg"
@@ -281,6 +303,7 @@
    "score": 7.99,
    "vote_count": 20702,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Woody (voice)",
    "poster_small": "https://image.tmdb.org/t/p/w342/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg"
@@ -293,6 +316,7 @@
    "score": 7.252,
    "vote_count": 123,
    "rated": true,
+   "settling": false,
    "lead": false,
    "character": "Self",
    "poster_small": "https://image.tmdb.org/t/p/w342/x0DSh3uMeQk6EG1DHjGJUywN7C0.jpg"
@@ -305,6 +329,7 @@
    "score": 6.886,
    "vote_count": 957,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Mr. White",
    "poster_small": "https://image.tmdb.org/t/p/w342/9RmZu33qHdyZFGLfhEOmkTjdNEu.jpg"
@@ -317,6 +342,7 @@
    "score": 7.0,
    "vote_count": 14,
    "rated": false,
+   "settling": false,
    "lead": false,
    "character": "Self (archive footage) (uncredited)",
    "poster_small": "https://image.tmdb.org/t/p/w342/xP4CR20quD3iNi0qKxyhpjs0YNr.jpg"
@@ -329,6 +355,7 @@
    "score": 8.234,
    "vote_count": 17957,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Captain Miller",
    "poster_small": "https://image.tmdb.org/t/p/w342/uqx37cS8cpHg8U35f9U5IBlrCV3.jpg"
@@ -341,6 +368,7 @@
    "score": 6.713,
    "vote_count": 3798,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Joe Fox",
    "poster_small": "https://image.tmdb.org/t/p/w342/rJLUSpmdxSMqqEsyzeCni3vy1ca.jpg"
@@ -353,6 +381,7 @@
    "score": 7.1,
    "vote_count": 11,
    "rated": false,
+   "settling": false,
    "lead": false,
    "character": "Narrator",
    "poster_small": "https://image.tmdb.org/t/p/w342/89289dPlOMOIWTZtIhy4qHhBQpb.jpg"
@@ -365,6 +394,7 @@
    "score": 6.8,
    "vote_count": 11,
    "rated": false,
+   "settling": false,
    "lead": true,
    "character": "Self",
    "poster_small": "https://image.tmdb.org/t/p/w342/1F0bQ77FBIEk0PbS3vV8mbLgZSj.jpg"
@@ -377,6 +407,7 @@
    "score": 7.624,
    "vote_count": 15500,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Woody (voice)",
    "poster_small": "https://image.tmdb.org/t/p/w342/4rbcp3ng8n1MKHjpeqW0L7Fnpzz.jpg"
@@ -389,6 +420,7 @@
    "score": 8.506,
    "vote_count": 20001,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Paul Edgecomb",
    "poster_small": "https://image.tmdb.org/t/p/w342/8VG8fDNiy50H4FedGwdSVUPoaJe.jpg"
@@ -401,6 +433,7 @@
    "score": 7.668,
    "vote_count": 12662,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Chuck Noland",
    "poster_small": "https://image.tmdb.org/t/p/w342/7lLJgKnAicAcR5UEuo8xhSMj18w.jpg"
@@ -413,6 +446,7 @@
    "score": 7.367,
    "vote_count": 4167,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Michael Sullivan",
    "poster_small": "https://image.tmdb.org/t/p/w342/loSpBeirRfTPJ3cMIqpQArstGhh.jpg"
@@ -425,6 +459,7 @@
    "score": 7.979,
    "vote_count": 17747,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Carl Hanratty",
    "poster_small": "https://image.tmdb.org/t/p/w342/ctjEj2xM32OvBXCq8zAdK3ZrsAj.jpg"
@@ -437,6 +472,7 @@
    "score": 6.117,
    "vote_count": 1820,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Professor G.H. Dorr",
    "poster_small": "https://image.tmdb.org/t/p/w342/l4g9R39NCp6VaYFrw6q8JwKNW9x.jpg"
@@ -449,6 +485,7 @@
    "score": 7.356,
    "vote_count": 9050,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Viktor Navorski",
    "poster_small": "https://image.tmdb.org/t/p/w342/cPB3ZMM4UdsSAhNdS4c7ps5nypY.jpg"
@@ -461,6 +498,7 @@
    "score": 5.258,
    "vote_count": 60,
    "rated": true,
+   "settling": false,
    "lead": false,
    "character": "Mailbox-Elvis",
    "poster_small": "https://image.tmdb.org/t/p/w342/yfIRJpLwR0yGAj6PmWMHZVU8mB1.jpg"
@@ -473,6 +511,7 @@
    "score": 6.728,
    "vote_count": 7093,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Hero Boy (Adult)/ Father / Conductor / Hobo / Scrooge / Santa Claus",
    "poster_small": "https://image.tmdb.org/t/p/w342/eOoCzH0MqeGr2taUZO4SwG416PF.jpg"
@@ -485,6 +524,7 @@
    "score": 6.736,
    "vote_count": 10402,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Robert Langdon",
    "poster_small": "https://image.tmdb.org/t/p/w342/9ejKfNk0LBhSI9AahH4f9NJNZNM.jpg"
@@ -497,6 +537,7 @@
    "score": 7.243,
    "vote_count": 208,
    "rated": true,
+   "settling": false,
    "lead": false,
    "character": "Self (archive footage)",
    "poster_small": "https://image.tmdb.org/t/p/w342/uMamC9o5zNU9wn8fyuAo2gUCMiD.jpg"
@@ -509,6 +550,7 @@
    "score": 6.548,
    "vote_count": 1737,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Charlie Wilson",
    "poster_small": "https://image.tmdb.org/t/p/w342/45FghqcdSYRWK7PsHUInaFPNd8l.jpg"
@@ -521,6 +563,7 @@
    "score": 6.014,
    "vote_count": 284,
    "rated": true,
+   "settling": false,
    "lead": false,
    "character": "Mr. Gable",
    "poster_small": "https://image.tmdb.org/t/p/w342/iglKvmA7sq6Pnd6KWFnT6WW9Vpn.jpg"
@@ -533,6 +576,7 @@
    "score": 6.731,
    "vote_count": 7572,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Robert Langdon",
    "poster_small": "https://image.tmdb.org/t/p/w342/tFZQAuulEOtFTp0gHbVdEXwGrYe.jpg"
@@ -545,6 +589,7 @@
    "score": 7.819,
    "vote_count": 16375,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Woody (voice)",
    "poster_small": "https://image.tmdb.org/t/p/w342/AbbXspMOwdvwWZgVN0nabZq03Ec.jpg"
@@ -557,6 +602,7 @@
    "score": 5.996,
    "vote_count": 1464,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Larry Crowne",
    "poster_small": "https://image.tmdb.org/t/p/w342/8GDM7RqM6J1vNUdlU94rmtlNa3e.jpg"
@@ -569,6 +615,7 @@
    "score": 7.7,
    "vote_count": 58,
    "rated": true,
+   "settling": false,
    "lead": false,
    "character": "Self - Filmmaker (archive footage)",
    "poster_small": "https://image.tmdb.org/t/p/w342/37dXuUl9Jv6NXFihaLsWbiYVBdv.jpg"
@@ -581,6 +628,7 @@
    "score": 6.991,
    "vote_count": 2195,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Thomas Schell",
    "poster_small": "https://image.tmdb.org/t/p/w342/6pszViNvKr1r31pP7gJNYDHEx5P.jpg"
@@ -593,6 +641,7 @@
    "score": 6.899,
    "vote_count": 7738,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Dr. Henry Goose / Hotel Manager / Isaac Sachs / Dermot Hoggins / Cavendish Look-a-Like Actor / Zachry",
    "poster_small": "https://image.tmdb.org/t/p/w342/8naVv2Xu3rWI5JKHz0vCujx6GaJ.jpg"
@@ -605,6 +654,7 @@
    "score": 6.0,
    "vote_count": 59,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Self - Narrator",
    "poster_small": "https://image.tmdb.org/t/p/w342/zqlOXMsJ0sSyForOe93BSfNW3Pi.jpg"
@@ -617,6 +667,7 @@
    "score": 7.536,
    "vote_count": 7749,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Captain Richard Phillips",
    "poster_small": "https://image.tmdb.org/t/p/w342/8Td0kkocW6sD3uRpzwfMfkqMWhx.jpg"
@@ -629,6 +680,7 @@
    "score": 7.336,
    "vote_count": 3586,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Walt Disney",
    "poster_small": "https://image.tmdb.org/t/p/w342/4RkcUe5PKnYvrCwMjk8giUAoID7.jpg"
@@ -641,6 +693,7 @@
    "score": 7.243,
    "vote_count": 7479,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "James B. Donovan",
    "poster_small": "https://image.tmdb.org/t/p/w342/fmOOjHAQzxr0c1sfcY4qkiSRBH6.jpg"
@@ -653,6 +706,7 @@
    "score": 5.2,
    "vote_count": 111,
    "rated": true,
+   "settling": false,
    "lead": false,
    "character": "Mr. Macauley",
    "poster_small": "https://image.tmdb.org/t/p/w342/4g4siEftWGiIkGfvaPyyizmx61f.jpg"
@@ -665,6 +719,7 @@
    "score": 5.846,
    "vote_count": 1260,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Alan Clay",
    "poster_small": "https://image.tmdb.org/t/p/w342/wmjWGb2tqtOA4XPnK1tpIfzRtSQ.jpg"
@@ -677,6 +732,7 @@
    "score": 7.207,
    "vote_count": 7959,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Chesley 'Sully' Sullenberger",
    "poster_small": "https://image.tmdb.org/t/p/w342/4vs83YcJ8TsabADDtaeCJ6ZTjYY.jpg"
@@ -689,6 +745,7 @@
    "score": 6.105,
    "vote_count": 6835,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Robert Langdon",
    "poster_small": "https://image.tmdb.org/t/p/w342/5T6iVetK5AB1kgwAEKbDM2hTZJU.jpg"
@@ -701,6 +758,7 @@
    "score": 5.525,
    "vote_count": 4671,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Eamon Bailey",
    "poster_small": "https://image.tmdb.org/t/p/w342/bQVqd5rWrx5GbXhJNuvKy4Viz6j.jpg"
@@ -713,6 +771,7 @@
    "score": 7.538,
    "vote_count": 317,
    "rated": true,
+   "settling": false,
    "lead": false,
    "character": "Self",
    "poster_small": "https://image.tmdb.org/t/p/w342/2AAvIR2PHoxNITgLDOkXXlWLlua.jpg"
@@ -725,6 +784,7 @@
    "score": 7.006,
    "vote_count": 5063,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Ben Bradlee",
    "poster_small": "https://image.tmdb.org/t/p/w342/h4XG3g6uMMPIBPjAoQhC2QIMdkl.jpg"
@@ -737,6 +797,7 @@
    "score": 7.288,
    "vote_count": 118,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Self",
    "poster_small": "https://image.tmdb.org/t/p/w342/yYtY9CRLyz4dXqTOiimdMF7Nt4e.jpg"
@@ -749,6 +810,7 @@
    "score": 7.463,
    "vote_count": 11100,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Woody (voice)",
    "poster_small": "https://image.tmdb.org/t/p/w342/w9kR8qbmQ01HwnvK4alvnQ2ca0L.jpg"
@@ -761,6 +823,7 @@
    "score": 6.967,
    "vote_count": 1826,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Fred Rogers",
    "poster_small": "https://image.tmdb.org/t/p/w342/pgxn1siPnWbSOKUeovfC86OwhWU.jpg"
@@ -773,6 +836,7 @@
    "score": 7.416,
    "vote_count": 3510,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Commander Krause",
    "poster_small": "https://image.tmdb.org/t/p/w342/kjMbDciooTbJPofVXgAoFjfX8Of.jpg"
@@ -785,6 +849,7 @@
    "score": 6.433,
    "vote_count": 3004,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Self",
    "poster_small": "https://image.tmdb.org/t/p/w342/3L1Ml5RWjFVfVq3rQENvgFymT0U.jpg"
@@ -797,6 +862,7 @@
    "score": 6.901,
    "vote_count": 2011,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Captain Jefferson Kyle Kidd",
    "poster_small": "https://image.tmdb.org/t/p/w342/fYQCgVRsQTEfUrP7cW5iAFVYOlh.jpg"
@@ -809,6 +875,7 @@
    "score": 7.816,
    "vote_count": 4245,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Finch",
    "poster_small": "https://image.tmdb.org/t/p/w342/eEJtzD1F05xDipFEDY98CTH5yZn.jpg"
@@ -821,6 +888,7 @@
    "score": 6.766,
    "vote_count": 160,
    "rated": true,
+   "settling": false,
    "lead": false,
    "character": "Self",
    "poster_small": "https://image.tmdb.org/t/p/w342/jUVglxBw7KSkcVEhvfJs1eipPnk.jpg"
@@ -833,6 +901,7 @@
    "score": 7.436,
    "vote_count": 4076,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Colonel Tom Parker",
    "poster_small": "https://image.tmdb.org/t/p/w342/qBOKWqAFbveZ4ryjJJwbie6tXkQ.jpg"
@@ -845,6 +914,7 @@
    "score": 6.241,
    "vote_count": 1796,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Geppetto",
    "poster_small": "https://image.tmdb.org/t/p/w342/zaZhjKrJeWczQ3AotKoQObppEbH.jpg"
@@ -857,6 +927,7 @@
    "score": 7.747,
    "vote_count": 3826,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Otto Anderson",
    "poster_small": "https://image.tmdb.org/t/p/w342/130H1gap9lFfiTF9iDrqNIkFvC9.jpg"
@@ -869,6 +940,7 @@
    "score": 6.456,
    "vote_count": 2680,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Stanley Zak",
    "poster_small": "https://image.tmdb.org/t/p/w342/hfo7pvL9Fys7rocfL4VOzw9qDEQ.jpg"
@@ -881,6 +953,7 @@
    "score": 7.2,
    "vote_count": 52,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Self - Narrator (voice)",
    "poster_small": "https://image.tmdb.org/t/p/w342/5GnpAw5BaQBNqYd4wE1IptYEVKd.jpg"
@@ -893,6 +966,7 @@
    "score": 6.5,
    "vote_count": 734,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Richard",
    "poster_small": "https://image.tmdb.org/t/p/w342/79euHUJJtfgeGU63ef38KtNjXEn.jpg"
@@ -905,6 +979,7 @@
    "score": 6.531,
    "vote_count": 1092,
    "rated": true,
+   "settling": false,
    "lead": false,
    "character": "Leland",
    "poster_small": "https://image.tmdb.org/t/p/w342/iXxIUVqpQAlyy98UjUlzjkMYuj6.jpg"
@@ -917,9 +992,36 @@
    "score": 7.9,
    "vote_count": 125,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Self - Actor, Splash",
    "poster_small": "https://image.tmdb.org/t/p/w342/mNEJdx9WSXeyMmkuQfTeY4zouNx.jpg"
+  },
+  {
+   "movie_id": 1620034,
+   "title": "Marty, Life Is Short",
+   "year": 2026,
+   "release_date": "2026-05-11",
+   "score": 8.0,
+   "vote_count": 33,
+   "rated": false,
+   "settling": true,
+   "lead": false,
+   "character": "Self",
+   "poster_small": "https://image.tmdb.org/t/p/w342/5u8r3iMUVeVejv8G2PrRvlTbogC.jpg"
+  },
+  {
+   "movie_id": 1084244,
+   "title": "Toy Story 5",
+   "year": 2026,
+   "release_date": "2026-06-17",
+   "score": 8.28,
+   "vote_count": 2760,
+   "rated": true,
+   "settling": true,
+   "lead": true,
+   "character": "Woody (voice)",
+   "poster_small": "https://image.tmdb.org/t/p/w342/sfQtVlIHljToOwYjhe21KPGzZWK.jpg"
   }
  ],
  "line": [
@@ -1232,8 +1334,29 @@
   },
   "test": {
    "coverage": 0.8292,
-   "n_people": 9498
+   "n_people": 9498,
+   "holdout": {
+    "year_from": 2026,
+    "coverage": 0.7275,
+    "n_points": 935
+   }
   }
+ },
+ "check": {
+  "up_to": 2025,
+  "low": 5.887,
+  "mid": 6.883,
+  "high": 7.879,
+  "films": [
+   {
+    "movie_id": 1084244,
+    "title": "Toy Story 5",
+    "year": 2026,
+    "score": 8.28,
+    "settling": true,
+    "inside": false
+   }
+  ]
  },
  "model_available": true
 }

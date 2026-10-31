@@ -9,13 +9,13 @@
   },
   {
    "role": "directing",
-   "film_count": 12,
-   "rated_count": 12
+   "film_count": 13,
+   "rated_count": 13
   },
   {
    "role": "writing",
-   "film_count": 11,
-   "rated_count": 11
+   "film_count": 12,
+   "rated_count": 12
   }
  ],
  "films": [
@@ -27,6 +27,7 @@
    "score": 7.116,
    "vote_count": 2008,
    "rated": true,
+   "settling": false,
    "lead": null,
    "character": null,
    "poster_small": "https://image.tmdb.org/t/p/w342/3bX6VVSMf0dvzk5pMT4ALG5A92d.jpg"
@@ -39,6 +40,7 @@
    "score": 8.174,
    "vote_count": 16928,
    "rated": true,
+   "settling": false,
    "lead": null,
    "character": null,
    "poster_small": "https://image.tmdb.org/t/p/w342/nzlv62aC0octS5AklAiWpXLX9Z0.jpg"
@@ -51,6 +53,7 @@
    "score": 7.731,
    "vote_count": 23370,
    "rated": true,
+   "settling": false,
    "lead": null,
    "character": null,
    "poster_small": "https://image.tmdb.org/t/p/w342/sPX89Td70IDDjVr85jdSBb4rWGr.jpg"
@@ -63,6 +66,7 @@
    "score": 8.212,
    "vote_count": 18315,
    "rated": true,
+   "settling": false,
    "lead": null,
    "character": null,
    "poster_small": "https://image.tmdb.org/t/p/w342/Ag2B2KHKQPukjH7WutmgnnSNurZ.jpg"
@@ -75,6 +79,7 @@
    "score": 8.538,
    "vote_count": 37016,
    "rated": true,
+   "settling": false,
    "lead": null,
    "character": null,
    "poster_small": "https://image.tmdb.org/t/p/w342/qJ2tW6WMUDux911r6m7haRef0WH.jpg"
@@ -87,6 +92,7 @@
    "score": 8.373,
    "vote_count": 40486,
    "rated": true,
+   "settling": false,
    "lead": null,
    "character": null,
    "poster_small": "https://image.tmdb.org/t/p/w342/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg"
@@ -99,6 +105,7 @@
    "score": 7.799,
    "vote_count": 25150,
    "rated": true,
+   "settling": false,
    "lead": null,
    "character": null,
    "poster_small": "https://image.tmdb.org/t/p/w342/hr0L2aueqlP2BYUblTTjmtn0hw4.jpg"
@@ -111,6 +118,7 @@
    "score": 8.491,
    "vote_count": 41560,
    "rated": true,
+   "settling": false,
    "lead": null,
    "character": null,
    "poster_small": "https://image.tmdb.org/t/p/w342/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg"
@@ -123,6 +131,7 @@
    "score": 7.45,
    "vote_count": 18123,
    "rated": true,
+   "settling": false,
    "lead": null,
    "character": null,
    "poster_small": "https://image.tmdb.org/t/p/w342/b4Oe15CGLL61Ped0RAS9JpqdmCt.jpg"
@@ -135,6 +144,7 @@
    "score": 7.172,
    "vote_count": 11664,
    "rated": true,
+   "settling": false,
    "lead": null,
    "character": null,
    "poster_small": "https://image.tmdb.org/t/p/w342/rrKH3VhHssGTCfPuaEQkxvEoElv.jpg"
@@ -147,9 +157,23 @@
    "score": 8.022,
    "vote_count": 12727,
    "rated": true,
+   "settling": false,
    "lead": null,
    "character": null,
    "poster_small": "https://image.tmdb.org/t/p/w342/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg"
+  },
+  {
+   "movie_id": 1368337,
+   "title": "The Odyssey",
+   "year": 2026,
+   "release_date": "2026-07-15",
+   "score": 8.0,
+   "vote_count": 4301,
+   "rated": true,
+   "settling": true,
+   "lead": null,
+   "character": null,
+   "poster_small": "https://image.tmdb.org/t/p/w342/5rhTDKUhPYvpdQIijFIs5VoWsON.jpg"
   }
  ],
  "line": [
@@ -218,8 +242,29 @@
   },
   "test": {
    "coverage": 0.8341,
-   "n_people": 991
+   "n_people": 991,
+   "holdout": {
+    "year_from": 2026,
+    "coverage": 0.8288,
+    "n_points": 74
+   }
   }
+ },
+ "check": {
+  "up_to": 2025,
+  "low": 6.606,
+  "mid": 7.453,
+  "high": 8.3,
+  "films": [
+   {
+    "movie_id": 1368337,
+    "title": "The Odyssey",
+    "year": 2026,
+    "score": 8.0,
+    "settling": true,
+    "inside": true
+   }
+  ]
  },
  "model_available": false
 }

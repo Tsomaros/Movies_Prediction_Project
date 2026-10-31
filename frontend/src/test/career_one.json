@@ -17,6 +17,7 @@
    "score": 5.667,
    "vote_count": 300,
    "rated": true,
+   "settling": false,
    "lead": true,
    "character": "Ebrill",
    "poster_small": "https://image.tmdb.org/t/p/w342/h6gCVAzjFLhzkffv2VZO1RgVCBt.jpg"
@@ -42,8 +43,14 @@
   "explain": null,
   "test": {
    "coverage": 0.8292,
-   "n_people": 9498
+   "n_people": 9498,
+   "holdout": {
+    "year_from": 2026,
+    "coverage": 0.7275,
+    "n_points": 935
+   }
   }
  },
+ "check": null,
  "model_available": true
 }

@@ -1,6 +1,6 @@
 // The Career section's chart (Day 14.8): a dot per dated film with a score, placed by release date, the career
 // line (a rolling mean over rated films) and, when there is a forecast, a "Next film" column after the last year
-// with the 80% band, its middle and a dashed step from the end of the line. Dots: lead roles filled, supporting hollow, crew filled, under 50 votes faint grey; the best film has
+// with the 80% band, its middle and a dashed step from the end of the line. Dots: lead roles filled, supporting hollow, crew filled, under 50 votes faint grey, a score still settling (a film under half a year old) a dashed outline; the best film has
 // a ring and a label. Hover shows a film's details and a click opens it; on touch the first tap shows them and a
 // second tap on the same dot opens it. Colours are theme tokens, so both themes work; screen readers get one
 // summary sentence (and the section's table).
@@ -14,7 +14,7 @@ import { chartSummary } from '@/career/explain'
 import { useMediaQuery } from '@/lib/useReducedMotion'
 import { points } from '@/result/format'
 
-type Kind = 'lead' | 'support' | 'crew' | 'faint'
+type Kind = 'lead' | 'support' | 'crew' | 'faint' | 'settling'
 type Dot = { x: number; y: number; film: CareerFilm; kind: Kind; best: boolean }
 type Tip = { film: CareerFilm; left: number; top: number }
 
@@ -30,6 +30,7 @@ function position(film: CareerFilm): number {
 
 function kind(film: CareerFilm): Kind {
   if (!film.rated) return 'faint'
+  if (film.settling) return 'settling'
   return film.lead === null ? 'crew' : film.lead ? 'lead' : 'support'
 }
 
@@ -46,8 +47,8 @@ const Plot = memo(function Plot({ data, height, events }: { data: CareerResponse
   const dots: Dot[] = data.films.flatMap(film => film.score === null ? [] : [
     { x: position(film), y: film.score, film, kind: kind(film), best: film.movie_id === data.best_film?.movie_id },
   ])
-  // line[i] belongs to the i-th rated film (both oldest first)
-  const rated = data.films.filter(f => f.rated)
+  // line[i] belongs to the i-th counted film (rated and settled; both oldest first)
+  const rated = data.films.filter(f => f.rated && !f.settling)
   const line = data.line.flatMap((p, i) => (rated[i] ? [{ x: position(rated[i]), y: p.value }] : []))
   const lastYear = data.films.length ? data.films[data.films.length - 1].year : 0
   const next = lastYear + 1
@@ -68,6 +69,7 @@ const Plot = memo(function Plot({ data, height, events }: { data: CareerResponse
       crew: { fill: 'var(--primary)', stroke: 'var(--primary)' },
       support: { fill: 'var(--background)', stroke: 'var(--primary)' },
       faint: { fill: 'var(--muted-foreground)', stroke: 'none', opacity: 0.35 },
+      settling: { fill: 'none', stroke: 'var(--primary)', strokeDasharray: '2 2' },
     }[payload.kind]
     return (
       <g data-testid={`dot-${payload.kind}`} style={{ cursor: 'pointer' }}
@@ -157,6 +159,7 @@ export function CareerChart({ data, onOpenMovie }: { data: CareerResponse; onOpe
           </div>
           {film.character && <div>as {film.character}</div>}
           {film.lead !== null && <div className="text-muted-foreground">{film.lead ? 'Lead role' : 'Supporting role'}</div>}
+          {film.rated && film.settling && <div className="text-muted-foreground">Score still settling</div>}
         </div>
       )}
     </div>

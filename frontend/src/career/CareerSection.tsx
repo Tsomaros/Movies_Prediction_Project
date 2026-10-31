@@ -60,7 +60,7 @@ export default function CareerSection({ personId, name, role }: { personId: numb
           </>
         ) : noFilms}
         <div className="grid items-start gap-4 md:grid-cols-2">
-          <TrackRecordCard forecast={data.forecast} />
+          <TrackRecordCard forecast={data.forecast} check={data.check} />
           {role === 'writing' ? (
             <p className="text-muted-foreground text-sm">The film model has no writer input, so only the track record is shown.</p>
           ) : modelOn && (
