@@ -11,24 +11,33 @@ Public API:
     year_query(year) -> str
     parse_rows(rows, year=None) -> (statements, report)
     survey(client) -> dict
+    pulled_years(path) -> set[int]
+    run_pull(client, years, path=RAW_WIKIDATA) -> counts      # resumable, one query per year
+    new_ids(path, ids_path) -> [(year, tmdb_id)]              # films not in discover_ids.csv
+    append_new_ids(ids_path, rows) -> int                     # appends "year,0,id" rows
 
 CLI:
     uv run python -m ml.data.wikidata survey
+    uv run python -m ml.data.wikidata pull [--years 1960-2025]
+    uv run python -m ml.data.wikidata new-ids                 # lists them; --append adds them to discover_ids.csv
 """
 
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import math
 import re
 import sys
 import time
+from pathlib import Path
 from typing import Any, Callable
 
 import httpx
 
-from ml.data.pull import RAW_DIR
+from ml.data.clean import MODEL_DATA_MAX_YEAR
+from ml.data.pull import FIRST_YEAR, IDS_FILE, RAW_DIR, repair_jsonl
 
 SPARQL_URL = "https://query.wikidata.org/sparql"
 USER_AGENT = "MoviePredictionApp/1.5 (https://github.com/Tsomaros)"
@@ -220,13 +229,111 @@ def survey(client: WikidataClient) -> dict:
     return result
 
 
+# ---------------------------------------------------------------- resumable pull
+
+
+def _read_lines(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    with path.open(encoding="utf-8") as f:
+        return [json.loads(line) for line in f if line.strip()]
+
+
+def pulled_years(path: Path) -> set[int]:
+    """Years already in the file (statement lines and empty-year markers both count)."""
+    return {line["year"] for line in _read_lines(path)}
+
+
+def run_pull(client: WikidataClient, years: range, path: Path = RAW_WIKIDATA) -> dict[str, int]:
+    """One query per year not yet in the file; append its new statements (a statement id is kept once).
+
+    A year that adds nothing (no rows, or only statements already written) gets a marker line
+    {"year": Y, "empty": true} so it counts as done.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    repair_jsonl(path)
+    lines = _read_lines(path)
+    done = {line["year"] for line in lines}
+    seen = {line["statement"] for line in lines if "statement" in line}
+    totals = {"years": 0, "statements": 0, "duplicates": 0}
+    for year in years:
+        if year in done:
+            continue
+        rows = client.query(year_query(year))
+        statements, report = parse_rows(rows, year=year)
+        fresh = []
+        for s in statements:
+            if s["statement"] in seen:
+                totals["duplicates"] += 1
+            else:
+                seen.add(s["statement"])
+                fresh.append(s)
+        with path.open("a", encoding="utf-8") as f:
+            for s in fresh or [{"year": year, "empty": True}]:
+                f.write(json.dumps(s) + "\n")
+        totals["years"] += 1
+        totals["statements"] += len(fresh)
+        for key, n in report.items():
+            totals[key] = totals.get(key, 0) + n
+        print(f"{year}: {len(rows)} rows -> {len(fresh)} statements")
+    return totals
+
+
+def known_tmdb_ids(ids_path: Path) -> set[int]:
+    with ids_path.open(newline="", encoding="utf-8") as f:
+        return {int(row["id"]) for row in csv.DictReader(f)}
+
+
+def new_ids(path: Path, ids_path: Path) -> list[tuple[int, int]]:
+    """(year, tmdb_id) of films in the Wikidata file, 1960-2025, that discover_ids.csv lacks.
+
+    A film's year is the smallest year of its statements.
+    """
+    first: dict[int, int] = {}
+    for line in _read_lines(path):
+        if "tmdb_id" in line:
+            tmdb = line["tmdb_id"]
+            first[tmdb] = min(line["year"], first.get(tmdb, line["year"]))
+    known = known_tmdb_ids(ids_path)
+    return sorted(
+        (year, tmdb)
+        for tmdb, year in first.items()
+        if FIRST_YEAR <= year <= MODEL_DATA_MAX_YEAR and tmdb not in known
+    )
+
+
+def append_new_ids(ids_path: Path, rows) -> int:
+    """Append `year,0,id` rows (page 0 marks an id that came from Wikidata)."""
+    rows = list(rows)
+    new_file = not ids_path.exists()
+    with ids_path.open("a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        if new_file:
+            writer.writerow(["year", "page", "id"])
+        writer.writerows((year, 0, tmdb) for year, tmdb in rows)
+    return len(rows)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Wikidata budgets and box office")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("survey", help="count currencies and regions per decade -> wikidata_survey.json")
+    pull = sub.add_parser("pull", help="query Wikidata year by year -> wikidata_money.jsonl (resumable)")
+    pull.add_argument("--years", default=f"{FIRST_YEAR}-{MODEL_DATA_MAX_YEAR}", help="e.g. 1960-2025")
+    ids = sub.add_parser("new-ids", help="TMDB ids in the Wikidata file that discover_ids.csv lacks")
+    ids.add_argument("--append", action="store_true", help="add them to discover_ids.csv")
     args = parser.parse_args(argv)
     if args.command == "survey":
         print(json.dumps(survey(WikidataClient()), indent=2))
+    elif args.command == "pull":
+        start, end = (int(x) for x in args.years.split("-"))
+        print(run_pull(WikidataClient(), range(start, end + 1)))
+    elif args.command == "new-ids":
+        ids_path = RAW_DIR / IDS_FILE
+        found = new_ids(RAW_WIKIDATA, ids_path)
+        print(f"{len(found)} new ids")
+        if args.append:
+            print(f"appended {append_new_ids(ids_path, found)} rows to {ids_path}")
     return 0
 
 

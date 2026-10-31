@@ -1,10 +1,20 @@
 import json
+import re
 from pathlib import Path
 
 import httpx
 
 from ml.data import wikidata
-from ml.data.wikidata import WikidataClient, flatten_bindings, parse_rows
+from ml.data.pull import load_discover_ids
+from ml.data.wikidata import (
+    WikidataClient,
+    append_new_ids,
+    flatten_bindings,
+    new_ids,
+    parse_rows,
+    pulled_years,
+    run_pull,
+)
 
 FIXTURE = Path(__file__).parents[1] / "fixtures" / "wikidata_year.json"
 
@@ -73,3 +83,87 @@ def test_client_retries_on_429():
     assert sleeps == [1]
     assert calls[0].headers["user-agent"] == wikidata.USER_AGENT
     assert calls[0].headers["accept"] == "application/sparql-results+json"
+
+
+# ---------------------------------------------------------------- Task 2: pull and new ids
+
+
+def make_row(st: str, tmdb: str = "1001", prop: str = "budget") -> dict[str, str]:
+    return {
+        "st": f"http://www.wikidata.org/entity/statement/{st}",
+        "item": f"http://www.wikidata.org/entity/Q{tmdb}",
+        "tmdb": tmdb,
+        "prop": prop,
+        "amount": "+1000",
+        "iso": "USD",
+        "rank": "http://wikiba.se/ontology#NormalRank",
+    }
+
+
+class FakeClient:
+    def __init__(self, by_year: dict[int, list[dict[str, str]]]) -> None:
+        self.by_year = by_year
+        self.queried: list[int] = []
+
+    def query(self, sparql: str) -> list[dict[str, str]]:
+        year = int(re.search(r"YEAR\(\?date\) = (\d+)", sparql).group(1))
+        self.queried.append(year)
+        return self.by_year.get(year, [])
+
+
+def lines(path: Path) -> list[dict]:
+    return [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines()]
+
+
+def test_pull_resumes_by_year(tmp_path):
+    path = tmp_path / "w.jsonl"
+    by_year = {y: [make_row(f"S{y}", tmdb=str(y))] for y in (2001, 2002, 2003)}
+    first = FakeClient(by_year)
+    run_pull(first, range(2001, 2003), path)
+    assert first.queried == [2001, 2002]
+    assert pulled_years(path) == {2001, 2002}
+    second = FakeClient(by_year)
+    run_pull(second, range(2001, 2004), path)
+    assert second.queried == [2003]
+    assert [x["year"] for x in lines(path)] == [2001, 2002, 2003]
+
+
+def test_pull_dedupes_statements_across_years(tmp_path):
+    path = tmp_path / "w.jsonl"
+    same = make_row("SAME")
+    run_pull(FakeClient({2001: [same], 2002: [same, make_row("OTHER", tmdb="7")]}), range(2001, 2003), path)
+    statements = [x for x in lines(path) if "statement" in x]
+    assert sorted(x["statement"] for x in statements) == ["OTHER", "SAME"]
+    assert next(x for x in statements if x["statement"] == "SAME")["year"] == 2001
+    assert pulled_years(path) == {2001, 2002}
+
+
+def test_empty_year_marked_done(tmp_path):
+    path = tmp_path / "w.jsonl"
+    client = FakeClient({})
+    run_pull(client, range(2001, 2002), path)
+    assert lines(path) == [{"year": 2001, "empty": True}]
+    run_pull(client, range(2001, 2002), path)
+    assert client.queried == [2001]
+
+
+def write_statements(path: Path, items: list[tuple[int, int]]) -> None:
+    with path.open("w", encoding="utf-8") as f:
+        for year, tmdb in items:
+            f.write(json.dumps({"statement": f"S{year}-{tmdb}", "tmdb_id": tmdb, "year": year}) + "\n")
+        f.write(json.dumps({"year": 1990, "empty": True}) + "\n")
+
+
+def test_new_ids_skips_known_and_out_of_range(tmp_path):
+    path, ids = tmp_path / "w.jsonl", tmp_path / "ids.csv"
+    ids.write_text("year,page,id\n2000,1,10\n", encoding="utf-8")
+    write_statements(path, [(2000, 10), (2001, 11), (1959, 12), (2026, 13), (2003, 14), (2002, 14), (1960, 15)])
+    assert new_ids(path, ids) == [(1960, 15), (2001, 11), (2002, 14)]
+
+
+def test_append_new_ids_uses_page_zero(tmp_path):
+    ids = tmp_path / "ids.csv"
+    ids.write_text("year,page,id\n2004,3,9\n", encoding="utf-8")
+    assert append_new_ids(ids, [(2004, 555)]) == 1
+    assert ids.read_text(encoding="utf-8").splitlines()[-1] == "2004,0,555"
+    assert load_discover_ids(ids, range(2004, 2005)) == [9, 555]
