@@ -12,7 +12,8 @@
                                        the most films)
 
 Counted films (MIN_VOTES+ votes, a score, and a settled score: not `settling`) feed the line, the best film and the
-forecast; low-vote and settling films are only drawn. roles_available lists each role with 5+ rated films (MIN_RATED), plus the one shown.
+forecast; low-vote and settling films are only drawn. _check scores films after MODEL_DATA_MAX_YEAR (settling
+ones too) against the range built from counted films up to it; None without such a range or such films. roles_available lists each role with 5+ rated films (MIN_RATED), plus the one shown.
 """
 
 from __future__ import annotations
@@ -28,7 +29,7 @@ from backend.app.repo import career as repo
 from backend.app.repo.career import CAREER_ROLES, Role
 from backend.app.services.movies.posters import poster
 from ml.career.forecast import MIN_RATED, RoleSettings, rolling_line, track_record
-from ml.data.clean import MIN_VOTES
+from ml.data.clean import MIN_VOTES, MODEL_DATA_MAX_YEAR
 
 MODEL_ROLES = ("acting", "directing")  # the score model has director and actor inputs, no writer
 ROLE_FIELDS = ("h", "k", "q", "mu", "sigma_pop", "test", "holdout")
@@ -77,7 +78,9 @@ def settings_of(art: CareerArtifact, role: Role) -> RoleSettings:
 
 def _forecast(art: CareerArtifact, role: Role, rated: list[repo.CareerFilm]) -> dict[str, Any]:
     r = art.roles[role]
-    test = {"coverage": r["test"]["coverage"], "n_people": r["test"]["n_people"]}
+    h = r["holdout"]
+    test = {"coverage": r["test"]["coverage"], "n_people": r["test"]["n_people"],
+            "holdout": {"year_from": h["year_from"], "coverage": h["coverage"], "n_points": h["n_points"]}}
     f = track_record([(x["year"], x["score"]) for x in rated], settings_of(art, role), r["mu"], r["sigma_pop"])
     if f is None:
         return {"status": "not_enough_films", "low": None, "mid": None, "high": None, "explain": None, "test": test}
@@ -85,6 +88,20 @@ def _forecast(art: CareerArtifact, role: Role, rated: list[repo.CareerFilm]) -> 
             "explain": {"n_rated": f.n_rated, "half_life": r["h"], "own_share": round(f.own_share, 3),
                         "own_avg": round(f.own_avg, 3), "db_avg": f.db_avg},
             "test": test}
+
+
+def _check(art: CareerArtifact, role: Role, films: list[repo.CareerFilm]) -> dict[str, Any] | None:
+    """The range from films up to MODEL_DATA_MAX_YEAR against the rated films after it (settling ones included)."""
+    r = art.roles[role]
+    history = [(f["year"], f["score"]) for f in films if repo.counted(f) and f["year"] <= MODEL_DATA_MAX_YEAR]
+    later = [f for f in films if f["rated"] and f["year"] > MODEL_DATA_MAX_YEAR]
+    f = track_record(history, settings_of(art, role), r["mu"], r["sigma_pop"])
+    if f is None or not later:
+        return None
+    low, mid, high = round(f.low, 3), round(f.mid, 3), round(f.high, 3)
+    return {"up_to": MODEL_DATA_MAX_YEAR, "low": low, "mid": mid, "high": high,
+            "films": [{**{k: x[k] for k in ("movie_id", "title", "year", "score", "settling")},
+                       "inside": low <= round(x["score"], 3) <= high} for x in later]}
 
 
 def career_response(con: sqlite3.Connection, art: CareerArtifact, person_id: int,
@@ -109,5 +126,6 @@ def career_response(con: sqlite3.Connection, art: CareerArtifact, person_id: int
         "line": [{"year": y, "value": round(v, 3)} for y, v in rolling_line([(f["year"], f["score"]) for f in rated])],
         "best_film": None if best is None else {k: best[1][k] for k in ("movie_id", "title", "year", "score")},
         "forecast": _forecast(art, role, rated),
+        "check": _check(art, role, films),
         "model_available": role in MODEL_ROLES and current["rated_count"] > 0,
     }

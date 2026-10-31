@@ -4,7 +4,7 @@
                             film and the track-record forecast of their next film
     CareerModelResponse  -> GET /people/{id}/career/model: the score model on "Their usual film" and
                             "Something new" (only `new` when a genre chip was asked for)
-    CareerRole, RoleCount, CareerFilmOut, LinePoint, BestFilm, ForecastExplain, ForecastTest, TrackForecast,
+    CareerRole, RoleCount, CareerFilmOut, LinePoint, BestFilm, ForecastExplain, ForecastTest, HoldoutTest, CheckFilm, CareerCheck, TrackForecast,
     SlotPerson, RecipeLabels, RecipeOut, ModelScoreRange, ModelFilm, NewFilm, Chip
                          -> their parts
 """
@@ -60,9 +60,17 @@ class ForecastExplain(BaseModel):
     db_avg: float = Field(description="The role's average score over rated films of the 10 latest years")
 
 
+class HoldoutTest(BaseModel):
+    year_from: int = Field(description="First year of the films the forecast never saw (the year after the model data)")
+    coverage: Optional[float] = Field(description="Share of their settled films inside a range built this way; None "
+                                                  "when this role has none")
+    n_points: int = Field(description="Settled films tested")
+
+
 class ForecastTest(BaseModel):
     coverage: float = Field(description="Share of real next films from 2019 on inside a range built this way")
     n_people: int = Field(description="People whose next films were tested")
+    holdout: HoldoutTest = Field(description="The same check on films after the model data")
 
 
 class TrackForecast(BaseModel):
@@ -74,6 +82,23 @@ class TrackForecast(BaseModel):
     test: ForecastTest = Field(description="The backtest of this role's settings")
 
 
+class CheckFilm(BaseModel):
+    movie_id: int
+    title: str
+    year: int
+    score: float
+    settling: bool = Field(description="Score under 182 days old when pulled")
+    inside: bool = Field(description="low <= score <= high, on the rounded numbers shown")
+
+
+class CareerCheck(BaseModel):
+    up_to: int = Field(description="The range is built from counted films up to this year")
+    low: float
+    mid: float
+    high: float
+    films: list[CheckFilm] = Field(description="Their rated films after `up_to`, oldest first")
+
+
 class CareerResponse(BaseModel):
     person_id: int
     role: CareerRole = Field(description="The role asked for, else their role with the most films")
@@ -83,6 +108,8 @@ class CareerResponse(BaseModel):
     best_film: Optional[BestFilm] = Field(description="Highest score (ties: more votes, then newer); None without "
                                                       "rated films")
     forecast: TrackForecast
+    check: Optional[CareerCheck] = Field(description="Films after the model data against the range from earlier ones; "
+                                                     "None without 5+ counted earlier films or a later rated film")
     model_available: bool = Field(description="Acting or directing with 1+ rated film: /career/model answers")
 
 

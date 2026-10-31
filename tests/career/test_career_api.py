@@ -26,8 +26,11 @@ from ml.data.clean import MIN_VOTES
 from tests.career.test_career_model import GENRES, THEMES
 
 ACTOR, FEW, WRITER, COMPOSER, UNRATED, COSTAR, YOUNGSTER, FIVE_ONE_YOUNG = 1, 2, 3, 4, 5, 6, 7, 8
+CHECKED, LOW_VOTE_LATER, FEW_LATER = 9, 10, 11
+SETTLED_2026, YOUNG_2026, LOW_2026 = 401, 402, 403
 PEOPLE = {ACTOR: "Actor A", FEW: "Few Films", WRITER: "Wendy Writer", COMPOSER: "Composer C", UNRATED: "Unrated U",
-          COSTAR: "Co Star", YOUNGSTER: "Young Ster", FIVE_ONE_YOUNG: "Five One"}
+          COSTAR: "Co Star", YOUNGSTER: "Young Ster", FIVE_ONE_YOUNG: "Five One", CHECKED: "Checked C",
+          LOW_VOTE_LATER: "Low Later", FEW_LATER: "Few Later"}
 DRAMA, CRIME, HORROR, MYSTERY, SCIFI, ACTION = 18, 80, 27, 9648, 878, 28
 BEST, LOW_VOTES, UNDATED = 103, 109, 110
 YOUNG_ID = 300  # an 8.9 film released 2019-01-01 and pulled 60 days later: settling
@@ -42,6 +45,9 @@ FILMS = [  # id, date, year, votes, score, genres, keywords, poster
     (UNDATED, None, None, 500, 7.0, (DRAMA,), (3,), None),
     (YOUNG_ID, "2019-01-01", 2019, 500, 8.9, (DRAMA,), (3,), None),
     *[(301 + k, f"{2014 + k}-03-01", 2014 + k, 500, s, (DRAMA,), (3,), None) for k, s in enumerate([6.0, 6.5, 7.0, 6.2, 6.8])],
+    (SETTLED_2026, "2026-01-10", 2026, 500, 6.5, (DRAMA,), (3,), None),  # pulled 2026-10-30: 293 days, settled
+    (YOUNG_2026, "2026-09-01", 2026, 500, 8.9, (DRAMA,), (3,), None),  # 59 days: settling
+    (LOW_2026, "2026-02-01", 2026, 10, 9.0, (DRAMA,), (3,), None),
     *[(201 + k, f"{2021 + k}-10-01", 2021 + k, 500, 6.5, (HORROR, MYSTERY), (5,), None) for k in range(5)],
     *[(206 + k, f"{2021 + k}-06-01", 2021 + k, 500, 6.5, (SCIFI, ACTION), (6,), None) for k in range(5)],
 ]
@@ -49,12 +55,16 @@ CAST = ([(101 + k, ACTOR, f"Part {k}", 4 if k in (1, 4) else 0) for k in range(8
         + [(LOW_VOTES, ACTOR, "Late", 0), (UNDATED, ACTOR, "Lost", 0), (LOW_VOTES, UNRATED, "Extra", 3)]
         + [(101 + k, FEW, "Friend", 1) for k in range(3)]
         + [(i, YOUNGSTER, "Part", 0) for i in (YOUNG_ID, 301, 302, 303, 304, 305)]  # 5 counted + 1 settling
-        + [(i, FIVE_ONE_YOUNG, "Part", 0) for i in (YOUNG_ID, 301, 302, 303, 304)])  # 4 counted + 1 settling
+        + [(i, FIVE_ONE_YOUNG, "Part", 0) for i in (YOUNG_ID, 301, 302, 303, 304)]  # 4 counted + 1 settling
+        + [(i, CHECKED, "Part", 0) for i in (301, 302, 303, 304, 305, SETTLED_2026, YOUNG_2026)]
+        + [(i, LOW_VOTE_LATER, "Part", 0) for i in (301, 302, 303, 304, 305, LOW_2026)]
+        + [(i, FEW_LATER, "Part", 0) for i in (301, 302, 303, 304, SETTLED_2026)])
 CREW = ([(108, ACTOR, "Director")] + [(101 + k, WRITER, "Screenplay") for k in range(6)]
         + [(101, COMPOSER, "Original Music Composer")])
 ROLE = {"h": 5.0, "k": 3.0, "q": 1.35, "mu": 6.4, "sigma_pop": 0.8, "fallback": False,
         "test": {"coverage": 0.82, "mae": 0.59, "width": 1.99, "baseline_mae": 0.64, "n_people": 9594, "n_points": 31498},
         "holdout": {"year_from": 2026, "coverage": 0.8, "mae": 0.6, "baseline_mae": 0.65, "n_people": 400, "n_points": 900}}
+HOLDOUT = {"year_from": 2026, "coverage": 0.8, "n_points": 900}
 ARTIFACT = {"version": 2, "built_at": "2026-10-25T00:00:00+00:00",
             "roles": {"acting": ROLE, "directing": {**ROLE, "h": 3.0, "k": 1.0},
                       "writing": {**ROLE, "h": None, "q": 1.6}}}
@@ -80,6 +90,8 @@ def files(tmp_path_factory):
     con.executemany("INSERT INTO movie_cast VALUES (?, ?, ?, ?)", CAST)
     con.executemany("INSERT INTO movie_crew VALUES (?, ?, ?)", CREW)
     con.execute("UPDATE movies SET pulled_at = '2019-03-02T10:00:00+00:00' WHERE id = ?", (YOUNG_ID,))
+    con.execute("UPDATE movies SET pulled_at = '2026-10-30T13:42:39+00:00' WHERE id IN (?, ?, ?)",
+                (SETTLED_2026, YOUNG_2026, LOW_2026))
     con.commit()  # the app reads it through its own read-only connections
     con.close()
     (tmp / "career.json").write_text(json.dumps(ARTIFACT), encoding="utf-8")
@@ -138,7 +150,7 @@ def test_career_full_response(client):
         "status": "ok", "low": round(f.low, 3), "mid": round(f.mid, 3), "high": round(f.high, 3),
         "explain": {"n_rated": 8, "half_life": 5.0, "own_share": round(f.own_share, 3), "own_avg": round(f.own_avg, 3),
                     "db_avg": 6.4},
-        "test": {"coverage": 0.82, "n_people": 9594}}
+        "test": {"coverage": 0.82, "n_people": 9594, "holdout": HOLDOUT}}
     assert b["forecast"]["low"] < b["forecast"]["mid"] < b["forecast"]["high"]
     assert b["model_available"] is True
 
@@ -166,7 +178,7 @@ def test_a_role_with_few_rated_films_is_listed_when_shown(client):
 def test_not_enough_films(client):
     b = client.get(CAREER.format(FEW)).json()
     assert b["forecast"] == {"status": "not_enough_films", "low": None, "mid": None, "high": None, "explain": None,
-                             "test": {"coverage": 0.82, "n_people": 9594}}
+                             "test": {"coverage": 0.82, "n_people": 9594, "holdout": HOLDOUT}}
     assert len(b["line"]) == 3 and b["model_available"] is True
 
 
@@ -284,3 +296,31 @@ def test_an_artifact_without_the_holdout_fails_to_load(tmp_path):
         path.write_text(json.dumps({**ARTIFACT, "roles": {**ARTIFACT["roles"], "acting": acting}}), encoding="utf-8")
         with pytest.raises(ValueError, match=r"holdout.*make career"):
             load_career_artifact(path)
+
+
+def test_check_lists_later_films_with_inside_flags(client):
+    c = client.get(CAREER.format(CHECKED)).json()["check"]
+    assert c["up_to"] == 2025 and c["low"] < c["mid"] < c["high"]
+    assert [(f["movie_id"], f["settling"], f["inside"]) for f in c["films"]] == [
+        (SETTLED_2026, False, True), (YOUNG_2026, True, False)]
+    assert c["films"][0] == {"movie_id": SETTLED_2026, "title": f"Film {SETTLED_2026}", "year": 2026, "score": 6.5,
+                             "settling": False, "inside": True}
+
+
+def test_check_history_ignores_2026_films(client):
+    c = client.get(CAREER.format(CHECKED)).json()["check"]
+    art = load_career_artifact(client.app.state.settings.career_file)
+    f = track_record([(2014 + k, s) for k, s in enumerate([6.0, 6.5, 7.0, 6.2, 6.8])], settings_of(art, "acting"),
+                     ROLE["mu"], ROLE["sigma_pop"])
+    assert (c["low"], c["mid"], c["high"]) == (round(f.low, 3), round(f.mid, 3), round(f.high, 3))
+
+
+@pytest.mark.parametrize("pid", [LOW_VOTE_LATER, FEW_LATER, YOUNGSTER, FEW])
+def test_check_is_null_without_history_or_later_rated_film(client, pid):
+    b = client.get(CAREER.format(pid)).json()
+    assert "check" in b and b["check"] is None
+
+
+def test_forecast_test_carries_the_holdout(client):
+    t = client.get(CAREER.format(ACTOR)).json()["forecast"]["test"]
+    assert t["holdout"] == HOLDOUT
