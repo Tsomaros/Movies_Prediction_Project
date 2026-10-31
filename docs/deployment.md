@@ -45,6 +45,7 @@ That is 19 checks. It exits with status 1 on any failure, the same against local
 | Startup until healthy | 8.3 s (models, prebuilt track records, comparables, lookups) |
 | Memory after startup | 323 MB (it peaks at 489 MB while loading) |
 | Memory after 100 different predictions with synopses | **407 MB** (`docker stats` 385 MiB), under the 450 MB gate |
+| After 100 predictions with synopses and 50 career pages (V1.4 image, fresh start, 2026-10-31) | `docker stats` 352 MiB (career pages added 3 MiB); after the smoke test (sweep and career model films included) plus both loads in one run 459 MiB, process RSS 443 MB |
 | Under a 512 MB limit, like Render Free | no out-of-memory kill; startup, 100 predictions and the smoke test pass |
 | Under 512 MB and 0.1 CPU (Day 15, the image with the app and Sentry) | healthy after 80.5 s, startup peak 456 MiB, 353 MiB after predictions; `/predict` median 5.9 s (1 CPU: 669 ms) |
 | `/predict`, uncached | median 175 ms, 90th percentile 192 ms |

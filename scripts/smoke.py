@@ -299,6 +299,10 @@ def main() -> None:
         assert usual["low"] < usual["high"] and new["low"] < new["high"], m
         nolan = s.get("/people/525/career/model", role="directing")
         assert nolan["chips"], nolan
+        odyssey = s.get("/people/525/career", role="directing")
+        check = odyssey.get("check")
+        assert check and 1368337 in {x["movie_id"] for x in check["films"]}, odyssey.get("check")
+        assert odyssey["forecast"]["test"]["holdout"]["year_from"] == 2026, odyssey["forecast"]["test"]
         return (f"next film {f['low']:.1f}-{f['high']:.1f} from {f['explain']['n_rated']} rated films; usual "
                 f"{usual['low']:.1f}-{usual['high']:.1f}, new {new['low']:.1f}-{new['high']:.1f}; "
                 f"Nolan's chips {', '.join(x['name'] for x in nolan['chips'])}")

@@ -129,6 +129,18 @@ The whole pipeline was reviewed stage by stage against the methods it uses, the 
 
 The money models hold up on new films; the score ranges under-cover, because young films' TMDB scores are still settling ([Limitations](../README.md#limitations)).
 
+## Career forecast on 2026
+
+The Career section's next-film score range (`ml/artifacts/career_forecast.json`, V1.4) is also checked on films released in 2026, which no setting was chosen on. Each point is a 2026 film with 50+ votes and a score at least 182 days old, forecast from the person's counted films before it. "Database-average MAE" is the same error when everyone gets the role's average score.
+
+| Role | Points | People | Coverage (target 80%) | MAE (points) | Database-average MAE |
+| --- | --- | --- | --- | --- | --- |
+| Acting | 935 | 857 | 72.8% | 0.734 | 0.770 |
+| Directing | 58 | 56 | 71.4% | 0.648 | 0.767 |
+| Writing | 74 | 73 | 82.9% | 0.616 | 0.601 |
+
+Acting and directing cover less than the 80% target (the 2019+ backtest covered 82.9% and 84.4%), and writing's error is slightly above the database average. Nothing was re-tuned on these numbers. The directing and writing samples are small (58 and 74 films). The app also shows a person's own 2026 films against the range built from films up to 2025.
+
 ## Testing
 
 ```bash

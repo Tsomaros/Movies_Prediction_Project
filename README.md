@@ -12,7 +12,7 @@ Every prediction is a range: a low end (10th percentile), an expected value (50t
 
 **What it does:**
 - **For creators:** a form for a planned film (genres, themes, director, cast, budget, release month…) gives three calibrated ranges, the drivers behind each, comparable earlier films, a break-even band, "what if" variants and the best release month.
-- **For everyone:** a header search for films or people (actors, directors, writers), browse 80,398 films (1960 to 2026) with a New arrivals row of what came out in the last two weeks and what is due in the next two months, film and person pages with career charts, a demo account with lists, ratings and notes, and a "Surprise me" picker.
+- **For everyone:** a header search for films or people (actors, directors, writers), browse 80,398 films (1960 to 2026) with a New arrivals row of what came out in the last two weeks and what is due in the next two months, film and person pages with career charts (a person's 2026 films are drawn and checked against the range built from films up to 2025; on 2026 films the acting range covers 72.8% of 935 films, below the 80% target), a demo account with lists, ratings and notes, and a "Surprise me" picker.
 
 ## Targets
 
