@@ -48,3 +48,7 @@ private/
 
 # V1.5 backup of the v1 models (restored on rollback)
 ml/artifacts.pre_v15/
+
+# Spike outputs (logs, pulls, pickles) and local Claude Code settings
+spikes/
+.claude/
