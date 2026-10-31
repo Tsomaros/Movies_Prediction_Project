@@ -728,7 +728,7 @@ export interface components {
             settling: boolean;
             /**
              * Inside
-             * @description low <= score <= high, on the rounded numbers shown
+             * @description low <= score <= high, compared at one decimal as the card shows them
              */
             inside: boolean;
         };

@@ -131,7 +131,7 @@ The money models hold up on new films; the score ranges under-cover, because you
 
 ## Career forecast on 2026
 
-The Career section's next-film score range (`ml/artifacts/career_forecast.json`, V1.4) is also checked on films released in 2026, which no setting was chosen on. Each point is a 2026 film with 50+ votes and a score at least 182 days old, forecast from the person's counted films before it. "Database-average MAE" is the same error when everyone gets the role's average score.
+The Career section's next-film score range (`ml/artifacts/career_forecast.json`, V1.4) is also checked on films released in 2026, which no setting was chosen on. Each point is a 2026 film with 50+ votes and a score at least 182 days old, forecast from the person's counted films up to 2025. "Database-average MAE" is the same error when everyone gets the role's average score.
 
 | Role | Points | People | Coverage (target 80%) | MAE (points) | Database-average MAE |
 | --- | --- | --- | --- | --- | --- |

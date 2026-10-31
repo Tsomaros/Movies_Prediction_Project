@@ -4,8 +4,9 @@
                             film and the track-record forecast of their next film
     CareerModelResponse  -> GET /people/{id}/career/model: the score model on "Their usual film" and
                             "Something new" (only `new` when a genre chip was asked for)
-    CareerRole, RoleCount, CareerFilmOut, LinePoint, BestFilm, ForecastExplain, ForecastTest, HoldoutTest, CheckFilm, CareerCheck, TrackForecast,
-    SlotPerson, RecipeLabels, RecipeOut, ModelScoreRange, ModelFilm, NewFilm, Chip
+    CareerRole, RoleCount, CareerFilmOut, LinePoint, BestFilm, ForecastExplain, ForecastTest, HoldoutTest,
+    CheckFilm, CareerCheck, TrackForecast, SlotPerson, RecipeLabels, RecipeOut, ModelScoreRange, ModelFilm, NewFilm,
+    Chip
                          -> their parts
 """
 
@@ -88,7 +89,7 @@ class CheckFilm(BaseModel):
     year: int
     score: float
     settling: bool = Field(description="Score under 182 days old when pulled")
-    inside: bool = Field(description="low <= score <= high, on the rounded numbers shown")
+    inside: bool = Field(description="low <= score <= high, compared at one decimal as the card shows them")
 
 
 class CareerCheck(BaseModel):

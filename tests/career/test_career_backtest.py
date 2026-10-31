@@ -225,7 +225,8 @@ def test_holdout_changes_no_tuned_number(con):
     con.execute("DELETE FROM movies WHERE year >= 2026")
     old = build_artifact(con, MIN_VOTES, "2026-10-31T00:00:00+00:00")
     for role in art["roles"]:  # (mu and sigma_pop move here only because the fixture's latest year drops to 2023)
-        assert {k: art["roles"][role][k] for k in ("h", "k", "q", "fallback", "test")} ==                {k: old["roles"][role][k] for k in ("h", "k", "q", "fallback", "test")}
+        tuned = ("h", "k", "q", "fallback", "test")
+        assert {k: art["roles"][role][k] for k in tuned} == {k: old["roles"][role][k] for k in tuned}
 
 
 def test_artifact_v2_holdout_shape_and_empty_role(con):

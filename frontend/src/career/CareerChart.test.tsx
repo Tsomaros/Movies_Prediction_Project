@@ -123,4 +123,13 @@ describe('the career table', () => {
     expect(green).toHaveAttribute('href', `/movies/${HANKS.best_film!.movie_id}`)
     expect(green.closest('tr')).toHaveTextContent(/1999The Green Mile8\.5[\d,]+as Paul Edgecomb · lead/)
   })
+
+  test('a settling film says so in its score cell; a settled one does not', () => {
+    const router = createMemoryRouter([{ path: '/', element: <CareerTable films={NOLAN.films} /> }])
+    render(<RouterProvider router={router} />)
+    const table = screen.getByRole('table', { name: 'Career films' })
+    expect(within(table).getByRole('link', { name: 'The Odyssey' }).closest('tr')).toHaveTextContent('still settling')
+    const settled = NOLAN.films.find(f => f.rated && !f.settling)!
+    expect(within(table).getByRole('link', { name: settled.title }).closest('tr')).not.toHaveTextContent('still settling')
+  })
 })

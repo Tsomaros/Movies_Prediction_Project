@@ -12,8 +12,9 @@
                                        the most films)
 
 Counted films (MIN_VOTES+ votes, a score, and a settled score: not `settling`) feed the line, the best film and the
-forecast; low-vote and settling films are only drawn. _check scores films after MODEL_DATA_MAX_YEAR (settling
-ones too) against the range built from counted films up to it; None without such a range or such films. roles_available lists each role with 5+ rated films (MIN_RATED), plus the one shown.
+forecast; low-vote and settling films are only drawn. _check scores films after MODEL_DATA_MAX_YEAR (settling ones
+too) against the range built from counted films up to it; None without such a range or such films.
+roles_available lists each role with 5+ rated films (MIN_RATED), plus the one shown.
 """
 
 from __future__ import annotations
@@ -60,6 +61,7 @@ def load_career_artifact(path: Path) -> CareerArtifact:
         missing = [f"{role}.{f}" for role, r in roles.items() for f in ROLE_FIELDS if f not in r]
         missing += [f"{role}.holdout.{f}" for role, r in roles.items() if isinstance(r.get("holdout"), dict)
                     for f in HOLDOUT_FIELDS if f not in r["holdout"]]
+        missing += [f"{role}.holdout" for role, r in roles.items() if not isinstance(r.get("holdout"), dict)]
         if missing:
             raise KeyError(", ".join(missing))
         return CareerArtifact(data["version"], data["built_at"], roles)
@@ -91,7 +93,10 @@ def _forecast(art: CareerArtifact, role: Role, rated: list[repo.CareerFilm]) -> 
 
 
 def _check(art: CareerArtifact, role: Role, films: list[repo.CareerFilm]) -> dict[str, Any] | None:
-    """The range from films up to MODEL_DATA_MAX_YEAR against the rated films after it (settling ones included)."""
+    """The range from films up to MODEL_DATA_MAX_YEAR against the rated films after it (settling ones included).
+
+    `inside` compares at one decimal, as the card shows the numbers, so a score that reads as the edge is inside.
+    """
     r = art.roles[role]
     history = [(f["year"], f["score"]) for f in films if repo.counted(f) and f["year"] <= MODEL_DATA_MAX_YEAR]
     later = [f for f in films if f["rated"] and f["year"] > MODEL_DATA_MAX_YEAR]
@@ -101,7 +106,7 @@ def _check(art: CareerArtifact, role: Role, films: list[repo.CareerFilm]) -> dic
     low, mid, high = round(f.low, 3), round(f.mid, 3), round(f.high, 3)
     return {"up_to": MODEL_DATA_MAX_YEAR, "low": low, "mid": mid, "high": high,
             "films": [{**{k: x[k] for k in ("movie_id", "title", "year", "score", "settling")},
-                       "inside": low <= round(x["score"], 3) <= high} for x in later]}
+                       "inside": round(low, 1) <= round(x["score"], 1) <= round(high, 1)} for x in later]}
 
 
 def career_response(con: sqlite3.Connection, art: CareerArtifact, person_id: int,

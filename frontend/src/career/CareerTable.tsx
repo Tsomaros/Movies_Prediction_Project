@@ -26,6 +26,7 @@ export function CareerTable({ films }: { films: CareerFilm[] }) {
               <td className="py-1 pr-3"><Link to={`/movies/${f.movie_id}`} className="underline">{f.title}</Link></td>
               <td className={`py-1 pr-3 text-right tabular-nums ${f.rated ? '' : 'text-muted-foreground'}`}>
                 {f.score === null ? '–' : points(f.score)}
+                {f.settling && <span className="text-muted-foreground"> (still settling)</span>}
               </td>
               <td className="py-1 pr-3 text-right tabular-nums">{f.vote_count.toLocaleString('en-US')}</td>
               {acting && (

@@ -18,7 +18,7 @@ from fastapi.testclient import TestClient
 
 from backend.app.main import create_app
 from backend.app.schemas.career import CareerModelResponse, CareerResponse
-from backend.app.services.career.forecast import load_career_artifact, settings_of
+from backend.app.services.career.forecast import _check, load_career_artifact, settings_of
 from backend.app.settings import API_PREFIX, Settings
 from ml.career.forecast import rolling_line, track_record
 from ml.data.build_db import SCHEMA
@@ -288,10 +288,9 @@ def test_a_missing_or_broken_artifact_stops_the_start(files, tmp_path):
 
 
 def test_an_artifact_without_the_holdout_fails_to_load(tmp_path):
-    for holdout in ({k: v for k, v in ROLE["holdout"].items() if k != "n_points"}, None):
-        acting = {k: v for k, v in ROLE.items() if k != "holdout"}
-        if holdout is not None:
-            acting["holdout"] = holdout
+    gone = {k: v for k, v in ROLE.items() if k != "holdout"}
+    for acting in ({**ROLE, "holdout": {k: v for k, v in ROLE["holdout"].items() if k != "n_points"}}, gone,
+                   {**ROLE, "holdout": None}):
         path = tmp_path / "old.json"
         path.write_text(json.dumps({**ARTIFACT, "roles": {**ARTIFACT["roles"], "acting": acting}}), encoding="utf-8")
         with pytest.raises(ValueError, match=r"holdout.*make career"):
@@ -305,6 +304,23 @@ def test_check_lists_later_films_with_inside_flags(client):
         (SETTLED_2026, False, True), (YOUNG_2026, True, False)]
     assert c["films"][0] == {"movie_id": SETTLED_2026, "title": f"Film {SETTLED_2026}", "year": 2026, "score": 6.5,
                              "settling": False, "inside": True}
+
+
+def test_inside_is_judged_at_the_one_decimal_the_card_shows(client):
+    art = load_career_artifact(client.app.state.settings.career_file)
+    history = [(2014 + k, s) for k, s in enumerate([6.0, 6.5, 7.0, 6.2, 6.8])]
+    f = track_record(history, settings_of(art, "acting"), ROLE["mu"], ROLE["sigma_pop"])
+    films = [{"movie_id": 1, "title": "T", "year": y, "score": s, "rated": True, "settling": False} for y, s in history]
+    for k in range(2):
+        edge = round(f.high, 1) if k == 0 else round(f.low, 1)
+        outside_at_3 = (round(f.high, 3) < edge) if k == 0 else (round(f.low, 3) > edge)
+        assert outside_at_3  # the real range does not sit on a tenth, so the edge is off by under 0.05
+        films.append({"movie_id": 10 + k, "title": "E", "year": 2026, "score": edge, "rated": True, "settling": False})
+    films.append({"movie_id": 20, "title": "Far", "year": 2026, "score": round(f.high, 1) + 0.1, "rated": True,
+                  "settling": False})
+    check = _check(art, "acting", films)
+    assert [x["inside"] for x in check["films"]] == [True, True, False]
+    assert (check["low"], check["high"]) == (round(f.low, 3), round(f.high, 3))
 
 
 def test_check_history_ignores_2026_films(client):
