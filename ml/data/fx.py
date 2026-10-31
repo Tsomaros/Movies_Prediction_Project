@@ -93,8 +93,9 @@ def build_fx(years: range, out: Path = FX_FILE, client: httpx.Client | None = No
         for currency, code in CURRENCY_COUNTRY.items():
             series = _series(client, code, years)
             if currency in EURO_FIXED:
-                # Older World Bank series may already be in euro-equivalents (about 0.8 per USD).
-                if series.get(1990, 99.0) < 2:
+                # Older World Bank series may already be in euro-equivalents (about 0.8 per USD); an own-currency
+                # rate is near the fixed rate (DEM 1990: 1.62 against 1.95583), so compare with half of it.
+                if series.get(1990, float("inf")) < EURO_FIXED[currency] / 2:
                     series = {y: v * EURO_FIXED[currency] for y, v in series.items()}
                 series = {y: v for y, v in series.items() if y < EURO_YEAR}
             rows.extend((currency, y, v) for y, v in series.items())

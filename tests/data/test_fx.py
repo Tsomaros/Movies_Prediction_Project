@@ -46,6 +46,7 @@ def _handler(request: httpx.Request) -> httpx.Response:
     series = {
         "FRA": [("1990", 0.82), ("1995", None), ("2005", 0.8)],
         "EMU": [("2005", 0.8), ("2000", 1.08)],
+        "DEU": [("1990", 1.62)],
     }.get(code, [])
     rows = [{"date": d, "value": v} for d, v in series]
     return httpx.Response(200, json=[{"page": 1}, rows])
@@ -65,3 +66,11 @@ def test_build_fx_rescales_euro_equivalent_series(tmp_path, monkeypatch):
     with out.open(newline="") as f:
         rows = list(csv.DictReader(f))
     assert [(r["currency"], r["year"]) for r in rows] == [("EUR", "2000"), ("EUR", "2005"), ("FRF", "1990")]
+
+
+def test_build_fx_keeps_an_own_currency_series_below_2(tmp_path, monkeypatch):
+    # DEM's 1990 rate (1.62 marks per USD) is below 2 but is not in euro-equivalents.
+    monkeypatch.setattr(fxmod, "CURRENCY_COUNTRY", {"DEM": "DEU"})
+    out = tmp_path / "fx.csv"
+    build_fx(range(1960, 2026), out, client=httpx.Client(transport=httpx.MockTransport(_handler)))
+    assert load_fx(out)[("DEM", 1990)] == 1.62
