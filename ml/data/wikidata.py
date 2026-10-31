@@ -102,14 +102,28 @@ class WikidataClient:
 # ---------------------------------------------------------------- queries
 
 
+def _date_range(first: int, last: int) -> str:
+    """Release date within the years first..last, as a dateTime range (YEAR() is far too slow here)."""
+    return (
+        f'FILTER(?date >= "{first}-01-01T00:00:00Z"^^xsd:dateTime'
+        f' && ?date < "{last + 1}-01-01T00:00:00Z"^^xsd:dateTime)'
+    )
+
+
 def year_query(year: int) -> str:
-    """Every budget and box office statement of films released in `year` that have a TMDB id."""
+    """Every budget and box office statement of films released in `year` that have a TMDB id.
+
+    Statement-first on purpose: starting from every item with a TMDB id made WDQS time out (504).
+    The optimizer hint keeps the written order.
+    """
     return f"""SELECT ?st ?item ?tmdb ?prop ?amount ?iso ?rank ?region ?time WHERE {{
-  ?item wdt:P4947 ?tmdb ; wdt:P577 ?date .
-  FILTER(YEAR(?date) = {year})
+  hint:Query hint:optimizer "None" .
   {{ ?item p:P2142 ?st . ?st psv:P2142 ?v . BIND("box_office" AS ?prop) }}
   UNION
   {{ ?item p:P2130 ?st . ?st psv:P2130 ?v . BIND("budget" AS ?prop) }}
+  ?item wdt:P577 ?date .
+  {_date_range(year, year)}
+  ?item wdt:P4947 ?tmdb .
   ?v wikibase:quantityAmount ?amount ; wikibase:quantityUnit ?unit .
   OPTIONAL {{ ?unit wdt:P498 ?iso }}
   ?st wikibase:rank ?rank .
@@ -119,11 +133,13 @@ def year_query(year: int) -> str:
 
 
 def _decade_body(decade: int) -> str:
-    return f"""  ?item wdt:P4947 ?tmdb ; wdt:P577 ?date .
-  FILTER(YEAR(?date) >= {decade} && YEAR(?date) <= {min(decade + 9, MODEL_DATA_MAX_YEAR)})
+    return f"""  hint:Query hint:optimizer "None" .
   {{ ?item p:P2142 ?st . ?st psv:P2142 ?v }}
   UNION
   {{ ?item p:P2130 ?st . ?st psv:P2130 ?v }}
+  ?item wdt:P577 ?date .
+  {_date_range(decade, min(decade + 9, MODEL_DATA_MAX_YEAR))}
+  ?item wdt:P4947 ?tmdb .
   ?v wikibase:quantityUnit ?unit .
   ?st wikibase:rank ?rank . FILTER(?rank != wikibase:DeprecatedRank)"""
 

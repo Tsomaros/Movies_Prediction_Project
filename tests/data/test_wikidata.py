@@ -110,7 +110,7 @@ class FakeClient:
         self.queried: list[int] = []
 
     def query(self, sparql: str) -> list[dict[str, str]]:
-        year = int(re.search(r"YEAR\(\?date\) = (\d+)", sparql).group(1))
+        year = int(re.search(r'\?date >= "(\d+)-01-01', sparql).group(1))
         self.queried.append(year)
         return self.by_year.get(year, [])
 
@@ -195,3 +195,13 @@ def test_new_ids_command_appends_by_default(tmp_path, monkeypatch):
     assert len(ids.read_text(encoding="utf-8").splitlines()) == 2
     main(["new-ids"])
     assert ids.read_text(encoding="utf-8").splitlines()[-1] == "2001,0,11"
+
+
+def test_year_query_is_statement_first_with_a_date_range():
+    q = wikidata.year_query(2010)
+    assert q.index('hint:Query hint:optimizer "None"') < q.index("wdt:P577") < q.index("wdt:P4947")
+    assert q.index("p:P2142") < q.index("wdt:P577")
+    assert '?date >= "2010-01-01T00:00:00Z"^^xsd:dateTime' in q
+    assert '?date < "2011-01-01T00:00:00Z"^^xsd:dateTime' in q
+    assert "YEAR(" not in q
+    assert '?date < "2026-01-01T00:00:00Z"' in wikidata.currency_survey_query(2020)
