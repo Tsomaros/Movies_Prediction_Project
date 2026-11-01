@@ -144,7 +144,7 @@ describe('the golden examples', () => {
     expect(panel).toHaveTextContent(`Budget${Math.round(t.budget.model.coverage * 100)}% of 1,964off by ×2 (×3.5)`)
     expect(panel).toHaveTextContent('Audience score81% of 7,461off by 0.5 points (0.6 points)')
     expect(panel).toHaveTextContent(`Audience score${Math.round(card.holdout.targets.score.model.coverage * 100)}% of 190`)
-    expect(panel).toHaveTextContent('built from 79,199 films released 1960–2025')
+    expect(panel).toHaveTextContent('trained on films released 1960–2025 (10,421 with revenue, 14,460 with a budget, 33,077 with a score)')
     expect(within(panel).getByRole('link', { name: 'Read how it was tested' })).toHaveAttribute('href', expect.stringContaining('#readme'))
   })
 })

@@ -1,4 +1,4 @@
-// /browse: browse the 80,398 films, and the header search's movie results (V1.1). Everything is in the URL
+// /browse: browse the films, and the header search's movie results (V1.1). Everything is in the URL
 // (src/movies/browse.ts): the search ?q= (typed in the header; here a "Results for" chip removes it), the filters,
 // the sort and the page, so a link or the back button always shows the same films. Filters sit in a sidebar
 // from `lg`, in a drawer on smaller screens; the grid size or list view is remembered in this browser. The
@@ -57,7 +57,7 @@ export default function Browse() {
   return (
     <div className="grid gap-6">
       <PageHeading title="Browse films">
-        Filter every film in our TMDB data, released from 1960 to 2026. Search titles and plots from the bar at the top.
+        Filter every film in our TMDB data, released from 1960 to today, plus upcoming films. Search titles and plots from the bar at the top.
       </PageHeading>
 
       {resets.length > 0 && (

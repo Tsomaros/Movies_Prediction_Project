@@ -82,7 +82,7 @@ export function Filters({ state, options, onChange, onClear, idPrefix = 'f' }: {
           <YearBox id={id('from')} value={state.yearFrom} placeholder="1960" onCommit={yearFrom => onChange({ yearFrom })} />
         </Field>
         <Field id={id('to')} label="To year">
-          <YearBox id={id('to')} value={state.yearTo} placeholder="2025" onCommit={yearTo => onChange({ yearTo })} />
+          <YearBox id={id('to')} value={state.yearTo} placeholder="2026" onCommit={yearTo => onChange({ yearTo })} />
         </Field>
       </div>
       <Field id={id('lang')} label="Original language">

@@ -1,5 +1,5 @@
 // /about: the project as a short case study: the data, how a prediction is made, how accurate it is (the served
-// models' own numbers from GET /model-card), the main limitations, and where the code is.
+// models' own numbers from GET /model-card), the main limitations, the rest of the app, and where the code is.
 import { Link } from 'react-router'
 
 import { Accuracy, README_URL } from '@/result/Notes'
@@ -30,7 +30,8 @@ export default function About() {
             className="text-primary underline">TMDB</a> in October 2026. Money is compared in 2025 US dollars, adjusted with the US
           consumer price index. Only 13% of films report both a budget and a box office, so the money models learn from the
           better-documented films. The models learn only from the 79,199 films up to 2025; the 1,199 films of 2026 are there
-          to browse, and the 2026 holdout checks the models on them.
+          to browse, and a 2026 holdout (70 revenue, 223 budget and 190 score films old enough to judge) checks the models.
+          New and upcoming films are added every 6 hours; the models never use them.
         </p>
         <p className="text-muted-foreground text-sm">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
       </Section>
@@ -38,7 +39,7 @@ export default function About() {
       <Section title="How a prediction is made">
         <ul>
           <li>Only what is known before release counts: genres, themes, people and their earlier films, studio, franchise, date,
-            runtime, rating and budget. Popularity, votes and box office never feed a prediction.</li>
+            language, country, runtime, rating and budget. Popularity, votes and box office never feed a prediction.</li>
           <li>A film's track record uses only films released before it, and their box office and score only once they are six
             months old, so the models never peek at the future.</li>
           <li>LightGBM models give a low, middle and high value. The ranges are then widened just enough that about 8 in 10 real
@@ -57,12 +58,24 @@ export default function About() {
             raises the estimate.</li>
           <li>New films' TMDB scores start high and settle in their first year; the score range is for the settled score.</li>
           <li>Leaving the studio or country empty lowers the ranges, because past films without one are mostly small.</li>
+          <li>The career forecast on person pages aims for 8 in 10 too, but on 2026 films it held 73% of actors' and 71% of
+            directors' scores (83% for writers).</li>
+        </ul>
+      </Section>
+
+      <Section title="Also in the app">
+        <ul>
+          <li>Compare up to three versions of a plan, and see how the release month changes the estimate.</li>
+          <li>Actor and crew pages, with a career chart and a forecast of the next film's score.</li>
+          <li>New arrivals: films just released and coming soon.</li>
+          <li>Surprise me, for a random film to watch.</li>
+          <li>A demo account with a watched list, a watchlist, ratings and notes.</li>
         </ul>
       </Section>
 
       <Section title="The project">
         <p>
-          Built in three weeks as a portfolio project: a data pipeline, time-split evaluation against simple baselines, a FastAPI
+          Built in October 2026 as a portfolio project: a data pipeline, time-split evaluation against simple baselines, a FastAPI
           backend and this React app. The code, the test results and every limitation are on{' '}
           <a href={REPO_URL} target="_blank" rel="noreferrer" className="text-primary underline">GitHub</a> (
           <a href={README_URL} target="_blank" rel="noreferrer" className="text-primary underline">README</a>).

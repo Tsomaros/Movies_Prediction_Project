@@ -50,6 +50,11 @@ const ROWS = (revenue: 'revenue' | 'revenue_estimated') => [
   { key: 'score', label: 'Audience score' },
 ] as const
 
+function trainedOn(films: ModelCard['training']['films']) {
+  const n = (key: string) => (films[key] ?? 0).toLocaleString('en-US')
+  return `${n('revenue')} with revenue, ${n('budget')} with a budget, ${n('score')} with a score`
+}
+
 function miss(m: Targets['score']['model']) {
   return m.typical_factor != null ? `off by ${factor(m.typical_factor)}` : `off by ${m.mae!.toFixed(1)} points`
 }
@@ -102,9 +107,10 @@ export function Accuracy({ mode }: { mode: Prediction['revenue']['mode'] }) {
           <AccuracyTable caption={`Films released in ${card.data.holdout.years}, after the training data ends`}
             targets={card.data.holdout.targets} revenue={revenue} />
           <p className="text-muted-foreground text-sm">
-            Scores of 2026 films land in range less often: a new film's TMDB score usually starts high and settles in
-            its first year, and the models predict the settled score. Models version {card.data.model_version}, built
-            from {card.data.data.films.toLocaleString('en-US')} films released {card.data.data.first_year}–{card.data.data.last_year}.{' '}
+            Scores of {card.data.holdout.years} films land in range less often: a new film's TMDB score usually starts
+            high and settles in its first year, and the models predict the settled score. Models version{' '}
+            {card.data.model_version}, trained on films released {card.data.training.years.replace('-', '–')}{' '}
+            ({trainedOn(card.data.training.films)}).{' '}
             <a href={README_URL} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-2">
               Read how it was tested
             </a>
