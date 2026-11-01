@@ -101,7 +101,9 @@ def not_cached(body: Any) -> str | None:
     return None if not any(flags) else f"a miss row was answered from the cache: {flags}"
 
 
-def measure(client: httpx.Client, repeats: int) -> list[Row]:
+def measure(client: httpx.Client, repeats: int, reads_only: bool = False) -> list[Row]:
+    if reads_only:
+        return read_rows(client, repeats)
     forms = json.loads(FORMS.read_text(encoding="utf-8"))["forms"]
     total = WARMUP + repeats
     free = [r for r in RUNTIMES if r not in {f.get("runtime") for f in forms.values()}]  # a form's own runtime is a hit
@@ -144,7 +146,11 @@ def measure(client: httpx.Client, repeats: int) -> list[Row]:
     run_row(client, row, lambda: ("POST", "/predict/sweep", {"form": base, "field": "release_month", "values": months}),
             repeats)
     rows.append(row)
+    return rows + read_rows(client, repeats)
 
+
+def read_rows(client: httpx.Client, repeats: int) -> list[Row]:
+    rows: list[Row] = []
     print("reads", flush=True)
     reads: list[tuple[str, str, dict[str, Any]]] = [
         ("GET /movies (genre, years, sort=score)", "/movies", {"genre": "Drama", "year_from": 2000, "year_to": 2020,
@@ -221,13 +227,14 @@ def main() -> int:
     parser.add_argument("--out", help="write the Markdown report here (it is always printed too)")
     parser.add_argument("--throttled", action="store_true",
                         help="the server runs with Render-like limits: gates G2-G4 apply, not G1")
+    parser.add_argument("--reads-only", action="store_true", help="measure the read endpoints only (G4); a throttled run of all rows takes ~50 min")
     parser.add_argument("--timeout", type=float, default=600, help="seconds per request")
     args = parser.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")
 
     print(f"Benchmark of {args.base_url}", flush=True)
     with httpx.Client(base_url=args.base_url.rstrip("/"), timeout=args.timeout) as client:
-        rows = measure(client, args.repeats)
+        rows = measure(client, args.repeats, args.reads_only)
     text = report(rows, args.base_url, args.throttled, args.repeats)
     print("\n" + text)
     if args.out:

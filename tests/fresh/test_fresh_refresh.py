@@ -5,12 +5,18 @@ from __future__ import annotations
 
 import asyncio
 import shutil
+import time
+from contextlib import closing
 from datetime import datetime, timedelta, timezone
 
+import httpx
 import pytest
 
 import backend.app.services.fresh.merge as fresh
+from backend.app.deps import connect_read_only
+from backend.app.repo import movies as movies_repo
 from backend.app.services.fresh.refresher import Refresher
+from ml.data.tmdb_client import TMDBClient
 from tests.ml.test_eval import db  # noqa: F401 (fixture: a small movies.db, films 1-300)
 from tests.fresh.test_fresh_build import FakeTMDB, client_for, disc, ids_in
 
@@ -135,3 +141,31 @@ async def test_only_one_refresh_at_a_time(refresher_factory):
     assert first is not None and r.maybe_start() is None  # running: a second call starts nothing
     await first
     assert r.maybe_start() is None  # and a fresh file is not due again
+
+
+async def test_a_request_during_a_refresh_does_not_wait_for_tmdb(refresher_factory, fake, clock):
+    """V1.5: TMDB is slow (the fake holds every answer back until released); a request in the meantime starts nothing
+    new, reads the database as it was and returns at once. When TMDB answers, the merge lands and the next read sees it."""
+    gate = asyncio.Event()
+
+    async def slow(request: httpx.Request) -> httpx.Response:
+        await gate.wait()
+        return fake(request)
+
+    r = refresher_factory(make_client=lambda token: TMDBClient("t", rate=10_000, backoff_base=0,
+                                                              transport=httpx.MockTransport(slow)))
+    task = r.maybe_start()
+    await asyncio.sleep(0.05)
+    assert task is not None and not task.done()  # the refresh is waiting for TMDB
+
+    began = time.perf_counter()
+    assert r.maybe_start() is None  # what the middleware does on every /api request: it neither waits nor restarts
+    with closing(connect_read_only(r.db_path)) as con:
+        rows, total = movies_repo.search(con, today=clock().date(), page_size=5)
+    assert rows and total > 0 and not any(i in {r_["id"] for r_ in rows} for i in WINDOW)
+    assert time.perf_counter() - began < 1 and not task.done()
+
+    gate.set()
+    assert (await task)["films"] == len(WINDOW)
+    with closing(connect_read_only(r.db_path)) as con:
+        assert movies_repo.ids_present(con, WINDOW) == set(WINDOW)  # the read after the merge sees the new films

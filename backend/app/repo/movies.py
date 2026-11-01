@@ -2,10 +2,10 @@
 
     fts_query(text)                     -> a safe FTS5 query: every word as a quoted prefix ("tom"* "han"*), or None
     search(con, q, genre, year_from, year_to, language, score_min, sort, page, page_size)
-                                        -> (rows for that page, total matching)
+                                        -> (rows for that page, each with `fresh`, total matching): 4 queries
     movie(con, movie_id)                -> one film's facts, people (the cast with their TMDB photo path), money and
                                            score, or None
-    summaries(con, ids)                 -> {id: summary, with runtime} for the films among ids that exist (one query)
+    summaries(con, ids)                 -> {id: summary, with runtime and genres} for the films among ids that exist (two queries)
     random_candidates(con, genre, decade, language, max_runtime, floor, ids)
                                         -> the ids of the films a "Surprise me" spin may pick (Day 14.5)
     posters(con, ids)                   -> {id: poster_path} for the films among ids that have a poster
@@ -34,7 +34,9 @@ SORTS = {  # name -> ORDER BY; ties broken by id so pages never overlap
     "revenue": "m.revenue_2025 DESC, m.id",  # films with a trusted revenue only, in 2025 dollars
     "soonest": "m.release_date IS NULL, m.release_date ASC, m.id",  # the next release first (the Coming soon list)
 }
-INDEXED_SORTS = ("popularity", "score", "revenue")  # the sorts with an index in build_db.SORT_INDEXES
+WALK_SORTS = ("popularity", "score", "revenue", "title", "newest")  # the sorts with an index in build_db.SORT_INDEXES
+WIDE_YEARS = 20  # search(): a year range this wide is not selective
+WALK_MIN_MATCHES = 5000  # a text search matching this many films walks the sort's index (search)
 CREW_JOBS = ("Director", "Screenplay", "Writer", "Producer", "Original Music Composer", "Director of Photography",
              "Editor")  # the order shown
 TOP_CAST = 15
@@ -68,7 +70,17 @@ def search(con: sqlite3.Connection, q: str | None = None, genre: str | None = No
     With `today` (V1.2): when="released" / "upcoming" keeps the films of that window (services/fresh/pull.windows); with
     neither `when` nor a text search a film not yet released is left out, so a coming-soon film is found only
     through when="upcoming", a search or its page."""
-    joins, where, args = "", ["m.release_date IS NOT NULL"], []
+    # V1.5: a unary "+" on a column keeps the planner off that column's index. A date filter such as
+    # "release_date <= today" matches nearly every film, yet the planner would walk idx_movies_release for it and
+    # fetch the table row of each (0.27 s for a count, against 8 ms from the year index). So the date terms never
+    # use an index here, except in a `when` window, where the range is the point.
+    plain = q is None and when is None  # no window and no text: the sorts' own indexes (build_db.SORT_INDEXES) serve
+    rel = "+m.release_date" if plain else "m.release_date"
+    # on the score sort a wide year range (20+ years, or open ended) is left to the vote_count index, which finds the few
+    # films with 500+ votes; a narrow range is better served by the year index
+    wide = (year_to if year_to is not None else 2100) - (year_from if year_from is not None else 1800) >= WIDE_YEARS
+    year = "+m.year" if plain and sort == "score" and wide else "m.year"
+    joins, where, args = "", ["+m.release_date IS NOT NULL"], []
     if q is not None:
         match = fts_query(q)
         if match is None:  # only punctuation: nothing can match
@@ -84,17 +96,17 @@ def search(con: sqlite3.Connection, q: str | None = None, genre: str | None = No
             where.append("m.release_date BETWEEN ? AND ?")
             args.extend((first.isoformat(), last.isoformat()))
         elif q is None:
-            where.append("m.release_date <= ?")
+            where.append(f"{rel} <= ?")
             args.append(today.isoformat())
     if genre:
         where.append("EXISTS (SELECT 1 FROM movie_genres mg JOIN genres g ON g.id = mg.genre_id "
                      "WHERE mg.movie_id = m.id AND g.name = ?)")
         args.append(genre)
     if year_from is not None:
-        where.append("m.year >= ?")
+        where.append(f"{year} >= ?")
         args.append(year_from)
     if year_to is not None:
-        where.append("m.year <= ?")
+        where.append(f"{year} <= ?")
         args.append(year_to)
     if language:
         where.append("m.original_language = ?")
@@ -110,33 +122,32 @@ def search(con: sqlite3.Connection, q: str | None = None, genre: str | None = No
     if sort == "revenue":
         where.append("m.revenue_2025 IS NOT NULL AND NOT m.money_suspect")
     clause = f"FROM movies m {joins} WHERE {' AND '.join(where)}"
-    ids_clause = count_clause = clause
-    if q is None and when is None and sort in INDEXED_SORTS:
-        # V1.5: "release_date <= today" matches nearly every film, yet the planner picks idx_movies_release for it
-        # (and sorts the table); "+" keeps it off that index so the sort's own index (build_db.SORT_INDEXES) is used
-        ids_clause = clause.replace("m.release_date IS NOT NULL", "+m.release_date IS NOT NULL").replace(
-            "m.release_date <= ?", "+m.release_date <= ?")
-        if sort == "score":  # its count walks the (vote_count, release_date) index; the others' counts are fast as they are
-            count_clause = ids_clause
+    # the revenue count is the one that wants the date range: its partial index (build_db.SORT_INDEXES) is on release_date
+    count_clause = clause.replace("+m.release_date", "m.release_date") if plain and sort == "revenue" else clause
     total = con.execute(f"SELECT COUNT(*) {count_clause}", args).fetchone()[0]
+    ids_clause = clause
+    if q is not None and total >= WALK_MIN_MATCHES and sort in WALK_SORTS:
+        # a common word matches most films: walking the sort's index and asking the match set whether each film is in
+        # it beats sorting every match (18 ms against 54 for "the"); a rare word keeps the match-driven plan
+        ids_clause = clause.replace(joins, "").replace("movies_fts MATCH ?", "+m.id IN (SELECT rowid FROM movies_fts "
+                                                                              "WHERE movies_fts MATCH ?)")
     # two steps: the ids of the page (a sort without per-row subqueries), then the page's summaries
     page_ids = [r[0] for r in con.execute(f"SELECT m.id {ids_clause} ORDER BY {SORTS[sort]} LIMIT ? OFFSET ?",
                                           [*args, page_size, (page - 1) * page_size])]
-    found = summaries(con, page_ids)
+    found = summaries(con, page_ids, with_fresh=True)
     return [found[i] for i in page_ids if i in found], total
 
 
 def genres_for(con: sqlite3.Connection, ids: list[int]) -> dict[int, list[str]]:
-    """Each film's genre names in TMDB's order, for a page of films: two flat queries instead of a subquery per
-    film (V1.2: 17x faster for the newest list)."""
+    """Each film's genre names in TMDB's order, for a page of films: one flat query (the names are joined by id)
+    instead of a subquery per film (V1.2: 17x faster for the newest list)."""
     if not ids:
         return {}
-    names = {r[0]: r[1] for r in con.execute("SELECT id, name FROM genres")}
     out: dict[int, list[str]] = {i: [] for i in ids}
-    for movie_id, genre_id in con.execute(f"SELECT movie_id, genre_id FROM movie_genres "
-                                           f"WHERE movie_id IN ({','.join('?' * len(ids))}) ORDER BY movie_id, ord", list(ids)):
-        if genre_id in names:
-            out[movie_id].append(names[genre_id])
+    for movie_id, name in con.execute(f"SELECT mg.movie_id, g.name FROM movie_genres mg JOIN genres g ON g.id = mg.genre_id "
+                                      f"WHERE mg.movie_id IN ({','.join('?' * len(ids))}) ORDER BY mg.movie_id, mg.ord",
+                                      list(ids)):
+        out[movie_id].append(name)
     return out
 
 
@@ -147,12 +158,18 @@ def _summary(r: sqlite3.Row) -> dict[str, Any]:
     return out
 
 
-def summaries(con: sqlite3.Connection, ids: list[int]) -> dict[int, dict[str, Any]]:
+def summaries(con: sqlite3.Connection, ids: list[int], with_fresh: bool = False) -> dict[int, dict[str, Any]]:
+    """The cards of the films among ids, genres included: two queries. with_fresh adds `fresh` (the refresher keeps
+    the film up to date, fresh_films) to each, in the same query."""
     if not ids:
         return {}
-    rows = con.execute(f"SELECT {SUMMARY_COLS}, m.runtime FROM movies m WHERE m.id IN ({','.join('?' * len(ids))})",
+    fresh = ", m.id IN (SELECT id FROM fresh_films) AS fresh" if with_fresh else ""
+    rows = con.execute(f"SELECT {SUMMARY_COLS}, m.runtime{fresh} FROM movies m WHERE m.id IN ({','.join('?' * len(ids))})",
                        list(ids))
     films = {r["id"]: _summary(r) for r in rows}
+    if with_fresh:
+        for film in films.values():
+            film["fresh"] = bool(film["fresh"])
     for movie_id, names in genres_for(con, list(films)).items():
         films[movie_id]["genres"] = names
     return films
@@ -165,9 +182,9 @@ def random_candidates(con: sqlite3.Connection, genre: str | None = None, decade:
     """floor = (fewest votes, lowest score), or None for no floor. ids limits the films to those (a watchlist);
     without ids every film needs a poster, because the reveal is a poster shuffle. A film with no runtime is
     left out under max_runtime. With `today`, a film not yet released is never a candidate (V1.2)."""
-    where, args = ["m.release_date IS NOT NULL"], []
+    where, args = ["+m.release_date IS NOT NULL"], []  # "+": see search(); a date filter must not walk idx_movies_release
     if today is not None:
-        where.append("m.release_date <= ?")
+        where.append("+m.release_date <= ?")
         args.append(today.isoformat())
     if ids is not None:
         if not ids:

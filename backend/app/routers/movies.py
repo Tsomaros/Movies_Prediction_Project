@@ -62,7 +62,8 @@ def list_movies(
     rows, total = repo.search(con, q, genre, year_from, year_to, language, score_min, sort, page, page_size,
                               when=when, today=request.app.state.clock().date())
     # new and upcoming films change by the day: ten minutes for a window or a page that holds one, an hour otherwise
-    fresh = when is not None or bool(repo.fresh_ids(con, [r["id"] for r in rows]))
+    held = [r.pop("fresh") for r in rows]  # search flags the films the refresher keeps up to date
+    fresh = when is not None or any(held)
     response.headers["Cache-Control"] = LIVE_CACHE if fresh else CACHE
     return {"items": [_summary(r) for r in rows], "total": total, "page": page, "page_size": page_size,
             "pages": math.ceil(total / page_size)}

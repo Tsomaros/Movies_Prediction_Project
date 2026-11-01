@@ -121,8 +121,11 @@ TABLE_ORDER = [
     "movie_languages",
 ]
 
-# V1.5: one index per browse sort that has no index of its own (the home rows' popularity, score and revenue; the last index covers a year range sorted by popularity); the
-# expressions match backend/app/repo/movies.py SORTS. IF NOT EXISTS: scripts/slim_db.py adds them to databases built before.
+# V1.5: one index per browse sort that has no index of its own: the home rows' popularity, score and revenue, and the
+# Title and Newest sorts. idx_movies_year_popularity covers a year range sorted by popularity; idx_movies_votes_year
+# answers a genre/year filter on the score sort without reading the table; idx_movies_language_score does the same for a
+# language with a minimum score. The expressions match
+# backend/app/repo/movies.py SORTS. IF NOT EXISTS: scripts/slim_db.py adds them to databases built before.
 SORT_INDEXES = """
 CREATE INDEX IF NOT EXISTS idx_movies_popularity ON movies((popularity IS NULL), popularity DESC, id);
 CREATE INDEX IF NOT EXISTS idx_movies_score ON movies(vote_average DESC, vote_count DESC, id);
@@ -132,6 +135,10 @@ CREATE INDEX IF NOT EXISTS idx_movies_revenue ON movies(revenue_2025 DESC, id)
 CREATE INDEX IF NOT EXISTS idx_movies_revenue_release ON movies(release_date)
     WHERE revenue_2025 IS NOT NULL AND NOT money_suspect;
 CREATE INDEX IF NOT EXISTS idx_movies_year_popularity ON movies(year, release_date, popularity, id);
+CREATE INDEX IF NOT EXISTS idx_movies_votes_year ON movies(vote_count, year, release_date);
+CREATE INDEX IF NOT EXISTS idx_movies_language_score ON movies(original_language, vote_average, vote_count, release_date);
+CREATE INDEX IF NOT EXISTS idx_movies_title ON movies(title COLLATE NOCASE, year, id);
+CREATE INDEX IF NOT EXISTS idx_movies_newest ON movies((release_date IS NULL), release_date DESC, id);
 """
 
 INDEXES = """
