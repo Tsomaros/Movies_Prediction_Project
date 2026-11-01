@@ -28,7 +28,7 @@ ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never UV_PROJECT
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
 # Runtime only: no dev group (pytest, jupyter) and no ml group (optuna, matplotlib)
-RUN uv sync --frozen --no-default-groups --no-install-project
+RUN uv sync --frozen --no-default-groups --no-install-project     && find /app/.venv -type d \( -name tests -o -name test \) -prune -exec rm -rf {} +
 
 # ---------------------------------------------------------------- runtime
 FROM python:3.11-slim
