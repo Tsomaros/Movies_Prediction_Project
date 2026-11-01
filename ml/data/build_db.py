@@ -121,6 +121,19 @@ TABLE_ORDER = [
     "movie_languages",
 ]
 
+# V1.5: one index per browse sort that has no index of its own (the home rows' popularity, score and revenue; the last index covers a year range sorted by popularity); the
+# expressions match backend/app/repo/movies.py SORTS. IF NOT EXISTS: scripts/slim_db.py adds them to databases built before.
+SORT_INDEXES = """
+CREATE INDEX IF NOT EXISTS idx_movies_popularity ON movies((popularity IS NULL), popularity DESC, id);
+CREATE INDEX IF NOT EXISTS idx_movies_score ON movies(vote_average DESC, vote_count DESC, id);
+CREATE INDEX IF NOT EXISTS idx_movies_votes_release ON movies(vote_count, release_date);
+CREATE INDEX IF NOT EXISTS idx_movies_revenue ON movies(revenue_2025 DESC, id)
+    WHERE revenue_2025 IS NOT NULL AND NOT money_suspect;
+CREATE INDEX IF NOT EXISTS idx_movies_revenue_release ON movies(release_date)
+    WHERE revenue_2025 IS NOT NULL AND NOT money_suspect;
+CREATE INDEX IF NOT EXISTS idx_movies_year_popularity ON movies(year, release_date, popularity, id);
+"""
+
 INDEXES = """
 CREATE INDEX idx_movies_year       ON movies(year);
 CREATE INDEX idx_movies_release    ON movies(release_date);
@@ -191,7 +204,7 @@ def write_db(con: sqlite3.Connection, tables: dict[str, pd.DataFrame], meta: dic
         columns = _columns(con, name)
         placeholders = ", ".join("?" * len(columns))
         con.executemany(f"INSERT INTO {name} ({', '.join(columns)}) VALUES ({placeholders})", _rows(tables[name], columns))
-    con.executescript(INDEXES + SEARCH + VIEWS)
+    con.executescript(INDEXES + SORT_INDEXES + SEARCH + VIEWS)
     # Every value is stored as JSON, so readers decode them all the same way.
     con.executemany("INSERT INTO meta (key, value) VALUES (?, ?)", [(k, json.dumps(v)) for k, v in meta.items()])
     broken = con.execute("PRAGMA foreign_key_check").fetchall()

@@ -34,6 +34,7 @@ SORTS = {  # name -> ORDER BY; ties broken by id so pages never overlap
     "revenue": "m.revenue_2025 DESC, m.id",  # films with a trusted revenue only, in 2025 dollars
     "soonest": "m.release_date IS NULL, m.release_date ASC, m.id",  # the next release first (the Coming soon list)
 }
+INDEXED_SORTS = ("popularity", "score", "revenue")  # the sorts with an index in build_db.SORT_INDEXES
 CREW_JOBS = ("Director", "Screenplay", "Writer", "Producer", "Original Music Composer", "Director of Photography",
              "Editor")  # the order shown
 TOP_CAST = 15
@@ -109,9 +110,17 @@ def search(con: sqlite3.Connection, q: str | None = None, genre: str | None = No
     if sort == "revenue":
         where.append("m.revenue_2025 IS NOT NULL AND NOT m.money_suspect")
     clause = f"FROM movies m {joins} WHERE {' AND '.join(where)}"
-    total = con.execute(f"SELECT COUNT(*) {clause}", args).fetchone()[0]
+    ids_clause = count_clause = clause
+    if q is None and when is None and sort in INDEXED_SORTS:
+        # V1.5: "release_date <= today" matches nearly every film, yet the planner picks idx_movies_release for it
+        # (and sorts the table); "+" keeps it off that index so the sort's own index (build_db.SORT_INDEXES) is used
+        ids_clause = clause.replace("m.release_date IS NOT NULL", "+m.release_date IS NOT NULL").replace(
+            "m.release_date <= ?", "+m.release_date <= ?")
+        if sort == "score":  # its count walks the (vote_count, release_date) index; the others' counts are fast as they are
+            count_clause = ids_clause
+    total = con.execute(f"SELECT COUNT(*) {count_clause}", args).fetchone()[0]
     # two steps: the ids of the page (a sort without per-row subqueries), then the page's summaries
-    page_ids = [r[0] for r in con.execute(f"SELECT m.id {clause} ORDER BY {SORTS[sort]} LIMIT ? OFFSET ?",
+    page_ids = [r[0] for r in con.execute(f"SELECT m.id {ids_clause} ORDER BY {SORTS[sort]} LIMIT ? OFFSET ?",
                                           [*args, page_size, (page - 1) * page_size])]
     found = summaries(con, page_ids)
     return [found[i] for i in page_ids if i in found], total

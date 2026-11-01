@@ -3,7 +3,8 @@
     uv run python scripts/slim_db.py [--src data/movies.db] [--out build/movies.db]
 
 Drops the `features` table (training and the comparables build read it; the app computes features from
-the films themselves) and VACUUMs the copy. Everything the API and predict() read stays: films, people,
+the films themselves), adds the browse sorts' indexes (build_db.SORT_INDEXES) if the source lacks them (V1.5)
+and VACUUMs the copy. Everything the API and predict() read stays: films, people,
 companies, keywords, collections, the link tables, the FTS index, the views and `meta`. The source is
 opened read-only and never changed; the copy is checked to have the same films and an intact FTS index, and
 refused when the source holds films the app's refresher merged (fresh_films not empty): the image ships the build.
@@ -17,6 +18,10 @@ import sys
 import time
 from contextlib import closing
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # `uv run python scripts/slim_db.py` has scripts/ on the path, not the repo
+
+from ml.data.build_db import SORT_INDEXES  # noqa: E402
 
 TRAINING_ONLY = ("features",)
 APP_TABLES = ("movies", "people", "companies", "keywords", "collections", "genres", "movie_genres", "movie_companies",
@@ -34,6 +39,7 @@ def slim(src: Path, out: Path) -> dict[str, float]:
     con = sqlite3.connect(tmp)
     for table in TRAINING_ONLY:
         con.execute(f"DROP TABLE IF EXISTS {table}")
+    con.executescript(SORT_INDEXES)  # V1.5: the browse sorts' indexes, if the source was built without them
     con.commit()
     con.execute("VACUUM")
     films = con.execute("SELECT COUNT(*) FROM movies").fetchone()[0]
