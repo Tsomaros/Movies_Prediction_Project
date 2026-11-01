@@ -131,7 +131,7 @@ V1.5 was a speed pass with no model change: predictions are identical to before 
 | `GET /movies?q=the`, median | 0.9 s | 0.7 s |
 | Startup to the first `/health` | 86-100 s | 85-87 s |
 
-4 of the 9 gates pass: local predict p95 195 ms, peak memory in the benchmark 409 MiB, the Home page's 186 KB of JavaScript, and identical outputs. Five fail: predict p95 (1.8-2.8 s against 1.5 s), compare (5.9-6.1 s against 2.5 s), the `q=the` search (0.8-1.4 s against 0.3 s), startup (85 s against 20 s; 50 s of it is building the autocomplete) and Lighthouse mobile (86, 88, 84 against 90). The frontend step was moved to the deploy session.
+4 of the 9 gates pass: local predict p95 195 ms, peak memory in the benchmark 409 MiB (but startup peaks at up to 464 MiB, about 486 MB, above 450 MB on Render's 512 MB), the Home page's 186 KB of JavaScript, and identical outputs. Five fail: predict p95 (1.8-2.8 s against 1.5 s), compare (5.9-6.1 s against 2.5 s), the `q=the` search (0.8-1.4 s against 0.3 s), startup (85 s against 20 s; 50 s of it is building the autocomplete) and Lighthouse mobile (86, 88, 84 against 90). The frontend step was moved to the deploy session.
 
 ## Limitations
 

@@ -19,9 +19,9 @@ Gates use the cache-miss rows and the image as built (with its Docker `HEALTHCHE
 |---|---|---|---|---|
 | G1 `POST /predict` p95, local, miss | <= 400 ms | 251 ms | 195 ms (p50 107-123 ms) | pass |
 | G2 `POST /predict` p95, throttled, miss | <= 1.5 s | 11.1 s (p50 5.6 s) | 1.80 s and 2.80 s (p50 1.20-1.30 s) | FAIL |
-| G3 compare and sweep p95, throttled, miss | <= 2.5 s | compare 36.0 s, sweep 78.7 s | compare 5.9 s and 6.1 s (p50 3.7 s); sweep 0.60 s and 0.59 s | FAIL (compare); sweep passes |
+| G3 compare and sweep p95, throttled, miss | <= 2.5 s | compare 36.0 s, sweep 78.7 s | compare 5.9 s and 6.1 s (p50 3.7 s; 3.8 s p95 in a compare-only run with `--no-healthcheck`, see G3 below); sweep 0.60 s and 0.59 s | FAIL (compare); sweep passes |
 | G4 read endpoints p95, throttled | <= 300 ms | 2.3 s (home row), 1.9 s (`q=the`), 0.8 s | `q=the` 793 ms and 1,401 ms (p50 696-697 ms); `/people/31` 502 ms in one run of two (200 ms in the other); every other row 96-300 ms | FAIL |
-| G5 peak RAM during the benchmark | < 450 MB | 377-399 MiB | 409 MiB and 389 MiB (about 429 and 408 MB) | pass |
+| G5 peak RAM during the benchmark | < 450 MB | 377-399 MiB | 409 MiB and 389 MiB (about 429 and 408 MB). Not part of the gate: the startup peak is 438-464 MiB, up to about 486 MB, above 450 MB on a 512 MB host (baseline 398-433 MiB; see Image, memory, startup) | pass |
 | G6 startup, container start to `/health` 200, throttled | <= 20 s | 86 s and 100 s | 85.0 s and 87.2 s | FAIL |
 | G7 Lighthouse mobile, Home + Browse + Movie detail | >= 90 | 87, 87, 80 | 86, 88, 84 | FAIL |
 | G8 initial JS (gzipped), Home | <= 200 KB | 185,294 bytes | 185,692 bytes | pass |
@@ -159,7 +159,8 @@ Nothing below was changed. Each option says whether it changes outputs (those ne
 
 ### G2 (predict p95, throttled): the outliers come from the Docker HEALTHCHECK
 
-- The miss itself passes: p50 1.20-1.30 s in every run. p95 fails on 1-2 slow requests per 20 (1.7-2.8 s). The server log
+- The miss itself passes: p50 1.20-1.30 s in every run. p95 fails on one or two slow requests per 20: 1.30-1.80 s in
+  run 1 and 2.70-2.80 s in run 2 (the two tabled runs), 1.30-1.71 s with `--no-healthcheck`. The server log
   of run 2 shows 8 of the 69 slow-logged predict requests at 2.0-2.9 s, the rest at 1.1-1.4 s.
 - In-process in the image at 0.1 CPU (100 predictions, no HTTP): p50 1,197 ms, p95 2,204 ms, max 2,798 ms; 16 calls over
   1.55 s, only one with a gen2 GC pause in it (GC pauses are 100-400 ms, 4 per 100 predictions).
@@ -179,7 +180,14 @@ Options:
 
 ### G3 (compare p95, throttled): pred_contrib for 4 forms
 
-- Throttled p50 3.70 s in every run, p95 4.3-6.1 s. Locally `predict_many` on the 4 forms takes 353-413 ms; of one
+- Throttled p50 3.70 s in every run; p95 5.9 s (run 1) and 6.1 s (run 2), 4.3 s in the full bench with
+  `--no-healthcheck`. Task 5's log row had p95 3,797 ms with the same p50 (3,699 ms): that was a full bench with
+  `--repeats 5` on the Task 5 image, healthcheck on, so its p95 is the slowest of 5 compares (about 18 s of compare
+  requests, which a 30 s healthcheck probe often misses); here it is the slowest of 20. A compare-only run on a fresh
+  container with `--no-healthcheck` (20 misses, the bench's request) gave **p50 3,699 ms, p95 3,796 ms**, every request
+  3,600-3,796 ms: the spread in the tabled runs is the healthcheck, as for G2. The one slower compare (4.3 s) in the
+  `--no-healthcheck` full bench is not explained. Without the spread compare still fails: 3.7-3.8 s against 2.5 s.
+- Locally `predict_many` on the 4 forms takes 353-413 ms; of one
   profiled call (393 ms) `pred_contrib` takes 227 ms (58%), the driver grouping and `main_feature` 37 + 9 + 8 ms,
   comparables 43 ms, the quantile predicts 12 ms. `pred_contrib` costs the same per row in a batch (Task 5), so 4 forms
   cost 4x one.
@@ -196,8 +204,10 @@ Options:
 ### G4 (reads, throttled): the `q=the` count
 
 - Locally `repo.search(q="the")` takes 64.5 ms: the `COUNT(*)` joining 71,766 FTS matches to `movies` 47.6 ms (74%), the
-  page ids 18.5 ms, cards and genres under 1 ms. Throttled that is about 700 ms (p50 in every run).
-- `/people/31` at 502 ms p95 in one run is the quota: its p50 is 100-300 ms and the other runs were 200 ms.
+  page ids 18.5 ms, cards and genres under 1 ms. Throttled that is about 700 ms (p50 696 and 697 ms in the tabled runs,
+  701 ms with `--no-healthcheck`).
+- `/people/31` at 502 ms p95 in run 1 (p50 298 ms) is not explained beyond the quota steps: run 2 had p50 108 / p95 201 ms
+  and the `--no-healthcheck` run 106 / 200 ms.
 
 Options (Task 7 listed the first three):
 1. Speed only: `INDEXED BY` a narrow `(id, release_date)` index for the join (count 46 -> 25 ms locally; breaks on a
