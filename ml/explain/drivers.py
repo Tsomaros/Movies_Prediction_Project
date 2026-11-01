@@ -1,6 +1,6 @@
 """What pushed a prediction up or down: LightGBM's own feature contributions, grouped and labelled.
 
-    contributions(model, df)                  -> one column per model feature plus EXPECTED, in the target's units
+    contributions(model, df, shown=None)      -> one column per model feature plus EXPECTED, in the target's units
     group_contributions(contribs, groups)     -> the same summed per group (every feature must have a group)
     effect(target, c)                         -> the size people see: a % change for money, points for score
     strength(target, c)                       -> "strong" / "moderate" / "slight"
@@ -28,7 +28,7 @@ from typing import Any, Collection, Mapping
 import numpy as np
 import pandas as pd
 
-from ml.models.train import LgbmQuantile
+from ml.models.train import LgbmQuantile, matrix
 
 EXPECTED = "expected"  # the model's average prediction, what the contributions start from
 STRONG, MODERATE = "strong", "moderate"
@@ -41,16 +41,18 @@ CUTOFFS = {  # target -> (strong at or above, moderate at or above), in the targ
 TOP_N = 5
 
 
-def contributions(model: LgbmQuantile, df: pd.DataFrame) -> pd.DataFrame:
+def contributions(model: LgbmQuantile, df: pd.DataFrame, shown: np.ndarray | None = None) -> pd.DataFrame:
     """Each feature's contribution to the middle prediction; the row sums equal model.predict(df)["p50"].
 
     When the budget or score quantile models cross, predict() sorts them and the middle shown is not
     the p50 model's own value (about 3% of 2016-18 budget films, under 0.2% for score; up to 0.3 log).
-    Those rows are scaled so the features still add up to the middle that is shown."""
-    raw = model.models["p50"].predict(df[model.features], pred_contrib=True, **model._threads())
+    Those rows are scaled so the features still add up to the middle that is shown. `shown`: that middle
+    when the caller already has it (model.predict(df)["p50"]: q never moves the middle), so the three
+    quantile models are not run again."""
+    raw = model.models["p50"].predict(matrix(df, model.features), pred_contrib=True, **model._threads())
     out = pd.DataFrame(raw, index=df.index, columns=[*model.features, EXPECTED])
     if model.target != "revenue":
-        shown = model.predict(df, q=0.0)["p50"].to_numpy()
+        shown = model.predict(df, q=0.0)["p50"].to_numpy() if shown is None else np.asarray(shown, dtype=float)
         own = raw[:, :-1].sum(axis=1)
         wanted = shown - raw[:, -1]
         scale = np.divide(wanted, own, out=np.ones_like(own), where=np.abs(own) > 1e-12)

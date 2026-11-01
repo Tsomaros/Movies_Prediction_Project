@@ -3,6 +3,10 @@
     Predictor.load(out_dir, db_path)  -> the all-data models, feature context, rough rule and comparables
                                          index, checked against out_dir/manifest.json (about 20 s, once)
     predictor.predict(form)           -> a JSON-ready dict (below); raises InvalidForm with readable errors
+    predictor.predict_many(forms, full=True)
+                                      -> the same for several forms, one call per LightGBM model (compare, the
+                                         sweep); full=False keeps only the three ranges
+    predictor.embed(text)             -> the synopsis vector, cached (LRU, EMBED_CACHE texts)
     write_manifest(out_dir)           -> out_dir/manifest.json: checksums, training years, versions
     predict(form)                     -> the same with a Predictor loaded once from ml/artifacts/final
 
@@ -28,6 +32,8 @@ import math
 import shutil
 import sqlite3
 import sys
+import threading
+from collections import OrderedDict
 from contextlib import closing
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
@@ -55,6 +61,7 @@ BIG_BUDGET = 150_000_000  # 2025 $; revenue for $150M+ films was the weak spot o
 PLATEAU_BUDGET = 300_000_000  # 2025 $; revenue stops rising above about this (audit, Finding 4)
 SCORE_NOTE = ("TMDB scores of new films usually start higher and settle during their first year; "
               "this range is for the settled score.")  # audit, Finding 1
+EMBED_CACHE = 256  # synopsis vectors kept by Predictor.embed (384 float32 each: about 0.4 MB in all)
 EDGE = 0.05  # a budget within 5% of an edge of the similar-films range is "at the low / high end"
 POSITION_WORDS = {"below": "below", "at the low end": "at the low end of", "within": "within",
                   "at the high end": "at the high end of", "above": "above"}
@@ -160,6 +167,8 @@ class Predictor:
     manifest: dict[str, Any]
     db_path: Path = DB_FILE
     groups: dict[str, str] = field(default_factory=feature_groups)
+    _vectors: OrderedDict[str, np.ndarray] = field(default_factory=OrderedDict, init=False, repr=False)
+    _vectors_lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False)
 
     @classmethod
     def load(cls, out_dir: Path = FINAL_DIR, db_path: Path = DB_FILE, comparables: bool = True,
@@ -193,55 +202,96 @@ class Predictor:
                     "companies": [lookup(con, "companies", c) for c in form.get("companies") or []],
                     "franchise": lookup(con, "collections", form.get("franchise"))}
 
-    def _drivers(self, target: str, model: LgbmQuantile, X: pd.DataFrame, form: dict[str, Any],
-                 names: dict[str, Any], estimated: tuple[str, ...] = ()) -> dict[str, list[dict[str, Any]]]:
-        c = contributions(model, X)
-        grouped = group_contributions(c, self.groups).iloc[0]
-        drivers = [{**d, "main_feature": main_feature(c.iloc[0], d["group"], self.groups)}
-                   for d in top_drivers(target, grouped, estimated=estimated)]
-        return explain(target, drivers, form, X.iloc[0].to_dict(), names)
+    def embed(self, text: str) -> np.ndarray:
+        """The synopsis vector, from an LRU cache of EMBED_CACHE texts keyed by the text's SHA-1 (the text is the
+        contract's cleaned synopsis). The vector is read-only: callers share it."""
+        key = hashlib.sha1(text.encode("utf-8")).hexdigest()
+        with self._vectors_lock:
+            if key in self._vectors:
+                self._vectors.move_to_end(key)
+                return self._vectors[key]
+        vector = self.ctx.embed(text)
+        vector.flags.writeable = False
+        with self._vectors_lock:
+            self._vectors[key] = vector
+            while len(self._vectors) > EMBED_CACHE:
+                self._vectors.popitem(last=False)
+        return vector
+
+    def _drivers(self, target: str, model: LgbmQuantile, X: pd.DataFrame, forms: list[dict[str, Any]],
+                 names: list[dict[str, Any]], estimated: list[tuple[str, ...]],
+                 shown: np.ndarray | None = None) -> list[dict[str, list[dict[str, Any]]]]:
+        """One explanation per row of X; one pred_contrib call for all rows."""
+        c = contributions(model, X, shown=shown)
+        grouped = group_contributions(c, self.groups)
+        out = []
+        for i in range(len(X)):
+            row = c.iloc[i]
+            drivers = [{**d, "main_feature": main_feature(row, d["group"], self.groups)}
+                       for d in top_drivers(target, grouped.iloc[i], estimated=estimated[i])]
+            out.append(explain(target, drivers, forms[i], X.iloc[i].to_dict(), names[i]))
+        return out
 
     def predict(self, form: dict[str, Any]) -> dict[str, Any]:
-        clean, errors = validate(form, themes=list(self.ctx.themes))
-        if errors:
-            raise InvalidForm(errors)
-        as_of = api_as_of(clean)
-        vector = self.ctx.embed(clean["synopsis"]) if clean.get("synopsis") else None
-        row = build_features(clean, as_of, self.ctx, synopsis_vector=vector)
-        X = pd.DataFrame([row], dtype=float)  # one row with missing values would otherwise be "object"
-        budget = clean.get("budget")
-        names = self.names(clean)
+        return self.predict_many([form])[0]
+
+    def predict_many(self, forms: list[dict[str, Any]], full: bool = True) -> list[dict[str, Any]]:
+        """predict() for several forms with one call per LightGBM model (V1.5: compare and the sweep); each answer
+        equals predict(form) alone. full=False gives only "model_version", "as_of" and the three ranges
+        (no drivers, comparables or warnings: what the sweep shows)."""
+        cleans = []
+        for form in forms:
+            clean, errors = validate(form, themes=list(self.ctx.themes))
+            if errors:
+                raise InvalidForm(errors)
+            cleans.append(clean)
+        as_ofs = [api_as_of(c) for c in cleans]
+        vectors = [self.embed(c["synopsis"]) if c.get("synopsis") else None for c in cleans]
+        rows = [build_features(c, a, self.ctx, synopsis_vector=v) for c, a, v in zip(cleans, as_ofs, vectors)]
+        X = pd.DataFrame(rows, dtype=float)  # one row with missing values would otherwise be "object"
+        budgets = [c.get("budget") for c in cleans]
 
         budget_p = self.chain.budget.predict(X)
-        revenue_p = self.chain.predict_revenue(X, budget=budget)
-        mode, log_budget = revenue_p.attrs["mode"], float(revenue_p.attrs["log_budget"][0])
-        X_revenue = X.assign(log_budget=log_budget)
+        revenue_p, modes, log_budgets = self.chain.predict_revenue_rows(X, budgets, budget_p["p50"].to_numpy())
         score_p = self.score.predict(X)
 
-        b, r, s = (p.iloc[0] for p in (budget_p, revenue_p, score_p))
-        out = {
-            "model_version": self.manifest["version"],
-            "as_of": date(clean["release_year"], clean["release_month"], 1).isoformat(),
-            "budget": {**_money_range(*np.exp([b["p10"], b["p50"], b["p90"]]).tolist()),
-                       "rough": bool(is_rough("budget", [b["p10"]], [b["p90"]], self.rule)[0]),
-                       "given": budget, "comparison": _comparison(budget_p, budget)},
-            "revenue": {**_money_range(*np.exp([r["p10"], r["p50"], r["p90"]]).tolist()),
-                        "rough": bool(is_rough("revenue", [r["p10"]], [r["p90"]], self.rule)[0]), "mode": mode,
-                        "budget_used": budget if mode == "given" else math.exp(log_budget)},
-            "score": {**_score_range(float(s["p10"]), float(s["p50"]), float(s["p90"])), "rough": False,
-                      "note": SCORE_NOTE},
-            "drivers": {
-                "budget": self._drivers("budget", self.chain.budget, X, clean, names),
-                "revenue": self._drivers("revenue", self.chain.revenue, X_revenue, clean, names,
-                                         estimated=("budget",) if mode == "estimated" else ()),
-                "score": self._drivers("score", self.score, X, clean, names),
-            },
-            "comparables": [] if self.index is None else self.index.query(
-                clean["genres"], clean["themes"], clean["language"], vector, clean["release_year"], log_budget,
-                as_of),
-            "warnings": self._warnings(clean, mode, log_budget),
+        outs = []
+        for i, clean in enumerate(cleans):
+            b, r, s = (p.iloc[i] for p in (budget_p, revenue_p, score_p))
+            budget, mode, log_budget = budgets[i], modes[i], float(log_budgets[i])
+            outs.append({
+                "model_version": self.manifest["version"],
+                "as_of": date(clean["release_year"], clean["release_month"], 1).isoformat(),
+                "budget": {**_money_range(*np.exp([b["p10"], b["p50"], b["p90"]]).tolist()),
+                           "rough": bool(is_rough("budget", [b["p10"]], [b["p90"]], self.rule)[0]),
+                           "given": budget, "comparison": _comparison(budget_p.iloc[[i]], budget)},
+                "revenue": {**_money_range(*np.exp([r["p10"], r["p50"], r["p90"]]).tolist()),
+                            "rough": bool(is_rough("revenue", [r["p10"]], [r["p90"]], self.rule)[0]), "mode": mode,
+                            "budget_used": budget if mode == "given" else math.exp(log_budget)},
+                "score": {**_score_range(float(s["p10"]), float(s["p50"]), float(s["p90"])), "rough": False,
+                          "note": SCORE_NOTE},
+            })
+        if not full:
+            return outs
+
+        names = [self.names(c) for c in cleans]
+        estimated = [("budget",) if m == "estimated" else () for m in modes]
+        drivers = {
+            "budget": self._drivers("budget", self.chain.budget, X, cleans, names, [()] * len(cleans),
+                                    shown=budget_p["p50"].to_numpy()),
+            "revenue": self._drivers("revenue", self.chain.revenue, X.assign(log_budget=log_budgets), cleans, names,
+                                     estimated),
+            "score": self._drivers("score", self.score, X, cleans, names, [()] * len(cleans),
+                                   shown=score_p["p50"].to_numpy()),
         }
-        return out
+        for i, (clean, out) in enumerate(zip(cleans, outs)):
+            log_budget = float(log_budgets[i])
+            out["drivers"] = {t: drivers[t][i] for t in ("budget", "revenue", "score")}
+            out["comparables"] = [] if self.index is None else self.index.query(
+                clean["genres"], clean["themes"], clean["language"], vectors[i], clean["release_year"], log_budget,
+                as_ofs[i])
+            out["warnings"] = self._warnings(clean, modes[i], log_budget)
+        return outs
 
     def _warnings(self, form: dict[str, Any], mode: str, log_budget: float) -> list[dict[str, str]]:
         out = []

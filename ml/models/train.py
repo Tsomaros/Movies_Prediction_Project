@@ -92,6 +92,13 @@ def _train(X: pd.DataFrame, y: np.ndarray, params: dict[str, Any], n_trees: int,
     return lgb.train(params, lgb.Dataset(X, y, weight=weight, free_raw_data=False), num_boost_round=n_trees)
 
 
+def matrix(df: pd.DataFrame, columns: list[str]) -> np.ndarray:
+    """The columns as one float64 array, in the booster's feature order. The models have no categorical
+    features (pandas_categorical is empty), so this gives LightGBM exactly the numbers a DataFrame would,
+    without its per-call DataFrame checks (about 0.5 ms a call, V1.5)."""
+    return df[columns].to_numpy(dtype=np.float64)
+
+
 class LgbmQuantile:
     def __init__(self, target: str, params: dict[str, Any] | None = None, n_trees: int = DEFAULT_TREES,
                  drop: tuple[str, ...] | None = None, monotone: bool = True, q: float = 0.0,
@@ -151,14 +158,14 @@ class LgbmQuantile:
         return {"num_threads": self.predict_threads} if self.predict_threads else {}
 
     def predict(self, df: pd.DataFrame, q: float | None = None) -> pd.DataFrame:
-        """p10 / p50 / p90, widened by `q` (default: the model's own correction)."""
-        X = df[self.features]
+        """p10 / p50 / p90, widened by `q` (default: the model's own correction; one value or one per row)."""
+        X = matrix(df, self.features)
         if self.target != "revenue":
             raw = np.column_stack([self.models[k].predict(X, **self._threads()) for k in ("p10", "p50", "p90")])
             p10, p50, p90 = np.sort(raw, axis=1).T  # quantile models can cross
         else:
             p50 = self.models["p50"].predict(X, **self._threads())
-            R = df[self.residual_features]
+            R = matrix(df, self.residual_features)
             p10 = p50 + np.minimum(self.models["p10"].predict(R, **self._threads()), 0.0)
             p90 = p50 + np.maximum(self.models["p90"].predict(R, **self._threads()), 0.0)
         out = pd.DataFrame({"p10": p10, "p50": p50, "p90": p90}, index=df.index)

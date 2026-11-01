@@ -255,7 +255,7 @@ def test_a_month_sweep_gives_12_points_that_agree_with_single_predictions(api):
     assert out["field"] == "release_month" and out["base_value"] == form["release_month"]
     assert [p["value"] for p in out["points"]] == list(range(1, 13)) and out["model_version"] == "test.0"
     june = api.post(PREDICT, json={**form, "release_month": 6}).json()
-    assert june["cached"] is True  # the sweep filled the cache
+    assert june["cached"] is False  # the sweep caches ranges only (V1.5), not the full answer with drivers
     point = out["points"][5]
     for t in ("budget", "revenue", "score"):
         assert {k: point[t][k] for k in ("low", "middle", "high", "text")} == {k: june[t][k] for k in ("low", "middle", "high", "text")}

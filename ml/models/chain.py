@@ -7,6 +7,9 @@
     Chain.load() / chain.predict_revenue(features, budget=None)
                                                -> the saved models; "given" mode when budget (2025 $) is
                                                   passed, "estimated" mode when it is None
+    chain.predict_revenue_rows(features, budgets, estimate)
+                                               -> the same per row, modes mixed (budgets[i] None = estimated
+                                                  from `estimate`, the budget model's middle); one model call
     predict_revenue(features, budget=None)     -> the same with the saved models, loaded once
     chain.compare_budget(features, budget)     -> "Similar films usually cost $X-Y" next to the creator's budget
     compare_budget(budget_p, budget)           -> the same from budget predictions (log 2025 $)
@@ -134,6 +137,18 @@ class Chain:
         out = self.revenue.predict(with_budget(features, log_budget), q=self.q[mode])
         out.attrs.update(mode=mode, log_budget=np.asarray(log_budget, dtype=float))
         return out
+
+    def predict_revenue_rows(self, features: pd.DataFrame, budgets: list[float | None],
+                             estimate: np.ndarray) -> tuple[pd.DataFrame, list[str], np.ndarray]:
+        """Revenue for rows whose modes differ (the app's batches): budgets[i] in 2025 $ or None, estimate the
+        budget model's middle (log 2025 $) the caller already has. Each row gets what predict_revenue gives it
+        alone: its own log budget and its mode's correction. -> (p10 / p50 / p90, modes, log budgets)."""
+        given = np.array([b is not None for b in budgets])
+        log_budget = np.where(given, np.log(np.array([np.nan if b is None else b for b in budgets], dtype=float)),
+                              np.asarray(estimate, dtype=float))
+        q = np.where(given, self.q["given"], self.q["estimated"])
+        out = self.revenue.predict(with_budget(features, log_budget), q=q)
+        return out, ["given" if g else "estimated" for g in given], log_budget
 
     def compare_budget(self, features: pd.DataFrame, budget=None) -> pd.DataFrame:
         return compare_budget(self.budget.predict(features), budget)
