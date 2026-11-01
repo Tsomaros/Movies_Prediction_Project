@@ -1,7 +1,9 @@
 """GET /health: is the API up, which models and database it serves, and how the prediction cache is doing.
 
-Used by the Docker healthcheck and the smoke script (Day 9). It touches the database (a COUNT), so a
-missing or unreadable database makes it fail instead of reporting "ok". Never cached.
+Used by the Docker healthcheck, the smoke script (Day 9), an uptime monitor and the app's wake-up screen (V1.5), so it
+is cheap: the build's numbers (`database`) are read once at startup (lifespan, `app.state.build_info`; the count leaves
+out films the refresher adds, so it cannot change while the process runs) and a request only runs `SELECT 1` on its
+read-only connection, so a missing or unreadable database still makes it fail instead of reporting "ok". Never cached.
 """
 
 from __future__ import annotations
@@ -24,13 +26,16 @@ def health(request: Request, response: Response, con: sqlite3.Connection = Depen
     state = request.app.state
     manifest = getattr(state.predictor, "manifest", {})
     cache = state.predictions
+    con.execute("SELECT 1").fetchone()
+    if state.build_info is None:  # startup could not read it (it is cached here once it can)
+        state.build_info = repo.build_info(con)
     response.headers["Cache-Control"] = "no-store"
     return {
         "status": "ok",
         "api_version": request.app.version,
         "model_version": manifest.get("version", "unknown"),
         "models": {t: m.get("trained_on", "") for t, m in manifest.get("models", {}).items()},
-        "database": repo.build_info(con),
+        "database": state.build_info,
         "started_at": datetime.fromtimestamp(state.started, timezone.utc).isoformat(timespec="seconds"),
         "uptime_seconds": round(time.time() - state.started, 1),
         "load_seconds": state.load_seconds,

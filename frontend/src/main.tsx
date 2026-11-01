@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router'
 
 import Providers from '@/app/Providers'
 import { routes } from '@/app/routes'
+import WakeUpGate from '@/app/WakeUpGate'
 import { startMonitoring } from '@/lib/monitoring'
 
 import './index.css'
@@ -13,8 +14,10 @@ const router = createBrowserRouter(routes)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Providers>
-      <RouterProvider router={router} />
-    </Providers>
+    <WakeUpGate>
+      <Providers>
+        <RouterProvider router={router} />
+      </Providers>
+    </WakeUpGate>
   </StrictMode>,
 )

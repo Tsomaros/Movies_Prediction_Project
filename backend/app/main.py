@@ -11,7 +11,7 @@ The lifespan hook runs once at startup and keeps on app.state:
 - career, career_models: the career forecast's settings (CAREER_FILE, loaded first: a missing file stops the
   start) and the cache of /career/model answers (Day 14.8);
 - predictions, rate_limiter: the prediction cache (CACHE_SIZE entries) and the per-IP limit (RATE_LIMIT a minute);
-- started:   the time it finished, plus load_seconds, for /health;
+- started:   the time it finished, plus load_seconds, for /health; build_info: the database's build numbers (V1.5);
 - userdb, demo_seed, limiters: the user-database pool (None without USER_DATABASE_URL: /auth and /me then
   answer 503), the demo account's starting set and the login/demo/write limits (Day 14) and the
   "Surprise me" limit (Day 14.5), and "read": every /api GET or HEAD but /health, RATE_LIMIT_READ a minute per
@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import ctypes
 import logging
+import sqlite3
 import sys
 import time
 from datetime import datetime, timezone
@@ -44,6 +45,7 @@ from fastapi.responses import JSONResponse
 
 from backend.app import errors, web
 from backend.app.deps import client_ip, connect_read_only
+from backend.app.repo.meta import build_info
 from backend.app.routers import (auth, career, collections, companies, health, meta, model_card, movies, my_movies,
                                  notes, people, predict, random, sweep)
 from backend.app.services.career.forecast import load_career_artifact
@@ -105,6 +107,11 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
                 app.state.lookups = Lookups.from_db(con)
         else:
             app.state.lookups = lookups
+        try:  # /health serves this instead of counting the films per request
+            with closing(connect_read_only(settings.db_path)) as con:
+                app.state.build_info = build_info(con)
+        except sqlite3.Error:
+            app.state.build_info = None
         app.state.predictions = PredictionService(app.state.predictor, settings.cache_size)
         app.state.rate_limiter = RateLimiter(settings.rate_limit)
         app.state.limiters = {name: RateLimiter(n) for name, n in LIMITS.items()} | {
