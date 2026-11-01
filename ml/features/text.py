@@ -108,7 +108,12 @@ class Embedder:
         self.tokenizer = Tokenizer.from_file(str(model_dir / "tokenizer.json"))
         self.tokenizer.enable_truncation(MAX_TOKENS)
         self.tokenizer.enable_padding()  # pad each batch to its longest text
-        self.session = ort.InferenceSession(str(model_dir / model_file), providers=["CPUExecutionProvider"])
+        options = ort.SessionOptions()
+        options.intra_op_num_threads = 1  # one thread: the app's host has a fraction of a CPU; same outputs
+        options.inter_op_num_threads = 1
+        options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        self.session = ort.InferenceSession(str(model_dir / model_file), sess_options=options,
+                                            providers=["CPUExecutionProvider"])
         self.input_names = {i.name for i in self.session.get_inputs()}
 
     def _batch(self, texts: list[str]) -> np.ndarray:

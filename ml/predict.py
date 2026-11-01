@@ -170,7 +170,10 @@ class Predictor:
         with closing(_read_only(db_path)) as con:
             ctx = FeatureContext.load(con, prebuilt=context_file)
         index = Index.load(out_dir / INDEX_FILE.name) if comparables else None
-        return cls(Chain.load(out_dir), load_model("score", out_dir), ctx, load_rule(out_dir / ROUGH_FILE.name),
+        chain, score = Chain.load(out_dir), load_model("score", out_dir)
+        for model in (chain.revenue, chain.budget, score):
+            model.predict_threads = 1  # one request at a time on a small host: threads only add overhead
+        return cls(chain, score, ctx, load_rule(out_dir / ROUGH_FILE.name),
                    index, manifest, db_path)
 
     def names(self, form: dict[str, Any]) -> dict[str, Any]:

@@ -112,6 +112,7 @@ class LgbmQuantile:
         if synopsis_components > N_COMPONENTS and "synopsis" not in self.drop:
             self.features += [f"synopsis_{i:02d}" for i in range(N_COMPONENTS, synopsis_components)]
         self.name = name or f"LightGBM {target}"
+        self.predict_threads = 0  # 0 = LightGBM's default; the app sets 1 (Predictor.load)
         self.models: dict[str, lgb.Booster] = {}
         if q:
             self.backtest_note = ("Range correction learned on folds 1-2, so coverage there is fitted, not tested; "
@@ -146,17 +147,20 @@ class LgbmQuantile:
             self.models[key] = _train(R, residual, _lgb_params(self.params, "quantile", alpha), self.n_trees)
         return self
 
+    def _threads(self) -> dict[str, int]:
+        return {"num_threads": self.predict_threads} if self.predict_threads else {}
+
     def predict(self, df: pd.DataFrame, q: float | None = None) -> pd.DataFrame:
         """p10 / p50 / p90, widened by `q` (default: the model's own correction)."""
         X = df[self.features]
         if self.target != "revenue":
-            raw = np.column_stack([self.models[k].predict(X) for k in ("p10", "p50", "p90")])
+            raw = np.column_stack([self.models[k].predict(X, **self._threads()) for k in ("p10", "p50", "p90")])
             p10, p50, p90 = np.sort(raw, axis=1).T  # quantile models can cross
         else:
-            p50 = self.models["p50"].predict(X)
+            p50 = self.models["p50"].predict(X, **self._threads())
             R = df[self.residual_features]
-            p10 = p50 + np.minimum(self.models["p10"].predict(R), 0.0)
-            p90 = p50 + np.maximum(self.models["p90"].predict(R), 0.0)
+            p10 = p50 + np.minimum(self.models["p10"].predict(R, **self._threads()), 0.0)
+            p90 = p50 + np.maximum(self.models["p90"].predict(R, **self._threads()), 0.0)
         out = pd.DataFrame({"p10": p10, "p50": p50, "p90": p90}, index=df.index)
         return self.apply_q(out, self.q if q is None else q, self.target)
 

@@ -47,7 +47,7 @@ def contributions(model: LgbmQuantile, df: pd.DataFrame) -> pd.DataFrame:
     When the budget or score quantile models cross, predict() sorts them and the middle shown is not
     the p50 model's own value (about 3% of 2016-18 budget films, under 0.2% for score; up to 0.3 log).
     Those rows are scaled so the features still add up to the middle that is shown."""
-    raw = model.models["p50"].predict(df[model.features], pred_contrib=True)
+    raw = model.models["p50"].predict(df[model.features], pred_contrib=True, **model._threads())
     out = pd.DataFrame(raw, index=df.index, columns=[*model.features, EXPECTED])
     if model.target != "revenue":
         shown = model.predict(df, q=0.0)["p50"].to_numpy()
