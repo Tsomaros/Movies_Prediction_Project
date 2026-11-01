@@ -53,6 +53,7 @@ from backend.app.services.search.lookups import Lookups
 from backend.app.services.platform.monitoring import start_sentry
 from backend.app.services.prediction import PredictionService
 from backend.app.services.platform.ratelimit import RateLimiter
+from backend.app.services.platform.timing import ServerTimingMiddleware
 from backend.app.settings import API_PREFIX, Settings
 from backend.app.userdb import repo as userdb_repo
 from backend.app.userdb.pool import make_pool
@@ -154,6 +155,7 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
     # The app and the API share one origin (Vite's proxy, or the app served by web.py), so the cookie needs no CORS credentials
     app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins),
                        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["*"])
+    app.add_middleware(ServerTimingMiddleware)  # outermost: times everything below, CORS included
     errors.install(app)
     for module in ROUTERS:
         app.include_router(module.router, prefix=API_PREFIX)
