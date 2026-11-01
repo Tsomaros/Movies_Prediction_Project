@@ -91,3 +91,19 @@ The key choices, what else was on the table, and why. Each day was planned the s
 | **A daily smoke check from GitHub Actions** | Uptime pings every 5 minutes | Any ping wakes the free service, so frequent ones are a keep-alive |
 | **The per-IP limits read `CF-Connecting-IP`** | `X-Forwarded-For` | Render appends to a visitor's own `X-Forwarded-For`, so forged values got past the limits; Cloudflare sets `CF-Connecting-IP` and refuses it from clients |
 | **Sentry for errors only,** no personal data | No error reporting, or tracing too | Know about failures; the session cookie never leaves the server |
+
+## Speed pass (V1.5)
+
+Spec: `docs/superpowers/specs/2026-11-01-v1.5-speed-pass-design.md`. Every change was measured before and after, and kept only if its number improved ([log](perf/log.md), [results](perf/after.md)).
+
+| Decision | Alternatives | Why |
+| --- | --- | --- |
+| **Pass/fail gates measured in local Docker at 0.1 CPU and 512 MB,** cache misses and hits apart | Measuring on Render, or one mixed number | Repeatable on the laptop; a repeated request is a cache hit and says nothing about the work |
+| **No model change: outputs equal a saved snapshot** (`scripts/perf_check.py`, within 1e-9) | Truncating the synopsis, dropping drivers | Speed must not change what the app says; such options are listed for approval instead |
+| **Kept: one batch for compare and the sweep, and a ranges-only sweep** (no drivers or comparables; its own `ranges:` cache entries) | One prediction per form | Each model runs once for all rows; sweep 70.8 → 0.5 s, compare 24.4 → 3.7 s at 0.1 CPU. A sweep no longer fills the full-answer cache |
+| **Kept: single-thread inference, numpy into the boosters, no booster run twice, a synopsis-embedding cache** | Library defaults | Threads only add overhead on 0.1 CPU; predict 5.6 → 1.3 s at 0.1 CPU with identical outputs |
+| **Kept: 10 sort indexes in the image's database** and plan fixes (a unary `+` on some date terms, an index walk for very common words) | A precomputed home-rows snapshot | A snapshot goes stale under the refresher; home row 1.2 → 0.1 s at 0.1 CPU for +18 MB |
+| **Kept: a cheap `/health`** (`SELECT 1`, the build numbers read once) **and the wake-up screen** after 2 s | The app waiting for `/health` before its first render | Waiting would add a round trip to every page load |
+| **Reverted or not done: SQLite PRAGMAs (`mmap_size`, `cache_size`, `temp_store`), `ANALYZE`, connection reuse, `ORJSONResponse`, `immutable=1`/WAL** | — | No measured gain (or deprecated); `immutable` and WAL are ruled out because the refresher writes the file |
+| **Cut: the frontend step** (route chunks, image sizes, cache headers) moved to the deploy session | Doing it in V1.5 | The session ran long and the plan's cut line said so; Lighthouse stays at 84-88 |
+| **Gates: 4 of 9 pass** (local predict, benchmark memory, Home JavaScript, identical outputs) | — | Predict p95, compare, the `q=the` search, startup and Lighthouse still fail; [after.md](perf/after.md) profiles each, with options marked when they would change outputs |

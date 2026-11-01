@@ -114,9 +114,24 @@ uv run python -m ml.predict manifest       # checksums of the app's model files 
 | `frontend/`  | React app: the creator form, the API client and types ([Frontend](docs/app.md#frontend)) |
 | `data/`      | Raw pull and database (not in git), CPI table, summaries |
 | `tests/`     | Offline tests, the end-to-end fixture and the golden forms ([Testing](docs/evaluation.md#testing)) |
-| `scripts/`   | `slim_db.py` (the image's database copy), `smoke.py` (checks a running API and app), `deploy.py` (`make deploy`) and `warmup.py` (`make warmup`, before a demo) |
+| `scripts/`   | `slim_db.py` (the image's database copy), `smoke.py` (checks a running API and app), `deploy.py` (`make deploy`) and `warmup.py` (`make warmup`, before a demo); `bench.py`, `perf_check.py`, `perf_snapshot.py` and `explain_queries.py` for speed work ([Performance](#performance)) |
 | `notebooks/` | Exploration and check notebooks                  |
 | `reports/`   | Evaluation reports from `make evaluate`, the ablation and the final test run (committed) |
+
+## Performance
+
+V1.5 was a speed pass with no model change: predictions are identical to before (`scripts/perf_check.py`). It was measured in local Docker with Render Free's limits (0.1 CPU, 512 MB), so the numbers are estimates for the host. Full tables, the nine gates and a profile of each failing one: [docs/perf/after.md](docs/perf/after.md).
+
+| Cache miss, 0.1 CPU | Before | After |
+| --- | --- | --- |
+| `POST /predict`, median | 5.6 s | 1.3 s |
+| `POST /predict/compare` (3 variants), median | 24.4 s | 3.7 s |
+| `POST /predict/sweep` (12 months), median | 70.8 s | 0.5 s |
+| Home row `GET /movies`, median | 1.2 s | 0.1 s |
+| `GET /movies?q=the`, median | 0.9 s | 0.7 s |
+| Startup to the first `/health` | 86-100 s | 85-87 s |
+
+4 of the 9 gates pass: local predict p95 195 ms, peak memory in the benchmark 409 MiB, the Home page's 186 KB of JavaScript, and identical outputs. Five fail: predict p95 (1.8-2.8 s against 1.5 s), compare (5.9-6.1 s against 2.5 s), the `q=the` search (0.8-1.4 s against 0.3 s), startup (85 s against 20 s; 50 s of it is building the autocomplete) and Lighthouse mobile (86, 88, 84 against 90). The frontend step was moved to the deploy session.
 
 ## Limitations
 
@@ -147,7 +162,7 @@ uv run python -m ml.predict manifest       # checksums of the app's model files 
 - **Cast and crew have no photos.** The pull didn't fetch people's images, so the film page shows initials avatars.
 - **The default browse order is TMDB's popularity on the day of the pull.** It is a trending number, so the first page starts with *Clue* (1985) rather than the best-known films.
 - **The per-IP limits trust Cloudflare's `CF-Connecting-IP` on Render.** It can't be forged through Render's edge, but the app takes it from any request that has it, so on a host without Cloudflare `CLIENT_IP_HEADER` must stay unset. Whether two visitors behind one Cloudflare edge are counted apart was checked from one machine only.
-- **The live site is slow where several predictions run in a row.** On Render Free's 0.1 CPU a prediction takes about 2.2 s (0.2 s locally), the career section's model films 6 s and the 12-month sweep about 25 s, with no progress shown beyond the slow-host notice. The first visit after 15 idle minutes waits about 84 s for the wake-up as well (the app shows its slow-host notice after 3 s); open the site a couple of minutes before a demo.
+- **The live site is slow where several predictions run in a row.** Before V1.5, on Render Free's 0.1 CPU a prediction took about 2.2 s (0.2 s locally), the career section's model films 6 s and the 12-month sweep about 25 s. Since V1.5, in local Docker at 0.1 CPU, a prediction takes about 1.3 s, a compare with 3 variants 3.7 s and the sweep 0.5 s; Render is not measured yet. The first visit after 15 idle minutes still waits about 85 s for the wake-up (the app shows "Waking up the server…" after 2 s); open the site a couple of minutes before a demo. See [Performance](#performance).
 - **Sentry is wired up but not active:** no DSN is set on Render or in the bundle yet.
 - **Everyone shares the demo account.** Its lists and "private" notes are private to the account, not to a visitor: anyone logged in to it sees and can change them until the nightly reset.
 - **Undo on a deleted note adds it back as a new note,** at the top of the list with today's date.

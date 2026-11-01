@@ -17,7 +17,7 @@ docker compose down
 
 **What goes into the image:**
 - the runtime dependencies only, 10 packages: `uv sync --no-default-groups`; `optuna`, `matplotlib`, `scikit-learn` and `onnx` are in the `ml` group, and `pytest` and `jupyter` in `dev`;
-- `build/movies.db`: `data/movies.db` without the training-only `features` table, VACUUMed, 334 → 293 MB with the person details (`scripts/slim_db.py`; 220 MB before Day 14.6); since V1.5 it also carries the browse sorts' indexes (`build_db.SORT_INDEXES`, added by `slim_db.py` if the source lacks them, about +9 MB, 307 MB in all), so the home rows' popularity, score and revenue lists and a year range sorted by popularity read an index instead of sorting the table;
+- `build/movies.db`: `data/movies.db` without the training-only `features` table, VACUUMed, 334 → 293 MB with the person details (`scripts/slim_db.py`; 220 MB before Day 14.6); since V1.5 it also carries the browse sorts' indexes (`build_db.SORT_INDEXES`, added by `slim_db.py` if the source lacks them, 10 indexes, about +18 MB, 316 MB measured on 2026-11-01), so the home rows' popularity, score and revenue lists, the title and newest sorts and a year range sorted by popularity read an index instead of sorting the table;
 - `build/context.joblib`: History, Companies and Franchises built once (`python -m ml.features.build prebuilt`), stamped with the database's build time and film count, so a file from another build is refused;
 - `ml/` and `backend/`, with the app's models and comparables index and the 8-bit MiniLM only (23 MB), copied after the data so a code-only deploy pushes only the small layers;
 - the built app (`frontend/dist`, about 1 MB).

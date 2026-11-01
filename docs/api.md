@@ -62,15 +62,15 @@ curl -s localhost:8000/api/v1/predict -H 'Content-Type: application/json' -d '{
 - **Autocomplete:** in memory. Any word of a name can start the match ("hanks", "tom ha"), and the names with the most films come first. The 398k names and their word keys are packed into byte blobs, about 33 MB; plain Python lists took about 207 MB.
 - **The database:** opened read-only (`mode=ro`), with one connection per request, so the API cannot write to it.
 
-**Measured** on this Windows laptop with the real models:
+**Measured** on this Windows laptop with the real models (V1.5, 2026-11-02; the 0.1 CPU column is local Docker with Render Free's limits, an estimate for the host; [docs/perf/after.md](perf/after.md) has every row):
 
-| | |
-| --- | --- |
-| Startup (models, feature context, comparables, lookups) | about 10 s |
-| `/predict` over HTTP, uncached | median 167 ms (under the 400 ms target); about 3 ms from the cache |
-| `/predict/compare` with 3 variants, uncached | about 0.5 s |
-| `/predict/sweep` over 12 months, uncached | 1.6 s in Docker (12 predictions); cached, a few ms |
-| Autocomplete / movie search / movie page | 2–10 ms / 5–90 ms / about 20 ms |
+| | Laptop | Docker, 0.1 CPU |
+| --- | --- | --- |
+| Startup (models, feature context, comparables, lookups) | about 4 s | 85-87 s to the first `/health` (50 s of it the autocomplete) |
+| `/predict` over HTTP, uncached | median 107-123 ms (under the 400 ms target); about 3 ms from the cache | median 1.2-1.3 s |
+| `/predict/compare` with 3 variants, uncached | median 361 ms (one batch) | median 3.7 s |
+| `/predict/sweep` over 12 months, uncached | median 46 ms (ranges only, one batch); cached, a few ms | median 0.5 s |
+| Autocomplete / movie search / movie page | 2–6 ms / 5–77 ms / about 16 ms | 3–6 ms / 5–700 ms / about 100 ms |
 | Memory after startup / after predictions with a synopsis (MiniLM loaded) | 639 MB / 746 MB on Windows, before the Day 9 cuts; in Docker now 323 MB / 407 MB ([Running with Docker](deployment.md#running-with-docker)) |
 
 Memory was 1,236 MB at first. The track record (`ml/features/history.py`) kept 350k small objects (about 870 MB); it now packs them into flat arrays (about 108 MB), and the rebuilt features table is bit-for-bit identical to the stored one. Day 9 brought the app under the 450 MB gate for the free host.
