@@ -37,9 +37,6 @@ import pandas as pd
 from ml.eval.splits import through
 from ml.models.train import ARTIFACTS_DIR, LgbmQuantile, load_model, meta_file
 
-MODES = ("given", "estimated")
-POSITIONS = ("below", "within", "above")  # the creator's budget against the similar-films range
-
 
 def format_money(dollars: float) -> str:
     """Two significant figures with K / M / B: 12_345_678 -> "$12M", 1_234_567_890 -> "$1.2B"."""
