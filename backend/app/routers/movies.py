@@ -29,6 +29,7 @@ from ml.predict import Predictor
 
 router = APIRouter(tags=["movies"], responses=VALIDATION)
 CACHE = "public, max-age=3600"
+MAX_ID = 2**63 - 1  # SQLite's largest integer: a bigger id can't exist (and would overflow the driver)
 LIVE_CACHE = "public, max-age=600"
 MAX_PAGE_SIZE = 48
 N_SIMILAR = 6
@@ -93,7 +94,7 @@ def _similar(predictor: Predictor, film: dict[str, Any], themes: list[str]) -> l
             summary="One film: facts, cast and crew, money, score and similar films")
 def get_movie(movie_id: int, response: Response, con: sqlite3.Connection = Depends(get_db),
               predictor: Predictor = Depends(get_predictor)):
-    film = repo.movie(con, movie_id)
+    film = repo.movie(con, movie_id) if 0 < movie_id <= MAX_ID else None
     if film is None:
         raise HTTPException(status_code=404, detail=f"No film with id {movie_id}")
     keywords = repo.film_keywords(con, movie_id)

@@ -17,8 +17,7 @@ from fastapi.responses import JSONResponse
 
 from backend.app.deps import get_db, get_predictions
 from backend.app.repo.career import Role, career_films
-from backend.app.routers.movies import CACHE
-from backend.app.routers.people import MAX_ID
+from backend.app.routers.movies import CACHE, MAX_ID
 from backend.app.routers.predict import ERRORS, rate_limited
 from backend.app.schemas.career import CareerModelResponse, CareerResponse
 from backend.app.schemas.errors import Message

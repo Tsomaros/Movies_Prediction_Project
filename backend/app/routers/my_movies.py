@@ -22,7 +22,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from backend.app.deps import current_user, get_db, get_userdb, no_store, now, same_origin_write, write_limited
 from backend.app.errors import unprocessable
 from backend.app.repo import movies as movies_repo
-from backend.app.routers.movies import _summary
+from backend.app.routers.movies import MAX_ID, _summary
 from backend.app.schemas.accounts import Entry, EntryRequest, MyMovieList, MySort, Status, StatusList
 from backend.app.schemas.errors import VALIDATION, Message
 from backend.app.services.platform.auth import today_athens
@@ -41,7 +41,7 @@ WRITE = [Depends(write_limited)]
 
 
 def film_or_404(con: sqlite3.Connection, movie_id: int) -> dict[str, Any]:
-    found = movies_repo.summaries(con, [movie_id])
+    found = movies_repo.summaries(con, [movie_id]) if 0 < movie_id <= MAX_ID else {}
     if movie_id not in found:
         raise HTTPException(status_code=404, detail=f"No film with id {movie_id}")
     return found[movie_id]
@@ -76,7 +76,7 @@ def my_movies(status: Status = "watched", sort: MySort = "added", page: int = Qu
 def statuses(ids: str = Query(..., max_length=600, description="Comma-separated film ids"),
              user: dict = Depends(current_user), conn: psycopg.Connection = Depends(get_userdb)):
     parts = [p.strip() for p in ids.split(",") if p.strip()]
-    if not all(p.isdigit() for p in parts):
+    if not all(p.isascii() and p.isdigit() for p in parts):  # str.isdigit() also accepts "²", which int() refuses
         return unprocessable({"ids": "must be film ids separated by commas"})
     if len(parts) > MAX_STATUS_IDS:
         return unprocessable({"ids": f"at most {MAX_STATUS_IDS} films at a time"})

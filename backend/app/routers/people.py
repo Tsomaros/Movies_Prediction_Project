@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
 from backend.app.deps import get_db, get_lookups
 from backend.app.repo import people as repo
-from backend.app.routers.movies import CACHE, _summary
+from backend.app.routers.movies import CACHE, MAX_ID, _summary
 from backend.app.schemas.errors import VALIDATION, Message
 from backend.app.schemas.person import PeopleSearchPage, PersonDetail, PersonMatch, SearchRole
 from backend.app.services.search.autocomplete import LIMIT, QUERY, respond
@@ -24,7 +24,6 @@ from backend.app.services.search.people_search import search_people
 from backend.app.services.movies.posters import profile
 
 router = APIRouter(tags=["form support"], responses=VALIDATION)
-MAX_ID = 2**63 - 1  # SQLite's largest integer: a bigger id can't exist (and would overflow the driver)
 
 
 @router.get("/people", response_model=list[PersonMatch], summary="Director and actor autocomplete")

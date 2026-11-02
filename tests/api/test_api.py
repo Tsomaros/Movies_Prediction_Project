@@ -511,6 +511,12 @@ def test_an_unknown_film_is_a_404(api):
     assert api.get(f"{MOVIES}/abc").status_code == 422
 
 
+@pytest.mark.parametrize("film_id", [0, -1, 2**63, 99999999999999999999])
+def test_a_film_id_outside_sqlites_range_is_a_404_not_a_500(api, film_id):
+    """sqlite3 raises OverflowError for an integer above 2**63 - 1."""
+    assert api.get(f"{MOVIES}/{film_id}").status_code == 404
+
+
 # ---------------------------------------------------------------- form support endpoints
 # The fixture's directors are "Director 0".."Director 6" (ids 1000-1006), its actors "Actor 1".."Actor 300", and
 # every film is made by the one company "Studio".

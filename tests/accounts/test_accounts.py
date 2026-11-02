@@ -273,6 +273,17 @@ def test_an_unknown_film_is_a_404(acct):
     assert acct.post(f"{ME}/movies/999999/notes", json={"body": "x"}).status_code == 404
 
 
+@pytest.mark.parametrize("call", [
+    lambda a, p: put(a, 2**70, status="watched"),
+    lambda a, p: a.delete(p),
+    lambda a, p: a.get(f"{p}/notes"),
+    lambda a, p: a.post(f"{p}/notes", json={"body": "x"}),
+], ids=["put", "delete", "notes_get", "notes_post"])
+def test_a_film_id_beyond_sqlites_range_is_a_404_not_a_500(acct, call):
+    demo(acct)
+    assert call(acct, f"{ME}/movies/{2**70}").status_code == 404
+
+
 def test_status_answers_for_up_to_48_films_and_refuses_more(acct):
     demo(acct)
     r = acct.get(f"{ME}/movies/status", params={"ids": ",".join(map(str, range(1, 49)))})
@@ -282,6 +293,27 @@ def test_status_answers_for_up_to_48_films_and_refuses_more(acct):
     too_many = acct.get(f"{ME}/movies/status", params={"ids": ",".join(map(str, range(1, 50)))})
     assert too_many.status_code == 422 and "48" in too_many.json()["errors"]["ids"]
     assert acct.get(f"{ME}/movies/status", params={"ids": "1,x"}).status_code == 422
+
+
+@pytest.mark.parametrize("ids", ["²", "1,①", "٣"])
+def test_status_refuses_non_ascii_digits_with_a_422(acct, ids):
+    """str.isdigit() is true for these, but int() refuses them: that was a 500."""
+    demo(acct)
+    assert acct.get(f"{ME}/movies/status", params={"ids": ids}).status_code == 422
+
+
+@pytest.mark.parametrize("ids", ["", ","])
+def test_status_with_no_ids_is_an_empty_list(acct, ids):
+    demo(acct)
+    r = acct.get(f"{ME}/movies/status", params={"ids": ids})
+    assert r.status_code == 200 and r.json()["items"] == []
+
+
+def test_status_with_a_huge_id_matches_nothing_instead_of_failing(acct):
+    demo(acct)
+    r = acct.get(f"{ME}/movies/status", params={"ids": f"1,{2**70}"})
+    assert r.status_code == 200
+    assert [e["movie_id"] for e in r.json()["items"]] == [1]
 
 
 def test_my_movies_has_one_tab_a_page_at_a_time_with_every_count(acct):
