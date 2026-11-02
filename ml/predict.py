@@ -153,8 +153,11 @@ def _comparison(budget_p: pd.DataFrame, budget: float | None) -> dict[str, Any]:
 # ---------------------------------------------------------------- the predictor
 
 
+READ_WAIT_S = 30  # seconds a read waits for the app's refresher to commit: at 0.1 CPU a merge outlasts SQLite's default 5 s
+
+
 def _read_only(db_path: Path) -> sqlite3.Connection:
-    return sqlite3.connect(f"file:{Path(db_path).resolve().as_posix()}?mode=ro", uri=True)
+    return sqlite3.connect(f"file:{Path(db_path).resolve().as_posix()}?mode=ro", uri=True, timeout=READ_WAIT_S)
 
 
 @dataclass

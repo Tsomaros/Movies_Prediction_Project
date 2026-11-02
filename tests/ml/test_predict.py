@@ -4,6 +4,7 @@ and small synthetic models (no network, no real models needed)."""
 import json
 import shutil
 import sqlite3
+import threading
 
 import numpy as np
 import pytest
@@ -95,6 +96,23 @@ def test_warnings(predictor):
     assert codes(out) == {"new_director", "new_actors", "no_country", "no_studio", "future_release", "big_budget"}
     text = {w["code"]: w["text"] for w in out["warnings"]}
     assert "2 of the 5 actors" in text["new_actors"] and "ends in 2022" in text["future_release"]
+
+
+@pytest.mark.slow
+def test_names_wait_out_a_merge_longer_than_sqlites_default_wait(predictor):
+    """A full prediction reads names on its own connection; a merge held past the default wait made it answer 500.
+
+    The default gives up at 5 s on Linux and about 7 s on Windows, so the lock is held for 8 s."""
+    writer = sqlite3.connect(predictor.db_path, isolation_level=None, check_same_thread=False)
+    writer.execute("BEGIN EXCLUSIVE")
+    release = threading.Timer(8, writer.execute, args=("ROLLBACK",))
+    release.start()
+    try:
+        names = predictor.names({"director": {"id": 1003, "name": None}})
+    finally:
+        release.join()
+        writer.close()
+    assert names["director"] == "Director 3"
 
 
 def test_names_come_from_the_database(predictor):

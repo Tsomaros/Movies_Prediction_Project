@@ -41,11 +41,10 @@ from backend.app.services.platform.auth import token_hash
 from backend.app.services.search.lookups import Lookups
 from backend.app.services.prediction import PredictionService
 from backend.app.userdb import repo as userdb
-from ml.predict import Predictor
+from ml.predict import READ_WAIT_S, Predictor
 
 COOKIE = "mp_session"
 SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
-READ_WAIT_S = 30  # seconds a read waits for the refresher's commit: at 0.1 CPU a merge outlasts SQLite's default 5 s
 
 
 def connect_read_only(path: Path) -> sqlite3.Connection:
