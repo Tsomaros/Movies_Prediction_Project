@@ -54,6 +54,7 @@ export function ModelCard({ base, chip, selected, onChip, onEdit, canEdit }: {
   const frame = (body: React.ReactNode) => (
     <section aria-labelledby="model-heading" className="bg-card grid content-start gap-4 rounded-lg border p-4">
       <h3 id="model-heading" className="text-sm font-medium">The film model</h3>
+      <p className="text-muted-foreground -mt-2 text-xs">Audience score (TMDB, 1–10): the likely range, 80% of the time.</p>
       {body}
     </section>
   )
@@ -103,6 +104,9 @@ export function ModelCard({ base, chip, selected, onChip, onEdit, canEdit }: {
           </Row>
         </div>
       )}
+      <p role="status" className="sr-only">
+        {asked && !faded && !chip.isError ? `Something new, ${chips.find(c => c.genre_id === on)?.name ?? 'this genre'}: ${points(shown.prediction.low)} – ${points(shown.prediction.high)}` : ''}
+      </p>
       <p className="text-muted-foreground text-xs">{HONESTY}</p>
     </>,
   )

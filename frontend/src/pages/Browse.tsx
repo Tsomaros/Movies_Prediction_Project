@@ -67,7 +67,7 @@ export default function Browse() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-[15rem_1fr]">
-        <aside className="hidden lg:block" aria-label="Filter films">
+        <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start" aria-label="Filter films">
           <Filters state={state} options={options.data} onChange={change} onClear={clear} idPrefix="side" />
         </aside>
 
@@ -85,6 +85,9 @@ export default function Browse() {
                   <SheetDescription>Results update as you choose.</SheetDescription>
                 </SheetHeader>
                 <Filters state={state} options={options.data} onChange={change} onClear={clear} idPrefix="drawer" />
+                <Button onClick={() => setDrawer(false)}>
+                  {data ? `Show ${data.total.toLocaleString('en-US')} ${data.total === 1 ? 'film' : 'films'}` : 'Show films'}
+                </Button>
               </SheetContent>
             </Sheet>
             <div className="flex items-center gap-2 text-sm">
@@ -133,7 +136,7 @@ export default function Browse() {
           )}
           {data && data.items.length === 0 && (
             <div className="grid justify-items-start gap-3 rounded-lg border p-6" data-testid="no-results">
-              <p className="font-medium">
+              <p role="status" className="font-medium">
                 {state.page > 1 ? 'No films match on this page.' : q ? `No movies match ‘${q}’.` : 'No films match.'}
               </p>
               {active.length > 0 ? (
@@ -159,7 +162,7 @@ export default function Browse() {
                 {data.pages > 1 && ` · page ${data.page.toLocaleString('en-US')} of ${data.pages.toLocaleString('en-US')}`}
               </p>
               <ul className={cn('grid gap-4 transition-opacity', view === 'list' ? 'gap-1' : GRID[view],
-                movies.isPlaceholderData && 'opacity-60')} aria-label="Films">
+                movies.isPlaceholderData && 'opacity-60')} aria-label="Films" aria-busy={movies.isPlaceholderData}>
                 {data.items.map((film, i) => (
                   <li key={film.id}>
                     {view === 'list' ? <MovieListItem film={film} eager={i < EAGER}

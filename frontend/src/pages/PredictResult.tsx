@@ -26,8 +26,7 @@ import { Summary } from '@/result/Summary'
 
 function Loading() {
   return (
-    <div className="grid gap-6" aria-busy="true" aria-live="polite">
-      <span className="sr-only">Running the models…</span>
+    <div className="grid gap-6" aria-busy="true">
       <div className="grid gap-4 sm:grid-cols-3">
         {[0, 1, 2].map(i => <Skeleton key={i} className="h-36 rounded-lg" />)}
       </div>
@@ -41,7 +40,9 @@ function Failed({ error, retry, editTo }: { error: unknown; retry: () => void; e
   const kind = error instanceof ApiError ? error.kind : 'server'
   const message = kind === 'validation'
     ? 'Some of this form needs fixing before it can be predicted.'
-    : kind === 'rate_limited' ? RATE_LIMITED : error instanceof Error ? error.message : String(error)
+    : kind === 'rate_limited' ? RATE_LIMITED
+    : kind === 'network' ? "Can't reach the server. Check your connection and try again."
+    : 'Something went wrong while running the models. Try again in a moment.'
   return (
     <div role="alert" className="bg-card grid justify-items-start gap-3 rounded-lg border p-4">
       <p>{message}</p>
@@ -94,6 +95,9 @@ export default function PredictResult() {
           {read.dropped.length === 1 ? 'was' : 'were'} reset to the usual value. <Link to={editTo} className="underline">Check the inputs</Link>
         </p>
       )}
+      <p role="status" className="sr-only">
+        {prediction.isPending ? 'Running the models…' : prediction.data ? 'Your prediction is ready.' : ''}
+      </p>
       <SlowNotice pending={prediction.isPending} />
       {prediction.isPending && <Loading />}
       {prediction.isError && <Failed error={prediction.error} retry={() => prediction.refetch()} editTo={editTo} />}
@@ -117,7 +121,7 @@ export default function PredictResult() {
             <Button variant="outline" onClick={copyLink}><LinkIcon /> Copy link</Button>
             <Button variant="outline" onClick={() => window.print()}><PrinterIcon /> Print or save as PDF</Button>
           </div>
-          <p className="text-muted-foreground text-xs">Models version {prediction.data.model_version}; judged as of {prediction.data.as_of}.</p>
+          <p className="text-muted-foreground text-xs">Made with model version {prediction.data.model_version}, counting films released before {prediction.data.as_of}.</p>
         </>
       )}
     </div>

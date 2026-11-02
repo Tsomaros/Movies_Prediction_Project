@@ -224,10 +224,12 @@ export function CreatorForm({ options, initial, onSubmit, pending, onValuesChang
         )}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Button type="submit" size="lg" disabled={pending} className="sm:w-44">
-            {pending && <Loader2Icon className="animate-spin" aria-hidden />}
+            {pending && <Loader2Icon className="animate-spin motion-reduce:animate-none" aria-hidden />}
             {pending ? 'Predicting…' : 'Predict'}
           </Button>
-          {pending && <p className="text-muted-foreground text-sm" aria-live="polite">Running the models, this takes a second or two…</p>}
+          {/* the live region stays mounted: one that appears already filled is often not announced */}
+          <p role="status" className="sr-only">{pending ? 'Running the models…' : ''}</p>
+          {pending && <p className="text-muted-foreground text-sm" aria-hidden>Running the models, this takes a second or two…</p>}
           {!pending && Object.keys(errors).length > 0 && (
             <p className="text-destructive text-sm">Some fields need fixing – see the messages above.</p>
           )}

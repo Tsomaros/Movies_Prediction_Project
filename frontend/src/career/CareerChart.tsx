@@ -4,7 +4,7 @@
 // a ring and a label. Hover shows a film's details and a click opens it; on touch the first tap shows them and a
 // second tap on the same dot opens it. Colours are theme tokens, so both themes work; screen readers get one
 // summary sentence (and the section's table).
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
   ComposedChart, Line, ReferenceArea, ReferenceLine, ResponsiveContainer, Scatter, XAxis, YAxis,
 } from 'recharts'
@@ -122,6 +122,14 @@ const Plot = memo(function Plot({ data, height, events }: { data: CareerResponse
   )
 })
 
+function LegendItem({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <li className="flex items-center gap-1.5">
+      <svg width={12} height={12} aria-hidden>{children}</svg>{label}
+    </li>
+  )
+}
+
 export function CareerChart({ data, onOpenMovie }: { data: CareerResponse; onOpenMovie: (id: number) => void }) {
   const wide = useMediaQuery('(min-width: 640px)')
   const [tip, setTip] = useState<Tip | null>(null)
@@ -143,16 +151,38 @@ export function CareerChart({ data, onOpenMovie }: { data: CareerResponse; onOpe
     }
   }, [])
 
+  const box = useRef<HTMLDivElement>(null)
+  // A tap elsewhere or Escape closes the tooltip (on touch nothing else would).
+  const tipOpen = tip !== null
+  useEffect(() => {
+    if (!tipOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') events.hide() }
+    const onDown = (e: PointerEvent) => { if (!box.current?.contains(e.target as Node)) events.hide() }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('pointerdown', onDown)
+    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('pointerdown', onDown) }
+  }, [tipOpen, events])
+
   const film = tip?.film
+  // keep the tooltip (max-w-56 = 224 px, centred on the dot) inside the chart's width
+  const left = tip ? `clamp(7rem, ${tip.left}px, calc(100% - 7rem))` : undefined
   return (
-    <div className="relative">
+    <div ref={box} className="relative">
       <p className="sr-only">{chartSummary(data)}</p>
       <div aria-hidden>
         <Plot data={data} height={wide ? 260 : 220} events={events} />
+        <ul className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 px-2 pt-1 text-xs">
+          <LegendItem label="Lead or crew"><circle cx={6} cy={6} r={4} fill="var(--primary)" stroke="var(--primary)" strokeWidth={1.5} /></LegendItem>
+          <LegendItem label="Supporting"><circle cx={6} cy={6} r={4} fill="var(--background)" stroke="var(--primary)" strokeWidth={1.5} /></LegendItem>
+          <LegendItem label="Score still settling">
+            <circle cx={6} cy={6} r={4} fill="none" stroke="var(--primary)" strokeWidth={1.5} strokeDasharray="2 2" />
+          </LegendItem>
+          <LegendItem label="Few votes"><circle cx={6} cy={6} r={4} fill="var(--muted-foreground)" opacity={0.35} /></LegendItem>
+        </ul>
       </div>
       {film && tip && (
         <div role="tooltip" className="bg-popover text-popover-foreground pointer-events-none absolute z-10 w-max max-w-56 -translate-x-1/2 rounded-md border px-2.5 py-1.5 text-xs shadow-md"
-          style={{ left: tip.left, top: tip.top + 12 }}>
+          style={{ left, top: tip.top + 12 }}>
           <div className="font-medium">{film.title}</div>
           <div className="text-muted-foreground tabular-nums">
             {film.year}{film.score !== null && ` · ${points(film.score)}`}

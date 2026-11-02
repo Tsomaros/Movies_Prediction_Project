@@ -47,7 +47,7 @@ export default function CareerSection({ personId, name, role }: { personId: numb
       </div>
     )
   } else if (!data) {
-    body = <Skeleton data-testid="career-skeleton" className="h-[260px]" />
+    body = <div aria-busy="true"><span className="sr-only">Loading the career chart…</span><Skeleton data-testid="career-skeleton" className="h-[260px]" /></div>
   } else {
     body = (
       <>

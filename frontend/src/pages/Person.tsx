@@ -131,7 +131,7 @@ export default function Person() {
             {links.map(l => (
               <li key={l.label}>
                 <a href={l.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 underline">
-                  {l.label} <ExternalLinkIcon className="size-3" aria-hidden />
+                  {l.label} <span className="sr-only">(opens in a new tab)</span><ExternalLinkIcon className="size-3" aria-hidden />
                 </a>
               </li>
             ))}

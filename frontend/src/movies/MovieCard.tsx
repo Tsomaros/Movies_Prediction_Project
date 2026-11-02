@@ -30,7 +30,7 @@ export function ScoreText({ score, votes: n }: { score: number | null | undefine
 function NewTag({ label }: { label: ReleaseLabel }) {
   if (label.kind !== 'new') return null
   return (
-    <span className="absolute bottom-1.5 left-1.5 rounded bg-rose-600 px-1.5 py-0.5 text-[0.65rem] font-semibold tracking-wide text-white uppercase shadow-xs">
+    <span className="absolute bottom-1.5 left-1.5 rounded bg-rose-600 px-1.5 py-0.5 text-[0.7rem] font-semibold tracking-wide text-white uppercase shadow-xs">
       {label.text}
     </span>
   )

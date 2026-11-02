@@ -58,6 +58,10 @@ function int(text: string | null, min: number, max: number): number | null {
   return n >= min && n <= max ? n : null
 }
 
+/** The years the address accepts; the year boxes use the same limits. */
+export const YEAR_MIN = 1900
+export const YEAR_MAX = 2100
+
 export function readBrowse(params: URLSearchParams): BrowseState {
   const sort = params.get(KEYS.sort)
   const score = Number(params.get(KEYS.scoreMin))
@@ -66,8 +70,8 @@ export function readBrowse(params: URLSearchParams): BrowseState {
     q: (params.get(KEYS.q) ?? '').slice(0, 200),
     genre: params.get(KEYS.genre) || null,
     when: WHENS.some(w => w.value === params.get(KEYS.when)) ? (params.get(KEYS.when) as When) : null,
-    yearFrom: int(params.get(KEYS.yearFrom), 1900, 2100),
-    yearTo: int(params.get(KEYS.yearTo), 1900, 2100),
+    yearFrom: int(params.get(KEYS.yearFrom), YEAR_MIN, YEAR_MAX),
+    yearTo: int(params.get(KEYS.yearTo), YEAR_MIN, YEAR_MAX),
     language: language && /^[a-z]{2}$/.test(language) ? language : null,
     scoreMin: params.has(KEYS.scoreMin) && Number.isFinite(score) && score > 0 && score <= 10 ? score : null,
     sort: SORTS.some(s => s.value === sort) ? (sort as Sort) : EMPTY.sort,

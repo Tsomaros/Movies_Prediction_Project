@@ -170,14 +170,14 @@ export function SearchBox({ variant, inputRef, onDone, replace = false }: Props)
         ? 'bg-popover absolute top-full right-0 left-0 z-50 mt-1 overflow-hidden rounded-md border py-1 shadow-lg'
         : 'mt-3', quick.isPlaceholderData && 'opacity-60')}>
       {data === undefined && quick.isError ? (
-        <div className="flex items-center justify-between gap-2 px-3 py-2">
+        <div role="presentation" className="flex items-center justify-between gap-2 px-3 py-2">
           <span>Search isn’t available right now.</span>
           <button type="button" onClick={() => quick.refetch()} className="text-primary font-medium underline-offset-4 hover:underline">Retry</button>
         </div>
       ) : data === undefined ? (
-        [0, 1, 2].map(i => <div key={i} className="flex items-center gap-3 px-3 py-2"><Skeleton className="h-10 w-8" /><Skeleton className="h-4 flex-1" /></div>)
+        [0, 1, 2].map(i => <div key={i} role="presentation" className="flex items-center gap-3 px-3 py-2"><Skeleton className="h-10 w-8" /><Skeleton className="h-4 flex-1" /></div>)
       ) : none ? (
-        <div className="grid gap-1 px-3 py-2">
+        <div role="presentation" className="grid gap-1 px-3 py-2">
           <p>No {mode} match ‘{shown}’.</p>
           <ModeHint mode={mode} q={shown} replace={replace} onFollow={() => { setOpen(false); onDone?.() }} />
         </div>
@@ -221,7 +221,7 @@ export function SearchBox({ variant, inputRef, onDone, replace = false }: Props)
             <button type="button" aria-label="Clear search" onMouseDown={e => e.preventDefault()}
               onClick={() => { setText(''); setActive(-1); inputRef?.current?.focus() }}
               className={cn('text-muted-foreground hover:text-foreground rounded outline-none focus-visible:ring-3 focus-visible:ring-ring',
-                variant === 'overlay' ? 'p-2' : 'p-0.5')}>
+                variant === 'overlay' ? 'p-2' : 'p-1.5')}>
               <XIcon className="size-4" />
             </button>
           )}

@@ -73,14 +73,14 @@ export function SweepChart({ sweep, chosen, card, year }: {
                 <div className={cn('relative h-56 rounded-sm', isMine && 'bg-primary/10 ring-primary/40 ring-1')}>
                   {ticks.map(t => <div key={t} className="bg-border absolute inset-x-0 h-px" style={{ bottom: `${at(t)}%` }} />)}
                   <div className={cn('absolute left-1/2 w-2 -translate-x-1/2 rounded-full',
-                    isMine ? 'bg-primary/70' : p.value === best || aboutAsGood.has(p.value) ? 'bg-chart-2/80' : 'bg-muted-foreground/35')}
+                    isMine ? 'bg-primary/70' : p.value === best || aboutAsGood.has(p.value) ? 'bg-chart-2/80' : 'bg-muted-foreground/70')}
                     style={{ bottom: `${low}%`, height: `${high - low}%` }} />
                   <div className="bg-foreground ring-background absolute left-1/2 h-1 w-4 -translate-x-1/2 translate-y-1/2 rounded-sm ring-2"
                     style={{ bottom: `${mid}%` }} />
                 </div>
                 <div className={cn('text-center text-[11px] leading-tight', isMine ? 'text-foreground font-semibold' : 'text-muted-foreground')}>
                   {short(p.value)}
-                  <div className="h-3 text-[10px]">{p.value === best ? '★' : aboutAsGood.has(p.value) ? '≈' : ''}</div>
+                  <div className="h-4 text-xs">{p.value === best ? '★' : aboutAsGood.has(p.value) ? '≈' : ''}</div>
                 </div>
               </div>
             )
