@@ -45,10 +45,12 @@ from ml.predict import Predictor
 
 COOKIE = "mp_session"
 SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
+READ_WAIT_S = 30  # seconds a read waits for the refresher's commit: at 0.1 CPU a merge outlasts SQLite's default 5 s
 
 
 def connect_read_only(path: Path) -> sqlite3.Connection:
-    con = sqlite3.connect(f"file:{Path(path).resolve().as_posix()}?mode=ro", uri=True, check_same_thread=False)
+    con = sqlite3.connect(f"file:{Path(path).resolve().as_posix()}?mode=ro", uri=True, check_same_thread=False,
+                          timeout=READ_WAIT_S)
     con.row_factory = sqlite3.Row
     return con
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import asyncio
 import shutil
+import sqlite3
+import threading
 import time
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
@@ -169,3 +171,28 @@ async def test_a_request_during_a_refresh_does_not_wait_for_tmdb(refresher_facto
     assert (await task)["films"] == len(WINDOW)
     with closing(connect_read_only(r.db_path)) as con:
         assert movies_repo.ids_present(con, WINDOW) == set(WINDOW)  # the read after the merge sees the new films
+
+
+@pytest.mark.slow
+def test_a_read_waits_out_a_merge_longer_than_sqlites_default_wait(tmp_path):
+    """Live at 0.1 CPU the first merge held the lock past 5 s and GET /movies answered 500 "database is locked".
+
+    The default wait gives up at 5 s on Linux and about 7 s on Windows, so the lock is held for 8 s."""
+    path = tmp_path / "locked.db"
+    with closing(sqlite3.connect(path)) as setup, setup:
+        setup.execute("CREATE TABLE films (id INTEGER)")
+        setup.execute("INSERT INTO films VALUES (1)")
+    writer = sqlite3.connect(path, isolation_level=None, check_same_thread=False)
+    writer.execute("BEGIN EXCLUSIVE")
+    writer.execute("INSERT INTO films VALUES (2)")
+    release = threading.Timer(8, writer.execute, args=("COMMIT",))
+    start = time.perf_counter()
+    release.start()
+    try:
+        with closing(connect_read_only(path)) as con:
+            films = con.execute("SELECT COUNT(*) FROM films").fetchone()[0]
+    finally:
+        release.join()
+        writer.close()
+    assert films == 2  # the committed merge, seen after waiting
+    assert time.perf_counter() - start >= 8
