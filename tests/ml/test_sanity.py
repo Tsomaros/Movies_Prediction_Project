@@ -125,6 +125,8 @@ def test_the_synopsis_changes_only_the_comparables(predictor, name):
     none = predictor.predict(without(form, "synopsis"))
     assert ranges(base) == ranges(other) == ranges(none)
     assert base["drivers"] == other["drivers"] == none["drivers"]
+    # and the synopsis does reach the comparables (else this test would pass if it were ignored everywhere)
+    assert [f["id"] for f in base["comparables"]] != [f["id"] for f in other["comparables"]]
 
 
 @pytest.mark.parametrize("name", FORMS)
@@ -231,13 +233,16 @@ def test_summer_and_holiday_releases_earn_at_least_as_much_as_september(predicto
 
 def test_a_film_judged_at_its_own_release_never_finds_itself(predictor, films):
     ids = films.movies.index[(films.movies["split"] == "validation")].to_series().sample(30, random_state=2)
+    returned = 0
     for movie_id in ids:
         m = films.movies.loc[movie_id]
         found = predictor.index.query(films.genres.get(movie_id, []), [], m["original_language"], None,
                                       int(m["year"]), None, day_number(m["release_date"]))
+        returned += len(found)
         assert movie_id not in [f["id"] for f in found]
         days = dict(zip(predictor.index.ids.tolist(), predictor.index.days.tolist()))
         assert all(days[f["id"]] < day_number(m["release_date"]) for f in found)
+    assert returned > 0  # the loop above must have had films to check
 
 
 # ---------------------------------------------------------------- training date vs the creator's date

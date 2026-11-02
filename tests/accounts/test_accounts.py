@@ -385,6 +385,7 @@ def spins(c, **params):
 
 def test_surprise_me_never_picks_a_watched_film(acct):
     everything, _ = spins(acct, decade=2020)  # logged out: nothing is left out
+    assert {12, 13, 27} <= everything  # else the exclusion below would be checked against nothing
     demo(acct)
     for movie_id in (12, 13, 27):  # 2020-22 films above the floor
         assert put(acct, movie_id, status="watched").status_code == 200

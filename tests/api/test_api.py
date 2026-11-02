@@ -179,8 +179,8 @@ def test_predict_returns_the_full_output_in_both_revenue_modes(api, predictor):
 
 def test_comparables_get_full_poster_urls(api):
     films = api.post(PREDICT, json=film_form()).json()["comparables"]
-    assert films and all(f["poster"] is None or f["poster"]["small"].startswith("https://image.tmdb.org/t/p/w342/")
-                         for f in films)
+    posters = [f["poster"] for f in films if f["poster"] is not None]
+    assert posters and all(p["small"].startswith("https://image.tmdb.org/t/p/w342/") for p in posters)  # not all None
 
 
 def test_the_same_film_written_two_ways_is_served_from_the_cache(api):

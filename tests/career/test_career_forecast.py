@@ -16,6 +16,21 @@ def test_needs_five_rated_films():
     assert track_record([(2000, 7.0)] * 4, S, mu=6.3, sigma_pop=0.9) is None
 
 
+def test_exactly_five_rated_films_is_enough():
+    assert track_record([(2000 + i, 7.0) for i in range(5)], S, mu=6.3, sigma_pop=0.9) is not None
+
+
+def test_middle_and_range_by_hand():
+    # h = inf: every film weighs 1. Scores 5..9: m = 7, n_eff = 5, k = 5 -> share = 5 / 10 = 0.5.
+    # mid = 0.5 * 7 + 0.5 * 6 = 6.5. Own variance = (4 + 1 + 0 + 1 + 4) / 5 = 2; sigma_pop = 1.
+    # sigma = sqrt(0.5 * 2 + 0.5 * 1) = sqrt(1.5); q = 2 -> half-width = 2 * sqrt(1.5).
+    f = track_record([(2000 + i, 5.0 + i) for i in range(5)], RoleSettings(math.inf, 5, 2.0), mu=6.0, sigma_pop=1.0)
+    half = 2 * math.sqrt(1.5)
+    assert (f.n_rated, f.own_avg, f.own_share, f.db_avg) == (5, pytest.approx(7.0), pytest.approx(0.5), 6.0)
+    assert f.mid == pytest.approx(6.5)
+    assert f.low == pytest.approx(6.5 - half) and f.high == pytest.approx(6.5 + half)
+
+
 def test_weights_halve_every_h_years():
     f = track_record([(2000, 5.0)] + [(2016, 8.0)] * 4, RoleSettings(8, 0.0001, 1.0), 6.3, 0.9)
     assert f.own_avg == pytest.approx((0.25 * 5 + 4 * 8) / 4.25)  # a film 16 years older counts 1/4

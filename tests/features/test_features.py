@@ -124,6 +124,28 @@ def test_young_films_count_but_do_not_move_the_medians():
     assert p["revenue"] == pytest.approx(base["revenue"]) and p["score"] == pytest.approx(base["score"])
 
 
+@pytest.mark.parametrize("release, counts", [("2002-07-03", True), ("2002-07-04", False)])
+def test_revenue_and_score_count_from_exactly_182_days(release, counts):
+    """2003-01-01 minus 182 days is 2002-07-03 (Jul 3 -> Jan 3 is 184 days, Jan 1 is 2 earlier): that film is
+    182 days old and counts; one day younger does not. Covers the person, the typical-film prior and the franchise."""
+    edge = (4, release, 30.0, 1.0, 77)
+    ann = history(BASE_FILMS + [edge], BASE_CREDITS + [(1, 4, "director")]).person(1, "director", TARGET)
+    assert ann["n_films"] == 3  # the film count never waits
+    if counts:
+        # Revenues 10, 12, 30 -> median 12; typical film over 10, 12, 20, 30 -> (12 + 20) / 2 = 16.
+        # Scores 5, 7, 1 -> median 5; typical over 1, 5, 7, 9 -> (5 + 7) / 2 = 6.
+        assert ann["revenue"] == pytest.approx((3 * 12 + 4 * 16) / 7)
+        assert ann["score"] == pytest.approx((3 * 5 + 4 * 6) / 7)
+    else:  # as if the edge film did not exist: median 11 / 6, typical 12 / 7
+        assert ann["revenue"] == pytest.approx((2 * 11 + 4 * 12) / 6)
+        assert ann["score"] == pytest.approx((2 * 6 + 4 * 7) / 6)
+    films = pd.DataFrame({"collection_id": [77, 77], "release_date": ["2000-01-01", release],
+                          "log_revenue": [10.0, 30.0], "log_budget": [math.nan, math.nan]})
+    fr = Franchises(films, pd.DataFrame({"id": [77], "name": ["Saga"]})).features(77, TARGET)
+    assert fr["franchise_earlier_films"] == 2  # counted either way
+    assert fr["franchise_revenue"] == (20.0 if counts else 10.0)  # median(10, 30) or just the first entry
+
+
 def test_films_on_or_after_the_date_never_count():
     same_day = (5, "2003-01-01", 1000.0, 0.0, None)
     later = (6, "2005-01-01", -1000.0, 10.0, None)

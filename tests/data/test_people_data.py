@@ -113,6 +113,8 @@ async def test_refresh_pulls_only_old_records_again_and_leaves_one_line_per_id(t
     path.write_text("".join(json.dumps(r) + "\n" for r in lines), encoding="utf-8")
     assert drop_older_than(path, 180, datetime(2026, 10, 25, tzinfo=timezone.utc)) == 1
     assert ids_in(path) == [101]
+    kept = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    assert [r["fetched_at"] for r in kept] == ["2026-10-20T00:00:00+00:00"]  # the newer of the two 101 lines
     fake = FakePeople()
     await pull(fake, [100, 101], tmp_path)
     assert [c[0] for c in fake.calls] == ["/3/person/100"] and ids_in(path) == [100, 101]

@@ -194,6 +194,15 @@ def test_sampling_caps_the_training_points(con):
     assert capped == build_artifact(con, MIN_VOTES, "x", max_points=40)["roles"]["acting"]  # seeded
 
 
+def test_sample_really_keeps_max_points_in_order_and_is_seeded(con):
+    st = _role_set(con, "acting", MIN_VOTES)
+    assert len(st) > 40
+    small = backtest._sample(st, 40)
+    assert len(small) == 40 and backtest._sample(st, None) is st and backtest._sample(st, len(st)) is st
+    assert (small.year == backtest._sample(st, 40).year).all()  # same draw each time
+    assert len(set(zip(small.person.tolist(), small.year.tolist(), small.score.tolist()))) > 1
+
+
 # ---------------------------------------------------------------- the 2026 holdout (V1.4)
 
 

@@ -126,6 +126,7 @@ def test_the_revenue_model_rises_with_the_budget(pipeline):
     model = pipeline["models"]["revenue"]
     middles = [model.predict(rows.assign(log_budget=np.log(b)))["p50"].to_numpy() for b in (1e6, 1e7, 1e8)]
     assert (np.diff(np.vstack(middles), axis=0) >= 0).all()
+    assert (middles[-1] > middles[0]).any()  # not flat: a model that ignores the budget would pass the line above
 
 
 # ---------------------------------------------------------------- through the API

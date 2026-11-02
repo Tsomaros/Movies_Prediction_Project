@@ -51,8 +51,9 @@ def test_load_keeps_known_people_skips_unknown_ids_and_records_coverage(con, tmp
 
 
 def test_load_is_rerunnable_and_the_newest_record_wins(con, tmp_path):
-    path = write(tmp_path / "p.jsonl", [rec(2001, biography="Old."),
-                                        rec(2001, fetched_at="2026-10-26T10:00:00+00:00", biography="New.")])
+    # The newest record comes first in the file, so "last line wins" would keep the stale one.
+    path = write(tmp_path / "p.jsonl", [rec(2001, fetched_at="2026-10-26T10:00:00+00:00", biography="New."),
+                                        rec(2001, biography="Old.")])
     people.load(con, path, TODAY)
     people.load(con, path, TODAY)
     assert con.execute("SELECT biography FROM person_details").fetchall() == [("New.",)]

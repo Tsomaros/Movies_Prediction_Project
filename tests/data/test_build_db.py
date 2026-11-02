@@ -59,6 +59,19 @@ def test_training_views(db):
     assert db.execute("SELECT DISTINCT split FROM v_train_score").fetchall() == [("test",)]
 
 
+def test_films_after_2025_stay_out_of_every_training_view(tmp_path):
+    # Film 8 would qualify for all three views on its data (money, votes); only its 2026 year keeps it out.
+    records = [*RECORDS, film(8, release_date="2026-02-01", credits=director(2, "Michael Mann"))]
+    raw, cpi = tmp_path / "raw.jsonl", tmp_path / "cpi.csv"
+    raw.write_text("".join(json.dumps(r) + "\n" for r in records), encoding="utf-8")
+    cpi.write_text("year,cpi,note\n" + "".join(f"{y},{c},test\n" for y, c in TEST_CPI.items()), encoding="utf-8")
+    build_db.build(raw, cpi, tmp_path / "movies.db")
+    with sqlite3.connect(tmp_path / "movies.db") as con:
+        assert con.execute("SELECT split FROM movies WHERE id = 8").fetchone() == ("later",)
+        for view in ("v_train_revenue", "v_train_budget", "v_train_score"):
+            assert 8 not in ids(con, f"SELECT id FROM {view}"), view
+
+
 def test_every_film_is_kept_for_browsing(db):
     assert db.execute("SELECT COUNT(*) FROM movies").fetchone() == (7,)
     assert db.execute("SELECT budget, money_suspect FROM movies WHERE id = 6").fetchone() == (65_500_000, 1)

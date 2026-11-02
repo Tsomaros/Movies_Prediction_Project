@@ -104,6 +104,7 @@ def test_a_new_face_has_no_link_a_known_person_has(client_with_fresh):
 def test_similar_films_for_a_fresh_film(client_with_fresh):  # outside the comparables index: matched on genres
     similar = client_with_fresh.get(f"{MOVIES}/{FRESH}").json()["similar"]
     assert FRESH not in [f["id"] for f in similar]
+    assert len(similar) == 6  # as many as any film page has (test_api): an empty list would pass the line above
 
 
 def test_a_person_the_refresh_added_has_no_page(client_with_fresh):
@@ -170,7 +171,13 @@ def test_unreleased_left_out_of_default_lists(client_with_fresh):
     assert UPCOMING not in ids(c.get(MOVIES, params={"sort": "popularity", "year_from": 2026}))
     assert UPCOMING in ids(c.get(MOVIES, params={"q": "Upcoming"}))  # search finds it
     assert UPCOMING in ids(c.get(MOVIES, params={"when": "upcoming"}))
-    assert all(c.get(f"{API_PREFIX}/random", params={"gems": "true"}).json()["movie"]["id"] != UPCOMING for _ in range(40))
+    # Surprise me is random, so spin the whole 2020s pool dry (spin again never repeats): the released fresh films
+    # are in it, the unreleased one never comes up. (40 random spins over ~300 films would miss a leak most of the time.)
+    shown = []
+    while (movie := c.get(f"{API_PREFIX}/random", params={"gems": "true", "decade": 2020,
+                                                         "exclude": ",".join(map(str, shown))}).json()["movie"]):
+        shown.append(movie["id"])
+    assert {FRESH, ZYX} <= set(shown) and UPCOMING not in shown
 
 
 def test_health_has_a_fresh_block(client_with_fresh):

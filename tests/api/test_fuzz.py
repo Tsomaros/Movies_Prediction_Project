@@ -76,9 +76,9 @@ known_ref = st.one_of(st.integers(1000, 1006), st.integers(2001, 2300), st.sampl
                       st.fixed_dictionaries({"id": st.integers(1000, 1006)}))
 VALID = {  # only allowed values, edges included: these forms must get a 200
     "genres": st.lists(st.sampled_from(GENRES), min_size=1, max_size=5, unique=True),
-    "release_year": st.integers(1960, 2035),
-    "release_month": st.integers(1, 12),
-    "runtime": st.integers(40, 300),
+    "release_year": st.one_of(st.integers(1960, 2035), st.sampled_from([1960, 2035])),  # the edges are drawn on purpose
+    "release_month": st.one_of(st.integers(1, 12), st.sampled_from([1, 12])),
+    "runtime": st.one_of(st.integers(40, 300), st.sampled_from([40, 300])),
     "language": st.sampled_from(["en", "fr", "ja", "xx"]),
     "certification": st.sampled_from(CERTIFICATIONS),
     "director": known_ref,
@@ -185,10 +185,10 @@ def test_compare_answers_200_or_a_readable_422(api, body):
     out = check(post(api, COMPARE, body))
     if out is not None:
         check_prediction(out["base"])
-        for variant in out["variants"]:
+        assert len(out["variants"]) == len(body["variants"])
+        for variant, changes in zip(out["variants"], body["variants"]):
             check_prediction(variant["prediction"])
-            assert all(f in body["base"] or f in variant["differences"]["changed_fields"]
-                       for f in variant["differences"]["changed_fields"])
+            assert set(variant["differences"]["changed_fields"]) <= set(changes)  # only what the variant changed
 
 
 @pytest.mark.slow
@@ -200,6 +200,26 @@ def test_sweep_answers_200_or_a_readable_422(api, body):
         assert len(out["points"]) == len(body["values"])
         for point in out["points"]:
             check_prediction(point)
+
+
+@pytest.mark.slow
+@settings(FUZZ, max_examples=100)
+@given(form=valid_forms())
+def test_forms_with_only_allowed_values_always_get_a_200(api, form):
+    """The tests above accept a 422 for any body, so a bug that refuses good forms would stay green there."""
+    response = post(api, PREDICT, form)
+    assert response.status_code == 200, (response.text[:300], form)
+    check_prediction(response.json())
+
+
+@pytest.mark.slow
+@settings(FUZZ, max_examples=40)
+@given(form=valid_forms(), field=st.sampled_from(["release_month", "runtime", "budget"]), data=st.data())
+def test_sweeps_with_only_allowed_values_always_get_a_200(api, form, field, data):
+    values = data.draw(st.lists(VALID[field].filter(lambda v: v is not None), min_size=2, max_size=12))  # no null points
+    response = post(api, SWEEP, {"form": form, "field": field, "values": values})
+    assert response.status_code == 200, (response.text[:300], field, values)
+    assert len(response.json()["points"]) == len(values)
 
 
 def test_the_fuzzing_reaches_both_outcomes(api):

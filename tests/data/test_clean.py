@@ -93,6 +93,36 @@ def test_leave_one_out_quantile_matches_brute_force(n):
     assert leave_one_out_quantile(values, 0.99).tolist() == pytest.approx(expected)
 
 
+def test_money_placeholder_boundary():
+    m = cleaned([film(1, budget=999, revenue=0), film(2, budget=1_000, revenue=0)])  # MIN_MONEY is 1,000
+    assert pd.isna(m.loc[1, "budget"]) and m.loc[2, "budget"] == 1_000
+
+
+def test_low_ratio_boundary():
+    # Token box office is revenue / budget strictly below 1 in 10,000.
+    m = cleaned([film(1, budget=10_000_000, revenue=1_000),   # exactly 1e-4: real
+                 film(2, budget=10_000_001, revenue=1_000)])  # just below: suspect
+    assert not m.loc[1, "money_suspect"] and m.loc[2, "money_suspect_reason"] == "low_ratio"
+
+
+def test_films_after_2025_do_not_move_the_currency_caps():
+    market = hindi_market()  # budgets $1M-$3M: the cap is about 3 x $3M
+    early = film(1, original_language="hi", release_date="2019-07-12", budget=50_000_000, revenue=90_000_000)
+    outliers = [film(5000 + i, original_language="hi", release_date="2026-03-01", budget=3_000_000_000,
+                     revenue=9_000_000_000) for i in range(20)]  # if they joined the cap, it would become huge
+    m = cleaned([*market, early, *outliers])
+    assert m.loc[1, "money_suspect_reason"] == "currency"  # still flagged against the <=2025 cap
+    assert m.loc[5000, "money_suspect_reason"] == "currency"  # and the 2026 films are checked against it too
+    assert m["money_suspect"].sum() == 21
+
+
+@pytest.mark.parametrize(("release", "incomplete"), [("2026-04-22", False), ("2026-04-23", True)])
+def test_revenue_incomplete_boundary(release, incomplete):
+    # Pulled 2026-10-21. Apr 21 -> Oct 21 is 183 days (30+31+30+31+31+30), so Apr 22 is 182 days old (complete)
+    # and Apr 23 is 181 (still earning).
+    assert cleaned([film(1, release_date=release)]).loc[1, "revenue_incomplete"] == incomplete
+
+
 def test_still_earning_film_is_incomplete():
     m = cleaned([
         film(1, release_date="2026-06-01"),  # 142 days before the pull
@@ -153,7 +183,8 @@ def test_text_is_trimmed_and_title_falls_back():
 
 @pytest.mark.parametrize(
     ("date", "split"),
-    [("2015-12-31", "train"), ("2016-01-01", "validation"), ("2018-12-31", "validation"), ("2019-01-01", "test")],
+    [("2015-12-31", "train"), ("2016-01-01", "validation"), ("2018-12-31", "validation"), ("2019-01-01", "test"),
+     ("2025-12-31", "test"), ("2026-01-01", "later")],
 )
 def test_split_by_release_year(date, split):
     m = cleaned([film(1, release_date=date)])

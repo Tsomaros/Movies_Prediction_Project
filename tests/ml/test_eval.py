@@ -135,12 +135,14 @@ def frame(n_per_genre: dict[str, int], **columns) -> pd.DataFrame:
 
 
 def test_b0_b1_medians_and_small_genre_fallback():
-    # Drama has enough films for its own median; Western doesn't and uses the global median.
-    train = frame({"Drama": MIN_GENRE_FILMS, "Western": 3}, target=lambda n: np.r_[np.full(MIN_GENRE_FILMS, 2.0), [9.0] * 3])
-    test = frame({"Drama": 1, "Western": 1, "Horror": 1})  # Horror never seen
+    # Drama (40 films, 2.0) and Comedy (MIN_GENRE_FILMS films, 5.0) have their own median; Western (3 films, 9.0)
+    # doesn't and uses the global median. Global: 73 films sorted, the 37th is a Drama 2.0.
+    train = frame({"Drama": 40, "Comedy": MIN_GENRE_FILMS, "Western": 3},
+                  target=lambda n: np.r_[np.full(40, 2.0), np.full(MIN_GENRE_FILMS, 5.0), [9.0] * 3])
+    test = frame({"Drama": 1, "Comedy": 1, "Western": 1, "Horror": 1})  # Horror never seen
     b0, b1 = BASELINES["budget"][0]().fit(train), BASELINES["budget"][1]().fit(train)
-    assert b0.predict(test)["p50"].tolist() == [2.0, 2.0, 2.0]
-    assert b1.predict(test)["p50"].tolist() == [2.0, 2.0, 2.0]  # Western and Horror fall back to the global 2.0
+    assert b0.predict(test)["p50"].tolist() == [2.0, 2.0, 2.0, 2.0]  # B0 ignores the genre
+    assert b1.predict(test)["p50"].tolist() == [2.0, 5.0, 2.0, 2.0]  # Comedy its own; Western and Horror the global 2.0
 
 
 def test_ranges_come_from_train_residuals_and_are_ordered():
