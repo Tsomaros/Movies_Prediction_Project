@@ -8,11 +8,11 @@ const VIEW_LABELS: Record<View, string> = { small: 'Small posters', medium: 'Med
 
 export function ViewPicker({ view, onChange }: { view: View; onChange: (v: View) => void }) {
   return (
-    <div role="radiogroup" aria-label="Show films as" className="bg-muted inline-flex rounded-md p-0.5">
+    <div role="group" aria-label="Show films as" className="bg-muted inline-flex rounded-md p-0.5">
       {VIEWS.map(v => (
-        <button key={v} type="button" role="radio" aria-checked={view === v} aria-label={VIEW_LABELS[v]} title={VIEW_LABELS[v]}
+        <button key={v} type="button" aria-pressed={view === v} aria-label={VIEW_LABELS[v]} title={VIEW_LABELS[v]}
           onClick={() => onChange(v)}
-          className={cn('inline-flex h-8 items-center gap-1 rounded px-2 text-xs',
+          className={cn('inline-flex h-8 items-center gap-1 rounded px-2 text-xs focus-visible:outline-2 focus-visible:outline-ring',
             view === v ? 'bg-background shadow-xs' : 'text-muted-foreground hover:text-foreground')}>
           {v === 'list' ? <ListIcon className="size-4" aria-hidden /> : (
             <><LayoutGridIcon className={cn(v === 'small' ? 'size-3' : v === 'medium' ? 'size-3.5' : 'size-4')} aria-hidden />

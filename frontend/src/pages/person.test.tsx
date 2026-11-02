@@ -63,9 +63,9 @@ describe('the person page', () => {
     const card = within(films).getAllByRole('link').find(l => l.getAttribute('href') === `/movies/${forrest.id}`)!
     expect(within(card).getByText('as Forrest Gump')).toBeInTheDocument()
     expect(gridTitles()[0]).toBe(acting.films[0].title) // newest first, as the API sends them
-    const switcher = screen.getByRole('radiogroup', { name: 'Show their work as' })
-    expect(within(switcher).getAllByRole('radio').map(r => r.textContent)).toEqual(['Acting 85', 'Directing 2', 'Writing 3', 'Production 16'])
-    expect(within(switcher).getByRole('radio', { name: /Acting/ })).toHaveAttribute('aria-checked', 'true')
+    const switcher = screen.getByRole('group', { name: 'Show their work as' })
+    expect(within(switcher).getAllByRole('button').map(r => r.textContent)).toEqual(['Acting 85', 'Directing 2', 'Writing 3', 'Production 16'])
+    expect(within(switcher).getByRole('button', { name: /Acting/ })).toHaveAttribute('aria-pressed', 'true')
   })
 
   test('a director opens on directing, and the switch moves to writing in the URL', async () => {
@@ -81,7 +81,7 @@ describe('the person page', () => {
     expect(gridTitles()[0]).toBe(directing.films[0].title)
     expect(screen.getByRole('heading', { name: 'Films · Directing' })).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('radio', { name: /Writing/ }))
+    await userEvent.click(screen.getByRole('button', { name: /Writing/ }))
     expect(router.state.location.search).toBe('?role=writing')
     const writing = role(NOLAN, 'writing')
     expect(within(stats()).getByText(new RegExp(`^Wrote ${writing.stats.film_count} films`))).toBeInTheDocument()
@@ -89,7 +89,7 @@ describe('the person page', () => {
     expect(screen.getAllByText(writing.films[0].jobs.join(', ')).length).toBeGreaterThan(0) // the writing credit
     expect(screen.queryByRole('button', { name: /Predict a film/ })).toBeNull() // the form has no writer field
 
-    await userEvent.click(screen.getByRole('radio', { name: /Directing/ }))
+    await userEvent.click(screen.getByRole('button', { name: /Directing/ }))
     expect(router.state.location.search).toBe('') // the main role needs no parameter
   })
 
@@ -106,7 +106,7 @@ describe('the person page', () => {
     serve(NOLAN)
     renderApp('/people/525?role=juggling')
     await screen.findByRole('heading', { level: 1, name: 'Christopher Nolan' })
-    expect(screen.getByRole('radio', { name: /Directing/ })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('button', { name: /Directing/ })).toHaveAttribute('aria-pressed', 'true')
   })
 
   test('a long biography starts clamped with Read more; the text is plain paragraphs, never HTML', async () => {
@@ -128,8 +128,8 @@ describe('the person page', () => {
     expect(await screen.findByRole('heading', { level: 1, name: PLAIN.name! })).toBeInTheDocument()
     expect(screen.queryByRole('img', { name: /^Photo of/ })).toBeNull()
     expect(screen.queryByTestId('biography')).toBeNull()
-    expect(screen.queryByRole('radiogroup', { name: 'Show their work as' })).toBeNull()
-    expect(within(screen.getByRole('list', { name: 'Elsewhere' })).getAllByRole('link').map(a => a.textContent?.trim())).toEqual(['TMDB'])
+    expect(screen.queryByRole('group', { name: 'Show their work as' })).toBeNull()
+    expect(within(screen.getByRole('list', { name: 'Elsewhere' })).getAllByRole('link').map(a => a.textContent?.trim())).toEqual(['TMDB (opens in a new tab)'])
     expect(within(stats()).getByText(/^1 film/)).toBeInTheDocument()
     expect(within(stats()).queryByText(/Most often/)).toBeNull()
   })

@@ -117,6 +117,8 @@ export function VariantPicker({ base, options, added, onAdd }: {
   const [ref, setRef] = useState<NameRef | null>(null)
   const [problem, setProblem] = useState<string | null>(null)
   const [presetName, setPresetName] = useState<string | null>(null)
+  const [announce, setAnnounce] = useState('')
+  const fullNote = useRef<HTMLParagraphElement>(null)
   const editorRef = useRef<HTMLDivElement>(null)
   const full = count >= MAX_VARIANTS
 
@@ -128,9 +130,16 @@ export function VariantPicker({ base, options, added, onAdd }: {
     setPresetName(name)
   }
 
+  // Adding unmounts the editor (or the whole picker at the limit): keep focus on the field list, or the full note.
+  const added1 = (variant: Variant) => {
+    onAdd(variant)
+    setAnnounce(`Added ${variant.name}. ${count + 1} of ${MAX_VARIANTS} variants.`)
+    setTimeout(() => (document.getElementById(`${id}-field`) ?? fullNote.current)?.focus())
+  }
+
   const preset = (presetId: PresetId, name: string) => {
     const action = presetAction(presetId, base, options, added)
-    if ('changes' in action) onAdd({ name, changes: action.changes })
+    if ('changes' in action) added1({ name, changes: action.changes })
     else if ('pick' in action) {
       choose(action.pick, name)
       setTimeout(() => editorRef.current?.querySelector('input')?.focus())
@@ -149,15 +158,25 @@ export function VariantPicker({ base, options, added, onAdd }: {
       setProblem('You already have this variant')
       return
     }
-    onAdd({ name: presetName ?? changeText(key as ChangeField, value), changes })
+    added1({ name: presetName ?? changeText(key as ChangeField, value), changes })
     choose('')
   }
 
+  const status = <p role="status" className="sr-only">{announce}</p>
   if (full) {
-    return <p className="text-muted-foreground text-sm">You're comparing {MAX_VARIANTS} variants, the most at once. Remove one to try another.</p>
+    return (
+      <>
+        {status}
+        <p ref={fullNote} tabIndex={-1} className="text-muted-foreground text-sm outline-none">
+          You're comparing {MAX_VARIANTS} variants, the most at once. Remove one to try another.
+        </p>
+      </>
+    )
   }
 
   return (
+    <>
+    {status}
     <section aria-labelledby={`${id}-heading`} className="bg-card grid gap-4 rounded-lg border p-4 print:hidden">
       <div>
         <h2 id={`${id}-heading`} className="font-semibold">Add a variant ({count} of {MAX_VARIANTS})</h2>
@@ -204,5 +223,6 @@ export function VariantPicker({ base, options, added, onAdd }: {
         </div>
       </div>
     </section>
+    </>
   )
 }

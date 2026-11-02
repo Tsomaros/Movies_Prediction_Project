@@ -8,6 +8,7 @@
 // The search (src/search/, V1.1) sits between the brand and the navigation, which then moves to the second row
 // below 1280 px; a route with `handle: { hideSearch: true }` (/series) has none.
 import { ClapperboardIcon } from 'lucide-react'
+import type { MouseEvent } from 'react'
 import { Link, NavLink, Outlet, ScrollRestoration, useMatches } from 'react-router'
 
 import { ThemeToggle } from '@/app/theme'
@@ -44,9 +45,9 @@ export function Header() {
   return (
     <header className="print:hidden bg-card/95 supports-backdrop-filter:bg-card/80 sticky top-0 z-40 border-b backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2">
-        <Link to="/" className="flex shrink-0 items-center gap-2 font-semibold">
+        <Link to="/" aria-label="Movie Prediction" className="-m-1 flex shrink-0 items-center gap-2 p-1 font-semibold">
           <ClapperboardIcon className="size-5 text-primary" aria-hidden />
-          Movie Prediction
+          <span className="hidden min-[420px]:inline">Movie Prediction</span>
         </Link>
         {search && <HeaderSearch />}
         <Nav className={search ? 'hidden shrink-0 xl:flex' : 'hidden sm:flex'} />
@@ -86,6 +87,12 @@ export function Footer({ flush = false }: { flush?: boolean }) {
   )
 }
 
+// A hash link would change the address the router keys pages by, so focus main by hand.
+function skipToMain(e: MouseEvent<HTMLAnchorElement>) {
+  e.preventDefault()
+  document.getElementById('main')?.focus()
+}
+
 export default function Layout() {
   const handles = useMatches().map(m => (m.handle ?? {}) as RouteHandle)
   const bleed = handles.some(h => h.bleed)
@@ -96,8 +103,12 @@ export default function Layout() {
   return (
     <LoginProvider>
       <div className="flex min-h-svh flex-col">
+        <a href="#main" onClick={skipToMain}
+          className="bg-background ring-ring fixed top-2 left-2 z-50 -translate-y-20 rounded-md px-3 py-2 text-sm focus:translate-y-0 focus:ring-2">
+          Skip to content
+        </a>
         <Header />
-        <main className={cn('w-full flex-1', bleed ? 'flex flex-col' : 'mx-auto max-w-5xl px-4 py-6 sm:py-10')}>
+        <main id="main" tabIndex={-1} className={cn('w-full flex-1 outline-none', bleed ? 'flex flex-col' : 'mx-auto max-w-5xl px-4 py-6 sm:py-10')}>
           <Outlet />
         </main>
         <Footer flush={bleed} />

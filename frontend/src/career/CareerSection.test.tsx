@@ -128,7 +128,7 @@ describe('the Career section', () => {
     const { router } = renderApp('/people/525')
     const section = await career()
     expect(await within(section).findByText('Their usual film')).toBeInTheDocument()
-    await userEvent.click(within(screen.getByRole('radiogroup', { name: 'Show their work as' })).getByRole('radio', { name: /Writing/ }))
+    await userEvent.click(within(screen.getByRole('group', { name: 'Show their work as' })).getByRole('button', { name: /Writing/ }))
     expect(router.state.location.search).toBe('?role=writing')
     const writing = await career()
     expect(await within(writing).findByText('Most likely around 7.5')).toBeInTheDocument()

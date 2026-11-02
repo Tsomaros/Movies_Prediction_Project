@@ -120,7 +120,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
     }
   body {
     @apply bg-background text-foreground;
@@ -130,6 +130,7 @@
     }
   html {
     @apply font-sans;
+    scroll-padding-top: 6rem; /* the sticky header must not cover a focused field */
     }
 }
 /* The start page's slow pan across a poster collage (turned off for reduced motion, src/pages/Start.tsx) */

@@ -221,6 +221,27 @@ describe('the browse page', () => {
     expect(new URLSearchParams(router.state.location.search).get('genre')).toBeNull()
   })
 
+  test('a year is applied after a pause in typing; one outside the limits shows a message and changes nothing', async () => {
+    serve()
+    const { router } = renderApp('/browse')
+    await screen.findByRole('list', { name: 'Films' })
+    const side = screen.getByRole('complementary', { name: 'Filter films' })
+    const param = (k: string) => new URLSearchParams(router.state.location.search).get(k)
+    await userEvent.type(within(side).getByLabelText('From year'), '1980')
+    expect(param('from')).toBeNull() // not applied while typing, only after the pause
+    await waitFor(() => expect(param('from')).toBe('1980'))
+
+    const to = within(side).getByLabelText('To year')
+    await userEvent.type(to, '1850')
+    await userEvent.tab()
+    expect(await within(side).findByText('Enter a year from 1900 to 2100')).toBeInTheDocument()
+    expect(to).toHaveAttribute('aria-invalid', 'true')
+    expect(param('to')).toBeNull()
+    await new Promise(r => setTimeout(r, 800)) // longer than the typing pause: it must still not be applied
+    expect(param('to')).toBeNull()
+    expect(param('from')).toBe('1980')
+  })
+
   test('no results: a button per filter, "Clear filters" (the search stays) and the people who match', async () => {
     const fetch = mockFetch({
       '/api/v1/meta/options': { body: options },
@@ -243,9 +264,9 @@ describe('the browse page', () => {
     serve()
     renderApp('/browse')
     await screen.findByRole('list', { name: 'Films' })
-    await userEvent.click(screen.getByRole('radio', { name: 'List' }))
+    await userEvent.click(screen.getByRole('button', { name: 'List' }))
     expect(localStorage.getItem(VIEW_KEY)).toBe('list')
-    expect(screen.getByRole('radio', { name: 'List' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('button', { name: 'List' })).toHaveAttribute('aria-pressed', 'true')
     expect(within(screen.getByRole('list', { name: 'Films' })).getAllByText(/Drama|Comedy|Horror|Action|Adventure/).length).toBeGreaterThan(0)
   })
 

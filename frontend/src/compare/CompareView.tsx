@@ -2,6 +2,7 @@
 // revenue ranges on one shared log money axis, each with its own break-even band. A change smaller than the
 // uncertainty (the model card's threshold) is greyed out and says so, so a tiny shift never looks like news.
 import { XIcon } from 'lucide-react'
+import { useRef } from 'react'
 
 import type { ModelCard, Prediction } from '@/api/client'
 import { Button } from '@/components/ui/button'
@@ -109,7 +110,8 @@ function RevenueChart({ columns }: { columns: Column[] }) {
       </div>
       <ul className="sr-only">
         {ready.map(c => (
-          <li key={c.key}>{c.title}: {money(c.prediction.revenue.low)} to {money(c.prediction.revenue.high)}, expected {money(c.prediction.revenue.middle)}.</li>
+          <li key={c.key}>{c.title}: {money(c.prediction.revenue.low)} to {money(c.prediction.revenue.high)}, expected {money(c.prediction.revenue.middle)}; break-even
+            around {money(BREAK_EVEN.low * c.prediction.revenue.budget_used)} to {money(BREAK_EVEN.high * c.prediction.revenue.budget_used)}.</li>
         ))}
       </ul>
       <div aria-hidden className="grid gap-2">
@@ -132,10 +134,18 @@ function RevenueChart({ columns }: { columns: Column[] }) {
 
 export function CompareView({ columns, card }: { columns: Column[]; card: ModelCard | undefined }) {
   const base = columns[0]?.prediction
+  // Removing a card unmounts the button that had focus: park it on the (screen-reader) heading above the cards.
+  const heading = useRef<HTMLHeadingElement>(null)
+  const withFocus = (c: Column): Column => {
+    const { onRemove } = c
+    return onRemove ? { ...c, onRemove: () => { onRemove(); setTimeout(() => heading.current?.focus()) } } : c
+  }
   return (
     <div className="grid gap-6">
-      <div className={cn('grid gap-4', columns.length > 1 && 'md:grid-cols-2', columns.length > 2 && 'lg:grid-cols-4')}>
-        {columns.map(c => <VersionCard key={c.key} column={c} base={base} card={card} />)}
+      <h2 ref={heading} tabIndex={-1} className="sr-only outline-none">Versions</h2>
+      <div className={cn('grid gap-4', columns.length > 1 && 'md:grid-cols-2', columns.length === 3 && 'lg:grid-cols-3',
+        columns.length > 3 && 'lg:grid-cols-4')}>
+        {columns.map(c => <VersionCard key={c.key} column={withFocus(c)} base={base} card={card} />)}
       </div>
       {card && columns.length > 1 && (
         <p className="text-muted-foreground text-xs" data-testid="threshold-note">

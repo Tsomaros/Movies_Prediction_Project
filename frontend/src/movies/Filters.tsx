@@ -1,13 +1,14 @@
 // The browse filters: genre, release window (Just released | Coming soon), years, original language and lowest score. The menus are the same shadcn/Radix
 // Select as the creator form's (FilterSelect, also the sort menu); the years are number boxes. Every change goes
-// to the URL through `onChange` (and back to page 1); a year is applied when the box loses focus or on Enter.
-import { useState, type ReactNode } from 'react'
+// to the URL through `onChange` (and back to page 1); a year is applied on Enter, when the box loses focus or
+// after a short pause in typing, so closing the phone drawer never loses it. The limits are the address's (browse.ts).
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 import type { Options } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { codeName } from '@/form/format'
-import { SCORE_STEPS, WHENS, type BrowseState, type When } from '@/movies/browse'
+import { SCORE_STEPS, WHENS, YEAR_MAX, YEAR_MIN, type BrowseState, type When } from '@/movies/browse'
 
 const CONTROL = 'border-input bg-card dark:bg-input/30 h-9 w-full rounded-md border px-2 text-sm focus-visible:outline-2 focus-visible:outline-ring'
 
@@ -40,25 +41,42 @@ function Field({ id, label, children }: { id: string; label: string; children: R
   )
 }
 
-function YearBox({ id, value, placeholder, onCommit }: {
-  id: string; value: number | null; placeholder: string; onCommit: (year: number | null) => void
+const TYPING_PAUSE_MS = 600
+
+function YearBox({ id, value, onCommit }: {
+  id: string; value: number | null; onCommit: (year: number | null) => void
 }) {
+  const [min, max] = [YEAR_MIN, YEAR_MAX]
   const [text, setText] = useState(value === null ? '' : String(value))
   const [shown, setShown] = useState(value)
+  const [blurred, setBlurred] = useState(false)
   if (shown !== value) { // the URL changed (e.g. "Clear filters"): follow it
     setShown(value)
     setText(value === null ? '' : String(value))
   }
-  const commit = () => {
-    const n = Number(text)
-    const year = text.trim() === '' || !Number.isInteger(n) || n < 1900 || n > 2100 ? null : n
-    if (year === null) setText('')
-    if (year !== value) onCommit(year)
-  }
+  const n = Number(text)
+  const empty = text.trim() === ''
+  const bad = !empty && (!Number.isInteger(n) || n < min || n > max)
+  const year = empty || bad ? null : n
+  const commit = () => { if (!bad && year !== value) onCommit(year) }
+  const latest = useRef(onCommit)
+  useEffect(() => { latest.current = onCommit })
+  // Only a valid year is applied on a pause: clearing waits for blur or Enter, because a number box reports ''
+  // while it holds half-typed text such as "-" or "1e".
+  useEffect(() => {
+    if (bad || empty || year === value) return
+    const timer = setTimeout(() => latest.current(year), TYPING_PAUSE_MS)
+    return () => clearTimeout(timer)
+  }, [bad, empty, year, value])
   return (
-    <input id={id} type="number" inputMode="numeric" min={1900} max={2100} placeholder={placeholder} value={text}
-      onChange={e => setText(e.target.value)} onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') commit() }}
-      className={CONTROL} />
+    <>
+      <input id={id} type="number" inputMode="numeric" min={min} max={max} placeholder="Any" value={text}
+        aria-invalid={(bad && blurred) || undefined} aria-describedby={bad && blurred ? `${id}-err` : undefined}
+        onChange={e => { setText(e.target.value); setBlurred(false) }}
+        onBlur={() => { setBlurred(true); commit() }} onKeyDown={e => { if (e.key === 'Enter') commit() }}
+        className={CONTROL} />
+      {bad && blurred && <p id={`${id}-err`} className="text-destructive text-xs">Enter a year from {min} to {max}</p>}
+    </>
   )
 }
 
@@ -79,12 +97,15 @@ export function Filters({ state, options, onChange, onClear, idPrefix = 'f' }: {
       </Field>
       <div className="grid grid-cols-2 gap-2">
         <Field id={id('from')} label="From year">
-          <YearBox id={id('from')} value={state.yearFrom} placeholder="1960" onCommit={yearFrom => onChange({ yearFrom })} />
+          <YearBox id={id('from')} value={state.yearFrom} onCommit={yearFrom => onChange({ yearFrom })} />
         </Field>
         <Field id={id('to')} label="To year">
-          <YearBox id={id('to')} value={state.yearTo} placeholder="2026" onCommit={yearTo => onChange({ yearTo })} />
+          <YearBox id={id('to')} value={state.yearTo} onCommit={yearTo => onChange({ yearTo })} />
         </Field>
       </div>
+      {state.yearFrom !== null && state.yearTo !== null && state.yearFrom > state.yearTo && (
+        <p role="status" className="text-destructive -mt-2 text-xs">“From” is after “To”, so no films match.</p>
+      )}
       <Field id={id('lang')} label="Original language">
         <FilterSelect id={id('lang')} value={state.language} any="Any language" onChange={language => onChange({ language })}
           choices={(options?.languages ?? []).map(l => ({ value: l.code, label: codeName('language', l.code) }))} />

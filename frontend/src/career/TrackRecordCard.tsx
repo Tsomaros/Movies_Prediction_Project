@@ -34,6 +34,7 @@ export function TrackRecordCard({ forecast, check }: { forecast: TrackForecast; 
       <h3 id="track-heading" className="text-sm font-medium">Their next film, from their track record</h3>
       {ok ? (
         <>
+          <p className="text-muted-foreground text-xs">Audience score (TMDB, 1–10) · likely range, 80% of the time</p>
           <p className="text-3xl font-semibold tabular-nums">{points(low)} – {points(high)}</p>
           <p className="text-muted-foreground text-sm">Most likely around {points(mid)}</p>
           <button type="button" aria-expanded={open} onClick={() => setOpen(o => !o)}

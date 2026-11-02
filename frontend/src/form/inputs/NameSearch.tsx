@@ -10,7 +10,7 @@
 // "Use '<name>' as a new person": someone our data doesn't know (no track record). Typed text that isn't
 // picked is never sent; a hint says so when the box loses focus with text in it.
 import { Loader2Icon, PlusIcon, XIcon } from 'lucide-react'
-import { useId, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 
 import type { NameKind } from '@/api/client'
 import { useNameSearch } from '@/api/hooks'
@@ -64,16 +64,24 @@ export function NameSearch({ id, kind, onPick, placeholder, exclude = [], disabl
       setActive(Math.max(0, Math.min(items.length - 1, current + (e.key === 'ArrowDown' ? 1 : -1))))
     } else if (e.key === 'Enter') {
       if (typed) e.preventDefault() // never submit the form from a half-typed name
-      if (showList && items[current]) pick(items[current])
+      if (showList && search.isError && done) search.refetch() // the Retry button is out of the tab order: the list closes on blur
+      else if (showList && items[current]) pick(items[current])
     } else if (e.key === 'Escape') {
       setOpen(false)
     }
   }
+  // One live region that is always mounted: screen readers skip one that appears already filled.
+  const status = !showList ? ''
+    : !done ? 'Searching'
+    : search.isError ? 'Search failed. Press Enter to try again.'
+    : matches.length === 0 ? 'No matches in our data. You can add it as new.'
+    : `${matches.length} ${matches.length === 1 ? 'suggestion' : 'suggestions'}. Use the arrow keys.`
   const hintId = `${id}-typed`
   const leftOver = !open && typed !== '' && !disabled
 
   return (
     <div className="relative grid gap-1">
+      <p role="status" className="sr-only">{status}</p>
       <Input id={id} type="text" value={text} placeholder={placeholder} disabled={disabled} autoComplete="off"
         role="combobox" aria-expanded={showList} aria-controls={listId} aria-autocomplete="list"
         aria-activedescendant={showList && items[current] ? `${listId}-${current}` : undefined}
@@ -85,18 +93,18 @@ export function NameSearch({ id, kind, onPick, placeholder, exclude = [], disabl
         <ul id={listId} role="listbox" aria-label={`Suggestions for ${placeholder.toLowerCase()}`}
           className="bg-popover text-popover-foreground absolute top-full right-0 left-0 z-20 mt-1 max-h-72 overflow-y-auto rounded-md border py-1 shadow-lg">
           {!done && (
-            <li className="text-muted-foreground flex items-center gap-2 px-3 py-2 text-sm" aria-live="polite">
-              <Loader2Icon className="size-3.5 animate-spin" aria-hidden /> Searching…
+            <li role="presentation" className="text-muted-foreground flex items-center gap-2 px-3 py-2 text-sm">
+              <Loader2Icon className="size-3.5 animate-spin motion-reduce:animate-none" aria-hidden /> Searching…
             </li>
           )}
           {done && search.isError && (
-            <li className="text-destructive flex items-center gap-2 px-3 py-2 text-sm">
+            <li role="presentation" className="text-destructive flex items-center gap-2 px-3 py-2 text-sm">
               Search failed. Try again in a moment.
               <button type="button" className="underline" onMouseDown={e => e.preventDefault()} // keep the focus in the box
                 onClick={() => search.refetch()}>Retry</button>
             </li>
           )}
-          {settled && matches.length === 0 && <li className="text-muted-foreground px-3 py-2 text-sm">No matches in our data</li>}
+          {settled && matches.length === 0 && <li role="presentation" className="text-muted-foreground px-3 py-2 text-sm">No matches in our data</li>}
           {items.map((ref, i) => (
             <li key={ref.id ?? 'new'} id={`${listId}-${i}`} role="option" aria-selected={i === current}
               onMouseDown={e => e.preventDefault()} // keep the focus, so the click lands before blur closes the list
@@ -131,7 +139,7 @@ export function Chip({ children, label, onRemove }: { children: ReactNode; label
     <span className="bg-secondary text-secondary-foreground inline-flex items-center gap-1 rounded-full py-1 pr-1 pl-3 text-sm">
       {children}
       <button type="button" onClick={onRemove} aria-label={`Remove ${label}`}
-        className="hover:bg-background/60 focus-visible:ring-ring/50 rounded-full p-0.5 outline-none focus-visible:ring-3">
+        className="hover:bg-background/60 focus-visible:ring-ring rounded-full p-0.5 outline-none focus-visible:ring-3">
         <XIcon className="size-3.5" />
       </button>
     </span>
@@ -150,29 +158,49 @@ function ChipText({ kind, value, prefix }: { kind: NameKind; value: NameRef; pre
 type PickerProps = Omit<SearchProps, 'onPick' | 'exclude'>
 
 export function NamePicker({ value, onChange, ...search }: PickerProps & { value: NameRef | null; onChange: (v: NameRef | null) => void }) {
+  // Picking swaps the box for the chip and removing swaps it back, so the focused element goes away:
+  // move focus to the other one. Only after the user's own action, never when the form is filled from a link.
+  const box = useRef<HTMLDivElement>(null)
+  const moveFocus = useRef(false)
+  const change = (v: NameRef | null) => { moveFocus.current = true; onChange(v) }
+  useEffect(() => {
+    if (!moveFocus.current) return
+    moveFocus.current = false
+    if (value) box.current?.querySelector('button')?.focus()
+    else document.getElementById(search.id)?.focus()
+  }, [value, search.id])
   if (value) {
     return (
-      <div className="flex min-h-9 items-center" id={search.id} tabIndex={-1}>
-        <Chip label={value.name} onRemove={() => onChange(null)}><ChipText kind={search.kind} value={value} /></Chip>
+      <div ref={box} className="flex min-h-9 items-center" id={search.id} tabIndex={-1}>
+        <Chip label={value.name} onRemove={() => change(null)}><ChipText kind={search.kind} value={value} /></Chip>
       </div>
     )
   }
-  return <NameSearch {...search} onPick={onChange} />
+  return <NameSearch {...search} onPick={change} />
 }
 
 export function NameChips({ value, onChange, max, numbered, fullText, ...search }: PickerProps & {
   value: NameRef[]; onChange: (v: NameRef[]) => void; max: number; numbered?: boolean; fullText: string
 }) {
   const full = value.length >= max
+  // A disabled box can't keep focus: after the last pick go to the chips, after a removal back to the box.
+  const list = useRef<HTMLOListElement>(null)
+  const moveFocus = useRef<'box' | 'chips' | null>(null)
+  useEffect(() => {
+    const to = moveFocus.current
+    moveFocus.current = null
+    if (to === 'box') document.getElementById(search.id)?.focus()
+    else if (to === 'chips') list.current?.querySelector<HTMLElement>('li:last-child button')?.focus()
+  }, [value, search.id])
   return (
     <div className="grid gap-2">
       <NameSearch {...search} placeholder={full ? fullText : search.placeholder} disabled={full} exclude={value}
-        onPick={ref => onChange([...value, ref])} />
+        onPick={ref => { if (value.length + 1 >= max) moveFocus.current = 'chips'; onChange([...value, ref]) }} />
       {value.length > 0 && (
-        <ol className="flex flex-wrap gap-2" aria-label="Chosen">
+        <ol ref={list} className="flex flex-wrap gap-2" aria-label="Chosen">
           {value.map((ref, i) => (
             <li key={ref.id ?? `new:${ref.name}`}>
-              <Chip label={ref.name} onRemove={() => onChange(value.filter((_, j) => j !== i))}>
+              <Chip label={ref.name} onRemove={() => { moveFocus.current = 'box'; onChange(value.filter((_, j) => j !== i)) }}>
                 <ChipText kind={search.kind} value={ref} prefix={numbered ? `${i + 1}. ` : undefined} />
               </Chip>
             </li>

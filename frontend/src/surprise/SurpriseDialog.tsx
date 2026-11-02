@@ -73,11 +73,11 @@ function SurprisePanel({ surprise, onClose }: { surprise: Surprise; onClose: () 
   return (
     <div className="grid gap-4">
       <div className="grid gap-1.5">
-        <div role="radiogroup" aria-label="Pick from" className="bg-muted grid grid-cols-2 rounded-md p-0.5">
+        <div role="group" aria-label="Pick from" className="bg-muted grid grid-cols-2 rounded-md p-0.5">
           {SOURCES.map(s => (
-            <button key={s.value} type="button" role="radio" aria-checked={prefs.source === s.value}
+            <button key={s.value} type="button" aria-pressed={prefs.source === s.value}
               onClick={() => setPrefs({ source: s.value })}
-              className={cn('rounded px-2 py-1.5 text-sm',
+              className={cn('rounded px-2 py-1.5 text-sm focus-visible:outline-2 focus-visible:outline-ring',
                 prefs.source === s.value ? 'bg-background font-medium shadow-xs' : 'text-muted-foreground hover:text-foreground')}>
               {s.label}
             </button>

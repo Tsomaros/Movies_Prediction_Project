@@ -25,7 +25,7 @@ export function ChipGroup({ id, options, value, onChange, max, label, describedB
             onClick={() => onChange(on ? value.filter(v => v !== option) : [...value, option])}
             className={cn(
               'inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm transition-colors',
-              'focus-visible:ring-ring/50 outline-none focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-40',
+              'focus-visible:ring-ring outline-none focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-40',
               on ? 'border-primary bg-primary text-primary-foreground' : 'hover:bg-accent bg-background',
               invalid && !on && 'border-destructive/60',
             )}>
