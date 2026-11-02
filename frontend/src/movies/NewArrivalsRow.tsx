@@ -43,7 +43,7 @@ function Switch({ value, onChange }: { value: Window; onChange: (w: Window) => v
       {CHOICES.map(c => (
         <button key={c.value} ref={el => { buttons.current[c.value] = el }} type="button" role="radio" aria-checked={c.value === value}
           tabIndex={c.value === value ? 0 : -1} onClick={() => onChange(c.value)} onKeyDown={onKeyDown}
-          className={cn('rounded px-2.5 py-1 text-xs font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50',
+          className={cn('rounded px-2.5 py-1 text-xs font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring',
             c.value === value ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>
           {c.label}
         </button>

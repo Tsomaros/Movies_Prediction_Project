@@ -99,7 +99,7 @@ export default function Browse() {
             <p className="flex items-center gap-2 text-sm">
               <span>Results for <span className="font-medium">‘{q}’</span></span>
               <button type="button" onClick={() => change({ q: '' })} aria-label={`Remove search ‘${q}’`}
-                className="hover:bg-accent focus-visible:ring-ring/50 rounded-full p-1 outline-none focus-visible:ring-3">
+                className="hover:bg-accent focus-visible:ring-ring rounded-full p-1 outline-none focus-visible:ring-3">
                 <XIcon className="size-3.5" aria-hidden />
               </button>
             </p>

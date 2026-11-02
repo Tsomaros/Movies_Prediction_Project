@@ -40,7 +40,7 @@ function ModeSwitch({ mode, onChange, className }: { mode: SearchMode; onChange:
       {MODES.map(m => (
         <button key={m} type="button" role="radio" aria-checked={m === mode} tabIndex={m === mode ? 0 : -1}
           onClick={() => onChange(m)} onKeyDown={onKeyDown}
-          className={cn('rounded px-2.5 py-1 text-xs font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50',
+          className={cn('rounded px-2.5 py-1 text-xs font-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring',
             m === mode ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>
           {LABEL[m]}
         </button>
@@ -220,7 +220,7 @@ export function SearchBox({ variant, inputRef, onDone, replace = false }: Props)
           {text && (
             <button type="button" aria-label="Clear search" onMouseDown={e => e.preventDefault()}
               onClick={() => { setText(''); setActive(-1); inputRef?.current?.focus() }}
-              className={cn('text-muted-foreground hover:text-foreground rounded outline-none focus-visible:ring-3 focus-visible:ring-ring/50',
+              className={cn('text-muted-foreground hover:text-foreground rounded outline-none focus-visible:ring-3 focus-visible:ring-ring',
                 variant === 'overlay' ? 'p-2' : 'p-0.5')}>
               <XIcon className="size-4" />
             </button>

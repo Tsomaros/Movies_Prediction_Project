@@ -33,6 +33,17 @@ describe('routes', () => {
     expect(screen.getByTestId('tmdb-attribution')).toHaveTextContent('not endorsed or certified by TMDB')
   })
 
+  test('the skip link moves focus to the main content without changing the address', async () => {
+    const { router } = renderApp('/about')
+    await screen.findByRole('heading', { level: 1, name: 'About' })
+    await userEvent.click(screen.getByRole('link', { name: 'Skip to content' }))
+    expect(screen.getByRole('main')).toHaveFocus()
+    expect(router.state.location.hash).toBe('')
+    // the memory router never sees a plain anchor's hash change, so check jsdom's real address too:
+    // without preventDefault the browser would append #main
+    expect(window.location.hash).toBe('')
+  })
+
   test('the navigation moves between pages and marks the current one', async () => {
     const { router } = renderApp('/about')
     const nav = (await screen.findAllByRole('navigation', { name: 'Main' }))[0]

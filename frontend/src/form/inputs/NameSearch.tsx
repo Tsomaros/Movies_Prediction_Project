@@ -131,7 +131,7 @@ export function Chip({ children, label, onRemove }: { children: ReactNode; label
     <span className="bg-secondary text-secondary-foreground inline-flex items-center gap-1 rounded-full py-1 pr-1 pl-3 text-sm">
       {children}
       <button type="button" onClick={onRemove} aria-label={`Remove ${label}`}
-        className="hover:bg-background/60 focus-visible:ring-ring/50 rounded-full p-0.5 outline-none focus-visible:ring-3">
+        className="hover:bg-background/60 focus-visible:ring-ring rounded-full p-0.5 outline-none focus-visible:ring-3">
         <XIcon className="size-3.5" />
       </button>
     </span>
