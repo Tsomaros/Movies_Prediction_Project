@@ -32,6 +32,7 @@ MIN_RUNTIME, MAX_RUNTIME = 40, 300  # minutes; feature-length films
 MIN_BUDGET, MAX_BUDGET = 1_000, 1_000_000_000  # 2025 USD; the data's largest budget is about $725M
 MAX_SYNOPSIS = 2_000  # characters
 MIN_ACTORS, MAX_ACTORS = 5, 10
+MAX_REF_ID = 2**31 - 1  # TMDB ids are far below this; sqlite3 raises OverflowError above 2**63 - 1 (the path routes allow up to that)
 
 LANGUAGE_CODE = re.compile(r"^[a-z]{2}$")  # TMDB uses ISO 639-1 (plus a few of its own, e.g. "cn", "xx")
 COUNTRY_CODE = re.compile(r"^[A-Z]{2}$")  # ISO 3166-1 alpha-2
@@ -114,7 +115,7 @@ def _ref(value: Any) -> tuple[dict[str, Any] | None, str | None]:
     if not isinstance(value, dict) or set(value) - {"id", "name"}:
         return None, "must be an id or a name"
     ref_id, name = value.get("id"), _text(value.get("name"))
-    if ref_id is not None and (isinstance(ref_id, bool) or not isinstance(ref_id, int) or ref_id <= 0):
+    if ref_id is not None and (isinstance(ref_id, bool) or not isinstance(ref_id, int) or not 0 < ref_id <= MAX_REF_ID):
         return None, "id must be a positive whole number"
     if ref_id is None and name is None:
         return None, "needs an id or a name"
@@ -144,7 +145,7 @@ def _field(f: Field, value: Any, themes: Collection[str] | None) -> tuple[Any, s
     if f.kind == "choice":
         return (value, None) if value in f.choices else (None, f"must be one of {', '.join(f.choices)}")
     if f.kind == "code":
-        return (value, None) if isinstance(value, str) and re.match(f.pattern, value) else (None, "must be a two-letter code")
+        return (value, None) if isinstance(value, str) and re.fullmatch(f.pattern, value) else (None, "must be a two-letter code")
     if f.kind == "ref":
         return _ref(value)
 
@@ -163,7 +164,7 @@ def _field(f: Field, value: Any, themes: Collection[str] | None) -> tuple[Any, s
             return None, f"unknown value(s): {', '.join(bad)}"
         return list(dict.fromkeys(items)), None  # drop repeats, keep order
     if f.kind == "codes":
-        if any(not isinstance(v, str) or not re.match(f.pattern, v) for v in items):
+        if any(not isinstance(v, str) or not re.fullmatch(f.pattern, v) for v in items):
             return None, "must be two-letter codes"
         return list(dict.fromkeys(items)), None
     refs = []

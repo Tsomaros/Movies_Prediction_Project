@@ -50,7 +50,7 @@ json_leaf = st.one_of(st.none(), st.booleans(), st.integers(-10**12, 10**12),
                       st.floats(allow_nan=True, allow_infinity=True), junk_text)
 junk = st.recursive(json_leaf, lambda inner: st.lists(inner, max_size=4) | st.dictionaries(st.text(max_size=8), inner,
                                                                                          max_size=3), max_leaves=8)
-ref = st.one_of(st.integers(-5, 3000), junk_text, st.fixed_dictionaries({"id": st.integers(-1, 2000)}),
+ref = st.one_of(st.integers(-5, 3000), st.integers(2**31 - 1, 2**70), junk_text, st.fixed_dictionaries({"id": st.one_of(st.integers(-1, 2000), st.integers(2**31 - 1, 2**70))}),
                 st.fixed_dictionaries({"name": junk_text}), st.just({"id": None, "name": None}), st.just(True))
 
 FIELDS = {

@@ -47,10 +47,23 @@ def test_validate_accepts_a_form_without_optional_fields():
     ("genres", ["Cooking"]), ("release_year", 1950), ("release_month", 13), ("runtime", 118.5),
     ("language", "English"), ("certification", "NR"), ("director", {"name": "  "}),
     ("actors", ["Only", "Four", "Actors", "Here"]), ("actors", [f"A{i}" for i in range(11)]),
-    ("themes", ["not a theme"]), ("countries", ["usa"]), ("budget", 50), ("synopsis", "x" * 2001),
+    ("themes", ["not a theme"]), ("countries", ["usa"]), ("language", "en\n"), ("countries", ["US\n"]), ("budget", 50), ("synopsis", "x" * 2001),
 ])
 def test_validate_rejects_bad_values(field, value):
     _, errors = contract.validate(good_form(**{field: value}), themes=["heist"])
+    assert field in errors
+
+
+def test_validate_accepts_the_largest_id_in_range():
+    _, errors = contract.validate(good_form(director={"id": contract.MAX_REF_ID}), themes=["heist"])
+    assert errors == {}
+
+
+@pytest.mark.parametrize("ref_id", [2**31, 2**63, 2**70])
+@pytest.mark.parametrize("field", ["director", "companies", "franchise"])
+def test_validate_rejects_ids_beyond_the_database_range(field, ref_id):
+    """sqlite3 raises OverflowError for an integer above 2**63 - 1, which would be a 500 instead of a 422."""
+    _, errors = contract.validate(good_form(**{field: {"id": ref_id}}), themes=["heist"])
     assert field in errors
 
 
