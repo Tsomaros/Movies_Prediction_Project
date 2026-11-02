@@ -50,6 +50,7 @@ from ml.explain.groups import feature_groups
 from ml.explain.sentences import explain
 from ml.features.build import FeatureContext, api_as_of, build_features
 from ml.features.contract import validate
+from ml.features.history import N_ACTORS
 from ml.models.chain import Chain, compare_budget, format_money
 from ml.models.rough import ROUGH_FILE, is_rough, load_rule
 from ml.models.train import QUANTILE_KEYS, TARGETS, LgbmQuantile, load_model
@@ -293,10 +294,12 @@ class Predictor:
             out["comparables"] = [] if self.index is None else self.index.query(
                 clean["genres"], clean["themes"], clean["language"], vectors[i], clean["release_year"], log_budget,
                 as_ofs[i])
-            out["warnings"] = self._warnings(clean, modes[i], log_budget)
+            out["warnings"] = self._warnings(clean, modes[i], log_budget, X.iloc[i])
         return outs
 
-    def _warnings(self, form: dict[str, Any], mode: str, log_budget: float) -> list[dict[str, str]]:
+    def _warnings(self, form: dict[str, Any], mode: str, log_budget: float, row: pd.Series) -> list[dict[str, str]]:
+        """Warnings for one answer. The people ones read the feature row the models saw: only the first N_ACTORS
+        actors count, and a known person with no film before the release also counts as new."""
         out = []
         if math.exp(log_budget) >= BIG_BUDGET:
             which = "Your budget" if mode == "given" else "The estimated budget"
@@ -304,14 +307,22 @@ class Predictor:
                 f"{which} is {format_money(BIG_BUDGET)} or more. Revenue ranges for films this big were less "
                 f"reliable on 2019+ films than for smaller ones, and budgets above {format_money(PLATEAU_BUDGET)} "
                 "don't raise the revenue estimate any further.")})
-        if self.ctx.history.resolve(form.get("director"), "director") is None:
-            out.append({"code": "new_director", "text": (
-                "We don't know this director, so they count as a first-time director with no track record.")})
-        unknown = sum(self.ctx.history.resolve(a, "actor") is None for a in form.get("actors") or [])
-        if unknown:
-            out.append({"code": "new_actors", "text": (
-                f"We don't know {unknown} of the {len(form['actors'])} actors, so they count as having no "
-                "earlier films.")})
+        if row["director_is_new"]:
+            if self.ctx.history.resolve(form.get("director"), "director") is None:
+                text = "We don't know this director, so they count as a first-time director with no track record."
+            else:
+                text = ("This director has no earlier films in our data before the release month, so they count as "
+                        "a first-time director with no track record.")
+            out.append({"code": "new_director", "text": text})
+        shown = (form.get("actors") or [])[:N_ACTORS]
+        new = round(float(row["actors_is_new_mean"]) * N_ACTORS)
+        if new:
+            unknown = sum(self.ctx.history.resolve(a, "actor") is None for a in shown)
+            text = (f"We don't know {new} of the {len(shown)} actors, so they count as having no earlier films."
+                    if unknown == new else
+                    f"{new} of the {len(shown)} actors have no earlier films in our data before the release month, "
+                    "so they count as having no earlier films.")
+            out.append({"code": "new_actors", "text": text})
         for key, code, what in (("countries", "no_country", "production country"), ("companies", "no_studio", "studio")):
             if not form.get(key):
                 out.append({"code": code, "text": (

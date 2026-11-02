@@ -88,14 +88,45 @@ def test_invalid_forms_are_refused_with_readable_errors(predictor):
     assert e.value.errors["popularity"] == "unknown field"
 
 
+LATE = dict(release_year=2022, release_month=12)  # every person of form() has an earlier film by then
+
+
+def warnings_of(predictor, **overrides):
+    return {w["code"]: w["text"] for w in predictor.predict(form(**overrides))["warnings"]}
+
+
 def test_warnings(predictor):
-    codes = lambda out: {w["code"] for w in out["warnings"]}
-    assert codes(predictor.predict(form())) == set()
+    assert warnings_of(predictor, **LATE) == {}
     out = predictor.predict(form(director="Nobody Known", actors=[2010, 2011, 2012, "New One", "New Two"],
                                  countries=[], companies=[], release_year=2024, budget=200_000_000))
-    assert codes(out) == {"new_director", "new_actors", "no_country", "no_studio", "future_release", "big_budget"}
+    assert {w["code"] for w in out["warnings"]} == {
+        "new_director", "new_actors", "no_country", "no_studio", "future_release", "big_budget"}
     text = {w["code"]: w["text"] for w in out["warnings"]}
     assert "2 of the 5 actors" in text["new_actors"] and "ends in 2022" in text["future_release"]
+    # names that never resolve keep the "don't know" wording (the other wording is for known people with no earlier film)
+    assert text["new_director"].startswith("We don't know this director")
+    assert text["new_actors"].startswith("We don't know 2 of the 5 actors")
+
+
+def test_a_known_person_without_an_earlier_film_is_warned_about_like_an_unknown_one(predictor):
+    """The models see both as new (is_new = 1), so the warning follows the features, not whether the name resolved."""
+    text = warnings_of(predictor, release_year=2008, release_month=1)  # nobody in form() has a film before 2008
+    assert "no earlier films in our data before the release month" in text["new_director"]
+    assert "We don't know" not in text["new_director"] and "We don't know" not in text["new_actors"]
+    assert text["new_actors"].startswith("5 of the 5 actors have no earlier films")
+    assert "2 of the 5 actors have no earlier films in our data" in warnings_of(predictor)["new_actors"]  # 2013, 2014 in 2021
+
+
+def test_one_unknown_and_two_known_but_new_actors_are_counted_together(predictor):
+    text = warnings_of(predictor, actors=["Unknown One", 2013, 2014, 2010, 2011])["new_actors"]  # 2021: 2013, 2014 are new
+    assert text.startswith("3 of the 5 actors have no earlier films") and "We don't know" not in text
+
+
+def test_actors_beyond_the_fifth_are_not_counted_because_no_model_sees_them(predictor):
+    seven = [2010, 2011, 2012, 2013, 2014, "Unknown Six", "Unknown Seven"]
+    assert warnings_of(predictor, actors=seven, **LATE) == {}
+    first_unknown = ["Unknown One", *seven[1:5], "Unknown Six", "Unknown Seven"]
+    assert "We don't know 1 of the 5 actors" in warnings_of(predictor, actors=first_unknown, **LATE)["new_actors"]
 
 
 @pytest.mark.slow
