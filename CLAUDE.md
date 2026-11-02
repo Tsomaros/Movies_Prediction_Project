@@ -70,6 +70,8 @@ Not in git (rebuilt by the commands above): `build/` (the image's slim database 
 - **Leak safety** (tested in `tests/features/test_features.py`): only films released strictly before a film's date count; an earlier film's revenue/score counts only once it is 182 days old (its budget from release); top-N vocabularies, themes and PCA are fit on train years only; a film is a franchise film only if its collection already had an earlier entry.
 - **Every model is compared with baselines B0–B2** through the same harness.
 - TMDB `0` budget/revenue means unknown. Money is compared in 2025 dollars via `data/cpi_us_annual.csv` (add a row before pulling a new year).
+- When you finish a task that changes or creates new code allways use code-reviewer subagent.
+- Whevever a new test is created allways use the test-auditor on that test.
 
 ## Architecture
 
