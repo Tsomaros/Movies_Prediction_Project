@@ -80,6 +80,7 @@ userdb:
 docker-build: ml/artifacts/career_forecast.json
 	uv run python scripts/slim_db.py
 	uv run python -m ml.features.build prebuilt
+	uv run python -m backend.app.services.search.lookups
 	docker compose build
 
 # Start the app and Postgres in the background and wait until their healthchecks pass (about 15 s); the app is on :8080

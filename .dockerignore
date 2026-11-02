@@ -6,6 +6,7 @@
 !ml/
 !build/movies.db
 !build/context.joblib
+!build/lookups.joblib
 !data/cpi_us_annual.csv
 !frontend/
 

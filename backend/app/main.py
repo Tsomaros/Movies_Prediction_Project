@@ -104,7 +104,7 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
                                                           context_file=settings.context_file)
         if lookups is None:
             with closing(connect_read_only(settings.db_path)) as con:
-                app.state.lookups = Lookups.from_db(con)
+                app.state.lookups = Lookups.load(con, settings.lookups_file)
         else:
             app.state.lookups = lookups
         try:  # /health serves this instead of counting the films per request

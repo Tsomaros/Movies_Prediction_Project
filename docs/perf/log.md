@@ -53,3 +53,4 @@
 | 8 | WakeUpGate (full-screen "Waking up the server..." after 2 s without a health answer, retry every 3 s; app renders at once, no extra wait before first render) | - | - | n/a (not a speed change) |
 | 8 | Uptime-monitor notes in docs/deployment.md | - | - | n/a (not a speed change) |
 | 10 | Final measurement on a fresh build (throttled bench twice, local bench, startup, RAM, Lighthouse, bundle) and a profile of each failing gate | baseline.md | after.md | n/a (measurement; nothing changed) |
+| 10+ | Prebuilt autocomplete lookups (`build/lookups.joblib`, `LOOKUPS_FILE`) | startup 85-87 s, startup peak 438-464 MiB, bench peak 389-409 MiB, image 1.42 GB | startup 27-32 s, startup peak 293-306 MiB, bench peak 357-362 MiB, image 1.47 GB | Kept |

@@ -3,10 +3,11 @@
 #
 #   uv run python scripts/slim_db.py                          # build/movies.db: data/movies.db minus training tables
 #   uv run python -m ml.features.build prebuilt               # build/context.joblib: the track records, prebuilt
-#   docker build -f backend/Dockerfile -t movie-prediction .  # (make docker-build does all three)
+#   uv run python -m backend.app.services.search.lookups      # build/lookups.joblib: the autocomplete, prebuilt
+#   docker build -f backend/Dockerfile -t movie-prediction .  # (make docker-build does all four)
 #
 # Build context = the repository root; .dockerignore lets in only pyproject.toml, uv.lock, ml/, backend/, the
-# frontend's sources and build/movies.db + build/context.joblib, and keeps out the <=2015 .joblib models, the
+# frontend's sources and build/movies.db + build/context.joblib + build/lookups.joblib, and keeps out the <=2015 .joblib models, the
 # full MiniLM, node_modules, caches and the rest.
 # Build args (make deploy passes them): VITE_SENTRY_DSN, the frontend's Sentry project (public by design, it ends
 # up in the bundle); APP_RELEASE, the git commit, Sentry's release on both sides.
@@ -44,6 +45,7 @@ COPY --from=builder /app/.venv /app/.venv
 # the 298 MB into one more layer
 COPY --chown=app:app build/movies.db data/movies.db
 COPY build/context.joblib data/context.joblib
+COPY build/lookups.joblib data/lookups.joblib
 # the CPI table: the refresher cleans new films in 2025 dollars (V1.2)
 COPY data/cpi_us_annual.csv data/cpi_us_annual.csv
 COPY ml/ ml/
@@ -58,6 +60,7 @@ ENV PATH=/app/.venv/bin:$PATH \
     FRESH_REFRESH=1 \
     MODELS_DIR=/app/ml/artifacts/final \
     CONTEXT_FILE=/app/data/context.joblib \
+    LOOKUPS_FILE=/app/data/lookups.joblib \
     WEB_DIR=/app/web \
     APP_RELEASE=$APP_RELEASE \
     MALLOC_ARENA_MAX=2 \
@@ -68,7 +71,7 @@ ENV PATH=/app/.venv/bin:$PATH \
 USER app
 EXPOSE 8000
 
-# Startup takes about 10-15 s (models, feature context, lookups), hence the start period
+# Startup takes about 30 s at 0.1 CPU (imports, models, feature context), hence the start period
 HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
     CMD ["python", "-c", "import os, sys, urllib.request; sys.exit(urllib.request.urlopen(f'http://127.0.0.1:{os.environ[\"PORT\"]}/api/v1/health', timeout=4).status != 200)"]
 

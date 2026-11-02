@@ -1,5 +1,5 @@
 // The wake-up screen, for a page that has loaded while the API answers slowly. It does not cover a cold start: the
-// server serves the page and the API from one process and opens no socket until its startup (63-87 s) is done, so a
+// server serves the page and the API from one process and opens no socket until its startup is done, so a
 // visitor to a sleeping host waits on the host before any of this code runs. The app renders at once (waiting for the answer would add a round trip to every page load); on load we ask
 // /api/v1/health, and if it hasn't answered OK within 2 s a full-screen notice covers the page. It asks again every 3 s
 // when no request is in flight (a slow answer is waited for, never cancelled by the next tick; one stuck for 10 s is
@@ -62,7 +62,7 @@ export default function WakeUpGate({ children }: { children: ReactNode }) {
             <Loader2Icon className={still ? 'size-8' : 'size-8 animate-spin'} aria-hidden />
             <p className="text-lg font-medium">Waking up the server…</p>
             <p className="text-muted-foreground max-w-md text-sm">
-              Free hosting sleeps when idle; this can take a minute or two.
+              Free hosting sleeps when idle; this can take up to a minute.
             </p>
           </div>
         )}

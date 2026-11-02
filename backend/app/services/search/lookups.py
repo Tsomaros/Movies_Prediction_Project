@@ -4,7 +4,13 @@
     NameIndex.build(rows)          -> a packed index over (id, name, n_films) rows
     index.search(q, limit=10)      -> [{id, name, n_films}]: names with a word starting with q, most films first
     index.matches(q)               -> the entries of every such name (sorted, unique), for the people search
-    Lookups.from_db(con)           -> one NameIndex per kind (KINDS), built once at startup (about 3 s)
+    Lookups.from_db(con)           -> one NameIndex per kind (KINDS), built from the database (about 3 s; 50 s at 0.1 CPU)
+    Lookups.load(con, prebuilt=p)  -> the same, read from a file written by save_prebuilt (refused unless it matches
+                                      the database), or built when there is no file
+    save_prebuilt(con, path)       -> build the indexes once and save them (joblib, V1.5)
+
+CLI (make docker-build runs it on the image's database):
+     uv run python -m backend.app.services.search.lookups [--db build/movies.db] [--out build/lookups.joblib]
 
 Any word of a name can start the match, and the query can run on into later words: "hanks", "tom ha" and
 "tom hanks" all find Tom Hanks. Matching is case-insensitive (str.casefold) on whitespace-separated words, and
@@ -17,12 +23,18 @@ binary-searches the sorted keys for the range starting with the query, then keep
 
 from __future__ import annotations
 
+import argparse
 import sqlite3
 import unicodedata
+from contextlib import closing
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Iterable
 
+import joblib
 import numpy as np
+
+from ml.features.build import database_stamp
 
 KINDS = ("director", "actor", "writer", "company", "collection")
 LIMIT = 10
@@ -127,9 +139,41 @@ class Lookups:
     def from_db(cls, con: sqlite3.Connection) -> Lookups:
         return cls({kind: NameIndex.build(con.execute(SQL[kind])) for kind in KINDS})
 
+    @classmethod
+    def load(cls, con: sqlite3.Connection, prebuilt: Path | None = None) -> Lookups:
+        if prebuilt is None:
+            return cls.from_db(con)
+        parts = joblib.load(prebuilt)
+        if parts["stamp"] != database_stamp(con):
+            raise ValueError(f"{prebuilt} was built from another database ({parts['stamp']}, this one is "
+                             f"{database_stamp(con)}); rebuild it with `python -m backend.app.services.search.lookups`")
+        return cls({kind: NameIndex(**fields) for kind, fields in parts["indexes"].items()})
+
     def search(self, kind: str, q: str, limit: int = LIMIT) -> list[dict[str, Any]]:
         return self.indexes[kind].search(q, limit)
 
     @property
     def nbytes(self) -> int:
         return sum(i.nbytes for i in self.indexes.values())
+
+
+def save_prebuilt(con: sqlite3.Connection, path: Path) -> dict[str, Any]:
+    """Plain fields, not NameIndex objects: this module runs as __main__ here, and a pickled class would keep that name."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    stamp = database_stamp(con)
+    joblib.dump({"stamp": stamp, "indexes": {k: vars(i) for k, i in Lookups.from_db(con).indexes.items()}}, path)
+    return stamp
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(prog="python -m backend.app.services.search.lookups")
+    parser.add_argument("--db", type=Path, default=Path("build/movies.db"))
+    parser.add_argument("--out", type=Path, default=Path("build/lookups.joblib"))
+    args = parser.parse_args()
+    with closing(sqlite3.connect(f"file:{args.db.resolve().as_posix()}?mode=ro", uri=True)) as con:
+        stamp = save_prebuilt(con, args.out)
+    print(f"Wrote {args.out} ({args.out.stat().st_size / 1e6:.0f} MB) for the database built {stamp['built_at']}")
+
+
+if __name__ == "__main__":
+    main()

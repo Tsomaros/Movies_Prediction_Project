@@ -11,6 +11,31 @@ and moves to the deploy session). Same laptop and methods as [baseline.md](basel
 With 20 repeats, `bench.py`'s p95 is the slowest of the 20, so one slow request decides a gate.
 The throttled numbers are local Docker estimates, not Render; the real check is in the deploy session.
 
+## After this table: prebuilt lookups
+
+The tables below were measured at 90e0bc4. The autocomplete lookups are now built once by `make docker-build`
+(`build/lookups.joblib`, 38 MB, `LOOKUPS_FILE`) instead of at every start. The indexes are identical to a build on the
+real `build/movies.db`, and loading takes 0.014 s against 2.89 s locally. Re-measured on a fresh image (fresh container
+each run, [after-lookups-1.md](after-lookups-1.md), [after-lookups-2.md](after-lookups-2.md)):
+
+| Item | Before | With prebuilt lookups |
+|---|---|---|
+| Startup, start -> first `/health` 200, throttled | 85.0 s, 87.2 s | 27.5, 29, 29, 31, 32.2 s; 24.7 s with `--no-healthcheck` |
+| "loaded the models and lookups in" (log) | 60-64 s | 6.7-8.8 s |
+| Peak RAM during startup | 438-464 MiB | 293-306 MiB |
+| Idle RAM | 325-359 MiB | 294-318 MiB |
+| Peak RAM during the bench (G5) | 389-409 MiB | 357, 362 MiB |
+| Image | 1,421,877,123 bytes | 1,472,075,333 bytes: +50 MB, of which the file is 38 MB; the other 12 MB is not explained |
+
+G6 improves but still fails (27-32 s against 20 s): imports and model loading remain, as the G6 profile says. The latency
+gates do not change: predict p50 1.1-1.2 s, p95 2.4-2.7 s; compare p50 3.4 s, p95 5.6-5.7 s; sweep p50 0.5 s, p95 1.2 s;
+`q=the` p50 0.6 s, p95 0.7 and 1.4 s; `/people/525` 400 ms p95 in one run of two (192 ms in the other). G1, G7 and G8 were
+not re-measured: this change does not touch them. Still 4 of 9 gates, with more memory room on a 512 MB host.
+
+One difference from a build at startup: the file holds the build's names only. A running process already behaved like
+this, because it builds before the first merge. Only a restart that keeps a merged database (a kept compose container,
+not a new container) used to pick up the merged films' people, and now does not.
+
 ## Gates
 
 Gates use the cache-miss rows and the image as built (with its Docker `HEALTHCHECK`).
@@ -21,8 +46,8 @@ Gates use the cache-miss rows and the image as built (with its Docker `HEALTHCHE
 | G2 `POST /predict` p95, throttled, miss | <= 1.5 s | 11.1 s (p50 5.6 s) | 1.80 s and 2.80 s (p50 1.20-1.30 s) | FAIL |
 | G3 compare and sweep p95, throttled, miss | <= 2.5 s | compare 36.0 s, sweep 78.7 s | compare 5.9 s and 6.1 s (p50 3.7 s; 3.8 s p95 in a compare-only run with `--no-healthcheck`, see G3 below); sweep 0.60 s and 0.59 s | FAIL (compare); sweep passes |
 | G4 read endpoints p95, throttled | <= 300 ms | 2.3 s (home row), 1.9 s (`q=the`), 0.8 s | `q=the` 793 ms and 1,401 ms (p50 696-697 ms); `/people/31` 502 ms in one run of two (200 ms in the other); every other row 91-300 ms | FAIL |
-| G5 peak RAM during the benchmark | < 450 MB | 377-399 MiB | 409 MiB and 389 MiB (about 429 and 408 MB). Not part of the gate: the startup peak is 438-464 MiB, up to about 486 MB, above 450 MB on a 512 MB host (baseline 398-433 MiB; see Image, memory, startup) | pass |
-| G6 startup, container start to `/health` 200, throttled | <= 20 s | 86 s and 100 s | 85.0 s and 87.2 s | FAIL |
+| G5 peak RAM during the benchmark | < 450 MB | 377-399 MiB | 409 MiB and 389 MiB (about 429 and 408 MB); with the prebuilt lookups 362 and 357 MiB. Not part of the gate: the startup peak was 438-464 MiB, above 450 MB on a 512 MB host; with the prebuilt lookups 293-306 MiB (see below) | pass |
+| G6 startup, container start to `/health` 200, throttled | <= 20 s | 86 s and 100 s | 85.0 s and 87.2 s; with the prebuilt lookups 27-32 s (see below) | FAIL |
 | G7 Lighthouse mobile, Home + Browse + Movie detail | >= 90 | 87, 87, 80 | 86, 88, 84 | FAIL |
 | G8 initial JS (gzipped), Home | <= 200 KB | 185,294 bytes | 185,692 bytes | pass |
 | G9 tests pass, outputs equal to the snapshot | 100% | pass | `perf_check: OK`; `make test` 688 passed, 45 skipped (the Postgres tests; `make test-pg` 48 passed); `make web-test` 344 passed | pass |
@@ -242,7 +267,7 @@ container started in 63.7 s instead of 85-87 s.
 
 Options (all speed only, outputs unchanged):
 1. Prebuild the lookups at image build time, like `CONTEXT_FILE` (packed bytes and arrays, stamped with the database's
-   `built_at`): saves most of the 50 s.
+   `built_at`): saves most of the 50 s. **Done, see the top of this page: 85-87 s -> 27-32 s.**
 2. A faster `_normalise` (skip NFKD for pure-ASCII names; the result is the same): about 40% of the build.
 3. The lighter healthcheck from G2: about 20 s locally.
 4. Imports (21 s) and model loading (9 s) remain, so even with 1-3 startup stays above 20 s at 0.1 CPU. Reaching 20 s

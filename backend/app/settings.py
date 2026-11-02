@@ -10,6 +10,7 @@
 | RATE_LIMIT_READ | 120                       | /api GET and HEAD requests per minute per client IP, /health left out (V1.1) |
 | CACHE_SIZE    | 1000                        | predictions kept in the LRU cache                    |
 | CONTEXT_FILE  | (none: build at startup)    | prebuilt track records (ml.features.build prebuilt)  |
+| LOOKUPS_FILE  | (none: build at startup)    | prebuilt autocomplete lookups (backend.app.services.search.lookups, V1.5) |
 | USER_DATABASE_URL | (none: accounts off)    | Postgres for the demo account (Day 14); without it /auth and /me answer 503 |
 | CAREER_FILE   | ml/artifacts/career_forecast.json | the career forecast's settings (make career, Day 14.8); missing: no start |
 | WEB_DIR       | (none: API only)            | the built app (frontend/dist) to serve beside the API (the image, Day 15) |
@@ -53,6 +54,7 @@ class Settings:
     read_limit: int = 120
     cache_size: int = 1000
     context_file: Path | None = None
+    lookups_file: Path | None = None
     user_database_url: str | None = None
     career_file: Path = CAREER_FILE
     web_dir: Path | None = None
@@ -76,6 +78,7 @@ class Settings:
             read_limit=int(env.get("RATE_LIMIT_READ", "120")),
             cache_size=int(env.get("CACHE_SIZE", "1000")),
             context_file=Path(env["CONTEXT_FILE"]) if env.get("CONTEXT_FILE") else None,
+            lookups_file=Path(env["LOOKUPS_FILE"]) if env.get("LOOKUPS_FILE") else None,
             user_database_url=env.get("USER_DATABASE_URL") or None,
             career_file=Path(env.get("CAREER_FILE", str(CAREER_FILE))),
             web_dir=Path(env["WEB_DIR"]) if env.get("WEB_DIR") else None,
