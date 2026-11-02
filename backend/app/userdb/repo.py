@@ -4,7 +4,7 @@ Users and sessions
     user_by_name(conn, username)                 -> the user row, or None
     upsert_user(conn, username, hash, is_demo)   -> the user's id (a new password hash replaces the old one)
     demo_user(conn)                              -> the demo user's row, or None before the seed has run
-    create_session(conn, user_id, token_hash, expires_at)
+    create_session(conn, user_id, token_hash, expires_at)   (keeps a user's newest MAX_SESSIONS_PER_USER only)
     session_user(conn, token_hash, now)          -> the user of an unexpired session, or None
     delete_session(conn, token_hash)
     delete_expired_sessions(conn, now)           -> how many were deleted
@@ -59,9 +59,18 @@ def demo_user(conn: psycopg.Connection) -> Optional[Row]:
     return conn.execute("SELECT * FROM users WHERE is_demo ORDER BY id LIMIT 1").fetchone()
 
 
-def create_session(conn: psycopg.Connection, user_id: int, token_hash: bytes, expires_at: datetime) -> None:
+MAX_SESSIONS_PER_USER = 1000  # far above real use; the shared demo account is the one that collects them
+
+
+def create_session(conn: psycopg.Connection, user_id: int, token_hash: bytes, expires_at: datetime,
+                   keep: int = MAX_SESSIONS_PER_USER) -> None:
+    """Store a session and drop the user's oldest ones beyond `keep`, so a script logging in again and again
+    can't fill the table between the nightly purges of expired rows."""
     conn.execute("INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (%s, %s, %s)",
                  (token_hash, user_id, expires_at))
+    conn.execute("""DELETE FROM sessions WHERE user_id = %s AND token_hash IN (
+                        SELECT token_hash FROM sessions WHERE user_id = %s
+                        ORDER BY created_at DESC, token_hash OFFSET %s)""", (user_id, user_id, keep))
 
 
 def session_user(conn: psycopg.Connection, token_hash: bytes, now: datetime) -> Optional[Row]:

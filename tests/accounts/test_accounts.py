@@ -176,6 +176,17 @@ def test_only_the_tokens_hash_is_stored(acct):
     assert len(stored) == 32 and token.encode() not in bytes(stored)
 
 
+def test_a_user_keeps_only_the_newest_sessions_and_other_users_are_untouched(pg):
+    expires = NOW + timedelta(days=7)
+    hashes = [bytes([i]) * 32 for i in range(5)]
+    repo.create_session(pg, pg.other_id, b"o" * 32, expires, keep=2)
+    for h in hashes:
+        repo.create_session(pg, pg.demo_id, h, expires, keep=3)
+    kept = {bytes(r["token_hash"]) for r in pg.execute("SELECT token_hash FROM sessions WHERE user_id = %s", (pg.demo_id,))}
+    assert kept == set(hashes[-3:])  # the three newest
+    assert repo.session_user(pg, b"o" * 32, NOW)["id"] == pg.other_id
+
+
 def test_an_old_cookie_gets_a_401_after_logout(acct):
     demo(acct)
     token = acct.cookies[COOKIE]
