@@ -4,15 +4,35 @@ Creators enter a planned movie's parameters and get ranges for **budget**, **rev
 
 Every prediction is a range: a low end (10th percentile), an expected value (50th) and a high end (90th). The ranges are calibrated so that about 80% of real outcomes fall inside them.
 
-**Stack:** Python, pandas, LightGBM, Optuna, ONNX Runtime, SQLite, FastAPI and React (Vite). All data comes from our own TMDB API pull.
+**Stack:** Python, pandas, LightGBM, Optuna, ONNX Runtime, SQLite, Postgres (the demo account), FastAPI and React (Vite). All data comes from our own TMDB API pull.
 
-**Live:** https://movie-prediction-2f1b0265282c.onrender.com (Render Free: it sleeps after 15 idle minutes, so the first visit takes about 1.5 minutes; see [Deployment](docs/deployment.md#deployment-day-15)).
+**Live:** https://movie-prediction-2f1b0265282c.onrender.com (Render Free: it sleeps after 15 idle minutes, so the first visit has to wait for it to wake; startup takes 27-32 s in local Docker with the host's limits, not re-measured on Render; see [Deployment](docs/deployment.md#deployment-day-15)).
 
 ![The results page: revenue, budget and score ranges with their drivers](docs/images/results-page.png)
 
 **What it does:**
 - **For creators:** a form for a planned film (genres, themes, director, cast, budget, release month…) gives three calibrated ranges, the drivers behind each, comparable earlier films, a break-even band, "what if" variants and the best release month.
 - **For everyone:** a header search for films or people (actors, directors, writers), browse 80,398 films (1960 to 2026) with a New arrivals row of what came out in the last two weeks and what is due in the next two months, film and person pages with career charts (a person's 2026 films are drawn and checked against the range built from films up to 2025; on 2026 films the acting range covers 72.8% of 935 films, below the 80% target), a demo account with lists, ratings and notes, and a "Surprise me" picker.
+
+## Where the project is now
+
+As of 2 November 2026, the live site runs the latest code on `main`: V1.5 and the fixes after it. The models haven't changed since V1.0; every version since then changed the app around them. All 786 Python tests and 348 frontend tests pass.
+
+| Version | What it added |
+| --- | --- |
+| V1.0 | The first live version: Days 1–16 of the plan |
+| V1.1 | One header search for films and people, with a people results page |
+| V1.2 | The New arrivals row, and the 1,199 films of 2026 for browsing only: the models never see them |
+| V1.3 | New and upcoming films merged into the one movies database every 6 hours |
+| V1.4 | A person's 2026 films on their career chart, with a check against the range built from films up to 2025 |
+| V1.5 | A speed pass with identical predictions (see [Performance](#performance)) and a "Waking up the server…" screen |
+| After V1.5 | Fixes from code, test and UI reviews: stricter input checks, reads that wait for a database merge, a cap on stored sessions, people warnings that match the features the models saw, and accessibility (solid focus rings, a skip link, a header that fits narrow phones) |
+
+**Still open:**
+- 5 of the 9 V1.5 speed gates fail, and the frontend speed step hasn't been done.
+- Speed and the wake-up time haven't been measured on Render since V1.5.
+- Sentry is wired up, but no DSN has been set, so error reports are off.
+- A check on a real phone is still to do.
 
 ## Targets
 
@@ -77,6 +97,7 @@ Python (pandas, LightGBM, ONNX Runtime for the MiniLM synopsis model) builds the
 | [Running with Docker and deployment](docs/deployment.md) | The one image, memory, and the live site on Render |
 | [Decisions](docs/decisions.md) | Each key choice, the alternatives and why |
 | [Model card](MODEL_CARD.md) | Intended use, data, metrics, failure cases and limitations |
+| [Changelog](CHANGELOG.md) | What changed in each version since V1.0 |
 
 ## Setup
 
@@ -86,8 +107,9 @@ Requirements: [uv](https://docs.astral.sh/uv/) and GNU make. uv installs Python 
 make setup                 # create .venv and install locked dependencies
 make model                 # download the MiniLM text model (about 90 MB, once) and make its 8-bit copy for the app
 cp .env.example .env       # then paste your TMDB API Read Access Token into .env
-make test                  # offline tests, no network needed (about 1 min in a fresh clone, 2.7 min with the data and models)
-make test-fast             # the quick loop: no slow or real-data tests (about 35 s)
+make test                  # offline tests, no network needed (about 1 min in a fresh clone, 3.5 min with the data, models and Postgres)
+make test-fast             # the quick loop: no slow, real-data or Postgres tests (about 1 min)
+make test-pg               # the accounts tests on the compose Postgres
 make coverage              # every test with line and branch coverage
 make data                  # pull films from TMDB (resumable), build data/movies.db, then the features table
 make db                    # rebuild data/movies.db from the raw pull only (about 30 s; drops the features table)
@@ -98,6 +120,9 @@ make evaluate              # baselines and LightGBM on validation, breakdowns an
 make api                   # the API on http://localhost:8000, docs at /docs (needs the database and the app's models)
 make docker-build          # the app's one image (see Running with Docker); make docker-run, make smoke
 make deploy                # build from this commit, push to GHCR and deploy on Render (see Deployment)
+make userdb                # migrations, the demo account and its seed at USER_DATABASE_URL
+make people                # TMDB person details (resumable, about 3 h 20 min from scratch); then make people-db
+make career                # the career forecast's settings -> ml/artifacts/career_forecast.json
 make web-setup             # the frontend's packages (needs Node 24); then make web for http://localhost:5173 (see Frontend)
 make web-test              # the frontend's types, lint and tests
 uv run python -m ml.models.rough           # the rough-estimate cut-offs (fitted once on Day 6, then frozen)
@@ -111,7 +136,7 @@ uv run python -m ml.predict manifest       # checksums of the app's model files 
 | ------------ | ------------------------------------------------ |
 | `ml/`        | Data pull, features, models and evaluation; `ml/artifacts/` holds the PCA and the models' settings, calibration and metadata (committed), the MiniLM files and the trained `.joblib` models (not in git; `make model`, `make train`); `ml/artifacts/final/` holds the app's all-data models, their `manifest.json` and the comparables index; `ml/explain/` and `ml/predict.py` turn them into explained predictions |
 | `backend/`   | FastAPI app: `backend/app/` with one router per resource, schemas, read-only repo queries and services ([API](docs/api.md#api)) |
-| `frontend/`  | React app: the creator form, the API client and types ([Frontend](docs/app.md#frontend)) |
+| `frontend/`  | React app: the creator form, results and compare pages, browse, film and person pages, search, the demo account and Surprise me ([Frontend](docs/app.md#frontend)) |
 | `data/`      | Raw pull and database (not in git), CPI table, summaries |
 | `tests/`     | Offline tests, the end-to-end fixture and the golden forms ([Testing](docs/evaluation.md#testing)) |
 | `scripts/`   | `slim_db.py` (the image's database copy), `smoke.py` (checks a running API and app), `deploy.py` (`make deploy`) and `warmup.py` (`make warmup`, before a demo); `bench.py`, `perf_check.py`, `perf_snapshot.py` and `explain_queries.py` for speed work ([Performance](#performance)) |
@@ -120,7 +145,7 @@ uv run python -m ml.predict manifest       # checksums of the app's model files 
 
 ## Performance
 
-V1.5 was a speed pass with no model change: predictions are identical to before (`scripts/perf_check.py`). It was measured in local Docker with Render Free's limits (0.1 CPU, 512 MB), so the numbers are estimates for the host. Full tables, the nine gates and a profile of each failing one: [docs/perf/after.md](docs/perf/after.md).
+V1.5 was a speed pass with no model change: predictions are identical to before (`scripts/perf_check.py`). It is live now, but it was measured in local Docker with Render Free's limits (0.1 CPU, 512 MB), so the numbers are estimates for the host. Full tables, the nine gates and a profile of each failing one: [docs/perf/after.md](docs/perf/after.md).
 
 | Cache miss, 0.1 CPU | Before | After |
 | --- | --- | --- |
@@ -131,7 +156,7 @@ V1.5 was a speed pass with no model change: predictions are identical to before 
 | `GET /movies?q=the`, median | 0.9 s | 0.7 s |
 | Startup to the first `/health` | 86-100 s | 27-32 s |
 
-4 of the 9 gates pass: local predict p95 195 ms, peak memory in the benchmark 362 MiB (startup peaks at 293-306 MiB), the Home page's 186 KB of JavaScript, and identical outputs. Five fail: predict p95 (1.8-2.8 s against 1.5 s), compare (5.9-6.1 s against 2.5 s), the `q=the` search (0.8-1.4 s against 0.3 s), startup (27-32 s against 20 s, down from 85 s since the autocomplete is prebuilt) and Lighthouse mobile (86, 88, 84 against 90). The frontend step was moved to the deploy session.
+4 of the 9 gates pass: local predict p95 195 ms, peak memory in the benchmark 362 MiB (startup peaks at 293-306 MiB), the Home page's 186 KB of JavaScript, and identical outputs. Five fail: predict p95 (1.8-2.8 s against 1.5 s), compare (5.9-6.1 s against 2.5 s), the `q=the` search (0.8-1.4 s against 0.3 s), startup (27-32 s against 20 s, down from 85 s since the autocomplete is prebuilt) and Lighthouse mobile (86, 88, 84 against 90). The frontend speed step was cut from V1.5 and hasn't been done yet.
 
 ## Limitations
 
@@ -159,16 +184,15 @@ V1.5 was a speed pass with no model change: predictions are identical to before 
 - **Breakouts stay outside the range.** *Get Out* earned $340M against a range of $160K–$59M, even with the all-data models that saw it in training; its drivers (small budget, new director, small studios) describe the typical film like it.
 - **Empty optional fields count against a film.** No production country or studio looks like the obscure films in the data that have none (no country: about −38% revenue for a small horror film). `predict()` warns about it.
 - **"Predict a film like this" carries only part of a film.** It leaves out the studio, country, franchise, budget and synopsis, and takes the first credited director when there are two (the form has one).
-- **Cast and crew have no photos.** The pull didn't fetch people's images, so the film page shows initials avatars.
-- **The default browse order is TMDB's popularity on the day of the pull.** It is a trending number, so the first page starts with *Clue* (1985) rather than the best-known films.
+- **The default browse order is TMDB's popularity.** It is a trending number that favours current films, so the first page opens with 2026 titles (*Wildwood*, *Hope*, *Spider-Man: Brand New Day*) rather than the best-known films of all time.
 - **The per-IP limits trust Cloudflare's `CF-Connecting-IP` on Render.** It can't be forged through Render's edge, but the app takes it from any request that has it, so on a host without Cloudflare `CLIENT_IP_HEADER` must stay unset. Whether two visitors behind one Cloudflare edge are counted apart was checked from one machine only.
-- **The live site is slow where several predictions run in a row.** Before V1.5, on Render Free's 0.1 CPU a prediction took about 2.2 s (0.2 s locally), the career section's model films 6 s and the 12-month sweep about 25 s. Since V1.5, in local Docker at 0.1 CPU, a prediction takes about 1.3 s, a compare with 3 variants 3.7 s and the sweep 0.5 s; Render is not measured yet. The first visit after 15 idle minutes still waits for the wake-up (27-32 s in local Docker at 0.1 CPU; 84 s on Render before the autocomplete was prebuilt, not re-measured): the server opens no socket until its startup is done, so nothing answers (not even the page) until then, and what the visitor sees meanwhile is the host's or the browser's, not ours (to be checked in the deploy session). The "Waking up the server…" screen only covers a page that has already loaded while the API is slow. Open the site a couple of minutes before a demo. See [Performance](#performance).
+- **The live site is slow where several predictions run in a row.** Before V1.5, on Render Free's 0.1 CPU a prediction took about 2.2 s (0.2 s locally), the career section's model films 6 s and the 12-month sweep about 25 s. Since V1.5, in local Docker at 0.1 CPU, a prediction takes about 1.3 s, a compare with 3 variants 3.7 s and the sweep 0.5 s; V1.5 is live, but Render is not measured yet. The first visit after 15 idle minutes still waits for the wake-up (27-32 s in local Docker at 0.1 CPU; 84 s on Render before the autocomplete was prebuilt, not re-measured): the server opens no socket until its startup is done, so nothing answers (not even the page) until then, and what the visitor sees meanwhile is the host's or the browser's, not ours (not checked on Render yet). The "Waking up the server…" screen only covers a page that has already loaded while the API is slow. Open the site a couple of minutes before a demo. See [Performance](#performance).
 - **Sentry is wired up but not active:** no DSN is set on Render or in the bundle yet.
 - **Everyone shares the demo account.** Its lists and "private" notes are private to the account, not to a visitor: anyone logged in to it sees and can change them until the nightly reset.
 - **Undo on a deleted note adds it back as a new note,** at the top of the list with today's date.
 - **The examples are dated October 2026 and May 2027,** like the golden forms they send. Once a date has passed, the year list (this year to four years ahead) no longer offers it, though the form still sends it.
-- **The Docker image is 1,097 MB unpacked, above the ~700 MB aim** (about 411 MB compressed). The Python packages take 489 MB (441 MB before Day 14's Postgres and argon2 packages), scipy alone 143 MB; the database 293 MB, 73 MB of it the person details (Days 14.6–14.7): LightGBM imports `scipy.sparse` when it loads, so scipy can't be left out. The 100 MB of precompiled bytecode stays, so startup doesn't recompile everything.
-- **Startup peaks at 456–489 MB.** That is under Render Free's 512 MB, but not by much: a bigger database or model would need another look.
+- **The Docker image is about 1,060 MB unpacked, above the ~700 MB aim** (the layers in `docker history`; `docker images` shows 1.47 GB). The Python packages take 403 MB, including their precompiled bytecode, so startup doesn't recompile everything; the database 316 MB; and the prebuilt context and autocomplete 95 MB. LightGBM imports `scipy.sparse` when it loads, so scipy can't be left out.
+- **Memory has room now, but not much in a long run.** Startup peaks at 293–306 MiB in local Docker since the autocomplete is prebuilt (456–489 MB before), and the V1.5 benchmark at 362 MiB. One long V1.4 run reached 459 MiB, close to Render Free's 512 MB, and its cause wasn't measured.
 - **The app embeds a synopsis with an 8-bit model, the comparables index holds full-model vectors.** They agree closely (mean cosine 0.993), but for about 1 synopsis in 10 the nearest overview differs, so a comparable can differ from what the full model would pick.
 - **Memory measurements depend on the system.** On Windows the same app keeps more freed memory (639 MB after startup before the cuts); `malloc_trim` works on Linux only. The gate is measured in Docker, like the host.
 - **Some comparable films are obscure.** *Get Out*'s are small horror films scored about 4.5–6. A tie-break towards well-known films was tried and made the comparables' revenue less like the film's own, so it was dropped.
@@ -186,7 +210,7 @@ V1.5 was a speed pass with no model change: predictions are identical to before 
 
 ## How it was built
 
-I built this project with Claude Code, an AI coding assistant, from 21 to 29 October 2026: 80 commits over Days 1–16, plus an audit after Day 7 and four extra days I added along the way (14.5–14.8: Surprise me, actor pages, crew pages and the Career section). We split the work clearly. I set the goals, made every decision and did everything that needs a person: accounts, tokens, the live dashboards, recording the demo. Claude wrote the code, ran the checks and reported what it found.
+I built this project with Claude Code, an AI coding assistant, from 21 to 29 October 2026: 80 commits over Days 1–16, plus an audit after Day 7 and four extra days I added along the way (14.5–14.8: Surprise me, actor pages, crew pages and the Career section). Versions V1.1–V1.5 and the review fixes followed, bringing it to 163 commits by 2 November. We split the work clearly. I set the goals, made every decision and did everything that needs a person: accounts, tokens, the live dashboards, recording the demo. Claude wrote the code, ran the checks and reported what it found.
 
 ### A plan, then a record
 
@@ -214,7 +238,7 @@ I built this project with Claude Code, an AI coding assistant, from 21 to 29 Oct
 
 - **I steered, Claude proposed.** Claude gave a recommendation with each question, but the call was mine: dropping the synopsis, removing the revenue view, choosing the Frankfurt region.
 - **Each of us did what the other couldn't.** Claude can't create accounts or handle passwords, so I made the TMDB, GitHub, Neon and Render accounts and tokens. Claude ran the migrations, pushed the images and tested the live site.
-- **"Done" means checked.** A task counted as done when its tests passed and its numbers were measured, not when the code was written. The project ends with 595 Python tests, 280 frontend tests, a Playwright demo flow and a daily smoke test of the live site.
+- **"Done" means checked.** A task counted as done when its tests passed and its numbers were measured, not when the code was written. The project now has 786 Python tests, 348 frontend tests, a Playwright demo flow and a daily smoke test of the live site.
 - **Plain writing.** The plan, PROGRESS.md and the docs use short sentences with concrete numbers, so either of us could pick up the next day from the written record alone.
 
 ## Attribution and TMDB terms
