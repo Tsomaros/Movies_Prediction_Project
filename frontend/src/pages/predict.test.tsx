@@ -5,7 +5,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import type { Options } from '@/api/client'
 import { EXAMPLES } from '@/form/examples'
 import { toApiBody } from '@/form/model'
-import { decodeForm, DRAFT_KEY, encodeForm, loadDraft, saveDraft } from '@/form/persist'
+import { decodeForm, DRAFT_KEY, encodeForm, loadDraft, resultPath, saveDraft } from '@/form/persist'
 import { SAVE_MS } from '@/pages/Predict'
 import { mockFetch } from '@/test/fetch'
 import optionsJson from '@/test/options.json'
@@ -41,6 +41,22 @@ describe('examples', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Predict' }))
     expect(await screen.findByTestId('card-revenue')).toHaveTextContent('$26M')
     expect(posted(calls)).toEqual([toApiBody(example.form)])
+  })
+
+  test("a failed prediction's Retry opens the result once it works", async () => {
+    let fail = true
+    mockFetch({ '/api/v1/meta/options': { body: options }, '/api/v1/model-card': { status: 503, body: {} },
+      '/api/v1/predict': () => (fail ? new TypeError('Failed to fetch') : { body: predictionsJson.small_drama }) })
+    const { router } = await openForm()
+    await userEvent.click(screen.getByRole('button', { name: 'Small indie drama' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Predict' }))
+    const retry = await screen.findByRole('button', { name: 'Retry' })
+    expect(router.state.location.pathname).toBe('/predict')
+    fail = false
+    await userEvent.click(retry)
+    expect(await screen.findByTestId('card-revenue')).toHaveTextContent('$26M')
+    const { pathname, search } = router.state.location
+    expect(pathname + search).toBe(resultPath(EXAMPLES.find(e => e.label === 'Small indie drama')!.form))
   })
 
   test('an example with optional fields opens "More details" and shows them', async () => {

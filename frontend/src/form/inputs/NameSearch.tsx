@@ -41,7 +41,8 @@ export function NameSearch({ id, kind, onPick, placeholder, exclude = [], disabl
   const [active, setActive] = useState(0)
   const search = useNameSearch(kind, text)
   const typed = text.trim()
-  const settled = typed !== '' && !search.typing && !search.isFetching
+  const done = typed !== '' && !search.typing && !search.isFetching
+  const settled = done && !search.isError // a failed search offers neither matches nor "new": the name may well exist
   const matches = settled ? (search.data ?? []).filter(m => !exclude.some(e => e.id === m.id)) : []
   const newOne: NameRef = { id: null, name: typed }
   const items: NameRef[] = settled
@@ -83,12 +84,18 @@ export function NameSearch({ id, kind, onPick, placeholder, exclude = [], disabl
       {showList && (
         <ul id={listId} role="listbox" aria-label={`Suggestions for ${placeholder.toLowerCase()}`}
           className="bg-popover text-popover-foreground absolute top-full right-0 left-0 z-20 mt-1 max-h-72 overflow-y-auto rounded-md border py-1 shadow-lg">
-          {!settled && (
+          {!done && (
             <li className="text-muted-foreground flex items-center gap-2 px-3 py-2 text-sm" aria-live="polite">
               <Loader2Icon className="size-3.5 animate-spin" aria-hidden /> Searching…
             </li>
           )}
-          {search.isError && <li className="text-destructive px-3 py-2 text-sm">Search failed. Try again in a moment.</li>}
+          {done && search.isError && (
+            <li className="text-destructive flex items-center gap-2 px-3 py-2 text-sm">
+              Search failed. Try again in a moment.
+              <button type="button" className="underline" onMouseDown={e => e.preventDefault()} // keep the focus in the box
+                onClick={() => search.refetch()}>Retry</button>
+            </li>
+          )}
           {settled && matches.length === 0 && <li className="text-muted-foreground px-3 py-2 text-sm">No matches in our data</li>}
           {items.map((ref, i) => (
             <li key={ref.id ?? 'new'} id={`${listId}-${i}`} role="option" aria-selected={i === current}

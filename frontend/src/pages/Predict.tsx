@@ -32,7 +32,7 @@ const STARTED_FROM = { link: 'Loaded from a shared link.', draft: 'Your draft fr
 
 export default function Predict() {
   const options = useMetaOptions()
-  const predict = usePredict()
+  const submitted = useRef<{ body: PredictForm; values: FormValues }>(undefined) // the last Predict click, for a Retry from the toast
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [start] = useState(() => startingForm(`?${searchParams}`))
@@ -49,12 +49,18 @@ export default function Predict() {
     }, SAVE_MS)
   }, [setSearchParams])
 
-  const submit = useCallback(async (body: PredictForm, values: FormValues) => {
-    await predict.mutateAsync(body) // a 422 throws back into the form; the answer is cached for the results page
+  const predict = usePredict(useCallback((form: PredictForm) => { // the answer is cached by now; also runs for a Retry
+    const sent = submitted.current
+    if (sent?.body !== form) return // a Retry of an older submit: stay where we are
     clearTimeout(timer.current)
-    saveDraft(values)
-    navigate(resultPath(values))
-  }, [predict, navigate])
+    saveDraft(sent.values)
+    navigate(resultPath(sent.values))
+  }, [navigate]))
+
+  const submit = useCallback(async (body: PredictForm, values: FormValues) => {
+    submitted.current = { body, values }
+    await predict.mutateAsync(body) // a 422 throws back into the form
+  }, [predict])
 
   const clear = useCallback(() => {
     clearTimeout(timer.current)

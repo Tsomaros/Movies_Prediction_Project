@@ -58,11 +58,16 @@ export const useCollectionSearch = (q: string) => useNameSearch('franchise', q)
 
 export const predictionKey = (form: PredictForm | null) => ['predict', form] as const
 
-export function usePredict() {
+/** `onDone` runs after every success, a toast's Retry included, so the caller's next step (opening the results)
+ *  doesn't depend on the `await` of a call that has already failed. */
+export function usePredict(onDone?: (form: PredictForm) => void) {
   const client = useQueryClient()
   const mutation = useMutation({
     mutationFn: (form: PredictForm) => api.predict(form),
-    onSuccess: (data, form) => client.setQueryData(predictionKey(form), data),
+    onSuccess: (data, form) => {
+      client.setQueryData(predictionKey(form), data)
+      onDone?.(form)
+    },
     onError: (error, form) => notifyError(error, () => mutation.mutate(form)),
   })
   return mutation

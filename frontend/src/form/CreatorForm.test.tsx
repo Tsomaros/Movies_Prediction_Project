@@ -123,6 +123,26 @@ describe('typing a name', () => {
     expect(screen.getByText('Top-billed cast').parentElement).toHaveTextContent('(1/5–10)')
   })
 
+  test('a failed search says so and offers neither "No matches" nor a new person; Enter picks nothing', async () => {
+    let down = true
+    mockFetch({ '/api/v1/people': () => (down ? { status: 500, body: { detail: 'boom' } } : { body: [{ id: 7, name: 'Saoirse Ronan', n_films: 28 }] }) })
+    renderForm()
+    const box = screen.getByRole('combobox', { name: /Top-billed cast/ })
+    await userEvent.type(box, 'sao')
+    expect(await screen.findByText('Search failed. Try again in a moment.')).toBeInTheDocument()
+    expect(screen.queryByText('No matches in our data')).not.toBeInTheDocument()
+    expect(screen.queryByText('Searching…')).not.toBeInTheDocument()
+    expect(screen.queryByRole('option')).not.toBeInTheDocument()
+    await userEvent.keyboard('{Enter}')
+    expect(box).toHaveValue('sao')
+    expect(screen.queryByRole('list', { name: 'Chosen' })).not.toBeInTheDocument()
+
+    down = false // the Retry button asks again, and the suggestions come back
+    await userEvent.click(screen.getByRole('button', { name: 'Retry' }))
+    expect(await screen.findByRole('option', { name: /Saoirse Ronan/ })).toBeInTheDocument()
+    expect(screen.queryByText('Search failed. Try again in a moment.')).not.toBeInTheDocument()
+  })
+
   test('Enter before the suggestions arrive does nothing, and never submits the form', async () => {
     people({ sao: [{ id: 36592, name: 'Saoirse Ronan', n_films: 28 }] })
     const onSubmit = renderForm()
