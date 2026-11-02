@@ -43,7 +43,7 @@ That is 19 checks. It exits with status 1 on any failure, the same against local
 | | |
 | --- | --- |
 | Image | 1,097 MB unpacked (the layers in `docker history`), about 411 MB compressed (Docker Desktop's `docker images` shows their sum, 1.51 GB); 1,085 / 409 MB before Day 15 added the app and Sentry, 984 / 370 MB before Day 14's account packages and the person details (Days 14.6–14.7) |
-| Startup until healthy | 8.3 s (models, prebuilt track records, comparables, lookups) |
+| Startup until healthy | 8.3 s (Day 15, unthrottled; models, prebuilt track records, comparables, lookups) |
 | Memory after startup | 323 MB (it peaks at 489 MB while loading) |
 | Memory after 100 different predictions with synopses | **407 MB** (`docker stats` 385 MiB), under the 450 MB gate |
 | After 100 predictions with synopses and 50 career pages (V1.4 image, fresh container, 2026-10-31) | `docker stats` 352 MiB (about 369 MB), under the 450 MB gate; the career pages alone added 3 MiB |

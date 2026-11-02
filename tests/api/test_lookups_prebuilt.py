@@ -27,6 +27,8 @@ def test_a_saved_file_loads_as_the_same_indexes(con, tmp_path):
     path = tmp_path / "lookups.joblib"
     assert save_prebuilt(con, path)["films"] > 0
     loaded = Lookups.load(con, prebuilt=path)
+    for kind in ("director", "actor", "company"):  # the fixture has no writers or collections: empty equals empty
+        assert len(built.indexes[kind]) > 0, kind
     for kind in KINDS:
         a, b = built.indexes[kind], loaded.indexes[kind]
         assert isinstance(b, NameIndex) and a.names == b.names and a.keys == b.keys
@@ -43,6 +45,15 @@ def test_a_file_from_another_database_is_refused(con, tmp_path):
     path = tmp_path / "lookups.joblib"
     save_prebuilt(con, path)
     con.execute("UPDATE meta SET value = '\"another build\"' WHERE key = 'built_at'")
+    with pytest.raises(ValueError, match="another database"):
+        Lookups.load(con, prebuilt=path)
+
+
+def test_a_file_from_a_database_with_other_films_is_refused(con, tmp_path):
+    # same build date, one film fewer inside the model years (<= 2025): the stamp's film count must refuse it
+    path = tmp_path / "lookups.joblib"
+    save_prebuilt(con, path)
+    con.execute("UPDATE movies SET year = 2030 WHERE id = (SELECT MIN(id) FROM movies WHERE year <= 2025)")
     with pytest.raises(ValueError, match="another database"):
         Lookups.load(con, prebuilt=path)
 

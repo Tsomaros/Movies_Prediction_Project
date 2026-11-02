@@ -4,7 +4,8 @@
     uv run python scripts/warmup.py --base-url http://localhost:8000 # local docker compose
 
 Run it about 3 minutes before the demo. On Render Free the service sleeps after 15 idle minutes (waking takes
-about 30 s in local Docker at 0.1 CPU, not yet measured on Render). The API caches each answer by its validated form (1,000 entries, kept until the service sleeps or
+about 30 s in local Docker at 0.1 CPU, not yet measured on Render).
+The API caches each answer by its validated form (1,000 entries, kept until the service sleeps or
 restarts), so a click that sends a form warmed here answers at once. A full prediction (/predict, and each
 /predict/compare form) is cached as a full answer. The sweep caches only ranges-only entries, one per month, so it
 does not warm the full answers the results page shows for those month forms. The service then stays awake for 15 minutes after the demo's last click.
