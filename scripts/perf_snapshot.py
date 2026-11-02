@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from dataclasses import replace
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -44,7 +45,8 @@ def strip(value: Any) -> Any:
 def build_snapshot() -> dict[str, Any]:
     forms = json.loads(FORMS.read_text(encoding="utf-8"))["forms"]
     out: dict[str, Any] = {"predict": {}}
-    with TestClient(create_app(Settings.from_env())) as client:
+    settings = replace(Settings.from_env(), user_database_url=None)  # no accounts database, so no pool or worker thread
+    with TestClient(create_app(settings)) as client:
         def post(path: str, body: Any) -> Any:
             r = client.post(API_PREFIX + path, json=body)
             r.raise_for_status()

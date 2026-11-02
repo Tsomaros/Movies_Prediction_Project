@@ -4,9 +4,10 @@
     uv run python scripts/warmup.py --base-url http://localhost:8000 # local docker compose
 
 Run it about 3 minutes before the demo. On Render Free the service sleeps after 15 idle minutes (waking takes
-about 84 s), a prediction takes about 2 s and the 12-month sweep about 25 s. The API caches each prediction by
-its validated form (1,000 entries, kept until the service sleeps or restarts), so a click that sends a form
-warmed here answers at once. The service then stays awake for 15 minutes after the demo's last click.
+about 85 s). The API caches each answer by its validated form (1,000 entries, kept until the service sleeps or
+restarts), so a click that sends a form warmed here answers at once. A full prediction (/predict, and each
+/predict/compare form) is cached as a full answer. The sweep caches only ranges-only entries, one per month, so it
+does not warm the full answers the results page shows for those month forms. The service then stays awake for 15 minutes after the demo's last click.
 
 What it sends, for each of the three example forms (tests/golden/forms.json, which the form page's example
 buttons send exactly):
@@ -16,7 +17,7 @@ buttons send exactly):
   3 variants a call like the page;
 - POST /predict/sweep over the 12 months.
 Then the Career section of Christopher Nolan (directing) and Tom Hanks (acting), whose model films are
-predictions too. That is 13 requests, under the 30-a-minute limit. """
+predictions too. The "cached" count at the end is the cache's size: it counts full and ranges-only entries. That is 13 requests, under the 30-a-minute limit. """
 
 from __future__ import annotations
 
@@ -99,7 +100,7 @@ def main() -> int:
         call(f"career model {who}", "GET", f"/people/{person}/career/model", params={"role": role})
 
     cache = client.get(f"{API}/health").json()["prediction_cache"]
-    print(f"Done: {cache['size']} predictions cached." + (f" {failed} request(s) FAILED." if failed else ""))
+    print(f"Done: {cache['size']} cache entries (full answers and ranges-only)." + (f" {failed} request(s) FAILED." if failed else ""))
     return 1 if failed else 0
 
 

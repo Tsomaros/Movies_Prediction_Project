@@ -20,7 +20,7 @@ Gates use the cache-miss rows and the image as built (with its Docker `HEALTHCHE
 | G1 `POST /predict` p95, local, miss | <= 400 ms | 251 ms | 195 ms (p50 107-123 ms) | pass |
 | G2 `POST /predict` p95, throttled, miss | <= 1.5 s | 11.1 s (p50 5.6 s) | 1.80 s and 2.80 s (p50 1.20-1.30 s) | FAIL |
 | G3 compare and sweep p95, throttled, miss | <= 2.5 s | compare 36.0 s, sweep 78.7 s | compare 5.9 s and 6.1 s (p50 3.7 s; 3.8 s p95 in a compare-only run with `--no-healthcheck`, see G3 below); sweep 0.60 s and 0.59 s | FAIL (compare); sweep passes |
-| G4 read endpoints p95, throttled | <= 300 ms | 2.3 s (home row), 1.9 s (`q=the`), 0.8 s | `q=the` 793 ms and 1,401 ms (p50 696-697 ms); `/people/31` 502 ms in one run of two (200 ms in the other); every other row 96-300 ms | FAIL |
+| G4 read endpoints p95, throttled | <= 300 ms | 2.3 s (home row), 1.9 s (`q=the`), 0.8 s | `q=the` 793 ms and 1,401 ms (p50 696-697 ms); `/people/31` 502 ms in one run of two (200 ms in the other); every other row 91-300 ms | FAIL |
 | G5 peak RAM during the benchmark | < 450 MB | 377-399 MiB | 409 MiB and 389 MiB (about 429 and 408 MB). Not part of the gate: the startup peak is 438-464 MiB, up to about 486 MB, above 450 MB on a 512 MB host (baseline 398-433 MiB; see Image, memory, startup) | pass |
 | G6 startup, container start to `/health` 200, throttled | <= 20 s | 86 s and 100 s | 85.0 s and 87.2 s | FAIL |
 | G7 Lighthouse mobile, Home + Browse + Movie detail | >= 90 | 87, 87, 80 | 86, 88, 84 | FAIL |
@@ -103,7 +103,7 @@ The baseline's local server read `data/movies.db` (no sort indexes yet); the aft
 
 | Item | Baseline | After |
 |---|---|---|
-| Image (`docker image inspect` size) | 1,513,149,058 bytes (1.51 GB) | 1,421,877,123 bytes (1.42 GB): -116 MB of test folders (Task 2), +18 MB of indexes |
+| Image (`docker image inspect` size) | 1,513,149,058 bytes (1.51 GB) | 1,421,877,123 bytes (1.42 GB): -116 MB of test folders (Task 2), +18 MB of indexes; that sums to -98 MB, the image shrank 91 MB, and the other 7 MB is not explained |
 | `build/movies.db` | 298 MB | 316 MB (315,793,408 bytes; 10 sort indexes, Tasks 6-7) |
 | Startup, start -> first `/health` 200 (polled every 1 s; baseline every 3 s) | 85.7 s, 100.1 s | 85.0 s, 87.2 s (a third run's start time was lost); 63.7 s with `--no-healthcheck` |
 | "loaded the models and lookups in" (log) | 60.3 s, 68.5 s | 63.5 s, 60.4 s, 63.2 s; 45.1 s with `--no-healthcheck` |
@@ -206,7 +206,7 @@ Options:
 - Locally `repo.search(q="the")` takes 64.5 ms: the `COUNT(*)` joining 71,766 FTS matches to `movies` 47.6 ms (74%), the
   page ids 18.5 ms, cards and genres under 1 ms. Throttled that is about 700 ms (p50 696 and 697 ms in the tabled runs,
   701 ms with `--no-healthcheck`).
-- `/people/31` at 502 ms p95 in run 1 (p50 298 ms) is not explained beyond the quota steps: run 2 had p50 108 / p95 201 ms
+- `/people/31` at 502 ms p95 in run 1 (p50 298 ms) is not explained: run 2 had p50 108 / p95 201 ms
   and the `--no-healthcheck` run 106 / 200 ms.
 
 Options (Task 7 listed the first three):

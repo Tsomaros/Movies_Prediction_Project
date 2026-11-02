@@ -162,7 +162,7 @@ def create_app(settings: Settings | None = None, predictor: Predictor | None = N
     # The app and the API share one origin (Vite's proxy, or the app served by web.py), so the cookie needs no CORS credentials
     app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins),
                        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["*"])
-    app.add_middleware(ServerTimingMiddleware)  # outermost: times everything below, CORS included
+    app.add_middleware(ServerTimingMiddleware)  # times the API and CORS; with WEB_DIR set, web.install adds GZip and the safety headers after it, so they wrap it and Server-Timing leaves out gzip
     errors.install(app)
     for module in ROUTERS:
         app.include_router(module.router, prefix=API_PREFIX)

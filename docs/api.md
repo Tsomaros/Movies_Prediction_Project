@@ -66,12 +66,12 @@ curl -s localhost:8000/api/v1/predict -H 'Content-Type: application/json' -d '{
 
 | | Laptop | Docker, 0.1 CPU |
 | --- | --- | --- |
-| Startup (models, feature context, comparables, lookups) | about 4 s | 85-87 s to the first `/health` (50 s of it the autocomplete) |
+| Startup (models, feature context, comparables, lookups) | about 4 s (the log's load time with `CONTEXT_FILE` and `build/movies.db`; Python imports are not in it) | 85-87 s to the first `/health` (50 s of it the autocomplete) |
 | `/predict` over HTTP, uncached | median 107-123 ms (under the 400 ms target); about 3 ms from the cache | median 1.2-1.3 s |
 | `/predict/compare` with 3 variants, uncached | median 361 ms (one batch) | median 3.7 s |
 | `/predict/sweep` over 12 months, uncached | median 46 ms (ranges only, one batch); cached, a few ms | median 0.5 s |
 | Autocomplete / movie search / movie page | 2–6 ms / 5–77 ms / about 16 ms | 3–6 ms / 5–700 ms / about 100 ms |
-| Memory after startup / after predictions with a synopsis (MiniLM loaded) | 639 MB / 746 MB on Windows, before the Day 9 cuts; in Docker now 323 MB / 407 MB ([Running with Docker](deployment.md#running-with-docker)) |
+| Memory after startup / after predictions with a synopsis (MiniLM loaded) | 639 MB / 746 MB on Windows, before the Day 9 cuts; in Docker at V1.5: idle 325-359 MiB, benchmark peak 389-409 MiB, startup peak 438-464 MiB (Day 9 measured 323 / 407 MB; [Running with Docker](deployment.md#running-with-docker)) |
 
 Memory was 1,236 MB at first. The track record (`ml/features/history.py`) kept 350k small objects (about 870 MB); it now packs them into flat arrays (about 108 MB), and the rebuilt features table is bit-for-bit identical to the stored one. Day 9 brought the app under the 450 MB gate for the free host.
 
