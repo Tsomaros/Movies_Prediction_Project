@@ -72,7 +72,7 @@ Not in git (rebuilt by the commands above): `build/` (the image's slim database 
 - TMDB `0` budget/revenue means unknown. Money is compared in 2025 dollars via `data/cpi_us_annual.csv` (add a row before pulling a new year).
 - When you finish a task that changes or creates new code allways use code-reviewer subagent.
 - Whevever a new test is created allways use the test-auditor on that test.
-- whenever a new front end component is created
+- whenever a new front end component is created use the ui-ux-reviewer to get a feedback and inprove the new component.
 
 ## Architecture
 
